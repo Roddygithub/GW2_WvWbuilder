@@ -1,0 +1,83 @@
+Projet : GW2_WvWbuilder
+Objectif : Optimiser des compositions de 2 à 20 joueurs pour le mode Monde contre Monde (WvW) dans Guild Wars 2.
+
+Backend : Python 3.11+, FastAPI, SQLAlchemy, PostgreSQL
+Frontend : React + TailwindCSS, shadcn/ui, recharts
+CI/CD : GitHub Actions
+Hébergement : Raspberry Pi / serveur perso (Debian/Arch possible)
+Base : 100% public, pas d’auth JWT pour l’instant
+Interrogation en temps réel de l’API officielle Guild Wars 2 et parsing du wiki anglais pour les mécaniques (buffs, dégâts, CC, etc.).
+
+⚙️ Extensions / outils à installer et configurer :
+- **Backend (Python)** :
+  - Black (formatage)
+  - pytest (tests)
+  - SQLAlchemy + Alembic (ORM & migrations)
+- **Frontend (JS/TS)** :
+  - ESLint + Prettier (lint & formatage)
+  - Vitest ou Jest (tests)
+  - React Query (API calls optimisés)
+  - TailwindCSS + shadcn/ui + recharts
+- **DevOps** :
+  - Docker + docker-compose (optionnel mais conseillé)
+  - GitHub Actions (CI/CD avec build + tests)
+  - Makefile ou Taskfile pour les commandes fréquentes
+- **Productivité** :
+  - Intégration GitHub (commit, push, CI/CD)
+  - Husky (pré-commit hooks pour lint/test)
+
+
+Crée le backend avec FastAPI.
+
+Tâches :
+- Récupération en temps réel des données via l’API officielle Guild Wars 2
+- Parsing du wiki anglais de Guild Wars 2 pour compléter les mécaniques (buffs, debuffs, CC, coefficients de dégâts…)
+- Stockage dans PostgreSQL ou SQLite avec SQLAlchemy (et migrations via Alembic)
+- Implémenter un moteur d’optimisation pour proposer des compositions :
+   - Input utilisateur : nombre de joueurs (2 à 20)
+   - Option 1 : classes fixées par l’utilisateur (ex : 2 gardiens, 1 nécro…)
+   - Option 2 : classes libres → le moteur propose une compo optimale
+   - L’algorithme doit prendre en compte toutes les mécaniques (heal, DPS, buffs, debuffs, CC, survie, synergies d’armes et spécialisations)
+   - Utiliser une recherche combinatoire, heuristique ou un algo multi-objectif (à ton choix)
+- API REST structurée :
+   - Endpoint `/builds/optimize`
+   - Input = nombre de joueurs + option classes choisies ou non
+   - Output = builds optimisés (classe, spé élite, traits, armes, compétences, équipement recommandé)
+
+⚙️ Extensions backend :
+- pytest pour tests unitaires
+- Black pour formatage
+- SQLAlchemy + Alembic
+
+Crée le frontend en React.
+
+Tâches :
+- Interface web moderne et responsive
+- Formulaire utilisateur :
+   - Sélection du nombre de joueurs (2 à 20)
+   - Option 1 : définir les classes de chaque joueur
+   - Option 2 : laisser le backend proposer une compo optimale
+- Affichage des compositions optimisées sous forme de cartes (comme sur https://fr.gw2skills.net/editor/)
+   - Inclure : classe, spé élite, traits, armes, skills, équipement
+- Possibilité d’exporter la composition en JSON
+- Graphiques simples avec recharts pour montrer la répartition (heal/dps/buffs/CC)
+- Style : TailwindCSS + shadcn/ui
+
+⚙️ Extensions frontend :
+- ESLint + Prettier
+- Vitest ou Jest pour tests
+- React Query pour gestion des appels API
+- Husky (pré-commit : lint/test)
+
+Configure CI/CD avec GitHub Actions.
+
+Tâches :
+- Workflow déclenché à chaque push/pull request :
+   - Backend : installer deps, lancer pytest
+   - Frontend : installer deps, lancer tests (Vitest/Jest)
+   - Build frontend
+- Ajouter vérifications de formatage (Black, Prettier)
+- Générer et publier un build (Docker si activé)
+- Documentation : ajouter un README clair avec étapes pour lancer en dev/prod
+- Ajout d’un CONTRIBUTING.md pour la collaboration
+
