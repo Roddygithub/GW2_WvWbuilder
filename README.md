@@ -36,27 +36,31 @@ Le projet vise à proposer des builds et des compositions en synergie, adaptés 
 ```bash
 git clone https://github.com/<ton_user>/GW2_WvWbuilder.git
 cd GW2_WvWbuilder
-
+2. Backend (FastAPI)
+bash
+Copier le code
 cd backend
 # Créer un venv
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+Lancer le serveur :
 
+bash
+Copier le code
 uvicorn app.main:app --reload
-
+3. Frontend (React)
+bash
+Copier le code
 cd frontend
 yarn install
 yarn dev
-
 4. Accès
-
 Backend : http://localhost:8000
 
 Frontend : http://localhost:3000
 
 👥 Collaboration
-
 Le projet est open source (licence MIT par défaut).
 
 Contributions bienvenues via issues et pull requests.
@@ -64,7 +68,6 @@ Contributions bienvenues via issues et pull requests.
 Collaborateurs ajoutés manuellement pour développement direct.
 
 🔮 Roadmap
-
  Implémentation du backend (connexion API GW2, récupération des données).
 
  Système d’optimisation des builds et compositions.
@@ -76,10 +79,11 @@ Collaborateurs ajoutés manuellement pour développement direct.
  Déploiement public (CI/CD).
 
 📜 Licence
+MIT – utilisation libre, avec attribution.
 
-MIT – utilisation libre, avec attribution
+yaml
+Copier le code
 
 ---
 
 👉 Veux-tu que je fasse aussi un **logo / bannière stylisée en ASCII ou image** pour ton projet (qui apparaîtra en haut du README sur GitHub) ? Ça peut donner un côté pro et attractif.
-
