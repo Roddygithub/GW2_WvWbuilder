@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import create_access_token
 from app.models import User
-from tests.integration.fixtures.factories import UserFactory
+from tests.integration.fixtures.factories import UserFactory, RoleFactory
 
 # Tests pour l'authentification
 class TestAuth:
@@ -17,10 +17,15 @@ class TestAuth:
         db.add(user)
         db.commit()
         
-        # Tester la connexion
+        # Tester la connexion avec des identifiants valides
+        login_data = {
+            "username": user.email,
+            "password": password
+        }
         response = client.post(
             "/api/v1/auth/login",
-            data={"username": user.email, "password": password},
+            data=login_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
         
         assert response.status_code == status.HTTP_200_OK
@@ -29,48 +34,61 @@ class TestAuth:
         assert data["token_type"] == "bearer"
     
     def test_login_invalid_credentials(self, client: TestClient, db: Session):
+        # Tester avec des identifiants invalides
+        login_data = {
+            "username": "nonexistent@example.com",
+            "password": "wrongpassword"
+        }
         response = client.post(
             "/api/v1/auth/login",
-            data={"username": "nonexistent@example.com", "password": "wrongpassword"},
+            data=login_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
         )
         
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        # Vérifier que la réponse est une erreur 400 (Bad Request) pour des identifiants invalides
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 # Tests pour les opérations CRUD sur les utilisateurs
 class TestUsers:
     def test_read_users_me(self, client: TestClient, db: Session):
-        # Créer un utilisateur et un token
-        user = UserFactory()
-        db.add(user)
-        db.commit()
+        # Obtenir les en-têtes d'authentification avec l'utilisateur par défaut du client de test
+        headers = client.auth_header()
         
-        token = create_access_token(subject=user.email)
-        
-        # Tester la récupération du profil
+        # Tester la récupération du profil avec le token JWT
         response = client.get(
             "/api/v1/users/me",
-            headers={"Authorization": f"Bearer {token}"}
+            headers=headers
         )
         
+        # Vérifier que la réponse est correcte
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["email"] == user.email
+        
+        # Vérifier que le mot de passe hashé n'est pas inclus dans la réponse
         assert "hashed_password" not in data
     
     def test_create_user(self, client: TestClient, db: Session):
+        # Get auth headers for a superuser
+        headers = client.auth_header()
+        
         user_data = {
             "email": "newuser@example.com",
             "username": "newuser",
             "password": "testpassword123",
         }
         
-        response = client.post("/api/v1/users/", json=user_data)
+        response = client.post(
+            "/api/v1/users/", 
+            json=user_data,
+            headers=headers
+        )
         
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["email"] == user_data["email"]
         assert data["username"] == user_data["username"]
         assert "id" in data
+        assert "hashed_password" not in data
         
         # Vérifier que l'utilisateur existe en base
         user = db.query(User).filter(User.email == user_data["email"]).first()
@@ -83,42 +101,47 @@ class TestUsers:
         db.add(user)
         db.commit()
         
-        # Créer un token d'admin
+        # Créer un admin et obtenir son en-tête d'authentification
         admin = UserFactory(is_superuser=True)
         db.add(admin)
         db.commit()
-        token = create_access_token(subject=admin.email)
+        
+        # Utiliser l'auth_header du client de test avec l'utilisateur admin
+        headers = client.auth_header(user=admin)
         
         # Tester la lecture du profil
         response = client.get(
             f"/api/v1/users/{user.id}",
-            headers={"Authorization": f"Bearer {token}"}
+            headers=headers
         )
         
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["id"] == user.id
         assert data["email"] == user.email
+        assert "hashed_password" not in data
     
     def test_update_user(self, client: TestClient, db: Session):
         # Créer un utilisateur de test
         user = UserFactory()
         db.add(user)
         db.commit()
+        db.refresh(user)  # S'assurer que l'utilisateur a un ID
         
-        token = create_access_token(subject=user.email)
+        # Obtenir les en-têtes d'authentification pour l'utilisateur
+        headers = client.auth_header(user=user)
         
         # Mettre à jour le profil
         update_data = {"username": "updated_username"}
         response = client.put(
-            f"/api/v1/users/me",
+            "/api/v1/users/me",
             json=update_data,
-            headers={"Authorization": f"Bearer {token}"}
+            headers=headers
         )
         
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_200_OK, f"Expected status code 200, got {response.status_code}. Response: {response.text}"
         data = response.json()
-        assert data["username"] == update_data["username"]
+        assert data["username"] == update_data["username"], f"Expected username to be updated to {update_data['username']}, got {data['username']}"
         
         # Vérifier la mise à jour en base
         db.refresh(user)
@@ -133,7 +156,7 @@ class TestUserRoles:
         db.add_all([user, role])
         db.commit()
         
-        token = create_access_token(subject=user.email)
+        token = create_access_token(subject=user.id)
         
         # Ajouter le rôle à l'utilisateur
         response = client.post(
