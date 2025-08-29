@@ -54,13 +54,13 @@ jobs:
         run: |
           cd backend
           # Install required dependencies
-          poetry add email-validator itsdangerous python-json-logger pytest-asyncio pytest-trio --no-interaction
+          poetry add email-validator itsdangerous python-json-logger pytest-asyncio pytest-trio pytest-mock --no-interaction
           # Regenerate lock file
           poetry lock --no-update
           # Install all dependencies including dev
           poetry install --no-interaction --no-ansi --with dev
-          # Install test dependencies using pip
-          poetry run pip install pytest-cov codecov
+          # Install test dependencies
+          poetry run pip install pytest-cov codecov pytest-factoryboy
           # Initialize test database
           poetry run alembic upgrade head
 
