@@ -53,6 +53,8 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
+          # Install email-validator for pydantic email validation
+          poetry add email-validator --no-interaction
           # Regenerate lock file
           poetry lock --no-update
           # Install all dependencies including dev
