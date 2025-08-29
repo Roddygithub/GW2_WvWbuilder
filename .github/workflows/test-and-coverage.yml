@@ -53,7 +53,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          poetry install --no-interaction --no-ansi --with dev,test
+          poetry install --no-interaction --no-ansi --with dev --extras test
           poetry run pip install pytest-cov codecov
 
       - name: Cache Poetry virtualenv
