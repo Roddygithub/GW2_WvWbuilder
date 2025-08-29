@@ -76,12 +76,46 @@ Visit: http://127.0.0.1:8000/docs
 5. CI will run tests and coverage on your PR.
 
 ## CI & Coverage
-- GitHub Actions workflow: `.github/workflows/test-and-coverage.yml`
-- Python 3.13 + Poetry are used in CI.
-- Coverage report is uploaded as `backend/coverage.xml` (Codecov supported if configured).
+
+### Workflow GitHub Actions
+Le workflow CI/CD est configuré dans `.github/workflows/test-and-coverage.yml` et s'exécute sur :
+- Push et pull requests vers les branches `main` et `develop`
+- Modification des fichiers du backend ou de la configuration CI
+
+### Fonctionnalités du workflow
+- **Tests automatisés** : Exécution des tests unitaires et d'intégration
+- **Couverture de code** : Génération de rapports de couverture (XML et HTML)
+- **Intégration Codecov** : Téléversement automatique des rapports de couverture
+- **Artefacts** : Stockage des résultats des tests et des rapports pour débogage
 
 ### Badges
-- Build status badge (GitHub Actions) and coverage badge (Codecov) are shown in `backend/README.md`. Ensure Codecov is enabled for the repository.
+Les badges suivants sont disponibles dans le README principal :
+- Statut des tests (GitHub Actions)
+- Couverture du code (Codecov)
+- Version Python
+- Style de code (Black, isort)
+- Licence MIT
+
+### Vérification locale
+Pour exécuter les mêmes vérifications que le CI localement :
+```bash
+# Installer les dépendances de développement
+poetry install --with dev
+
+# Exécuter les tests avec couverture
+./backend/run_tests.sh
+```
+
+### Rapports de couverture
+Les rapports de couverture sont disponibles :
+1. **En local** : `backend/htmlcov/index.html`
+2. **Dans les artefacts CI** : Téléchargeables depuis l'onglet "Actions" de GitHub
+3. **En ligne** : Sur [Codecov](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder) (après activation)
+
+### Configuration requise pour les PR
+- La couverture doit rester ≥ 90%
+- Tous les tests doivent passer
+- Le code doit être formaté avec Black et isort
 
 ## Reporting Issues / Asking Questions
 Open an issue with steps to reproduce, expected behavior, and any logs or screenshots.
