@@ -54,7 +54,7 @@ jobs:
         run: |
           cd backend
           poetry lock --no-update
-          poetry install --no-interaction --no-ansi --with dev,test
+          poetry install --no-interaction --no-ansi --with dev --extras "test"
 
       - name: Cache Poetry virtualenv
         id: cache-venv
