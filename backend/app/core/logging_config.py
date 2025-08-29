@@ -17,6 +17,7 @@ def setup_logging() -> None:
     log_dir.mkdir(exist_ok=True)
     
     # Default logging configuration
+    log_to_file = getattr(settings, "LOG_TO_FILE", False)
     log_config = {
         "version": 1,
         "disable_existing_loggers": False,
@@ -67,7 +68,7 @@ def setup_logging() -> None:
             }
         },
         "root": {
-            "handlers": ["console", "file", "error_file"] if settings.LOG_TO_FILE else ["console"],
+            "handlers": ["console", "file", "error_file"] if log_to_file else ["console"],
             "level": "DEBUG" if settings.DEBUG else "INFO"
         },
         "loggers": {
@@ -85,7 +86,7 @@ def setup_logging() -> None:
                 "propagate": False
             },
             "app": {
-                "handlers": ["console", "file", "error_file"] if settings.LOG_TO_FILE else ["console"],
+                "handlers": ["console", "file", "error_file"] if log_to_file else ["console"],
                 "level": "DEBUG" if settings.DEBUG else "INFO",
                 "propagate": False
             }

@@ -1,0 +1,107 @@
+mkdir -p /home/roddy/Documents/GW2_WvWbuilder/backend
+
+# Créer/écraser README.md
+cat > /home/roddy/Documents/GW2_WvWbuilder/backend/README.md << 'EOL'
+# GW2 Team Builder – Backend (FastAPI)
+
+[![Backend Test & Coverage](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml/badge.svg?branch=main)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml)
+[![codecov](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/main/graph/badge.svg)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
+
+Backend FastAPI pour Guild Wars 2 Team Builder. Utilise SQLAlchemy 2.0, Pydantic v2, et inclut une suite de tests complète avec couverture de code.
+
+## 🚀 Stack technique
+- Framework : FastAPI
+- Base de données : SQLAlchemy 2.0
+- Validation : Pydantic v2
+- Tests : pytest avec couverture ≥90%
+- Gestion des dépendances : Poetry
+
+## 📋 Prérequis
+- Python 3.13
+- Poetry (https://python-poetry.org/)
+
+## 🛠 Installation
+cd /home/roddy/Documents/GW2_WvWbuilder/backend
+poetry install
+
+## 🧪 Exécution des tests
+poetry run pytest --cov=app --cov-report=term-missing
+Objectif : ≥90% de couverture
+
+## 🔄 Développement local
+poetry run uvicorn app.main:app --reload
+
+## 🤝 Processus de contribution
+Créer une branche : git checkout -b feature/ma-fonctionnalite  
+Commits atomiques  
+PR vers develop ou main avec tests et documentation
+
+## 📊 CI & Couverture
+Workflow : .github/workflows/test-and-coverage.yml  
+Badges : Build Status, Coverage
+
+## ❓ Questions
+Ouvrez une issue avec :  
+- Étapes pour reproduire  
+- Comportement attendu  
+- Logs/captures si nécessaire
+EOL
+
+# Créer/écraser CONTRIBUTING.md
+cat > /home/roddy/Documents/GW2_WvWbuilder/backend/CONTRIBUTING.md << 'EOL'
+# Guide de contribution – Backend GW2 Team Builder
+
+## Introduction
+Ce guide explique comment contribuer au backend. Utilise FastAPI avec SQLAlchemy 2.0 et Pydantic v2.
+
+## Prérequis
+- Python 3.13
+- Poetry
+- Accès au dépôt GitHub
+
+## Installation
+cd /home/roddy/Documents/GW2_WvWbuilder/backend
+poetry install
+
+## Tests et couverture
+poetry run pytest --cov=app --cov-report=term-missing
+Objectif : ≥90% de couverture
+
+## Gestion des avertissements
+- Gzip : PytestUnraisableExceptionWarning filtré globalement
+- Pydantic v2 : dépréciations des dépendances
+- SQLAlchemy : avertissements de teardown inoffensifs
+
+## Ajouter des tests
+- Placer les tests dans `backend/tests/`
+- Utiliser TestClient pour les tests d'API
+
+## Surcharge des dépendances
+```python
+from app.api import deps
+client.app.dependency_overrides[deps.get_db] = lambda: iter([test_db])
+client.app.dependency_overrides[deps.get_current_active_superuser] = lambda: test_superuser
+
+## 🔄 Développement local
+
+poetry run uvicorn app.main:app --reload
+
+## 🤝 Processus de contribution
+
+Créer une branche : git checkout -b feature/ma-fonctionnalite
+Commits atomiques
+PR vers develop ou main avec tests et documentation
+
+## 📊 CI & Couverture
+
+Workflow : .github/workflows/test-and-coverage.yml
+Badges : Build Status, Coverage
+
+❓ Questions
+
+Ouvrez une issue avec :
+- Étapes pour reproduire
+- Comportement attendu
+- Logs/captures si nécessaire
+
+EOL

@@ -8,6 +8,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 import logging
+import os
 from typing import List, Dict, Any
 
 from app.core.config import settings
@@ -52,8 +53,10 @@ def create_application() -> FastAPI:
     # Include API routes
     application.include_router(api_router, prefix=settings.API_V1_STR)
 
-    # Set up static files
-    application.mount("/static", StaticFiles(directory="static"), name="static")
+    # Set up static files if present (skip in test envs without static dir)
+    static_dir = os.path.join(os.path.dirname(__file__), "static")
+    if os.path.isdir(static_dir) or os.path.isdir("static"):
+        application.mount("/static", StaticFiles(directory="static"), name="static")
 
     # Set up logging
     setup_logging()

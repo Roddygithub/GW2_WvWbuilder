@@ -22,14 +22,19 @@ class Settings(BaseSettings):
     
     # Application Settings
     DEBUG: bool = True
+    TESTING: bool = False
+    LOG_TO_FILE: bool = False
+
+    # Optional override used by tests
+    DATABASE_URL: Optional[str] = None
     
     class Config:
         case_sensitive = True
         env_file = ".env"
         
     def get_database_url(self) -> str:
-        """Get the database URL from environment or use default SQLite."""
-        return self.SQLALCHEMY_DATABASE_URI
+        """Get the database URL, using test override if provided."""
+        return self.DATABASE_URL or self.SQLALCHEMY_DATABASE_URI
 
 # Create settings instance
 settings = Settings()
