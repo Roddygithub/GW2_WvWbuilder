@@ -1,6 +1,2 @@
-from sqlalchemy.ext.declarative import declarative_base
-
-# Create a base class for all models
-Base = declarative_base()
-
-# This allows us to use Base in other modules without circular imports
+# Re-export Base from the application's DB layer to ensure a single metadata
+from app.db.base import Base  # noqa: F401

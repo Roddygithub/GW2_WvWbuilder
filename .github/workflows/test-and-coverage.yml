@@ -1,0 +1,48 @@
+name: Backend Test & Coverage
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.13
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          poetry install
+
+      - name: Run tests with coverage
+        run: |
+          cd backend
+          poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing -q
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        with:
+          files: backend/coverage.xml
+          fail_ci_if_error: true
+
+      - name: Archive test logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: pytest-logs
+          path: backend/.pytest_cache

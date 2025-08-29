@@ -5,12 +5,13 @@ from typing import AsyncGenerator, Generator
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core.config import settings
 from app.db.base import Base
-from app.db.session import SessionLocal, engine, get_db
+from app.api.deps import get_db as deps_get_db
 from app.main import app
 
 # Configuration pour les tests
@@ -23,6 +24,9 @@ settings.DATABASE_URL = TEST_DATABASE_URL
 # Créer un moteur SQLite en mémoire pour les tests
 @pytest.fixture(scope="session")
 def test_engine():
+    # Import models so all tables are registered on Base.metadata
+    import app.models.models  # noqa: F401
+
     test_engine = create_engine(
         TEST_DATABASE_URL,
         connect_args={"check_same_thread": False},
@@ -42,12 +46,18 @@ def test_engine():
 def db_session(test_engine):
     connection = test_engine.connect()
     transaction = connection.begin()
-    session = SessionLocal(bind=connection)
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=connection)
+    session = TestingSessionLocal()
     
     yield session
     
     session.close()
-    transaction.rollback()
+    try:
+        if transaction.is_active:
+            transaction.rollback()
+    except Exception:
+        # Ignore teardown issues if transaction already deassociated
+        pass
     connection.close()
 
 # Client de test FastAPI
@@ -60,7 +70,7 @@ def client(db_session):
         finally:
             pass
     
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[deps_get_db] = override_get_db
     
     with TestClient(app) as test_client:
         yield test_client

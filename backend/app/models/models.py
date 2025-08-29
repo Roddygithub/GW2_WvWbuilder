@@ -18,6 +18,14 @@ composition_members = Table(
     Column('notes', Text, nullable=True)
 )
 
+# Table de jonction many-to-many entre User et Role (assignations directes)
+user_roles = Table(
+    'user_roles',
+    Base.metadata,
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('role_id', Integer, ForeignKey('roles.id'), primary_key=True),
+)
+
 class User(Base):
     __tablename__ = "users"
 
@@ -37,11 +45,11 @@ class User(Base):
         back_populates="members",
         overlaps="members"
     )
+    # Assignations directes de rôles
     roles = relationship(
-        "Role", 
-        secondary=composition_members, 
-        back_populates="members",
-        viewonly=True
+        "Role",
+        secondary=user_roles,
+        back_populates="users",
     )
 
     def __repr__(self):
@@ -56,11 +64,11 @@ class Role(Base):
     icon_url = Column(String, nullable=True)
     
     # Relations
-    members = relationship(
-        "User", 
-        secondary=composition_members, 
+    # Vue via composition_members non nécessaire ici; relation directe ci-dessous
+    users = relationship(
+        "User",
+        secondary=user_roles,
         back_populates="roles",
-        viewonly=True
     )
 
     def __repr__(self):
