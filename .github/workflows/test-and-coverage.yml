@@ -53,7 +53,8 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          poetry install --no-interaction --no-ansi
+          poetry lock --no-update
+          poetry install --no-interaction --no-ansi --with dev,test
 
       - name: Cache Poetry virtualenv
         id: cache-venv
