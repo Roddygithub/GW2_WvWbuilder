@@ -75,6 +75,7 @@ def get_current_user(
 ) -> models.User:
     """
     Get the current authenticated user from the JWT token.
+    The token subject can be either the user's email or ID.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -85,16 +86,22 @@ def get_current_user(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        username: str = payload.get("sub")
-        if username is None:
+        subject: str = payload.get("sub")
+        if subject is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
     except JWTError:
         raise credentials_exception
     
-    user = crud.user.get_by_email(db, email=token_data.username)
+    # First try to find user by email
+    user = crud.user.get_by_email(db, email=subject)
+    
+    # If not found by email, try by ID
+    if user is None and subject.isdigit():
+        user = db.query(models.User).filter(models.User.id == int(subject)).first()
+    
     if user is None:
         raise credentials_exception
+        
     return user
 
 def get_current_active_user(

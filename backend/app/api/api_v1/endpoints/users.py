@@ -52,14 +52,8 @@ def update_user_me(
     """
     Update own user.
     """
-    # Update the user
-    user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
-    
-    # Commit the changes to the database
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    
+    # Update the user and commit the transaction
+    user = crud.user.update(db, db_obj=current_user, obj_in=user_in, commit=True)
     return user
 
 @router.get("/me", response_model=schemas.User)

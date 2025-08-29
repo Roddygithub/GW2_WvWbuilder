@@ -122,71 +122,104 @@ class TestUsers:
         assert "hashed_password" not in data
     
     def test_update_user(self, client: TestClient, db: Session):
-        # Créer un utilisateur de test
-        user = UserFactory()
+        # Create a test user with a password
+        user = UserFactory(hashed_password="testpassword123")
         db.add(user)
         db.commit()
-        db.refresh(user)  # S'assurer que l'utilisateur a un ID
+        db.refresh(user)
         
-        # Obtenir les en-têtes d'authentification pour l'utilisateur
-        headers = client.auth_header(user=user)
+        # Get authentication headers for the user
+        token = create_access_token(subject=user.id)
+        headers = {"Authorization": f"Bearer {token}"}
         
-        # Mettre à jour le profil
-        update_data = {"username": "updated_username"}
+        # Update the profile with a new username
+        new_username = f"updated_{user.username}"
+        update_data = {"username": new_username}
+        
+        # Make the update request
         response = client.put(
             "/api/v1/users/me",
             json=update_data,
             headers=headers
         )
         
+        # Verify the response
         assert response.status_code == status.HTTP_200_OK, f"Expected status code 200, got {response.status_code}. Response: {response.text}"
         data = response.json()
-        assert data["username"] == update_data["username"], f"Expected username to be updated to {update_data['username']}, got {data['username']}"
+        assert data["username"] == new_username, f"Expected username to be updated to {new_username}, got {data['username']}"
         
-        # Vérifier la mise à jour en base
-        db.refresh(user)
-        assert user.username == update_data["username"]
+        # Verify the update in the database by making a new request to get the user
+        response = client.get("/api/v1/users/me", headers=headers)
+        assert response.status_code == status.HTTP_200_OK
+        user_data = response.json()
+        assert user_data["username"] == new_username, f"User's username was not updated to {new_username}, got {user_data['username']}"
 
 # Tests pour les rôles utilisateur
 class TestUserRoles:
     def test_add_role_to_user(self, client: TestClient, db: Session):
-        # Créer un utilisateur et un rôle
+        # Create an admin user who has permission to add roles
+        admin = UserFactory(is_superuser=True)
         user = UserFactory()
         role = RoleFactory()
-        db.add_all([user, role])
+        db.add_all([admin, user, role])
         db.commit()
         
-        token = create_access_token(subject=user.id)
+        # Use admin's token for authorization
+        admin_headers = client.auth_header(user=admin)
         
-        # Ajouter le rôle à l'utilisateur
+        # Add role to user
         response = client.post(
             f"/api/v1/users/{user.id}/roles/{role.id}",
-            headers={"Authorization": f"Bearer {token}"}
+            headers=admin_headers
         )
         
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_200_OK, f"Expected status code 200, got {response.status_code}. Response: {response.text}"
         
-        # Vérifier l'ajout du rôle
-        db.refresh(user)
-        assert role in user.roles
+        # Verify role was added by making a GET request to get the user's roles
+        response = client.get(
+            f"/api/v1/users/{user.id}",
+            headers=admin_headers
+        )
+        assert response.status_code == status.HTTP_200_OK
+        user_data = response.json()
+        assert any(r["id"] == role.id for r in user_data["roles"]), \
+            f"Role {role.id} was not added to user {user.id}"
     
     def test_remove_role_from_user(self, client: TestClient, db: Session):
-        # Créer un utilisateur avec un rôle
+        # Create an admin user who has permission to remove roles
+        admin = UserFactory(is_superuser=True)
         role = RoleFactory()
         user = UserFactory(roles=[role])
-        db.add_all([user, role])
+        db.add_all([admin, user, role])
         db.commit()
         
-        token = create_access_token(subject=user.email)
+        # Use admin's token for authorization
+        admin_headers = client.auth_header(user=admin)
         
-        # Retirer le rôle de l'utilisateur
+        # First verify the role is assigned
+        response = client.get(
+            f"/api/v1/users/{user.id}",
+            headers=admin_headers
+        )
+        assert response.status_code == status.HTTP_200_OK
+        user_data = response.json()
+        assert any(r["id"] == role.id for r in user_data["roles"]), \
+            f"Role {role.id} was not initially assigned to user {user.id}"
+        
+        # Remove role from user
         response = client.delete(
             f"/api/v1/users/{user.id}/roles/{role.id}",
-            headers={"Authorization": f"Bearer {token}"}
+            headers=admin_headers
         )
         
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_200_OK, f"Expected status code 200, got {response.status_code}. Response: {response.text}"
         
-        # Vérifier la suppression du rôle
-        db.refresh(user)
-        assert role not in user.roles
+        # Verify role was removed by making a GET request to get the user's roles
+        response = client.get(
+            f"/api/v1/users/{user.id}",
+            headers=admin_headers
+        )
+        assert response.status_code == status.HTTP_200_OK
+        user_data = response.json()
+        assert not any(r["id"] == role.id for r in user_data["roles"]), \
+            f"Role {role.id} was not removed from user {user.id}"

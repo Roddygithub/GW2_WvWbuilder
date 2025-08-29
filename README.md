@@ -10,68 +10,81 @@
 
 ## 🌟 Fonctionnalités
 
-- 🎯 Création et gestion de compositions d'équipe
-- 🔍 Optimisation des rôles et des compétences
-- 👥 Gestion des utilisateurs et des rôles
-- 🔄 Synchronisation avec l'API officielle de Guild Wars 2
-- 📊 Tableaux de bord et statistiques
+- **🎯 Générateur de compositions** : Créez des équipes équilibrées pour 2 à 20 joueurs
+- **📊 Bibliothèque de builds** : Accédez à des builds optimisés pour chaque profession
+- **🔍 Analyse de synergie** : Visualisez les interactions entre les membres de l'équipe
+- **👥 Gestion des utilisateurs** : Système d'authentification et de rôles
+- **🔄 Synchronisation GW2** : Intégration avec l'API officielle de Guild Wars 2
+- **📱 Interface moderne** : Conçue pour les joueurs de tous niveaux
+
+## 🏗️ Stack technique
+
+### Backend
+- **Framework** : FastAPI (Python 3.13+)
+- **Base de données** : PostgreSQL avec SQLAlchemy ORM
+- **Authentification** : JWT
+- **API** : RESTful avec documentation OpenAPI (Swagger/ReDoc)
+- **Tests** : pytest avec couverture de code (90%+)
+
+### Frontend
+- **Framework** : React 18 avec TypeScript
+- **Styling** : TailwindCSS
+- **Gestion d'état** : React Query
+- **Formulaires** : React Hook Form
+
+### DevOps
+- **CI/CD** : GitHub Actions
+- **Conteneurisation** : Docker
+- **Monitoring** : Sentry, Prometheus
 
 ## 🚀 Démarrage rapide
 
 ### Prérequis
-
 - Python 3.13+
+- Node.js 18+
 - PostgreSQL 14+
-- Node.js 18+ (pour le frontend)
-- Compte GW2 avec les autorisations API nécessaires
+- Poetry (gestion des dépendances Python)
+- Yarn (gestion des dépendances JavaScript)
 
-### Installation du backend
+### Installation
 
-1. Cloner le dépôt :
+1. **Cloner le dépôt**
    ```bash
    git clone https://github.com/Roddygithub/GW2_WvWbuilder.git
-   cd GW2_WvWbuilder/backend
+   cd GW2_WvWbuilder
    ```
 
-2. Créer un environnement virtuel :
+2. **Configurer l'environnement**
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # Sur Windows: .\venv\Scripts\activate
-   ```
-
-3. Installer les dépendances :
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. Configurer les variables d'environnement :
-   ```bash
+   # Backend
+   cd backend
    cp .env.example .env
    # Éditer le fichier .env avec vos paramètres
-   ```
-
-5. Appliquer les migrations :
-   ```bash
+   
+   # Créer et activer l'environnement virtuel
+   python -m venv venv
+   source venv/bin/activate  # Sur Windows: .\venv\Scripts\activate
+   
+   # Installer les dépendances
+   pip install -r requirements.txt
+   
+   # Appliquer les migrations
    alembic upgrade head
-   ```
-
-6. Lancer le serveur de développement :
-   ```bash
+   
+   # Lancer le serveur de développement
    uvicorn app.main:app --reload
    ```
 
-### Installation du frontend (optionnel)
-
-```bash
-cd ../frontend
-npm install
-npm run dev
-```
+3. **Frontend (optionnel)**
+   ```bash
+   cd ../frontend
+   yarn install
+   yarn dev
+   ```
 
 ## 🧪 Exécution des tests
 
 ### Backend
-
 ```bash
 # Tous les tests
 pytest
@@ -84,10 +97,9 @@ pytest tests/integration/api/test_users.py -v
 ```
 
 ### Frontend
-
 ```bash
 cd frontend
-npm test
+yarn test
 ```
 
 ## 📚 Documentation API
@@ -122,7 +134,7 @@ Distribué sous la licence MIT. Voir `LICENSE` pour plus d'informations.
 
 ## 📧 Contact
 
-Votre nom - [@votretwitter](https://twitter.com/votretwitter) - email@exemple.com
+Pour toute question ou suggestion, veuillez ouvrir une issue sur GitHub.
 
 Lien du projet : [https://github.com/Roddygithub/GW2_WvWbuilder](https://github.com/Roddygithub/GW2_WvWbuilder)
 
@@ -130,73 +142,6 @@ Lien du projet : [https://github.com/Roddygithub/GW2_WvWbuilder](https://github.
 
 - [ArenaNet](https://www.arena.net/) pour Guild Wars 2
 - Tous les contributeurs qui ont participé à ce projet
-
-## 📋 Table des matières
-
-- [🎯 Objectifs](#-objectifs)
-- [✨ Fonctionnalités](#-fonctionnalités)
-- [🏗️ Stack technique](#%EF%B8%8F-stack-technique)
-- [🚀 Installation rapide](#-installation-rapide)
-- [⚙️ Configuration](#%EF%B8%8F-configuration)
-- [🧪 Exécution des tests](#-exécution-des-tests)
-- [📊 Couverture de code](#-couverture-de-code)
-- [🌐 Développement local](#-développement-local)
-- [🤝 Contribution](#-contribution)
-- [📜 Licence](#-licence)
-
-## 🎯 Objectifs
-
-GW2 WvW Builder est une application web conçue pour aider les joueurs de Guild Wars 2 à optimiser leurs compositions d'équipe pour le mode WvW. Notre objectif est de fournir des outils puissants pour :
-
-- Générer des compositions d'équipe optimisées pour 2 à 20 joueurs
-- Proposer des builds en synergie basés sur les métas actuels
-- Analyser les forces et faiblesses des compositions
-- Faciliter le partage des builds entre joueurs
-
-## ✨ Fonctionnalités
-
-- **Générateur de compositions** : Créez des équipes équilibrées pour le WvW
-- **Bibliothèque de builds** : Accédez à des builds optimisés pour chaque profession
-- **Analyse de synergie** : Visualisez les interactions entre les membres de l'équipe
-- **Export/Import** : Partagez facilement vos compositions
-- **Interface intuitive** : Conçue pour les joueurs de tous niveaux
-
-## 🏗️ Stack technique
-
-### Backend
-- **Framework** : FastAPI (Python 3.13+)
-- **Base de données** : PostgreSQL avec SQLAlchemy ORM
-- **Authentification** : JWT
-- **API** : RESTful avec documentation OpenAPI (Swagger/ReDoc)
-
-### Frontend
-- **Framework** : React 18 avec TypeScript
-- **Styling** : TailwindCSS
-- **Gestion d'état** : React Query
-- **Formulaires** : React Hook Form
-
-### DevOps
-- **CI/CD** : GitHub Actions
-- **Tests** : pytest avec couverture de code (90%+)
-- **Conteneurisation** : Docker
-- **Monitoring** : Sentry, Prometheus
-
-## 🚀 Installation rapide
-
-### Prérequis
-- Python 3.13+
-- Node.js 18+
-- PostgreSQL 14+
-- Poetry (gestion des dépendances Python)
-- Yarn (gestion des dépendances JavaScript)
-
-### Installation
-
-1. **Cloner le dépôt**
-   ```bash
-   git clone https://github.com/Roddygithub/GW2_WvWbuilder.git
-   cd GW2_WvWbuilder
-   ```
 
 2. **Configurer l'environnement backend**
    ```bash

@@ -39,6 +39,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         *,
         db_obj: ModelType,
         obj_in: UpdateSchemaType | Dict[str, Any],
+        commit: bool = False
     ) -> ModelType:
         if isinstance(obj_in, BaseModel):
             update_data = obj_in.model_dump(exclude_unset=True)
@@ -48,8 +49,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             if hasattr(db_obj, field):
                 setattr(db_obj, field, value)
         db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
+        if commit:
+            db.commit()
+            db.refresh(db_obj)
         return db_obj
 
     def remove(self, db: Session, *, id: Any) -> Optional[ModelType]:
