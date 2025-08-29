@@ -53,6 +53,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
+          poetry lock --no-update
           poetry install --no-interaction --no-ansi --with dev --extras test
           poetry run pip install pytest-cov codecov
 
