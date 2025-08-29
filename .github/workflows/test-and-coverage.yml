@@ -1,48 +1,54 @@
-name: Backend Test & Coverage
+name: Tests et couverture
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
   pull_request:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.13]
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python 3.13
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: 3.13
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Cache Poetry packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pypoetry
+            ~/.cache/pip
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
 
       - name: Install dependencies
         run: |
-          cd backend
+          python -m pip install --upgrade pip
+          pip install poetry
           poetry install
 
       - name: Run tests with coverage
         run: |
-          cd backend
-          poetry run pytest --cov=app --cov-report=xml --cov-report=term-missing -q
+          poetry run pytest -v --cov=app --cov-report=xml --cov-report=term-missing
 
-      - name: Upload coverage report
-        uses: codecov/codecov-action@v4
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
         with:
-          files: backend/coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
           fail_ci_if_error: true
-
-      - name: Archive test logs
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: pytest-logs
-          path: backend/.pytest_cache
