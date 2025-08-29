@@ -53,10 +53,12 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          # Install all dependencies
-          poetry install --no-interaction --no-ansi
-          # Install test dependencies
-          poetry add --dev pytest pytest-cov codecov --no-interaction
+          # Regenerate lock file
+          poetry lock --no-update
+          # Install all dependencies including dev
+          poetry install --no-interaction --no-ansi --with dev
+          # Install test dependencies using pip
+          poetry run pip install pytest-cov codecov
 
       - name: Cache Poetry virtualenv
         id: cache-venv
