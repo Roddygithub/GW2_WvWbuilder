@@ -80,17 +80,24 @@ jobs:
           poetry install --no-interaction --no-root
           poetry install --no-interaction
 
+      - name: Set up test database
+        run: |
+          cd backend
+          # Create test database and run migrations
+          export DATABASE_URL=sqlite:///./test.db
+          poetry run alembic upgrade head
+
       - name: Run tests with coverage
         working-directory: ./backend
         env:
+          DATABASE_URL: sqlite:///./test.db
           PYTHONPATH: ${{ github.workspace }}/backend
-          DATABASE_URL: "sqlite:///:memory:"
-          PYTHONUNBUFFERED: 1
         run: |
           mkdir -p test-results
           set -o pipefail
           poetry run pytest tests/ \
             -v \
+            --asyncio-mode=auto \
             --cov=app \
             --cov-report=xml:coverage.xml \
             --cov-report=html:htmlcov \
