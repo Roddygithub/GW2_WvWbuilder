@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     # Security
     SECRET_KEY: str = "your-secret-key-here"  # Change in production
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8  # 8 days
+    ALGORITHM: str = "HS256"  # Algorithm for JWT
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["*"]

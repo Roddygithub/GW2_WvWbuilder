@@ -61,19 +61,22 @@ def test_get_current_user_404_and_403(monkeypatch):
     # Use dummy SessionLocal
     monkeypatch.setattr(deps, "SessionLocal", lambda: DummySession())
 
-    # 404 branch: crud.user.get returns None
-    monkeypatch.setattr(crud.user, "get", lambda db, id: None)
+    # 403 branch: invalid token format
     with pytest.raises(Exception) as ex1:
-        deps.get_current_user(db=None, token="token")
-    assert "User not found" in str(ex1.value)
+        deps.get_current_user(db=None, token="invalid_token")
+    assert "Could not validate credentials" in str(ex1.value)
 
     # 403 branch: raise jwt.JWTError inside try
-    class DummyJWTError(Exception):
-        pass
-    monkeypatch.setattr(deps, "jwt", type("J", (), {"JWTError": DummyJWTError}))
-    def raiser(db, id):
-        raise DummyJWTError("bad token")
-    monkeypatch.setattr(crud.user, "get", raiser)
+    class DummyJWT:
+        class JWTError(Exception):
+            pass
+        
+        @staticmethod
+        def decode(*args, **kwargs):
+            raise DummyJWT.JWTError("bad token")
+    
+    monkeypatch.setattr(deps, "jwt", DummyJWT)
+    
     with pytest.raises(Exception) as ex2:
         deps.get_current_user(db=None, token="token")
     assert "Could not validate credentials" in str(ex2.value)

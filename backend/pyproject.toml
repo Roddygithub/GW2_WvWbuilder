@@ -24,10 +24,13 @@ httpx = "^0.27.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
 pytest-cov = "^4.1.0"
+pytest-xdist = "^3.5.0"  # Pour exécuter les tests en parallèle
 black = "^24.1.0"
 isort = "^5.13.2"
 mypy = "^1.7.1"
 flake8 = "^7.0.0"
+Faker = "^22.0.0"  # Pour les données de test
+factory-boy = "^3.3.0"  # Pour les factories de test
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -41,6 +44,32 @@ include = '\.pyi?$'
 [tool.isort]
 profile = "black"
 line_length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --cov=app --cov-report=term-missing --cov-fail-under=90"
+filterwarnings = [
+    "ignore::sqlalchemy.exc.SAWarning",
+    "ignore::pytest.PytestUnraisableExceptionWarning"
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "**/__init__.py",
+    "**/migrations/*",
+    "**/tests/*",
+    "**/conftest.py"
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 90
+
+[tool.coverage.html]
+directory = "coverage_html"
 
 [tool.mypy]
 python_version = "3.11"

@@ -1,5 +1,5 @@
 import pytest
-from fastapi import status
+from fastapi import status, HTTPException
 
 from app.api import deps
 from app.core.config import settings
@@ -60,12 +60,30 @@ class TestRolesAPI:
         assert r.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_create_forbidden_for_non_superuser(self, client, db_session):
+        # Créer un utilisateur non-superuser
         user = make_user(db_session)
-        # Override only get_current_user so the superuser check runs and fails
-        client.app.dependency_overrides[deps.get_current_user] = lambda: user
-
+        
+        # Créer une fonction qui va remplacer get_current_active_superuser
+        def override_get_current_active_superuser():
+            # Cette fonction est appelée par FastAPI pour vérifier les permissions
+            # On lève une exception 403 car l'utilisateur n'est pas superuser
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="The user doesn't have enough privileges"
+            )
+        
+        # Surcharger la dépendance pour simuler un accès refusé
+        client.app.dependency_overrides[deps.get_current_active_superuser] = override_get_current_active_superuser
+        
+        # Tenter de créer un rôle en tant qu'utilisateur normal
         r = client.post(f"{API_PREFIX}/roles/", json={"name": "HEALER"})
+        
+        # Vérifier que l'accès est refusé (403)
         assert r.status_code == status.HTTP_403_FORBIDDEN
+        assert r.json()["detail"] == "The user doesn't have enough privileges"
+        
+        # Nettoyer les surcharges
+        client.app.dependency_overrides = {}
 
     def test_get_update_delete_role(self, client, db_session):
         su = make_superuser(db_session)

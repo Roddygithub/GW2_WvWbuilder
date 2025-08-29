@@ -4,6 +4,8 @@ import tempfile
 from typing import AsyncGenerator, Generator
 
 import pytest
+from fastapi import Depends, HTTPException, status
+from app.core.security import create_access_token
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -11,8 +13,15 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.config import settings
 from app.db.base import Base
-from app.api.deps import get_db as deps_get_db
+from app.api.deps import get_db as deps_get_db, get_current_user, get_current_active_user, get_current_active_superuser
 from app.main import app
+from tests.integration.fixtures.factories import (
+    UserFactory,
+    RoleFactory,
+    ProfessionFactory,
+    EliteSpecializationFactory,
+    CompositionFactory
+)
 
 # Configuration pour les tests
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -60,6 +69,25 @@ def db_session(test_engine):
         pass
     connection.close()
 
+# Alias pour la compatibilité avec les tests existants
+@pytest.fixture
+def db(db_session):
+    return db_session
+
+# Configurer les factories pour utiliser la session de test
+@pytest.fixture(autouse=True)
+def setup_factories(db_session):
+    """Configure les factories pour utiliser la session de test."""
+    UserFactory._meta.sqlalchemy_session = db_session
+    RoleFactory._meta.sqlalchemy_session = db_session
+    ProfessionFactory._meta.sqlalchemy_session = db_session
+    EliteSpecializationFactory._meta.sqlalchemy_session = db_session
+    CompositionFactory._meta.sqlalchemy_session = db_session
+    yield
+    # Nettoyage après les tests
+    for factory in [UserFactory, RoleFactory, ProfessionFactory, EliteSpecializationFactory, CompositionFactory]:
+        factory._meta.sqlalchemy_session = None
+
 # Client de test FastAPI
 @pytest.fixture
 def client(db_session):
@@ -70,12 +98,49 @@ def client(db_session):
         finally:
             pass
     
-    app.dependency_overrides[deps_get_db] = override_get_db
+    # Créer un utilisateur de test par défaut
+    test_user = UserFactory()
+    db_session.add(test_user)
+    db_session.commit()
     
+    # Surcharger les dépendances d'authentification pour les tests
+    def override_get_current_user():
+        # Retourne l'utilisateur de test par défaut
+        return test_user
+        
+    def override_get_current_active_user(current_user = Depends(override_get_current_user)):
+        return current_user
+        
+    def override_get_current_active_superuser():
+        # Créer un superutilisateur pour les tests
+        superuser = UserFactory(is_superuser=True)
+        db_session.add(superuser)
+        db_session.commit()
+        return superuser
+    
+    # Surcharger les dépendances
+    app.dependency_overrides[deps_get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_current_active_user] = override_get_current_active_user
+    app.dependency_overrides[get_current_active_superuser] = override_get_current_active_superuser
+    
+    # Créer le client de test
     with TestClient(app) as test_client:
+        # Ajouter un helper pour l'authentification
+        def auth_header(user=None):
+            if user is None:
+                user = test_user
+                db_session.add(user)
+                db_session.commit()
+            token = create_access_token(subject=user.id)
+            return {"Authorization": f"Bearer {token}"}
+            
+        # Ajouter la méthode auth_header au client
+        test_client.auth_header = auth_header
+        
         yield test_client
     
-    # Réinitialiser les surcharges
+    # Nettoyage après les tests
     app.dependency_overrides.clear()
 
 # Fixture pour les données de test
