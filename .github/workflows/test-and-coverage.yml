@@ -27,23 +27,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python 3.13
+      - name: Set up Python 3.10
         uses: actions/setup-python@v4
         with:
-          python-version: '3.13'
-
+          python-version: '3.10'
+          
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libpq-dev python3-dev
-
+          sudo apt-get install -y libpq-dev python3-dev python3-pip
+          
       - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: '1.8.0'
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 - --version 1.5.1
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
           
       - name: Configure Poetry
         run: |
@@ -53,14 +50,10 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          # Install required dependencies
-          poetry add email-validator itsdangerous python-json-logger pytest-asyncio pytest-trio pytest-mock --no-interaction
-          # Regenerate lock file
-          poetry lock --no-update
-          # Install all dependencies including dev
+          # Install dependencies in one go to avoid timeouts
+          poetry add email-validator itsdangerous python-json-logger pytest-asyncio pytest-trio pytest-mock pytest-cov codecov pytest-factoryboy --group dev --no-interaction
+          # Install the project in development mode with all extras
           poetry install --no-interaction --no-ansi --with dev
-          # Install test dependencies
-          poetry run pip install pytest-cov codecov pytest-factoryboy
           # Initialize test database
           poetry run alembic upgrade head
 
@@ -73,16 +66,10 @@ jobs:
           restore-keys: |
             venv-${{ runner.os }}-
 
-      - name: Install dependencies
-        working-directory: ./backend
-        run: |
-          poetry config virtualenvs.in-project true
-          poetry install --no-interaction --no-root
-          poetry install --no-interaction
 
       - name: Set up test database
+        working-directory: ./backend
         run: |
-          cd backend
           # Create test database and run migrations
           export DATABASE_URL=sqlite:///./test.db
           poetry run alembic upgrade head
@@ -92,6 +79,7 @@ jobs:
         env:
           DATABASE_URL: sqlite:///./test.db
           PYTHONPATH: ${{ github.workspace }}/backend
+          COVERAGE_FILE: ${{ github.workspace }}/backend/.coverage
         run: |
           mkdir -p test-results
           set -o pipefail
@@ -108,18 +96,16 @@ jobs:
             2>&1 | tee test-results/pytest.log
 
       - name: Upload coverage to Codecov
-        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+        if: success() && github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./backend/coverage.xml
-          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN || '' }}
+          file: ./coverage.xml
+          fail_ci_if_error: false
           verbose: true
           name: codecov-umbrella
           flags: unittests
           env_vars: OS,PYTHON
-          path_to_write_report: ./coverage_report.txt
-          working-directory: ./backend
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
