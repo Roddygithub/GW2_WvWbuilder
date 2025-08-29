@@ -54,7 +54,7 @@ jobs:
         run: |
           cd backend
           # Install required dependencies
-          poetry add email-validator itsdangerous --no-interaction
+          poetry add email-validator itsdangerous python-json-logger --no-interaction
           # Regenerate lock file
           poetry lock --no-update
           # Install all dependencies including dev
