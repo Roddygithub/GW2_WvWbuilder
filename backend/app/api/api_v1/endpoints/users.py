@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app.core.config import settings
+from app.core.security import get_current_active_user
 
 router = APIRouter()
 
@@ -22,7 +23,7 @@ def read_users(
     users = crud.user.get_multi(db, skip=skip, limit=limit)
     return users
 
-@router.post("/", response_model=schemas.User)
+@router.post("/", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 def create_user(
     *,
     db: Session = Depends(deps.get_db),
@@ -51,7 +52,8 @@ def update_user_me(
     """
     Update own user.
     """
-    user = crud.user.update(db, db_obj=current_user, obj_in=user_in)
+    # Update the user and commit the transaction
+    user = crud.user.update(db, db_obj=current_user, obj_in=user_in, commit=True)
     return user
 
 @router.get("/me", response_model=schemas.User)
@@ -74,13 +76,17 @@ def read_user_by_id(
     Get a specific user by id.
     """
     user = crud.user.get(db, id=user_id)
-    if user == current_user:
-        return user
-    if not crud.user.is_superuser(current_user):
+    if not user:
         raise HTTPException(
-            status_code=400, detail="The user doesn't have enough privileges"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
         )
-    return user
+    if user == current_user or crud.user.is_superuser(current_user):
+        return user
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN, 
+        detail="The user doesn't have enough privileges"
+    )
 
 @router.put("/{user_id}", response_model=schemas.User)
 def update_user(
@@ -100,4 +106,70 @@ def update_user(
             detail="The user with this username does not exist in the system",
         )
     user = crud.user.update(db, db_obj=user, obj_in=user_in)
+    return user
+
+@router.post("/{user_id}/roles/{role_id}", response_model=schemas.User)
+def add_role_to_user(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_id: int,
+    role_id: int,
+    current_user: models.User = Depends(get_current_active_user),
+) -> Any:
+    """
+    Add a role to a user.
+    """
+    # Vérifier si l'utilisateur existe
+    user = crud.user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Vérifier si le rôle existe
+    role = crud.role.get(db, id=role_id)
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    # Vérifier si l'utilisateur a déjà ce rôle
+    if role in user.roles:
+        return user
+    
+    # Ajouter le rôle à l'utilisateur
+    user.roles.append(role)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    
+    return user
+
+@router.delete("/{user_id}/roles/{role_id}", response_model=schemas.User)
+def remove_role_from_user(
+    *,
+    db: Session = Depends(deps.get_db),
+    user_id: int,
+    role_id: int,
+    current_user: models.User = Depends(get_current_active_user),
+) -> Any:
+    """
+    Remove a role from a user.
+    """
+    # Vérifier si l'utilisateur existe
+    user = crud.user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Vérifier si le rôle existe
+    role = crud.role.get(db, id=role_id)
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    # Vérifier si l'utilisateur a ce rôle
+    if role not in user.roles:
+        return user
+    
+    # Retirer le rôle de l'utilisateur
+    user.roles.remove(role)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    
     return user

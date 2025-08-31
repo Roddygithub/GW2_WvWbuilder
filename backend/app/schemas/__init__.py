@@ -17,6 +17,11 @@ from .composition import (
     CompositionEvaluation
 )
 
+from .build import (
+    BuildBase, BuildCreate, BuildUpdate, BuildInDB, Build, BuildInDBBase,
+    BuildGenerationRequest, BuildGenerationResponse
+)
+
 # Re-export all schemas
 __all__ = [
     # User schemas
@@ -35,5 +40,9 @@ __all__ = [
     'CompositionUpdate', 'CompositionInDB', 'Composition', 'CompositionTagBase',
     'CompositionTagCreate', 'CompositionTagUpdate', 'CompositionTagInDB', 'CompositionTag',
     'CompositionSearch', 'CompositionOptimizationRequest', 'CompositionOptimizationResult',
-    'CompositionEvaluation'
+    'CompositionEvaluation',
+    
+    # Build schemas
+    'BuildBase', 'BuildCreate', 'BuildUpdate', 'BuildInDB', 'Build', 'BuildInDBBase',
+    'BuildGenerationRequest', 'BuildGenerationResponse'
 ]

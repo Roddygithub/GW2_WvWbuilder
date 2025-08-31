@@ -1,53 +1,339 @@
-# GW2 Team Builder – Backend (FastAPI)
+<div align="center">
+  <h1>GW2 WvW Team Builder – Backend</h1>
+  
+  [![Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml/badge.svg?branch=develop)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml)
+  [![Coverage](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/develop/graph/badge.svg?token=YOUR-TOKEN-HERE)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
+  [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
+  [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+  [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+</div>
 
-[![Backend Test & Coverage](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml/badge.svg?branch=main)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml)
-[![codecov](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/main/graph/badge.svg)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
+High-performance backend for Guild Wars 2 WvW Team Builder, built with FastAPI, SQLAlchemy 2.0, and Pydantic v2. Includes a comprehensive test suite with >90% code coverage.
 
-Backend FastAPI pour Guild Wars 2 Team Builder. Utilise SQLAlchemy 2.0, Pydantic v2, et inclut une suite de tests complète avec couverture de code.
+## 📋 Table of Contents
+- [Features](#-features)
+- [Prerequisites](#-prerequisites)
+- [Getting Started](#-getting-started)
+- [Development](#-development)
+- [Testing](#-testing)
+- [API Documentation](#-api-documentation)
+- [Deployment](#-deployment)
+- [Project Structure](#-project-structure)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-## 🚀 Stack technique
-- **Framework** : FastAPI
-- **Base de données** : SQLAlchemy 2.0
-- **Validation** : Pydantic v2
-- **Tests** : pytest avec couverture ≥90%
-- **Gestion des dépendances** : Poetry
+## 🚀 Features
 
-## 📋 Prérequis
+- **RESTful API** with interactive documentation (Swagger/ReDoc)
+- **Relational Database** with SQLAlchemy 2.0
+- **Data Validation** with Pydantic v2
+- **Secure JWT Authentication**
+- **Automated Testing** with code coverage
+- **CI/CD Pipeline** with GitHub Actions and Codecov
+- **Docker** ready for deployment
+- **Asynchronous** for high performance
+- **Type Annotations** throughout the codebase
+- **Modular Architecture** for easy maintenance
+
+## 🛠 Prerequisites
+
 - Python 3.13
-- [Poetry](https://python-poetry.org/)
+- [Poetry](https://python-poetry.org/) for dependency management
+- PostgreSQL (recommended for production, SQLite for development)
+- Docker (optional, for containerized deployment)
+- Git (for version control)
 
-## 🛠 Installation
+## ⚙️ Getting Started
+
+### Clone the Repository
+
 ```bash
-# Cloner le dépôt
-git clone [https://github.com/Roddygithub/GW2_WvWbuilder.git](https://github.com/Roddygithub/GW2_WvWbuilder.git)
+git clone https://github.com/Roddygithub/GW2_WvWbuilder.git
 cd GW2_WvWbuilder/backend
+```
 
-# Installer les dépendances
+### Install Dependencies
+
+```bash
+# Install Python dependencies
 poetry install
-undefined
-🧪 Exécution des tests
-bash
-# Lancer les tests avec couverture
+
+# Install pre-commit hooks
+poetry run pre-commit install
+```
+
+### Configure Environment
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` with your configuration:
+   ```env
+   # Database
+   DATABASE_URL=sqlite:///./gw2_wvwbuilder.db
+   # or for PostgreSQL:
+   # DATABASE_URL=postgresql://user:password@localhost:5432/gw2_wvwbuilder
+
+   # JWT
+   SECRET_KEY=your-secret-key-here
+   ACCESS_TOKEN_EXPIRE_MINUTES=1440  # 24 hours
+
+   # App
+   ENVIRONMENT=development
+   DEBUG=true
+   ```
+
+### Initialize the Database
+
+```bash
+# Run migrations
+alembic upgrade head
+
+# Create initial data (optional)
+python -m app.initial_data
+```
+
+### Run the Development Server
+
+```bash
+# Start the development server with auto-reload
+uvicorn app.main:app --reload
+```
+
+Once running, you can access:
+- **Interactive API Docs**: http://127.0.0.1:8000/docs
+- **Alternative Docs**: http://127.0.0.1:8000/redoc
+- **API Base URL**: http://127.0.0.1:8000/api/v1
+
+## 🧪 Testing
+
+### Running Tests
+
+```bash
+# Run all tests with coverage
 poetry run pytest --cov=app --cov-report=term-missing
-Couverture cible : ≥90%
-Les numéros de ligne non couverts sont affichés dans la colonne "Missing"
-🚀 Développement local
-bash
-# Démarrer le serveur de développement
-poetry run uvicorn app.main:app --reload
-Documentation interactive : http://127.0.0.1:8000/docs
-Documentation alternative : http://127.0.0.1:8000/redoc
-🤝 Contribuer
-Consultez notre guide de contribution pour :
 
-Les conventions de code
-La structure des tests
-Le processus de PR
-Les PR doivent :
+# Run only unit tests
+poetry run pytest tests/unit
 
-Cibler les branches main ou develop
-Inclure des tests pour les nouvelles fonctionnalités
-Maintenir une couverture de code ≥90%
+# Run only integration tests
+poetry run pytest tests/integration
+
+# Run a specific test file
+poetry run pytest tests/integration/api/test_builds.py -v
+
+# Run tests with detailed logging
+poetry run pytest -v --log-cli-level=INFO
+
+# Generate HTML coverage report
+poetry run pytest --cov=app --cov-report=html
+# Open the report in your browser
+python -m http.server --directory=htmlcov
+```
+
+### Code Quality
+
+```bash
+# Format code with Black
+poetry run black .
+
+# Sort imports with isort
+poetry run isort .
+
+# Check types with mypy
+poetry run mypy .
+
+# Check style with flake8
+poetry run flake8
+
+# Run all checks (configured in pre-commit)
+poetry run pre-commit run --all-files
+```
+
+## 📚 API Documentation
+
+### Authentication
+
+The API uses JWT for authentication. Include the token in the `Authorization` header:
+
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+### Available Endpoints
+
+- `GET /api/v1/builds/` - List all builds
+- `POST /api/v1/builds/` - Create a new build
+- `GET /api/v1/builds/{build_id}` - Get build details
+- `PUT /api/v1/builds/{build_id}` - Update a build
+- `DELETE /api/v1/builds/{build_id}` - Delete a build
+- `POST /api/v1/builds/generate/` - Generate a new build
+
+For detailed API documentation, visit the interactive documentation at `http://localhost:8000/docs` when running the development server.
+
+## 🚀 Deployment
+
+### Production with Docker
+
+1. Build the Docker image:
+   ```bash
+   docker build -t gw2-wvwbuilder-backend .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -d --name gw2-wvwbuilder-backend \
+     -p 8000:80 \
+     -e DATABASE_URL=postgresql://user:password@db:5432/gw2_wvwbuilder \
+     -e SECRET_KEY=your-secret-key \
+     gw2-wvwbuilder-backend
+   ```
+
+### Production with Gunicorn
+
+```bash
+# Install gunicorn
+poetry add gunicorn
+
+# Run with gunicorn (adjust workers based on CPU cores)
+gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | Database connection URL | `sqlite:///./gw2_wvwbuilder.db` |
+| `SECRET_KEY` | Secret key for JWT token generation | - |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | JWT token expiration time in minutes | `1440` (24h) |
+| `ENVIRONMENT` | Application environment (`development`/`production`) | `development` |
+| `DEBUG` | Enable debug mode | `False` in production |
+
+## 🏗 Project Structure
+
+```
+backend/
+├── alembic/                 # Database migrations
+├── app/
+│   ├── api/                 # API routes
+│   ├── core/                # Core functionality
+│   ├── crud/                # Database operations
+│   ├── models/              # SQLAlchemy models
+│   ├── schemas/             # Pydantic models
+│   ├── services/            # Business logic
+│   ├── tests/               # Test utilities
+│   ├── main.py              # FastAPI application
+│   └── initial_data.py      # Database initialization
+├── tests/                   # Test suite
+│   ├── integration/         # Integration tests
+│   └── unit/                # Unit tests
+├── .env.example             # Example environment variables
+├── .gitignore               # Git ignore file
+├── alembic.ini              # Alembic configuration
+├── docker-compose.yml       # Docker Compose file
+├── Dockerfile               # Docker configuration
+├── poetry.lock             # Dependency lock file
+├── pyproject.toml          # Project metadata and dependencies
+└── README.md               # This file
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### Commit Message Guidelines
+
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat:` A new feature
+- `fix:` A bug fix
+- `docs:` Documentation only changes
+- `style:` Changes that do not affect the meaning of the code
+- `refactor:` A code change that neither fixes a bug nor adds a feature
+- `perf:` A code change that improves performance
+- `test:` Adding missing tests or correcting existing tests
+- `chore:` Changes to the build process or auxiliary tools
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [FastAPI](https://fastapi.tiangolo.com/) - The web framework used
+- [SQLAlchemy](https://www.sqlalchemy.org/) - The ORM used
+- [Pydantic](https://pydantic-docs.helpmanual.io/) - Data validation
+- [Alembic](https://alembic.sqlalchemy.org/) - Database migrations
+- [Poetry](https://python-poetry.org/) - Dependency management
+
+### Variables d'environnement requises
+
+```
+# Base de données
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+# ou pour SQLite
+# DATABASE_URL=sqlite:///./sql_app.db
+
+# Sécurité
+SECRET_KEY=votre_secret_key_tres_long_et_securise
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+### Avec Docker
+
+```bash
+docker-compose up --build
+```
+
+## 🤝 Contribuer
+
+Les contributions sont les bienvenues ! Consultez notre [guide de contribution](CONTRIBUTING.md) pour plus de détails.
+
+### Processus de PR
+
+1. Forkez le dépôt
+2. Créez une branche pour votre fonctionnalité (`git checkout -b feature/AmazingFeature`)
+3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`)
+4. Poussez vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrez une Pull Request
+
+### Standards de code
+
+- Suivez [PEP 8](https://www.python.org/dev/peps/pep-0008/)
+- Utilisez les type hints partout
+- Documentez les fonctions et classes avec des docstrings
+- Écrivez des tests pour les nouvelles fonctionnalités
+- Maintenez la couverture de code à au moins 90%
+
+## 📚 Documentation additionnelle
+
+- [Structure des modèles de données](docs/MODELS.md) - Documentation complète des modèles et relations
+- [Guide des migrations](docs/MIGRATIONS.md) - Comment gérer les migrations de base de données
+
+## 📄 Licence
+
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
+
+## 🙏 Remerciements
+
+- [FastAPI](https://fastapi.tiangolo.com/) - Le framework web moderne et rapide
+- [SQLAlchemy](https://www.sqlalchemy.org/) - L'ORM Python
+- [Pydantic](https://pydantic-docs.helpmanual.io/) - La validation des données
+- [Poetry](https://python-poetry.org/) - La gestion des dépendances
+
+## 📚 Documentation additionnelle
+
+- [Structure des modèles de données](docs/MODELS.md) - Documentation complète des modèles et relations
+- [Guide des migrations](docs/MIGRATIONS.md) - Comment gérer les migrations de base de données
+- [Guide de contribution](CONTRIBUTING.md) - Normes et processus de contribution
 📊 Statut
 Tests : 33/33 PASS
 Couverture : 93% (objectif ≥90%)

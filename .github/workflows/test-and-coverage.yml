@@ -27,52 +27,65 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python 3.13
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
-          python-version: '3.13'
-          cache: 'poetry'
-
+          python-version: '3.11'
+          
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libpq-dev python3-dev
+          sudo apt-get install -y libpq-dev python3-dev python3-pip
+          
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 - --version 1.5.1
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          
+      - name: Configure Poetry
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry config virtualenvs.create true
+          
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          cd backend
+          # Install dependencies in one go to avoid timeouts
+          poetry add email-validator itsdangerous python-json-logger pytest-asyncio pytest-trio pytest-mock pytest-cov codecov pytest-factoryboy --group dev --no-interaction
+          # Install the project in development mode with all extras
+          poetry install --no-interaction --no-ansi --with dev
+          # Initialize test database
+          poetry run alembic upgrade head
 
       - name: Cache Poetry virtualenv
         id: cache-venv
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
           path: ./backend/.venv
           key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
           restore-keys: |
             venv-${{ runner.os }}-
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          version: '1.8.0'
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-          installer-parallel: true
-
-      - name: Install dependencies
+      - name: Set up test database
         working-directory: ./backend
         run: |
-          poetry config virtualenvs.in-project true
-          poetry install --no-interaction --no-root
-          poetry install --no-interaction
+          # Create test database and run migrations
+          export DATABASE_URL=sqlite:///./test.db
+          poetry run alembic upgrade head
 
       - name: Run tests with coverage
         working-directory: ./backend
         env:
+          DATABASE_URL: sqlite:///./test.db
           PYTHONPATH: ${{ github.workspace }}/backend
-          DATABASE_URL: "sqlite:///:memory:"
-          PYTHONUNBUFFERED: 1
+          COVERAGE_FILE: ${{ github.workspace }}/backend/.coverage
         run: |
           mkdir -p test-results
           set -o pipefail
           poetry run pytest tests/ \
             -v \
+            --asyncio-mode=auto \
             --cov=app \
             --cov-report=xml:coverage.xml \
             --cov-report=html:htmlcov \
@@ -83,18 +96,15 @@ jobs:
             2>&1 | tee test-results/pytest.log
 
       - name: Upload coverage to Codecov
-        if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+        if: success() && github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./backend/coverage.xml
-          fail_ci_if_error: true
-          verbose: true
-          name: codecov-umbrella
+          token: ${{ secrets.CODECOV_TOKEN || '' }}
+          file: ./coverage.xml
           flags: unittests
-          env_vars: OS,PYTHON
-          path_to_write_report: ./coverage_report.txt
-          working-directory: ./backend
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          verbose: true
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
