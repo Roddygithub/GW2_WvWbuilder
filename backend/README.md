@@ -1,103 +1,277 @@
 <div align="center">
-  <h1>GW2 Team Builder – Backend</h1>
+  <h1>GW2 WvW Team Builder – Backend</h1>
   
-  [![Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml/badge.svg?branch=main)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml)
-  [![Coverage](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/main/graph/badge.svg?token=YOUR-TOKEN-HERE)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
+  [![Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml/badge.svg?branch=develop)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml)
+  [![Coverage](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/develop/graph/badge.svg?token=YOUR-TOKEN-HERE)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
   [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
   [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
   [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 </div>
 
-Backend haute performance pour Guild Wars 2 Team Builder, construit avec FastAPI, SQLAlchemy 2.0 et Pydantic v2. Inclut une suite de tests complète avec une couverture de code >90%.
+High-performance backend for Guild Wars 2 WvW Team Builder, built with FastAPI, SQLAlchemy 2.0, and Pydantic v2. Includes a comprehensive test suite with >90% code coverage.
 
-## 🚀 Fonctionnalités
+## 📋 Table of Contents
+- [Features](#-features)
+- [Prerequisites](#-prerequisites)
+- [Getting Started](#-getting-started)
+- [Development](#-development)
+- [Testing](#-testing)
+- [API Documentation](#-api-documentation)
+- [Deployment](#-deployment)
+- [Project Structure](#-project-structure)
+- [Contributing](#-contributing)
+- [License](#-license)
 
-- **API RESTful** avec documentation interactive (Swagger/ReDoc)
-- **Base de données** relationnelle avec SQLAlchemy 2.0
-- **Validation des données** avec Pydantic v2
-- **Authentification** JWT sécurisée
-- **Tests automatisés** avec couverture de code
-- **CI/CD** avec GitHub Actions et Codecov
-- **Conteneurisation** prête pour le déploiement
+## 🚀 Features
 
-## 🛠 Prérequis
+- **RESTful API** with interactive documentation (Swagger/ReDoc)
+- **Relational Database** with SQLAlchemy 2.0
+- **Data Validation** with Pydantic v2
+- **Secure JWT Authentication**
+- **Automated Testing** with code coverage
+- **CI/CD Pipeline** with GitHub Actions and Codecov
+- **Docker** ready for deployment
+- **Asynchronous** for high performance
+- **Type Annotations** throughout the codebase
+- **Modular Architecture** for easy maintenance
+
+## 🛠 Prerequisites
 
 - Python 3.13
-- [Poetry](https://python-poetry.org/)
-- PostgreSQL (optionnel, SQLite par défaut en développement)
+- [Poetry](https://python-poetry.org/) for dependency management
+- PostgreSQL (recommended for production, SQLite for development)
+- Docker (optional, for containerized deployment)
+- Git (for version control)
 
-## ⚙️ Installation
+## ⚙️ Getting Started
+
+### Clone the Repository
 
 ```bash
-# Cloner le dépôt
 git clone https://github.com/Roddygithub/GW2_WvWbuilder.git
 cd GW2_WvWbuilder/backend
-
-# Installer les dépendances
-poetry install
-
-# Configurer les variables d'environnement
-cp .env.example .env
-# Éditer le fichier .env selon vos besoins
 ```
 
-## 🚀 Démarrage rapide
-
-### Environnement de développement
+### Install Dependencies
 
 ```bash
-# Activer l'environnement virtuel
-poetry shell
+# Install Python dependencies
+poetry install
 
-# Appliquer les migrations de base de données
+# Install pre-commit hooks
+poetry run pre-commit install
+```
+
+### Configure Environment
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit `.env` with your configuration:
+   ```env
+   # Database
+   DATABASE_URL=sqlite:///./gw2_wvwbuilder.db
+   # or for PostgreSQL:
+   # DATABASE_URL=postgresql://user:password@localhost:5432/gw2_wvwbuilder
+
+   # JWT
+   SECRET_KEY=your-secret-key-here
+   ACCESS_TOKEN_EXPIRE_MINUTES=1440  # 24 hours
+
+   # App
+   ENVIRONMENT=development
+   DEBUG=true
+   ```
+
+### Initialize the Database
+
+```bash
+# Run migrations
 alembic upgrade head
 
-# Démarrer le serveur de développement
+# Create initial data (optional)
+python -m app.initial_data
+```
+
+### Run the Development Server
+
+```bash
+# Start the development server with auto-reload
 uvicorn app.main:app --reload
 ```
 
-- **Documentation interactive**: http://127.0.0.1:8000/docs
-- **Documentation alternative**: http://127.0.0.1:8000/redoc
+Once running, you can access:
+- **Interactive API Docs**: http://127.0.0.1:8000/docs
+- **Alternative Docs**: http://127.0.0.1:8000/redoc
 - **API Base URL**: http://127.0.0.1:8000/api/v1
 
-## 🧪 Tests et qualité
+## 🧪 Testing
 
-### Exécuter les tests
+### Running Tests
 
 ```bash
-# Tous les tests avec couverture
+# Run all tests with coverage
 poetry run pytest --cov=app --cov-report=term-missing
 
-# Uniquement les tests unitaires
+# Run only unit tests
 poetry run pytest tests/unit
 
-# Uniquement les tests d'intégration
+# Run only integration tests
 poetry run pytest tests/integration
 
-# Générer un rapport HTML de couverture
+# Run a specific test file
+poetry run pytest tests/integration/api/test_builds.py -v
+
+# Run tests with detailed logging
+poetry run pytest -v --log-cli-level=INFO
+
+# Generate HTML coverage report
 poetry run pytest --cov=app --cov-report=html
-# Ouvrir le rapport dans le navigateur
+# Open the report in your browser
 python -m http.server --directory=htmlcov
 ```
 
-### Vérification de la qualité
+### Code Quality
 
 ```bash
-# Vérifier le style de code avec Black
+# Format code with Black
 poetry run black .
 
-# Vérifier les imports avec isort
+# Sort imports with isort
 poetry run isort .
 
-# Vérifier les types avec mypy
+# Check types with mypy
 poetry run mypy .
 
-# Vérifier le style avec flake8
+# Check style with flake8
 poetry run flake8
+
+# Run all checks (configured in pre-commit)
+poetry run pre-commit run --all-files
 ```
 
-## 📦 Déploiement
+## 📚 API Documentation
+
+### Authentication
+
+The API uses JWT for authentication. Include the token in the `Authorization` header:
+
+```
+Authorization: Bearer <your-jwt-token>
+```
+
+### Available Endpoints
+
+- `GET /api/v1/builds/` - List all builds
+- `POST /api/v1/builds/` - Create a new build
+- `GET /api/v1/builds/{build_id}` - Get build details
+- `PUT /api/v1/builds/{build_id}` - Update a build
+- `DELETE /api/v1/builds/{build_id}` - Delete a build
+- `POST /api/v1/builds/generate/` - Generate a new build
+
+For detailed API documentation, visit the interactive documentation at `http://localhost:8000/docs` when running the development server.
+
+## 🚀 Deployment
+
+### Production with Docker
+
+1. Build the Docker image:
+   ```bash
+   docker build -t gw2-wvwbuilder-backend .
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -d --name gw2-wvwbuilder-backend \
+     -p 8000:80 \
+     -e DATABASE_URL=postgresql://user:password@db:5432/gw2_wvwbuilder \
+     -e SECRET_KEY=your-secret-key \
+     gw2-wvwbuilder-backend
+   ```
+
+### Production with Gunicorn
+
+```bash
+# Install gunicorn
+poetry add gunicorn
+
+# Run with gunicorn (adjust workers based on CPU cores)
+gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | Database connection URL | `sqlite:///./gw2_wvwbuilder.db` |
+| `SECRET_KEY` | Secret key for JWT token generation | - |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | JWT token expiration time in minutes | `1440` (24h) |
+| `ENVIRONMENT` | Application environment (`development`/`production`) | `development` |
+| `DEBUG` | Enable debug mode | `False` in production |
+
+## 🏗 Project Structure
+
+```
+backend/
+├── alembic/                 # Database migrations
+├── app/
+│   ├── api/                 # API routes
+│   ├── core/                # Core functionality
+│   ├── crud/                # Database operations
+│   ├── models/              # SQLAlchemy models
+│   ├── schemas/             # Pydantic models
+│   ├── services/            # Business logic
+│   ├── tests/               # Test utilities
+│   ├── main.py              # FastAPI application
+│   └── initial_data.py      # Database initialization
+├── tests/                   # Test suite
+│   ├── integration/         # Integration tests
+│   └── unit/                # Unit tests
+├── .env.example             # Example environment variables
+├── .gitignore               # Git ignore file
+├── alembic.ini              # Alembic configuration
+├── docker-compose.yml       # Docker Compose file
+├── Dockerfile               # Docker configuration
+├── poetry.lock             # Dependency lock file
+├── pyproject.toml          # Project metadata and dependencies
+└── README.md               # This file
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### Commit Message Guidelines
+
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+
+- `feat:` A new feature
+- `fix:` A bug fix
+- `docs:` Documentation only changes
+- `style:` Changes that do not affect the meaning of the code
+- `refactor:` A code change that neither fixes a bug nor adds a feature
+- `perf:` A code change that improves performance
+- `test:` Adding missing tests or correcting existing tests
+- `chore:` Changes to the build process or auxiliary tools
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [FastAPI](https://fastapi.tiangolo.com/) - The web framework used
+- [SQLAlchemy](https://www.sqlalchemy.org/) - The ORM used
+- [Pydantic](https://pydantic-docs.helpmanual.io/) - Data validation
+- [Alembic](https://alembic.sqlalchemy.org/) - Database migrations
+- [Poetry](https://python-poetry.org/) - Dependency management
 
 ### Variables d'environnement requises
 
