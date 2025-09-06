@@ -10,8 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app import crud, models, schemas
 from app.core.config import settings
-from app.models.build import Build, BuildProfession
-from app.models.profession import Profession
+from app.models import Build, BuildProfession, Profession
 
 logger = logging.getLogger(__name__)
 

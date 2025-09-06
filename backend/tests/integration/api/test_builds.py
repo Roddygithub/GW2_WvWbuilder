@@ -8,26 +8,28 @@ from datetime import datetime, timedelta
 # Import app settings and utilities
 from app.core.config import settings
 from app.core.security import create_access_token
-from app.core.db import get_db
+from app.db.session import get_db
 from app.schemas.build import BuildCreate, BuildUpdate
 
 # Import models to ensure they are registered with SQLAlchemy
-from app.models import models  # noqa: F401
-from app.models.build import Build, BuildProfession  # noqa: F401
-from app.models.models import Composition, CompositionTag  # noqa: F401
-from app.models.models import Profession, EliteSpecialization  # noqa: F401
-from app.models.role import Role  # noqa: F401
-from app.models.user import User  # noqa: F401
+from app.models import (
+    Build, 
+    BuildProfession,
+    Composition, 
+    CompositionTag,
+    Profession, 
+    EliteSpecialization,
+    Role,
+    User
+)  # noqa: F401
 
 # Import test utilities and helpers
 from tests.conftest import client, db
-from tests.integration.fixtures import (
-    BuildFactory, 
+from tests.integration.fixtures.factories import (
     UserFactory, 
     ProfessionFactory,
     EliteSpecializationFactory
 )
-from tests.integration.utils.test_helpers import create_test_profession, create_test_professions
 
 # Test data
 TEST_BUILD_DATA = {
@@ -289,7 +291,6 @@ def test_create_duplicate_build(client: TestClient, db: Session) -> None:
     user = client.test_user
     
     # Create test professions
-    from app.models.profession import Profession
     professions = []
     for i in range(2):  # Only need 2 for this test
         profession = Profession(
@@ -325,7 +326,6 @@ def test_create_duplicate_build(client: TestClient, db: Session) -> None:
 def test_create_build_with_nonexistent_professions(client: TestClient, db: Session) -> None:
     """Test creating a build with non-existent profession IDs."""
     # Create a valid profession first
-    from app.models.profession import Profession
     profession = Profession(
         name="Test Profession",
         description="Test Profession Description",
@@ -351,7 +351,6 @@ def test_create_build_with_nonexistent_professions(client: TestClient, db: Sessi
 def test_create_build_validation_errors(client: TestClient, db: Session) -> None:
     """Test creating a build with invalid data (validation errors)."""
     # Create a valid profession for the tests
-    from app.models.profession import Profession
     profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
     db.add(profession)
     db.commit()
@@ -381,7 +380,6 @@ def test_get_build(client: TestClient, db: Session) -> None:
     user = client.test_user
     
     # Create some test professions
-    from app.models.profession import Profession
     profession1 = Profession(name="Test Profession 1", icon="icon1.png")
     profession2 = Profession(name="Test Profession 2", icon="icon2.png")
     db.add_all([profession1, profession2])
@@ -627,7 +625,6 @@ def test_update_build_validation_errors(client: TestClient, db: Session) -> None
     """Test updating a build with invalid data."""
     # First create a build to update
     # Create a profession for the build
-    from app.models.profession import Profession
     profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
     db.add(profession)
     db.commit()
@@ -671,12 +668,7 @@ def test_update_build_validation_errors(client: TestClient, db: Session) -> None
 
 def test_list_builds(client: TestClient, db: Session) -> None:
     """Test listing builds with various filters and pagination."""
-    # Create test users
-    from app.models.user import User
-    from app.models.profession import Profession
-    from app.models.build import Build, BuildProfession
-    
-    # Create test professions
+    # Create test users and professions
     professions = []
     for i in range(5):
         profession = Profession(

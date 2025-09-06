@@ -3,8 +3,7 @@ from fastapi import status
 
 from app.api import deps
 from app.core.config import settings
-from app.models.user import User
-from app.models.models import Role, Profession, EliteSpecialization, Composition
+from app.models import User, Role, Profession, EliteSpecialization, Composition
 
 API_PREFIX = settings.API_V1_STR
 

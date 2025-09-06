@@ -8,7 +8,7 @@ from app.api.api_v1.endpoints import professions as prof_ep
 from app.api.api_v1.endpoints import roles as roles_ep
 from app.api.api_v1.endpoints import users as users_ep
 from app.core.config import settings
-from app.models.models import User, Role, Profession, EliteSpecialization
+from app.models import User, Role, Profession, EliteSpecialization
 from app import crud
 
 API_PREFIX = settings.API_V1_STR
@@ -31,7 +31,7 @@ def test_model_reprs(db_session):
     assert "Spec (Prof)" in repr(es)
 
 def test_composition_repr():
-    from app.models.models import Composition
+    from app.models import Composition
     c = Composition(name="Zerg Squad")
     assert "<Composition Zerg Squad>" == repr(c)
 

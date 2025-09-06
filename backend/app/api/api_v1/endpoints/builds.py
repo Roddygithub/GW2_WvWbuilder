@@ -158,44 +158,128 @@ def create_build(
     - **profession_ids**: List of associated profession IDs
     """
     # Log the build creation request
-    logger.info(f"Creating build with data: {build_in}")
+    logger.info(f"=== Starting build creation for user {current_user.id} ===")
+    logger.info(f"Build data: {build_in}")
     
-    # Create the build with the owner and profession associations
-    db_build = crud.build.create_with_owner(
-        db=db, obj_in=build_in, owner_id=current_user.id
-    )
-    
-    # Ensure the build was created
-    if not db_build:
-        logger.error("Failed to create build")
+    try:
+        # Create the build with the owner and profession associations
+        logger.info("Calling create_with_owner...")
+        try:
+            logger.info("Calling create_with_owner with data:")
+            logger.info(f"- owner_id: {current_user.id}")
+            logger.info(f"- build_data: {build_in.model_dump()}")
+            
+            # Log current database state before the operation
+            logger.info("Current database state before create_with_owner:")
+            try:
+                prof_count = db.query(models.Profession).count()
+                logger.info(f"- Total professions: {prof_count}")
+                
+                build_count = db.query(models.Build).count()
+                logger.info(f"- Total builds: {build_count}")
+                
+                bp_count = db.query(models.BuildProfession).count()
+                logger.info(f"- Total build-profession associations: {bp_count}")
+            except Exception as db_err:
+                logger.error(f"Error querying database state: {str(db_err)}", exc_info=True)
+            
+            # Call the create_with_owner method
+            db_build = crud.build.create_with_owner(
+                db=db, obj_in=build_in, owner_id=current_user.id
+            )
+            
+            # Log the result
+            if db_build:
+                logger.info(f"create_with_owner returned build with ID: {getattr(db_build, 'id', 'N/A')}")
+            else:
+                logger.error("create_with_owner returned None")
+            
+            # Ensure the build was created
+            if not db_build:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to create build: create_with_owner returned None"
+                )
+                
+        except HTTPException as http_exc:
+            # Re-raise HTTP exceptions as-is
+            logger.error(f"HTTPException in create_with_owner: {str(http_exc)}")
+            raise
+            
+        except Exception as e:
+            # Log detailed error information
+            error_type = type(e).__name__
+            error_message = str(e)
+            logger.error(f"Error in create_with_owner: {error_type}: {error_message}", exc_info=True)
+            
+            # Log the full traceback to help with debugging
+            import traceback
+            logger.error(f"Full traceback:\n{traceback.format_exc()}")
+            
+            # Log the build data that caused the error
+            try:
+                logger.error(f"Build data that caused the error: {build_in.model_dump_json()}")
+            except Exception as json_err:
+                logger.error(f"Could not serialize build data: {str(json_err)}")
+            
+            # Log current database state for debugging
+            try:
+                logger.info("Current builds in database:")
+                builds = db.query(models.Build).all()
+                logger.info(f"- Total builds: {len(builds)}")
+                for b in builds[:5]:  # Limit to first 5 builds to avoid huge logs
+                    logger.info(f"  - Build {b.id}: {b.name} (owner: {getattr(b, 'created_by_id', 'N/A')})")
+                
+                logger.info("Current professions in database:")
+                profs = db.query(models.Profession).all()
+                logger.info(f"- Total professions: {len(profs)}")
+                for p in profs[:5]:  # Limit to first 5 professions
+                    logger.info(f"  - Profession {p.id}: {p.name}")
+                    
+            except Exception as db_err:
+                logger.error(f"Error querying database state: {str(db_err)}", exc_info=True)
+            
+            # Re-raise with a generic error message to avoid leaking internal details
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An error occurred while creating the build. Please try again."
+            )
+            
+        logger.info(f"Successfully created build with ID: {db_build.id}")
+        
+        # Explicitly load the build with its professions
+        logger.info("Loading build with professions...")
+        db_build = crud.build.get_with_professions(
+            db=db, 
+            id=db_build.id,
+            user_id=current_user.id
+        )
+        
+        if not db_build:
+            logger.error(f"Failed to load build with ID {db_build.id}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to load created build"
+            )
+            
+        logger.info(f"Successfully loaded build with {len(db_build.professions) if hasattr(db_build, 'professions') else 0} professions")
+        
+        # Log profession information
+        if hasattr(db_build, 'professions'):
+            logger.info(f"Build professions: {[p.id for p in db_build.professions]}")
+        
+        return db_build
+        
+    except Exception as e:
+        logger.error(f"Error creating build: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to create build"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create build: {str(e)}"
         )
-    
-    # Log the created build
-    logger.info(f"Created build with ID: {db_build.id}")
-    
-    # Query the build with all relationships loaded
-    db_build = (
-        db.query(models.Build)
-        .options(
-            joinedload(models.Build.build_professions)
-            .joinedload(models.BuildProfession.profession),
-            joinedload(models.Build.professions)
-        )
-        .filter(models.Build.id == db_build.id)
-        .first()
-    )
-    
-    # Log the loaded build
-    logger.info(f"Loaded build from DB: {db_build}")
-    
-    # Log the build's professions
-    if hasattr(db_build, 'professions'):
+    if hasattr(db_build, 'professions') and db_build.professions:
         logger.info(f"Build has {len(db_build.professions)} professions: {[p.id for p in db_build.professions]}")
     else:
-        logger.warning("Build has no professions attribute")
+        logger.warning("Build has no professions attribute or empty professions list")
     
     # Create a dictionary with only the fields we want to include in the response
     build_data = {
@@ -211,16 +295,27 @@ def create_build(
         'created_at': db_build.created_at,
         'updated_at': db_build.updated_at,
         'owner_id': db_build.created_by_id,  # Map created_by_id to owner_id for the schema
-        'professions': [
-            {
-                'id': p.id,
-                'name': p.name,
-                'description': p.description or ""
-            }
-            for p in db_build.professions
-        ] if hasattr(db_build, 'professions') and db_build.professions else [],
-        'profession_ids': [p.id for p in db_build.professions] if hasattr(db_build, 'professions') and db_build.professions else []
     }
+    
+    # Get the professions from the build_professions relationship
+    if hasattr(db_build, 'build_professions'):
+        professions = []
+        for bp in db_build.build_professions:
+            if hasattr(bp, 'profession') and bp.profession is not None:
+                profession_data = {
+                    'id': bp.profession.id,
+                    'name': bp.profession.name,
+                    'description': bp.profession.description or ""
+                }
+                professions.append(profession_data)
+        
+        build_data['professions'] = professions
+        build_data['profession_ids'] = [p['id'] for p in professions]
+    else:
+        build_data['professions'] = []
+        build_data['profession_ids'] = []
+    
+    logger.info(f"Build data with professions: {build_data}")
     
     # Log the built data for debugging
     logger.info(f"Build data to be serialized: {build_data}")

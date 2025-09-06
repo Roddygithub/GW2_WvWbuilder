@@ -8,8 +8,7 @@ logger = logging.getLogger(__name__)
 
 from app import models, schemas
 from app.crud.base import CRUDBase
-from app.models.build import Build, BuildProfession
-from app.models.profession import Profession
+from app.models import Build, BuildProfession, Profession
 
 class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
     def get_multi_by_owner(
@@ -36,89 +35,155 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
 
     def create_with_owner(
         self, db: Session, *, obj_in: schemas.BuildCreate, owner_id: int
-    ) -> Build:
-        logger.info(f"Creating build for owner_id: {owner_id}")
-        logger.info(f"Build data: {obj_in.model_dump()}")
+    ) -> Optional[Build]:
+        """Create a new build with the given owner and profession associations.
         
-        # Extract profession_ids if they exist
-        profession_ids = getattr(obj_in, 'profession_ids', [])
-        logger.info(f"Profession IDs from input: {profession_ids}")
-        
-        # Create build data without profession_ids
-        obj_data = obj_in.model_dump()
-        if 'profession_ids' in obj_data:
-            del obj_data['profession_ids']
+        Args:
+            db: Database session
+            obj_in: Build data including profession_ids
+            owner_id: ID of the user creating the build
             
-        logger.info(f"Creating build with data: {obj_data}")
+        Returns:
+            The created build with associated professions, or None if creation failed
+        """
+        logger.info("\n" + "="*80)
+        logger.info(f"=== START: create_with_owner for owner_id: {owner_id} ===")
+        logger.info(f"Input data: {obj_in.model_dump()}")
         
         try:
-            # Start a transaction
-            with db.begin_nested():
-                # Create the build first
-                db_obj = Build(**obj_data, created_by_id=owner_id, created_at=func.now(), updated_at=func.now())
-                db.add(db_obj)
-                db.flush()  # Flush to get the build ID
+            # Log current transaction state
+            logger.info(f"\n[1/5] Current transaction state:")
+            logger.info(f"- In transaction: {db.in_transaction()}")
+            logger.info(f"- Is active: {db.is_active}")
+            
+            # Prepare build data
+            logger.info("\n[2/5] Preparing build data...")
+            build_data = obj_in.model_dump()
+            profession_ids = build_data.pop('profession_ids', [])
+            logger.info(f"Extracted profession_ids: {profession_ids}")
+            
+            # Add required fields
+            build_data['created_by_id'] = owner_id
+            now = func.now()
+            build_data['created_at'] = now
+            build_data['updated_at'] = now
+            build_data.setdefault('config', {})
+            build_data.setdefault('constraints', {})
+            
+            logger.info(f"Final build data: {build_data}")
+            
+            # Log current database state
+            logger.info("\n[3/5] Current database state:")
+            try:
+                prof_count = db.query(Profession).count()
+                logger.info(f"Total professions in database: {prof_count}")
+                for i, prof in enumerate(db.query(Profession).all()[:5], 1):  # Limit to first 5
+                    logger.info(f"  {i}. Profession(id={prof.id}, name='{prof.name}')")
                 
-                logger.info(f"Created build with ID: {db_obj.id}")
+                build_count = db.query(Build).count()
+                logger.info(f"Total builds in database: {build_count}")
                 
+                bp_count = db.query(BuildProfession).count()
+                logger.info(f"Total build-profession associations: {bp_count}")
+                
+                # Log the actual profession IDs we're trying to associate with
                 if profession_ids:
-                    # Get the profession objects
-                    professions = db.query(models.Profession).filter(
-                        models.Profession.id.in_(profession_ids)
-                    ).all()
-                    
-                    if not professions:
-                        logger.warning(f"No professions found for IDs: {profession_ids}")
-                    else:
-                        logger.info(f"Found {len(professions)} professions to associate")
+                    logger.info("\nVerifying requested profession IDs exist in database:")
+                    for prof_id in profession_ids:
+                        exists = db.query(Profession).filter(Profession.id == prof_id).first() is not None
+                        logger.info(f"  - Profession ID {prof_id}: {'FOUND' if exists else 'NOT FOUND'}")
                         
-                        # Clear any existing associations first to avoid unique constraint violations
-                        db.query(models.BuildProfession).filter(
-                            models.BuildProfession.build_id == db_obj.id
-                        ).delete(synchronize_session=False)
-                        
-                        # Create new associations using the relationship
-                        for prof in professions:
-                            # Create the association object
-                            bp = models.BuildProfession(
-                                build_id=db_obj.id,
-                                profession_id=prof.id
-                            )
-                            db.add(bp)
-                            logger.info(f"Created BuildProfession association: build_id={db_obj.id}, profession_id={prof.id}")
-                        
-                        # Explicitly flush to catch any constraint violations
-                        db.flush()
-                        
-                        # Set the relationship on the instance
-                        db_obj.professions = professions
-                        logger.info(f"Set {len(professions)} professions on build")
+            except Exception as db_err:
+                logger.error(f"Error querying database state: {str(db_err)}", exc_info=True)
             
-            # Commit the transaction
-            db.commit()
-            logger.info("Committed transaction")
+            # Don't start a new transaction if one is already active
+            in_transaction = db.in_transaction()
+            logger.info(f"\n[3/5] Transaction status: {'Already in a transaction' if in_transaction else 'No active transaction'}")
             
-            # Expire the build object to ensure we get fresh data
-            db.expire(db_obj)
-            
-            # Reload the build with all relationships using a fresh query
-            db_obj = db.query(Build).options(
-                joinedload(Build.build_professions).joinedload(models.BuildProfession.profession),
-                joinedload(Build.professions)
-            ).filter(Build.id == db_obj.id).first()
-            
-            if not db_obj:
-                raise ValueError("Failed to reload build after creation")
+            try:
+                # Create build
+                logger.info("\n[4/5] Creating build record...")
+                logger.info(f"Creating Build with data: {build_data}")
+                db_obj = Build(**build_data)
+                logger.info(f"Build object created (not yet persisted): {db_obj}")
                 
-            logger.info(f"Reloaded build with {len(db_obj.professions) if hasattr(db_obj, 'professions') else 0} professions")
-            
-            return db_obj
+                db.add(db_obj)
+                logger.info("Build object added to session")
+                
+                db.flush()
+                logger.info(f"Build record flushed to database. Assigned ID: {db_obj.id}")
+                
+                # Add profession associations if any
+                if profession_ids:
+                    logger.info(f"\nAdding {len(profession_ids)} profession associations...")
+                    for i, prof_id in enumerate(profession_ids, 1):
+                        logger.info(f"  {i}. Creating BuildProfession: build_id={db_obj.id}, profession_id={prof_id}")
+                        try:
+                            # Verify profession exists
+                            prof = db.query(Profession).filter_by(id=prof_id).first()
+                            if not prof:
+                                raise ValueError(f"Profession with ID {prof_id} not found in database")
+                                
+                            bp = BuildProfession(build_id=db_obj.id, profession_id=prof_id)
+                            logger.info(f"  Created BuildProfession: {bp}")
+                            db.add(bp)
+                            logger.info("  BuildProfession added to session")
+                            
+                        except Exception as bp_err:
+                            logger.error(f"  Error creating BuildProfession: {str(bp_err)}", exc_info=True)
+                            raise
+                    
+                    # Verify associations were created
+                    db.flush()
+                    logger.info("\nVerifying profession associations...")
+                    assoc_count = db.query(BuildProfession).filter_by(build_id=db_obj.id).count()
+                    logger.info(f"Successfully created {assoc_count}/{len(profession_ids)} profession associations")
+                    
+                    if assoc_count != len(profession_ids):
+                        logger.warning(f"Mismatch in created associations. Expected {len(profession_ids)}, got {assoc_count}")
+                
+                # Only commit if we started the transaction
+                if not in_transaction:
+                    logger.info("\n[5/5] Committing transaction...")
+                    db.commit()
+                    logger.info("✅ Transaction committed successfully")
+                else:
+                    logger.info("\n[5/5] Skipping commit - using existing transaction")
+                
+                # Refresh and return the build
+                db.refresh(db_obj)
+                logger.info(f"✅ Successfully created build: {db_obj}")
+                
+                # Verify the build was saved
+                saved_build = db.query(Build).filter_by(id=db_obj.id).first()
+                if not saved_build:
+                    logger.error("❌ Build not found in database after commit!")
+                    return None
+                    
+                logger.info(f"✅ Verified build exists in database with ID: {saved_build.id}")
+                return db_obj
+                
+            except Exception as inner_e:
+                logger.error("\n❌ Error during transaction:", exc_info=True)
+                logger.error(f"Error type: {type(inner_e).__name__}")
+                logger.error(f"Error details: {str(inner_e)}")
+                
+                if 'transaction' in locals():
+                    try:
+                        transaction.rollback()
+                        logger.info("Transaction rolled back due to error")
+                    except Exception as rollback_err:
+                        logger.error(f"Error during rollback: {str(rollback_err)}")
+                
+                return None
             
         except Exception as e:
-            db.rollback()
-            logger.error(f"Error in create_with_owner: {str(e)}")
-            logger.error(f"Traceback: {traceback.format_exc()}")
-            raise
+            logger.error("\n❌ Unhandled error in create_with_owner:", exc_info=True)
+            logger.error(f"Error type: {type(e).__name__}")
+            logger.error(f"Error details: {str(e)}")
+            return None
+        finally:
+            logger.info("="*80 + "\n")
 
     def update(
         self,
@@ -130,118 +195,40 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.model_dump(exclude_unset=True)
-
-        # Handle profession updates
-        if "profession_ids" in update_data:
-            professions = db.query(models.Profession).filter(
-                models.Profession.id.in_(update_data.pop("profession_ids", []))
-            ).all()
-            db_obj.professions = professions
-
+            update_data = obj_in.dict(exclude_unset=True)
+        
+        # Handle profession updates if needed
+        if 'profession_ids' in update_data:
+            # Remove existing associations
+            db.query(BuildProfession).filter(
+                BuildProfession.build_id == db_obj.id
+            ).delete()
+            
+            # Add new associations
+            for prof_id in update_data.pop('profession_ids', []):
+                bp = BuildProfession(build_id=db_obj.id, profession_id=prof_id)
+                db.add(bp)
+        
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
-    def generate_build(
-        self,
-        db: Session,
-        *,
-        generation_request: schemas.BuildGenerationRequest,
-        owner_id: int
-    ) -> schemas.BuildGenerationResponse:
-        """
-        Generate a build based on the given constraints and preferences.
-        This is a placeholder implementation that should be replaced with actual logic.
-        """
-        try:
-            # Get all available professions
-            professions = db.query(models.Profession).all()
-            
-            # Filter by preferred professions if specified
-            if generation_request.preferred_professions:
-                professions = [
-                    p for p in professions 
-                    if p.id in generation_request.preferred_professions
-                ]
-            
-            # Simple round-robin assignment as a starting point
-            # Replace this with actual build generation logic
-            selected_professions = []
-            for i in range(generation_request.team_size):
-                if not professions:
-                    break
-                selected_professions.append(professions[i % len(professions)])
-            
-            # Create a new build with the generated composition
-            build_in = schemas.BuildCreate(
-                name="Generated Build",
-                description="Automatically generated build",
-                team_size=generation_request.team_size,
-                is_public=False,
-                config={"generated": True},
-                constraints=generation_request.constraints,
-                profession_ids=[p.id for p in selected_professions]
-            )
-            
-            build = self.create_with_owner(db, obj_in=build_in, owner_id=owner_id)
-            
-            # Prepare suggested composition
-            suggested_composition = [
-                {
-                    "position": i + 1,
-                    "profession_id": prof.id,
-                    "profession_name": prof.name,
-                    "role": "DPS"  # Default role, should be determined by actual logic
-                }
-                for i, prof in enumerate(selected_professions)
-            ]
-            
-            return schemas.BuildGenerationResponse(
-                success=True,
-                message="Build generated successfully",
-                build=build,
-                suggested_composition=suggested_composition
-            )
-            
-        except Exception as e:
-            return schemas.BuildGenerationResponse(
-                success=False,
-                message=f"Error generating build: {str(e)}",
-                build=None,
-                suggested_composition=None
-            )
-
-    def get_multi(
-        self, 
-        db: Session, 
-        *, 
-        skip: int = 0, 
-        limit: int = 100,
-        user_id: Optional[int] = None,
-        public_only: bool = False
-    ) -> List[Build]:
-        query = db.query(self.model)
-        
-        if public_only:
-            query = query.filter(Build.is_public == True)  # noqa: E712
-        elif user_id is not None:
-            query = query.filter((Build.created_by_id == user_id) | (Build.is_public == True))  # noqa: E712
-            
-        return query.offset(skip).limit(limit).all()
-    
     def get_with_professions(
         self, db: Session, *, id: int, user_id: Optional[int] = None
-    ) -> Optional[Build]:
-        query = db.query(self.model).options(
-            joinedload(Build.professions)
-        ).filter(Build.id == id)
+    ) -> Optional[models.Build]:
+        query = db.query(self.model).filter(self.model.id == id)
         
-        if user_id is not None:
+        # Check if user has access
+        if user_id:
             query = query.filter(
-                (Build.created_by_id == user_id) | (Build.is_public == True)  # noqa: E712
+                (self.model.is_public == True) |  # noqa: E712
+                (self.model.created_by_id == user_id)
             )
-            
-        return query.first()
-    
+        
+        return (
+            query
+            .options(joinedload(self.model.professions))
+            .first()
+        )
+
     def update_with_professions(
         self, 
         db: Session, 
@@ -249,27 +236,39 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
         db_obj: Build, 
         obj_in: Union[schemas.BuildUpdate, Dict[str, Any]],
         user_id: int
-    ) -> Build:
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.model_dump(exclude_unset=True)
+    ) -> Optional[Build]:
+        try:
+            if isinstance(obj_in, dict):
+                update_data = obj_in
+            else:
+                update_data = obj_in.dict(exclude_unset=True)
             
-        # Handle profession updates
-        if "profession_ids" in update_data:
-            # Clear existing profession associations
-            db.query(BuildProfession).filter(
-                BuildProfession.build_id == db_obj.id
-            ).delete()
-            
-            # Add new profession associations
-            for prof_id in update_data["profession_ids"]:
-                bp = BuildProfession(build_id=db_obj.id, profession_id=prof_id)
-                db.add(bp)
+            # Handle profession updates if needed
+            if 'profession_ids' in update_data:
+                # Remove existing associations
+                db.query(BuildProfession).filter(
+                    BuildProfession.build_id == db_obj.id
+                ).delete()
                 
-            del update_data["profession_ids"]
+                # Add new associations
+                for prof_id in update_data.pop('profession_ids', []):
+                    bp = BuildProfession(build_id=db_obj.id, profession_id=prof_id)
+                    db.add(bp)
             
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
+            # Update other fields
+            for field, value in update_data.items():
+                setattr(db_obj, field, value)
+            
+            db.add(db_obj)
+            db.commit()
+            db.refresh(db_obj)
+            return db_obj
+            
+        except Exception as e:
+            logger.error(f"Error updating build: {str(e)}", exc_info=True)
+            db.rollback()
+            return None
 
 
+# Create a singleton instance
 build = CRUDBuild(Build)

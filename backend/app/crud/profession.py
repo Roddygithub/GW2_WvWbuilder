@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
-from app.models.models import Profession as ProfessionModel
+from app.models import Profession as ProfessionModel
 from app.schemas.profession import ProfessionCreate, ProfessionUpdate
 
 

@@ -3,7 +3,7 @@ import factory
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app.models import User, Role, Profession, Composition, EliteSpecialization
+from app.models import User, Role, Profession, Composition, EliteSpecialization, Build, BuildProfession
 
 fake = Faker()
 
@@ -73,6 +73,37 @@ class CompositionFactory(factory.alchemy.SQLAlchemyModelFactory):
         if extracted:
             for member in extracted:
                 self.members.append(member)
+
+class BuildFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = Build
+        sqlalchemy_session_persistence = "commit"
+    
+    name = factory.Faker("catch_phrase")
+    description = factory.Faker("paragraph")
+    game_mode = "wvw"
+    team_size = 5
+    is_public = False
+    config = {}
+    constraints = {}
+    created_by = factory.SubFactory(UserFactory)
+    
+    @factory.post_generation
+    def professions(self, create, extracted, **kwargs):
+        if not create:
+            return
+            
+        if extracted:
+            for profession in extracted:
+                self.professions.append(profession)
+
+class BuildProfessionFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        model = BuildProfession
+        sqlalchemy_session_persistence = "commit"
+    
+    build = factory.SubFactory(BuildFactory)
+    profession = factory.SubFactory(ProfessionFactory)
 
 def create_test_data(db: Session) -> dict:
     """Crée un jeu de données de test complet."""

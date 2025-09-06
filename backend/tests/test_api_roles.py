@@ -3,8 +3,7 @@ from fastapi import status, HTTPException
 
 from app.api import deps
 from app.core.config import settings
-from app.models.user import User
-from app.models.models import Role
+from app.models import User, Role
 
 API_PREFIX = settings.API_V1_STR
 

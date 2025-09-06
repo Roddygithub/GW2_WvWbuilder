@@ -6,6 +6,7 @@ from app.api.api_v1.endpoints import (
     professions,
     compositions,
     auth,
+    builds,
 )
 
 api_router = APIRouter()
@@ -16,3 +17,4 @@ api_router.include_router(roles.router, prefix="/roles", tags=["Roles"])
 api_router.include_router(professions.router, prefix="/professions", tags=["Professions"])
 api_router.include_router(compositions.router, prefix="/compositions", tags=["Compositions"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_router.include_router(builds.router, prefix="/builds", tags=["Builds"])

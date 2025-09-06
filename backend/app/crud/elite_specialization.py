@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
-from app.models.models import EliteSpecialization as EliteSpecModel
+from app.models import EliteSpecialization as EliteSpecModel
 from app.schemas.profession import EliteSpecializationCreate, EliteSpecializationUpdate
 
 

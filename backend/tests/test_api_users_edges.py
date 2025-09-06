@@ -3,7 +3,7 @@ from fastapi import status
 
 from app.api import deps
 from app.core.config import settings
-from app.models.user import User
+from app.models import User
 
 API_PREFIX = settings.API_V1_STR
 

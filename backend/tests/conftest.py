@@ -5,11 +5,15 @@ from typing import AsyncGenerator, Generator
 
 import pytest
 from fastapi import Depends, HTTPException, status
-from app.core.security import create_access_token
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+
+from app.core.security import create_access_token
+from jose import jwt
+from pydantic import ValidationError
 
 from app.core.config import settings
 from app.db.base import Base
@@ -33,14 +37,16 @@ settings.DATABASE_URL = TEST_DATABASE_URL
 # Créer un moteur SQLite en mémoire pour les tests
 @pytest.fixture(scope="session")
 def test_engine():
-    # Import models so all tables are registered on Base.metadata
-    import app.models.models  # noqa: F401
-
-    test_engine = create_engine(
-        TEST_DATABASE_URL,
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
+    # Importer les modèles pour qu'ils soient enregistrés dans les métadonnées de Base
+    from app.models import Base  # noqa: F401
+    from app.models import (  # noqa: F401
+        User, Role, Profession, EliteSpecialization,
+        Composition, CompositionTag, Build, BuildProfession
     )
+
+    # Utiliser la même configuration que dans app/db/session.py
+    from app.db.session import get_engine
+    test_engine = get_engine()
     
     # Créer toutes les tables
     Base.metadata.create_all(bind=test_engine)
@@ -53,21 +59,39 @@ def test_engine():
 # Session de test
 @pytest.fixture
 def db_session(test_engine):
+    from sqlalchemy.orm import sessionmaker
+    from app.db.session import SessionLocal
+    
+    # Utiliser la même configuration de session que l'application
     connection = test_engine.connect()
     transaction = connection.begin()
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=connection)
+    
+    # Créer une session avec les mêmes paramètres que dans app/db/session.py
+    TestingSessionLocal = sessionmaker(
+        autocommit=False,
+        autoflush=False,
+        bind=connection,
+        expire_on_commit=False  # Important pour éviter les problèmes de session expirée
+    )
+    
     session = TestingSessionLocal()
+    
+    # S'assurer que la session est propre avant de commencer
+    session.expire_all()
     
     yield session
     
+    # Nettoyage après le test
+    session.expire_all()
     session.close()
+    
     try:
         if transaction.is_active:
             transaction.rollback()
-    except Exception:
-        # Ignore teardown issues if transaction already deassociated
-        pass
-    connection.close()
+    except Exception as e:
+        print(f"Error during transaction rollback: {e}")
+    finally:
+        connection.close()
 
 # Alias pour la compatibilité avec les tests existants
 @pytest.fixture
@@ -91,56 +115,105 @@ def setup_factories(db_session):
 # Client de test FastAPI
 @pytest.fixture
 def client(db_session):
+    """Fixture pour créer un client de test FastAPI."""
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.api.deps import get_db
+    from sqlalchemy.orm import Session
+    from typing import Generator
+    
+    # S'assurer que la session est propre avant de commencer
+    db_session.expire_all()
+    
     # Surcharger la dépendance get_db pour utiliser la session de test
-    def override_get_db():
+    def override_get_db() -> Generator[Session, None, None]:
         try:
+            # Commencer une nouvelle transaction si aucune n'est active
+            if not db_session.in_transaction():
+                db_session.begin()
             yield db_session
-        finally:
-            pass
-    
-    # Créer un utilisateur de test par défaut
-    test_user = UserFactory()
-    db_session.add(test_user)
-    db_session.commit()
-    
-    # Surcharger les dépendances d'authentification pour les tests
-    def override_get_current_user():
-        # Retourne l'utilisateur de test par défaut
-        return test_user
+            # S'assurer que les changements sont flushés
+            db_session.flush()
+        except Exception as e:
+            # En cas d'erreur, annuler la transaction
+            db_session.rollback()
+            raise
         
-    def override_get_current_active_user(current_user = Depends(override_get_current_user)):
-        return current_user
+    # Surcharger les dépendances d'authentification
+    def override_get_current_user():
+        # Créer un utilisateur de test si nécessaire
+        if not hasattr(override_get_current_user, 'test_user'):
+            override_get_current_user.test_user = UserFactory()
+            db_session.add(override_get_current_user.test_user)
+            db_session.commit()
+        return override_get_current_user.test_user
+    
+    def override_get_current_active_user():
+        return override_get_current_user()
         
     def override_get_current_active_superuser():
         # Créer un superutilisateur pour les tests
-        superuser = UserFactory(is_superuser=True)
-        db_session.add(superuser)
-        db_session.commit()
-        return superuser
+        if not hasattr(override_get_current_active_superuser, 'superuser'):
+            override_get_current_active_superuser.superuser = UserFactory(is_superuser=True)
+            db_session.add(override_get_current_active_superuser.superuser)
+            db_session.commit()
+        return override_get_current_active_superuser.superuser
     
-    # Surcharger les dépendances
-    app.dependency_overrides[deps_get_db] = override_get_db
+    # Appliquer les surcharges de dépendances
+    app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_current_active_user] = override_get_current_active_user
     app.dependency_overrides[get_current_active_superuser] = override_get_current_active_superuser
     
     # Créer le client de test
     with TestClient(app) as test_client:
-        # Ajouter un helper pour l'authentification
+        # Stocker les utilisateurs de test dans un dictionnaire pour un accès facile
+        test_users = {}
+        
+        # Fonction utilitaire pour obtenir ou créer un utilisateur de test
+        def get_or_create_test_user(user=None, **kwargs):
+            if user is None:
+                user = UserFactory(**kwargs)
+                db_session.add(user)
+                db_session.commit()
+                db_session.refresh(user)
+            test_users[user.id] = user
+            return user
+            
+        # Créer l'utilisateur de test par défaut
+        test_user = get_or_create_test_user()
+        
+        # Fonction utilitaire pour générer les en-têtes d'authentification
         def auth_header(user=None):
             if user is None:
                 user = test_user
+            
+            # S'assurer que l'utilisateur est dans le dictionnaire et la base de données
+            if user.id not in test_users:
+                test_users[user.id] = user
                 db_session.add(user)
                 db_session.commit()
+                db_session.refresh(user)
+                
+            # Générer un jeton JWT valide
             token = create_access_token(subject=user.id)
             return {"Authorization": f"Bearer {token}"}
             
-        # Ajouter la méthode auth_header au client
+        # Ajouter les méthodes utilitaires au client de test
         test_client.auth_header = auth_header
+        test_client.get_or_create_test_user = get_or_create_test_user
         
-        yield test_client
+        # Définir l'utilisateur par défaut pour les dépendances
+        app.dependency_overrides[get_current_user] = lambda: test_user
+        
+        # Exécuter le test
+        try:
+            yield test_client
+        finally:
+            # Nettoyage après le test
+            db_session.rollback()
     
-    # Nettoyage après les tests
+    # Nettoyage final après les tests
     app.dependency_overrides.clear()
 
 # Fixture pour les données de test

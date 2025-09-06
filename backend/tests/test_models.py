@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 def test_user_model(db_session, test_data):
     """Test de création d'un utilisateur."""
-    from app.models.user import User
+    from app.models.base_models import User
     
     user_data = test_data["user"]
     user = User(
@@ -27,7 +27,7 @@ def test_user_model(db_session, test_data):
 
 def test_role_model(db_session, test_data):
     """Test de création d'un rôle."""
-    from app.models.role import Role
+    from app.models.base_models import Role
     
     role_data = test_data["role"]
     role = Role(
@@ -46,7 +46,7 @@ def test_role_model(db_session, test_data):
 @pytest.mark.asyncio
 async def test_profession_model(db_session, test_data):
     """Test de création d'une profession."""
-    from app.models.profession import Profession
+    from app.models.base_models import Profession
     
     profession_data = test_data["profession"]
     profession = Profession(
@@ -64,8 +64,7 @@ async def test_profession_model(db_session, test_data):
 
 def test_user_role_relationship(db_session, test_data):
     """Test de la relation entre utilisateur et rôle."""
-    from app.models.user import User
-    from app.models.role import Role
+    from app.models.base_models import User, Role
     
     # Créer un rôle
     role = Role(
@@ -95,7 +94,7 @@ def test_user_role_relationship(db_session, test_data):
 
 def test_unique_constraint_violation(db_session, test_data):
     """Test de la contrainte d'unicité sur l'email."""
-    from app.models.user import User
+    from app.models.base_models import User
     
     # Créer un premier utilisateur
     user1 = User(
