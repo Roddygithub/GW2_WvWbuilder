@@ -1,68 +1,63 @@
 """
-Gestion des sessions de base de données SQLAlchemy.
+Gestion des sessions de base de données SQLAlchemy 2.0.
 
 Ce module fournit la configuration de base pour la gestion des sessions de base de données
-et l'initialisation de la base de données.
+et l'initialisation de la base de données avec SQLAlchemy 2.0.
 """
 from __future__ import annotations
 
-from typing import Generator
+from typing import AsyncGenerator, Generator
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, text
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker, Session
 
 from app.core.config import settings
 from app.models.base import Base  # Import de la classe de base des modèles
 
+# URL de base de données
+DATABASE_URL = settings.get_database_url()
+ASYNC_DATABASE_URL = settings.get_async_database_url()
 
-def get_engine():
-    """Crée et retourne une instance du moteur SQLAlchemy."""
-    db_url = settings.get_database_url()
-    connect_args = {}
-    
-    # Configuration spécifique pour SQLite
-    if "sqlite" in db_url:
-        connect_args["check_same_thread"] = False
-    
-    # Création du moteur avec des paramètres optimisés
-    return create_engine(
-        db_url,
-        pool_pre_ping=True,  # Vérifie la connexion avant d'utiliser une connexion du pool
-        connect_args=connect_args
-    )
+# Moteur synchrone
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+)
 
+# Moteur asynchrone
+async_engine = create_async_engine(
+    ASYNC_DATABASE_URL,
+    pool_pre_ping=True,
+    connect_args={"check_same_thread": False} if "sqlite" in ASYNC_DATABASE_URL else {}
+)
 
-# Création de l'instance du moteur
-engine = get_engine()
-
-# Configuration de la fabrique de sessions
+# Session locale synchrone
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=engine,
-    expire_on_commit=False  # Évite les problèmes de session expirée après commit
+    class_=Session,
+    expire_on_commit=False
+)
+
+# Session locale asynchrone
+AsyncSessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False
 )
 
 
-def get_db() -> Generator:
+def get_db() -> Generator[Session, None, None]:
     """
-    Génère une session de base de données pour les dépendances FastAPI.
-    
-    Cette fonction est utilisée comme dépendance dans les routes FastAPI pour obtenir
-    une session de base de données. La session est automatiquement fermée après utilisation.
+    Obtient une session de base de données synchrone pour les dépendances FastAPI.
     
     Yields:
-        Session: Une session de base de données SQLAlchemy.
-        
-    Exemple d'utilisation:
-        ```python
-        from fastapi import Depends
-        from sqlalchemy.orm import Session
-        
-        @app.get("/items/")
-        def read_items(db: Session = Depends(get_db)):
-            return db.query(Item).all()
-        ```
+        Session: Une instance de session SQLAlchemy synchrone
     """
     db = SessionLocal()
     try:

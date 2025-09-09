@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app import models, schemas
 from app.crud.build import build as build_crud
 from app.db.base import Base
-from app.models import Build, BuildProfession, Profession
+from app.models import Build, Profession
 
 logger = logging.getLogger(__name__)
 
@@ -28,58 +28,51 @@ def test_create_build_with_professions(db: Session) -> None:
     logger.info(f"Created professions with IDs: {profession_ids}")
     
     # Create build data
-    build_data = schemas.BuildCreate(
-        name="Test Build with Professions",
-        description="A test build with multiple professions",
-        game_mode="wvw",
-        team_size=5,
-        is_public=True,
-        profession_ids=profession_ids,
-        config={"key": "value"},
-        constraints={"min_healers": 1}
-    )
+    build_data = {
+        "name": "Test Build with Professions",
+        "description": "A build with multiple professions",
+        "game_mode": "wvw",
+        "team_size": 5,
+        "is_public": True,
+        "config": {"test": "config"},
+        "constraints": {"test": "constraints"},
+        "profession_ids": profession_ids
+    }
     
-    # Create the build
-    db_build = build_crud.create_with_owner(
+    # Create build using CRUD
+    build = build_crud.create_with_owner(
         db=db,
-        obj_in=build_data,
-        owner_id=1  # Assuming user with ID 1 exists
+        obj_in=schemas.BuildCreate(**build_data),
+        owner_id=1,  # Assuming user with ID 1 exists
+        profession_ids=profession_ids
     )
     
-    # Verify the build was created
-    assert db_build is not None
-    assert db_build.id is not None
-    logger.info(f"Created build with ID: {db_build.id}")
+    logger.info(f"Created build with ID: {build.id}")
     
-    # Verify the build was saved to the database
-    db_build = db.query(Build).filter(Build.id == db_build.id).first()
-    assert db_build is not None
+    # Verify the build was created correctly
+    assert build is not None
+    assert build.name == build_data["name"]
+    assert build.description == build_data["description"]
+    assert build.game_mode == build_data["game_mode"]
+    assert build.team_size == build_data["team_size"]
+    assert build.is_public == build_data["is_public"]
+    assert build.config == build_data["config"]
+    assert build.constraints == build_data["constraints"]
     
-    # Verify the build-profession associations
-    build_profs = db.query(BuildProfession).filter(
-        BuildProfession.build_id == db_build.id
-    ).all()
+    # Verify profession associations were created
+    db.refresh(build)
+    assert len(build.professions) == len(profession_ids)
     
-    logger.info(f"Found {len(build_profs)} build-profession associations")
-    assert len(build_profs) == len(profession_ids), \
-        f"Expected {len(profession_ids)} associations, got {len(build_profs)}"
+    # Check that all specified professions are associated
+    associated_profession_ids = {p.id for p in build.professions}
+    assert associated_profession_ids == set(profession_ids)
     
-    # Verify the profession IDs match
-    associated_prof_ids = {bp.profession_id for bp in build_profs}
-    expected_prof_ids = set(profession_ids)
+    # Verify we can retrieve the build with its professions
+    build_in_db = db.query(Build).options(
+        joinedload(Build.professions)
+    ).filter(Build.id == build.id).first()
     
-    logger.info(f"Associated profession IDs: {associated_prof_ids}")
-    logger.info(f"Expected profession IDs: {expected_prof_ids}")
-    
-    assert associated_prof_ids == expected_prof_ids, \
-        f"Expected profession IDs {expected_prof_ids}, got {associated_prof_ids}"
-    
-    # Verify the relationship on the build object
-    if hasattr(db_build, 'professions'):
-        logger.info(f"Build has {len(db_build.professions)} professions via relationship")
-        assert len(db_build.professions) == len(profession_ids), \
-            f"Expected {len(profession_ids)} professions via relationship, got {len(db_build.professions)}"
-    else:
-        logger.warning("Build object does not have 'professions' relationship")
+    assert build_in_db is not None
+    assert len(build_in_db.professions) == len(profession_ids)
     
     logger.info("=== Test completed successfully ===")

@@ -6,6 +6,7 @@ class ProfessionBase(BaseModel):
     name: str = Field(..., min_length=2, max_length=50, examples=["Guardian"])
     icon_url: Optional[str] = Field(None, examples=["https://example.com/icons/guardian.png"])
     description: Optional[str] = Field(None, examples=["A profession that uses magical powers to protect allies and smite foes."])
+    game_modes: Optional[List[str]] = Field(default_factory=list, examples=[["WvW", "PvP"]])
     
     model_config = ConfigDict(
         json_schema_extra={
@@ -26,6 +27,7 @@ class ProfessionUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=50, examples=["Guardian"])
     icon_url: Optional[str] = Field(None, examples=["https://example.com/icons/guardian_updated.png"])
     description: Optional[str] = Field(None, examples=["Updated description of the Guardian profession."])
+    game_modes: Optional[List[str]] = Field(None, examples=[["WvW", "PvP"]])
     
     model_config = ConfigDict(
         json_schema_extra={

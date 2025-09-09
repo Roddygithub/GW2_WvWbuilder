@@ -5,6 +5,8 @@ class RoleBase(BaseModel):
     """Base schema for role data"""
     name: str = Field(..., min_length=2, max_length=50, examples=["Healer"])
     description: Optional[str] = Field(None, examples=["Responsible for keeping the group alive with healing"])
+    permission_level: int = Field(default=0, ge=0, le=100, description="Permission level (0-100)")
+    is_default: bool = Field(default=False, description="Whether this is a default role for new users")
     icon_url: Optional[str] = Field(None, examples=["https://example.com/icons/healer.png"])
     
     model_config = ConfigDict(
@@ -26,6 +28,8 @@ class RoleUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=2, max_length=50, examples=["Support Healer"])
     description: Optional[str] = Field(None, examples=["Provides healing and support to the group"])
     icon_url: Optional[str] = Field(None, examples=["https://example.com/icons/support_healer.png"])
+    permission_level: Optional[int] = Field(None, ge=0, le=100, description="Permission level (0-100)")
+    is_default: Optional[bool] = Field(None, description="Whether this is a default role for new users")
     
     model_config = ConfigDict(
         json_schema_extra={

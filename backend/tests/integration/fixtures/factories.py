@@ -3,7 +3,7 @@ import factory
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app.models import User, Role, Profession, Composition, EliteSpecialization, Build, BuildProfession
+from app.models import User, Role, Profession, Composition, EliteSpecialization, Build
 
 fake = Faker()
 
@@ -14,7 +14,8 @@ class RoleFactory(factory.alchemy.SQLAlchemyModelFactory):
     
     name = factory.Faker("job")
     description = factory.Faker("sentence")
-    icon_url = factory.Faker("image_url")
+    permission_level = 0
+    is_default = False
 
 class ProfessionFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
@@ -90,20 +91,13 @@ class BuildFactory(factory.alchemy.SQLAlchemyModelFactory):
     
     @factory.post_generation
     def professions(self, create, extracted, **kwargs):
-        if not create:
+        if not create or not extracted:
             return
             
-        if extracted:
-            for profession in extracted:
-                self.professions.append(profession)
+        for profession in extracted:
+            self.professions.append(profession)
 
-class BuildProfessionFactory(factory.alchemy.SQLAlchemyModelFactory):
-    class Meta:
-        model = BuildProfession
-        sqlalchemy_session_persistence = "commit"
-    
-    build = factory.SubFactory(BuildFactory)
-    profession = factory.SubFactory(ProfessionFactory)
+# BuildProfession is now a table, not a model, so we don't need a factory for it
 
 def create_test_data(db: Session) -> dict:
     """Crée un jeu de données de test complet."""
@@ -114,39 +108,73 @@ def create_test_data(db: Session) -> dict:
     # Créer des professions avec spécialisations
     professions = []
     elite_specs = []
-    for _ in range(3):
+    
+    for _ in range(5):
         prof = ProfessionFactory()
         professions.append(prof)
-        for _ in range(2):  # 2 spécialisations par profession
-            elite_specs.append(EliteSpecializationFactory(profession=prof))
+        
+        # Ajouter 1-3 spécialisations par profession
+        for _ in range(fake.random_int(1, 3)):
+            spec = EliteSpecializationFactory(profession=prof)
+            elite_specs.append(spec)
     
     db.add_all(professions)
     db.add_all(elite_specs)
     
-    # Créer des utilisateurs avec des rôles
+    # Créer des utilisateurs avec rôles
     users = []
     for i in range(5):
-        user_roles = [roles[i % len(roles)]]  # Assigner des rôles de manière cyclique
+        user_roles = [roles[0]]  # Tous les utilisateurs ont le premier rôle
+        if i == 0:  # Premier utilisateur est admin
+            user_roles.append(roles[1])
+        
         user = UserFactory(roles=user_roles)
         users.append(user)
     
     db.add_all(users)
     
-    # Créer des compositions avec des membres
+    # Créer des compositions
     compositions = []
     for i in range(3):
-        # Chaque composition a 2-3 membres
-        members = users[i:i+3] if i+3 <= len(users) else users[i:]
-        comp = CompositionFactory(members=members)
+        owner = users[i % len(users)]
+        comp = CompositionFactory(created_by=owner.id)
+        
+        # Ajouter des membres aléatoires
+        members = [u for u in users if u != owner][:fake.random_int(1, 3)]
+        comp.members = members
+        
         compositions.append(comp)
     
     db.add_all(compositions)
+    
+    # Créer des builds avec des associations de profession
+    builds = []
+    for i in range(5):
+        owner = users[i % len(users)]
+        build = BuildFactory(created_by=owner)
+        
+        # Associer 1-3 professions aléatoires
+        build_professions = fake.random_elements(
+            elements=professions,
+            length=fake.random_int(1, 3),
+            unique=True
+        )
+        build.professions = build_professions
+        
+        # Associer à une composition aléatoire
+        if i < len(compositions):
+            compositions[i].build = build
+        
+        builds.append(build)
+    
+    db.add_all(builds)
     db.commit()
     
     return {
+        'users': users,
         'roles': roles,
         'professions': professions,
-        'elite_specializations': elite_specs,
-        'users': users,
+        'elite_specs': elite_specs,
         'compositions': compositions,
+        'builds': builds
     }

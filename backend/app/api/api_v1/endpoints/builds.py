@@ -184,21 +184,41 @@ def create_build(
                 logger.error(f"Error querying database state: {str(db_err)}", exc_info=True)
             
             # Call the create_with_owner method
-            db_build = crud.build.create_with_owner(
-                db=db, obj_in=build_in, owner_id=current_user.id
-            )
-            
-            # Log the result
-            if db_build:
-                logger.info(f"create_with_owner returned build with ID: {getattr(db_build, 'id', 'N/A')}")
-            else:
-                logger.error("create_with_owner returned None")
-            
-            # Ensure the build was created
-            if not db_build:
+            try:
+                db_build = crud.build.create_with_owner(
+                    db=db, obj_in=build_in, owner_id=current_user.id
+                )
+                
+                # Log the result
+                if db_build:
+                    logger.info(f"Successfully created build with ID: {getattr(db_build, 'id', 'N/A')}")
+                else:
+                    logger.error("create_with_owner returned None")
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Failed to create build: No build was returned"
+                    )
+                
+                return db_build
+                
+            except ValueError as ve:
+                # Handle validation errors with a 400 Bad Request
+                logger.error(f"Validation error in create_with_owner: {str(ve)}", exc_info=True)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid build data: {str(ve)}"
+                )
+                
+            except Exception as e:
+                # Log detailed error information
+                error_type = type(e).__name__
+                error_message = str(e)
+                logger.error(f"Unexpected error in create_with_owner: {error_type}: {error_message}", exc_info=True)
+                
+                # Re-raise as a 500 error
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to create build: create_with_owner returned None"
+                    detail=f"An error occurred while creating the build: {error_message}"
                 )
                 
         except HTTPException as http_exc:
@@ -210,11 +230,17 @@ def create_build(
             # Log detailed error information
             error_type = type(e).__name__
             error_message = str(e)
-            logger.error(f"Error in create_with_owner: {error_type}: {error_message}", exc_info=True)
+            logger.error(f"Unexpected error in build creation: {error_type}: {error_message}", exc_info=True)
             
             # Log the full traceback to help with debugging
             import traceback
             logger.error(f"Full traceback:\n{traceback.format_exc()}")
+            
+            # Raise a 500 error
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred while creating the build. Please try again later."
+            )
             
             # Log the build data that caused the error
             try:

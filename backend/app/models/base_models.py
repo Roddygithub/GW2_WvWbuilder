@@ -5,16 +5,32 @@ Ce module contient toutes les définitions de modèles SQLAlchemy pour l'applica
 Les modèles sont organisés de manière logique avec des commentaires pour une meilleure lisibilité.
 """
 
+from __future__ import annotations
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
 from sqlalchemy import (
-    Boolean, Column, DateTime, ForeignKey, Integer, String, Table, Text, JSON
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    JSON,
+    UniqueConstraint,
+    PrimaryKeyConstraint,
+    Table,
+    func,
+    or_,
 )
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base
+
+# Pour les annotations de type en cas d'imports circulaires
+if TYPE_CHECKING:
+    from .base_models import Composition, Role, Build, Profession, EliteSpecialization
 
 # Tables de jonction
 try:
@@ -38,12 +54,15 @@ try:
         Column('role_id', Integer, ForeignKey('roles.id'), primary_key=True),
     )
 
-    # Table de jonction pour les builds et les professions
-    build_professions = Table(
-        'build_professions',
+    # Association table for build-profession many-to-many relationship
+    build_profession = Table(
+        "build_professions",
         Base.metadata,
-        Column('build_id', Integer, ForeignKey('builds.id'), primary_key=True),
-        Column('profession_id', Integer, ForeignKey('professions.id'), primary_key=True)
+        Column("id", Integer, primary_key=True, autoincrement=True),
+        Column("build_id", Integer, ForeignKey("builds.id", ondelete="CASCADE"), nullable=False, index=True),
+        Column("profession_id", Integer, ForeignKey("professions.id", ondelete="CASCADE"), nullable=False, index=True),
+        Column("created_at", DateTime(timezone=True), server_default=func.now(), nullable=False),
+        UniqueConstraint('build_id', 'profession_id', name='uq_build_profession')
     )
 
 except Exception as e:
@@ -55,29 +74,32 @@ class User(Base):
     """Modèle utilisateur avec authentification et autorisations."""
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    is_active = Column(Boolean, default=True)
-    is_superuser = Column(Boolean, default=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    username: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+    full_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now())
     
     # Relations
-    compositions = relationship(
+    compositions: Mapped[List[Composition]] = relationship(
         "Composition", 
         secondary=composition_members, 
-        back_populates="members"
+        back_populates="members",
+        viewonly=True
     )
     
-    roles = relationship(
+    roles: Mapped[List[Role]] = relationship(
         "Role",
         secondary=user_roles,
         back_populates="users",
+        viewonly=True
     )
     
-    builds = relationship("Build", back_populates="created_by")
+    builds: Mapped[List[Build]] = relationship("Build", back_populates="created_by")
 
     def __repr__(self):
         return f"<User {self.username}>"
@@ -95,47 +117,51 @@ class Role(Base):
     """Modèle de rôle pour les autorisations des utilisateurs."""
     __tablename__ = "roles"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True, nullable=False)
-    description = Column(Text, nullable=True)
-    icon_url = Column(String, nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    permission_level: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
     
     # Relations
-    users = relationship(
-        "User",
-        secondary=user_roles,
+    users: Mapped[List[User]] = relationship(
+        "User", 
+        secondary=user_roles, 
         back_populates="roles",
+        viewonly=True
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Role {self.name}>"
 
 
 class Profession(Base):
     """Modèle de profession (classe) dans Guild Wars 2."""
     __tablename__ = "professions"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True, nullable=False)
-    icon_url = Column(String, nullable=True)
-    description = Column(Text, nullable=True)
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    icon_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    game_modes: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True, default=[])
     
     # Relations
-    elite_specializations = relationship(
+    elite_specializations: Mapped[List["EliteSpecialization"]] = relationship(
         "EliteSpecialization", 
         back_populates="profession",
         cascade="all, delete-orphan"
     )
     
-    builds = relationship(
+    # Relation avec les builds via la table d'association
+    builds: Mapped[List["Build"]] = relationship(
         "Build",
-        secondary="build_professions",
-        viewonly=True
+        secondary=build_profession,
+        back_populates="professions"
     )
     
-    build_professions = relationship("BuildProfession", back_populates="profession")
-
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Profession {self.name}>"
 
 
@@ -143,16 +169,16 @@ class EliteSpecialization(Base):
     """Modèle de spécialisation d'élite pour les professions."""
     __tablename__ = "elite_specializations"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
-    profession_id = Column(Integer, ForeignKey('professions.id'), nullable=False)
-    icon_url = Column(String, nullable=True)
-    description = Column(Text, nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    profession_id: Mapped[int] = mapped_column(Integer, ForeignKey('professions.id'), nullable=False)
+    icon_url: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
     # Relations
-    profession = relationship("Profession", back_populates="elite_specializations")
-    
-    def __repr__(self):
+    profession: Mapped[Profession] = relationship("Profession", back_populates="elite_specializations")
+
+    def __repr__(self) -> str:
         return f"<EliteSpecialization {self.name} ({self.profession.name})>"
 
 
@@ -160,28 +186,34 @@ class Composition(Base):
     """Modèle de composition d'équipe WvW."""
     __tablename__ = "compositions"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
-    description = Column(Text, nullable=True)
-    squad_size = Column(Integer, default=10)
-    is_public = Column(Boolean, default=True)
-    created_by = Column(Integer, ForeignKey('users.id'))
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    build_id = Column(Integer, ForeignKey('builds.id'), nullable=True)
-
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    squad_size: Mapped[int] = mapped_column(Integer, default=10)
+    is_public: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[int] = mapped_column(Integer, ForeignKey('users.id'))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now())
+    build_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('builds.id'), nullable=True)
+    
     # Relations
-    members = relationship(
+    members: Mapped[List[User]] = relationship(
         "User", 
         secondary=composition_members, 
-        back_populates="compositions"
+        back_populates="compositions",
+        viewonly=True
     )
     
-    tags = relationship("CompositionTag", back_populates="composition", cascade="all, delete-orphan")
-    creator = relationship("User", foreign_keys=[created_by])
-    build = relationship("Build", back_populates="compositions")
+    tags: Mapped[List[CompositionTag]] = relationship(
+        "CompositionTag", 
+        back_populates="composition", 
+        cascade="all, delete-orphan"
+    )
+    
+    creator: Mapped[User] = relationship("User", foreign_keys=[created_by])
+    build: Mapped[Optional[Build]] = relationship("Build", back_populates="compositions")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Composition {self.name}>"
 
 
@@ -189,14 +221,14 @@ class CompositionTag(Base):
     """Modèle d'étiquette pour les compositions."""
     __tablename__ = "composition_tags"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
-    composition_id = Column(Integer, ForeignKey('compositions.id'))
-
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    composition_id: Mapped[int] = mapped_column(Integer, ForeignKey('compositions.id'))
+    
     # Relations
-    composition = relationship("Composition", back_populates="tags")
+    composition: Mapped[Composition] = relationship("Composition", back_populates="tags")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<CompositionTag {self.name}>"
 
 
@@ -204,36 +236,37 @@ class Build(Base):
     """Modèle de build pour les compositions."""
     __tablename__ = "builds"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True, nullable=False)
-    description = Column(Text, nullable=True)
-    game_mode = Column(String, default="wvw")
-    team_size = Column(Integer, default=5)
-    is_public = Column(Boolean, default=False)
-    created_by_id = Column(Integer, ForeignKey("users.id"))
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    config = Column(JSON, nullable=False, default=dict)
-    constraints = Column(JSON, default=dict)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    game_mode: Mapped[str] = mapped_column(String, default="wvw")
+    team_size: Mapped[int] = mapped_column(Integer, default=5)
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_by_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now())
+    config: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    constraints: Mapped[Optional[dict]] = mapped_column(JSON, default=dict)
     
     # Relations
-    created_by = relationship("User", back_populates="builds")
-    compositions = relationship("Composition", back_populates="build", cascade="all, delete-orphan")
-    build_professions = relationship(
-        "BuildProfession", 
+    created_by: Mapped[User] = relationship("User", back_populates="builds")
+    compositions: Mapped[List[Composition]] = relationship(
+        "Composition", 
         back_populates="build", 
         cascade="all, delete-orphan"
     )
     
-    professions = relationship(
+    # Relation avec les professions via la table d'association
+    professions: Mapped[List[Profession]] = relationship(
         "Profession",
-        secondary="build_professions",
-        viewonly=True
+        secondary=build_profession,
+        back_populates="builds"
     )
-
+    
+    # Alias pour created_by_id pour la compatibilité avec l'API
     @property
     def owner_id(self) -> int:
-        """Alias pour created_by_id pour la compatibilité avec l'API."""
+        """Retourne l'ID du propriétaire (alias pour created_by_id)."""
         return self.created_by_id
         
     @owner_id.setter
@@ -241,21 +274,5 @@ class Build(Base):
         """Définit l'ID du propriétaire (alias pour created_by_id)."""
         self.created_by_id = value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Build {self.name}>"
-
-
-class BuildProfession(Base):
-    """Table d'association pour la relation many-to-many entre Build et Profession."""
-    __tablename__ = "build_professions"
-    __table_args__ = {'extend_existing': True}
-
-    build_id = Column(Integer, ForeignKey("builds.id"), primary_key=True)
-    profession_id = Column(Integer, ForeignKey("professions.id"), primary_key=True)
-    
-    # Relations
-    build = relationship("Build", back_populates="build_professions")
-    profession = relationship("Profession", back_populates="build_professions")
-
-    def __repr__(self):
-        return f"<BuildProfession build_id={self.build_id} profession_id={self.profession_id}>"

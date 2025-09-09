@@ -14,12 +14,11 @@ from .base_models import (
     Composition,
     CompositionTag,
     Build,
-    BuildProfession,
     
     # Tables de jonction
     composition_members,
     user_roles,
-    build_professions
+    build_profession
 )
 
 __all__ = [
@@ -34,10 +33,9 @@ __all__ = [
     "Composition",
     "CompositionTag",
     "Build",
-    "BuildProfession",
     
     # Tables de jonction
     "composition_members",
     "user_roles",
-    "build_professions"
+    "build_profession"
 ]
