@@ -45,6 +45,12 @@ class User(Base):
         back_populates="members",
         overlaps="members"
     )
+    # Builds created by this user
+    builds = relationship(
+        "Build",
+        back_populates="created_by",
+        cascade="all, delete-orphan"
+    )
     # Assignations directes de rôles
     roles = relationship(
         "Role",
@@ -84,6 +90,16 @@ class Profession(Base):
     
     # Relations
     elite_specializations = relationship("EliteSpecialization", back_populates="profession")
+    build_professions = relationship("BuildProfession", back_populates="profession", overlaps="builds,professions")
+    
+    # Many-to-many relationship with Build through BuildProfession
+    builds = relationship(
+        "Build",
+        secondary="build_professions",
+        back_populates="professions",
+        viewonly=True,
+        overlaps="build_professions,profession"
+    )
     
     def __repr__(self):
         return f"<Profession {self.name}>"
@@ -115,6 +131,9 @@ class Composition(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # Foreign key to the build this composition belongs to
+    build_id = Column(Integer, ForeignKey('builds.id'), nullable=True)
+    
     # Relations
     members = relationship(
         "User", 
@@ -124,8 +143,11 @@ class Composition(Base):
     )
     tags = relationship("CompositionTag", back_populates="composition")
     
-    # Relation avec le créateur
+    # Relation with the creator
     creator = relationship("User", foreign_keys=[created_by])
+    
+    # Relation with the build
+    build = relationship("Build", back_populates="compositions")
 
     def __repr__(self):
         return f"<Composition {self.name}>"

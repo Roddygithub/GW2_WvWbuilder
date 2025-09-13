@@ -1,12 +1,13 @@
-from typing import TYPE_CHECKING, List
+from typing import List
 from sqlalchemy import Boolean, Column, Integer, String, ForeignKey, JSON, DateTime, Text, Table
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from app.core.db import Base
+from app.db.base import Base
+from .build_profession import BuildProfession
 
 # Remove circular imports by using string-based relationships
-__all__ = ["Build", "BuildProfession"]
+__all__ = ["Build"]
 
 class Build(Base):
     __tablename__ = "builds"
@@ -53,25 +54,4 @@ class Build(Base):
     def __repr__(self):
         return f"<Build {self.name}>"
 
-
-class BuildProfession(Base):
-    """Association table for many-to-many relationship between Build and Profession with additional attributes."""
-    __tablename__ = "build_professions"
-    
-    build_id = Column(Integer, ForeignKey("builds.id"), primary_key=True)
-    profession_id = Column(Integer, ForeignKey("professions.id"), primary_key=True)
-    
-    # Relationships with explicit overlaps to handle the many-to-many pattern
-    build = relationship(
-        "Build", 
-        back_populates="build_professions",
-        overlaps="builds,professions"
-    )
-    profession = relationship(
-        "Profession", 
-        back_populates="build_professions",
-        overlaps="builds"
-    )
-    
-    def __repr__(self):
-        return f"<BuildProfession build_id={self.build_id} profession_id={self.profession_id}>"
+# BuildProfession model has been moved to app.models.build_profession

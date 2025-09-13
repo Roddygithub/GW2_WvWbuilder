@@ -1,5 +1,6 @@
 import logging
 from typing import Any, Dict, List, Optional, Type, TypeVar, Union, Type, Generic
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql import func
 import traceback
@@ -163,43 +164,105 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
                     if p.id in generation_request.preferred_professions
                 ]
             
+            # Ensure we have at least one profession
+            if not professions:
+                logger.warning("No professions available for build generation")
+                return schemas.BuildGenerationResponse(
+                    success=False,
+                    message="No valid professions available for build generation",
+                    build=None,
+                    suggested_composition=[]
+                )
+            
             # Simple round-robin assignment as a starting point
             # Replace this with actual build generation logic
             selected_professions = []
             for i in range(generation_request.team_size):
-                if not professions:
-                    break
                 selected_professions.append(professions[i % len(professions)])
+            
+            # Prepare constraints as a dictionary if they exist
+            constraints_dict = generation_request.constraints.dict() if hasattr(generation_request.constraints, 'dict') else {}
             
             # Create a new build with the generated composition
             build_in = schemas.BuildCreate(
-                name="Generated Build",
-                description="Automatically generated build",
+                name=f"Generated Build - {generation_request.team_size} players",
+                description=f"Automatically generated build for {generation_request.team_size} players",
+                game_mode="wvw",  # Default to WvW for generated builds
                 team_size=generation_request.team_size,
                 is_public=False,
-                config={"generated": True},
-                constraints=generation_request.constraints,
+                config={"generated": True, "constraints": constraints_dict},
+                constraints=constraints_dict,
                 profession_ids=[p.id for p in selected_professions]
             )
             
             build = self.create_with_owner(db, obj_in=build_in, owner_id=owner_id)
             
-            # Prepare suggested composition
-            suggested_composition = [
-                {
+            # Convert build to dict and update with profession details
+            build_dict = {
+                "id": build.id,
+                "name": build.name,
+                "description": build.description,
+                "game_mode": build.game_mode,
+                "team_size": build.team_size,
+                "is_public": build.is_public,
+                "owner_id": owner_id,  # Add owner_id to match the schema
+                "created_by_id": build.created_by_id,
+                "created_at": build.created_at.isoformat(),
+                "updated_at": build.updated_at.isoformat(),
+                "profession_ids": [p.id for p in selected_professions],
+                "professions": [
+                    {
+                        "id": p.id,
+                        "name": p.name,
+                        "description": p.description or ""
+                    }
+                    for p in selected_professions
+                ],
+                "config": build.config or {},
+                "constraints": build.constraints or {}
+            }
+            
+            # Prepare suggested composition - ensure this is always a list, even if empty
+            suggested_composition = []
+            for i, prof in enumerate(selected_professions):
+                # Determine role based on position or other logic
+                role = "DPS"  # Default role
+                if i == 0 and generation_request.team_size > 1:
+                    role = "Healer"
+                elif i == 1 and generation_request.team_size > 2:
+                    role = "Support"
+                
+                suggested_composition.append({
                     "position": i + 1,
-                    "profession_id": prof.id,
-                    "profession_name": prof.name,
-                    "role": "DPS"  # Default role, should be determined by actual logic
-                }
-                for i, prof in enumerate(selected_professions)
-            ]
+                    "profession": prof.name,
+                    "role": role,
+                    "build": f"{prof.name} - {role}",
+                    "required_boons": ["Might", "Fury"],
+                    "required_utilities": ["CC", "Cleanse"]
+                })
+            
+            # Prepare metrics
+            metrics = {
+                "boon_coverage": {
+                    "might": 100.0,
+                    "fury": 100.0,
+                    "quickness": 50.0,
+                    "alacrity": 0.0
+                },
+                "role_distribution": {
+                    "healer": 1,
+                    "support": 1,
+                    "dps": generation_request.team_size - 2 if generation_request.team_size > 2 else 1
+                },
+                "profession_distribution": {p.name: 1 for p in selected_professions}
+            }
             
             return schemas.BuildGenerationResponse(
                 success=True,
                 message="Build generated successfully",
-                build=build,
-                suggested_composition=suggested_composition
+                build=build_dict,
+                suggested_composition=suggested_composition,
+                metrics=metrics
             )
             
         except Exception as e:
@@ -207,7 +270,7 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
                 success=False,
                 message=f"Error generating build: {str(e)}",
                 build=None,
-                suggested_composition=None
+                suggested_composition=[]
             )
 
     def get_multi(
