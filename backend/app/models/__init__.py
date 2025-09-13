@@ -10,6 +10,9 @@ from .models import (
     composition_members
 )
 
+from .build import Build
+from .build_profession import BuildProfession
+
 __all__ = [
     "Base",
     "User",
@@ -18,5 +21,7 @@ __all__ = [
     "EliteSpecialization",
     "Composition",
     "CompositionTag",
-    "composition_members"
+    "composition_members",
+    "Build",
+    "BuildProfession"
 ]

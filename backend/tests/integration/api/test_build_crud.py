@@ -1,9 +1,10 @@
 """Tests for build CRUD operations."""
+import json
 import logging
 import sys
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, sessionmaker, joinedload
 from typing import Dict, Any, List, Generator
 
 # Configure logging
@@ -16,15 +17,13 @@ logger = logging.getLogger(__name__)
 
 # Import settings first to ensure environment is set up correctly
 from app.core.config import settings
-from app.core.db import engine, Base, get_db
+from app.db.base import Base
+from app.db.session import engine, get_db
 
 # Import models to ensure they are registered with SQLAlchemy
 from app.models import models
 from app.models.build import Build, BuildProfession  # noqa: F401
 from app.models.models import User, Role, Profession, EliteSpecialization, Composition  # noqa: F401
-
-# Import CRUD operations
-from app.crud.build import build as build_crud
 
 # Import test utilities
 from tests.integration.fixtures.factories import (
@@ -32,6 +31,15 @@ from tests.integration.fixtures.factories import (
     UserFactory, 
     ProfessionFactory
 )
+
+# Import CRUD operations
+from app.crud.build import build as build_crud
+
+# Import schemas
+from app.schemas.build import BuildCreate, BuildUpdate
+
+# Import test client
+from tests.conftest import client
 
 # Create a new test database session factory
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -219,32 +227,21 @@ def test_create_build(client: TestClient, db: Session) -> None:
             
             # Verify build was created correctly
             assert db_build is not None, "Build not found in database"
+            
+            # Log professions relationship
+            if hasattr(db_build, 'professions') and db_build.professions:
                 logger.info(f"  - Professions (direct): {len(db_build.professions)}")
                 for prof in db_build.professions:
                     logger.info(f"    - Profession: id={prof.id}, name={prof.name}")
-                
-                # Log build_professions relationship
-                if hasattr(db_build, 'build_professions') and db_build.build_professions:
-                    logger.info(f"  - BuildProfessions: {len(db_build.build_professions)}")
-                    for bp in db_build.build_professions:
-                        logger.info(f"    - BuildProfession: build_id={bp.build_id}, profession_id={bp.profession_id}")
-                        if hasattr(bp, 'profession') and bp.profession:
-                            logger.info(f"      - Profession: id={bp.profession.id}, name={bp.profession.name}")
-                
-                # Log professions relationship
-                if hasattr(db_build, 'professions') and db_build.professions:
-                    logger.info(f"  - Professions (direct): {len(db_build.professions)}")
-                    for prof in db_build.professions:
-                        logger.info(f"    - Profession: id={prof.id}, name={prof.name}")
-                else:
-                    logger.warning("  - No professions found via direct relationship")
-                    
-                # Log profession_ids from the response
-                response_data = response.json()
-                logger.info(f"  - Response profession_ids: {response_data.get('profession_ids', [])}")
-                logger.info(f"  - Response professions: {response_data.get('professions', [])}")
             else:
-                logger.error("Build not found in database after creation")
+                logger.warning("  - No professions found via direct relationship")
+                
+            # Log profession_ids from the response
+        # Get response data
+        try:
+            response_data = response.json()
+            logger.info(f"  - Response profession_ids: {response_data.get('profession_ids', [])}")
+            logger.info(f"  - Response professions: {response_data.get('professions', [])}")
             
             # If the response is an error, log more details
             if response.status_code >= 400:
@@ -252,15 +249,16 @@ def test_create_build(client: TestClient, db: Session) -> None:
                 try:
                     error_detail = response.json()
                     logger.error(f"Error details: {json.dumps(error_detail, indent=2)}")
-                except:
+                except Exception as e:
                     logger.error(f"Could not parse error response: {response.text}")
+                    logger.error(f"Error parsing JSON: {str(e)}")
         except Exception as e:
             logger.error("\n=== Error during request ===")
             logger.error(f"Exception type: {type(e).__name__}")
             logger.error(f"Error message: {str(e)}")
-        import traceback
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        raise
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise
         
         # Verify response - 201 Created is the correct status code for successful resource creation
         logger.info("\n=== Verifying response ===")

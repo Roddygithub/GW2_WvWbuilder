@@ -135,8 +135,18 @@ def client(db_session):
             token = create_access_token(subject=user.id)
             return {"Authorization": f"Bearer {token}"}
             
-        # Ajouter la méthode auth_header au client
+        # Ajouter les méthodes d'aide au client
         test_client.auth_header = auth_header
+        test_client.test_user = test_user
+        
+        def clear_auth():
+            if hasattr(test_client, 'test_user'):
+                delattr(test_client, 'test_user')
+                
+        test_client.clear_auth = clear_auth
+        
+        # Set up default auth header
+        test_client.headers.update(auth_header())
         
         yield test_client
     
