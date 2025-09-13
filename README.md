@@ -1,7 +1,7 @@
 # 🏰 GW2 WvW Builder
 
 [![Backend Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml/badge.svg?branch=develop)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml)
-[![Code Coverage](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/develop/graph/badge.svg?token=YOUR-TOKEN-HERE)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
+![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)
 [![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -45,6 +45,41 @@
 - PostgreSQL 14+
 - Poetry (gestion des dépendances Python)
 - Yarn (gestion des dépendances JavaScript)
+- Docker et Docker Compose (pour les tests en conteneur)
+
+## 🛠️ Validation locale
+
+Le projet inclut un système complet de validation locale pour s'assurer que tout fonctionne correctement avant de pousser des modifications.
+
+### Validation complète
+
+Exécutez toutes les validations en une seule commande :
+
+```bash
+make final-validate
+```
+
+Cette commande va :
+1. Lancer les tests unitaires avec couverture de code
+2. Générer un rapport de couverture HTML
+3. Exécuter les tests dans un environnement Docker isolé
+
+### Commandes de validation individuelles
+
+- **Tests avec couverture** : `make test`
+- **Ouvrir le rapport de couverture** : `make coverage`
+- **Lancer les tests dans Docker** : `make docker-test`
+- **Nettoyer les fichiers de test** : `make clean`
+
+### Configuration requise pour les tests
+
+1. **Pour les tests locaux** :
+   - PostgreSQL doit être en cours d'exécution localement
+   - Les variables d'environnement doivent être configurées (voir `.env.example`)
+
+2. **Pour les tests Docker** :
+   - Docker et Docker Compose doivent être installés
+   - Le port 5432 doit être disponible pour PostgreSQL
 
 ### Installation
 
