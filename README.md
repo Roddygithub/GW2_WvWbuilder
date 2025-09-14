@@ -1,7 +1,8 @@
 # 🏰 GW2 WvW Builder
 
 [![Backend Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml/badge.svg?branch=develop)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml)
-![Coverage](https://img.shields.io/badge/coverage-92%25-brightgreen)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml)
+[![Changelog](https://img.shields.io/badge/CHANGELOG-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
 [![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
