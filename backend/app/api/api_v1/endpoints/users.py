@@ -75,14 +75,56 @@ def read_user_by_id(
     """
     Get a specific user by id.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info("=" * 50)
+    logger.info(f"read_user_by_id called with user_id={user_id}")
+    
+    # Debug current user
+    if current_user is None:
+        logger.error("Current user is None! This should not happen with get_current_active_user")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+    
+    logger.info(f"Current user: id={current_user.id if current_user else 'None'}, "
+                f"email={getattr(current_user, 'email', 'No email')}, "
+                f"is_superuser={getattr(current_user, 'is_superuser', False)}")
+    
+    # Get the requested user
     user = crud.user.get(db, id=user_id)
     if not user:
+        logger.warning(f"User with id {user_id} not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    if user == current_user or crud.user.is_superuser(current_user):
+        
+    logger.info(f"Found requested user: id={user.id}, "
+                f"email={user.email}, "
+                f"is_superuser={getattr(user, 'is_superuser', False)}")
+    
+    # Debug information
+    logger.info("-" * 50)
+    logger.info("Debug Information:")
+    logger.info(f"User IDs - Requested: {user.id}, Current: {current_user.id}")
+    logger.info(f"User emails - Requested: {user.email}, Current: {current_user.email}")
+    logger.info(f"User types - Requested: {type(user)}, Current: {type(current_user)}")
+    logger.info(f"User comparison: user == current_user -> {user == current_user}")
+    logger.info(f"Is superuser: {crud.user.is_superuser(current_user)}")
+    logger.info("-" * 50)
+    
+    # Check permissions
+    is_user_superuser = getattr(current_user, "is_superuser", False)
+    logger.info(f"User is superuser: {is_user_superuser}")
+    
+    if user.id == current_user.id or is_user_superuser:
+        logger.info("Access granted")
         return user
+        
+    logger.warning("Access denied - insufficient privileges")
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN, 
         detail="The user doesn't have enough privileges"
@@ -103,10 +145,19 @@ def update_user(
     if not user:
         raise HTTPException(
             status_code=404,
-            detail="The user with this username does not exist in the system",
+            detail="The user with this ID does not exist in the system",
         )
-    user = crud.user.update(db, db_obj=user, obj_in=user_in)
-    return user
+    
+    try:
+        user = crud.user.update(db, db_obj=user, obj_in=user_in, commit=True)
+        return user
+    except ValueError as e:
+        if "Email already registered" in str(e):
+            raise HTTPException(
+                status_code=400,
+                detail="The email is already registered to another user"
+            )
+        raise  # Re-raise other ValueErrors
 
 @router.post("/{user_id}/roles/{role_id}", response_model=schemas.User)
 def add_role_to_user(

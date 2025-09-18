@@ -1,22 +1,37 @@
+"""
+Configuration de base pour la base de données SQLAlchemy.
+
+Ce module configure la connexion à la base de données et fournit la session de base de données.
+"""
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
+
 from app.config import get_settings
+from app.models import Base  # Import de la classe de base des modèles
 
-# Import Base from models to avoid circular imports
-# Note: We still need to import models to register them with SQLAlchemy
-from app.models import Base, User, Role, Profession, EliteSpecialization, Composition, CompositionTag, composition_members
-
+# Obtenir la configuration
 settings = get_settings()
 
+# URL de connexion à la base de données
 SQLALCHEMY_DATABASE_URL = settings.get_database_url()
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+# Créer le moteur de base de données
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    pool_pre_ping=True,
+    connect_args={"check_same_thread": False} if "sqlite" in SQLALCHEMY_DATABASE_URL else {}
+)
+
+# Créer une fabrique de sessions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
-
 def get_db():
+    """
+    Fournit une session de base de données pour les dépendances FastAPI.
+    
+    Yields:
+        Session: Une session de base de données SQLAlchemy.
+    """
     db = SessionLocal()
     try:
         yield db

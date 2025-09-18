@@ -45,6 +45,41 @@
 - PostgreSQL 14+
 - Poetry (gestion des dépendances Python)
 - Yarn (gestion des dépendances JavaScript)
+- Docker et Docker Compose (pour les tests en conteneur)
+
+## 🛠️ Validation locale
+
+Le projet inclut un système complet de validation locale pour s'assurer que tout fonctionne correctement avant de pousser des modifications.
+
+### Validation complète
+
+Exécutez toutes les validations en une seule commande :
+
+```bash
+make final-validate
+```
+
+Cette commande va :
+1. Lancer les tests unitaires avec couverture de code
+2. Générer un rapport de couverture HTML
+3. Exécuter les tests dans un environnement Docker isolé
+
+### Commandes de validation individuelles
+
+- **Tests avec couverture** : `make test`
+- **Ouvrir le rapport de couverture** : `make coverage`
+- **Lancer les tests dans Docker** : `make docker-test`
+- **Nettoyer les fichiers de test** : `make clean`
+
+### Configuration requise pour les tests
+
+1. **Pour les tests locaux** :
+   - PostgreSQL doit être en cours d'exécution localement
+   - Les variables d'environnement doivent être configurées (voir `.env.example`)
+
+2. **Pour les tests Docker** :
+   - Docker et Docker Compose doivent être installés
+   - Le port 5432 doit être disponible pour PostgreSQL
 
 ## 🧪 Tests
 
