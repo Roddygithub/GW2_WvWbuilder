@@ -85,9 +85,60 @@ async def db() -> AsyncGenerator:
             # Annuler la transaction
             await session.rollback()
     
-    # Supprimer toutes les tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+    # Créer un utilisateur de test par défaut
+    test_user = UserFactory()
+    db_session.add(test_user)
+    db_session.commit()
+    
+    # Surcharger les dépendances d'authentification pour les tests
+    def override_get_current_user():
+        # Retourne l'utilisateur de test par défaut
+        return test_user
+        
+    def override_get_current_active_user(current_user = Depends(override_get_current_user)):
+        return current_user
+        
+    def override_get_current_active_superuser():
+        # Créer un superutilisateur pour les tests
+        superuser = UserFactory(is_superuser=True)
+        db_session.add(superuser)
+        db_session.commit()
+        return superuser
+    
+    # Surcharger les dépendances
+    app.dependency_overrides[deps_get_db] = override_get_db
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_current_active_user] = override_get_current_active_user
+    app.dependency_overrides[get_current_active_superuser] = override_get_current_active_superuser
+    
+    # Créer le client de test
+    with TestClient(app) as test_client:
+        # Ajouter un helper pour l'authentification
+        def auth_header(user=None):
+            if user is None:
+                user = test_user
+                db_session.add(user)
+                db_session.commit()
+            token = create_access_token(subject=user.id)
+            return {"Authorization": f"Bearer {token}"}
+            
+        # Ajouter les méthodes d'aide au client
+        test_client.auth_header = auth_header
+        test_client.test_user = test_user
+        
+        def clear_auth():
+            if hasattr(test_client, 'test_user'):
+                delattr(test_client, 'test_user')
+                
+        test_client.clear_auth = clear_auth
+        
+        # Set up default auth header
+        test_client.headers.update(auth_header())
+        
+        yield test_client
+    
+    # Nettoyage après les tests
+    app.dependency_overrides.clear()
 
 # Fixture pour les données de test
 @pytest.fixture(scope="function")

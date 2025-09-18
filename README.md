@@ -1,8 +1,7 @@
 # 🏰 GW2 WvW Builder
 
-[![Backend Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml/badge.svg?branch=develop)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml)
-[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml)
-[![Changelog](https://img.shields.io/badge/CHANGELOG-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
+[![Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
+[![codecov](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/main/graph/badge.svg?token=YOUR-TOKEN-HERE)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
 [![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -82,20 +81,73 @@ Cette commande va :
    - Docker et Docker Compose doivent être installés
    - Le port 5432 doit être disponible pour PostgreSQL
 
+## 🧪 Tests
+
+### Configuration requise
+- Base de données PostgreSQL en cours d'exécution
+- Variables d'environnement configurées (voir `.env.example`)
+
+### Exécution des tests
+
+#### Tous les tests
+```bash
+# Dans le répertoire backend
+./run_tests.sh
+```
+
+#### Tests unitaires uniquement
+```bash
+./run_tests.sh --unit-only
+```
+
+#### Tests d'intégration
+```bash
+./run_tests.sh --integration-only
+```
+
+#### Tests d'API
+```bash
+./run_tests.sh --api-only
+```
+
+#### Options supplémentaires
+- `--no-cov` : Désactive le rapport de couverture
+- `--no-report` : Ne génère pas de rapports HTML/XML
+- `--threshold=N` : Définit le seuil de couverture minimal (par défaut : 90)
+
+### Couverture de code
+Le projet vise une couverture de code d'au moins 90%. Pour générer un rapport de couverture :
+
+```bash
+# Génère un rapport HTML dans le dossier htmlcov/
+./run_tests.sh --no-cov
+```
+
+### Dépannage
+- **Erreurs de base de données** : Assurez-vous que PostgreSQL est en cours d'exécution et que les informations de connexion dans `.env` sont correctes.
+- **Échecs de test** : Consultez les journaux dans `test-results/` pour plus de détails.
+- **Problèmes de dépendances** : Exécutez `poetry install` pour installer toutes les dépendances requises.
+
+Pour plus d'informations, consultez [TESTING.md](backend/TESTING.md).
+
 ### Installation
 
-1. **Cloner le dépôt**
+1. Clone the repository
    ```bash
    git clone https://github.com/Roddygithub/GW2_WvWbuilder.git
    cd GW2_WvWbuilder
    ```
 
-2. **Configurer l'environnement**
+2. Set up the backend
    ```bash
-   # Backend
    cd backend
-   cp .env.example .env
-   # Éditer le fichier .env avec vos paramètres
+   poetry install
+   ```
+
+3. Set up the database
+   ```bash
+   # Create a .env file with your database URL
+   echo "DATABASE_URL=sqlite:///./test.db" > .env
    
    # Créer et activer l'environnement virtuel
    python -m venv venv

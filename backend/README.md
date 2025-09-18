@@ -1,8 +1,11 @@
 <div align="center">
   <h1>GW2 WvW Team Builder – Backend</h1>
   
-  [![Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml/badge.svg?branch=develop)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/test-and-coverage.yml)
+  [![Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/ci.yml)
   [![Coverage](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/develop/graph/badge.svg?token=YOUR-TOKEN-HERE)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
+  [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+  [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
   [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
   [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
@@ -108,33 +111,45 @@ Once running, you can access:
 - **Alternative Docs**: http://127.0.0.1:8000/redoc
 - **API Base URL**: http://127.0.0.1:8000/api/v1
 
-## 🧪 Testing
+## 🧪 Testing & Coverage
 
 ### Running Tests
 
 ```bash
-# Run all tests with coverage
-poetry run pytest --cov=app --cov-report=term-missing
+# Install dependencies
+poetry install --with test
 
-# Run only unit tests
-poetry run pytest tests/unit
+# Run all tests
+make test
 
-# Run only integration tests
-poetry run pytest tests/integration
-
-# Run a specific test file
-poetry run pytest tests/integration/api/test_builds.py -v
-
-# Run tests with detailed logging
-poetry run pytest -v --log-cli-level=INFO
+# Run tests with coverage report in terminal
+make test-cov
 
 # Generate HTML coverage report
-poetry run pytest --cov=app --cov-report=html
-# Open the report in your browser
-python -m http.server --directory=htmlcov
+make test-coverage
+
+# Run a specific test file
+poetry run pytest tests/unit/test_example.py -v
+
+# Run tests matching a pattern
+poetry run pytest -k "test_name" -v
 ```
 
-### Code Quality
+### Test Coverage
+
+We aim to maintain >90% test coverage. The test runner will fail if coverage falls below this threshold.
+
+View the coverage report:
+
+```bash
+# After running tests, open the HTML report
+open htmlcov/index.html  # On macOS
+xdg-open htmlcov/index.html  # On Linux
+```
+
+For more information on writing and running tests, see [TESTING.md](TESTING.md).
+
+### Code Quality Checks
 
 ```bash
 # Format code with Black
@@ -151,6 +166,23 @@ poetry run flake8
 
 # Run all checks (configured in pre-commit)
 poetry run pre-commit run --all-files
+```
+
+### Test Structure
+
+- `tests/unit/` - Unit tests for individual components
+- `tests/integration/` - Integration tests for API endpoints
+- `tests/conftest.py` - Test fixtures and configuration
+- `tests/factories/` - Test data factories
+
+### Continuous Integration
+
+Tests are automatically run on every push and pull request via GitHub Actions. The workflow includes:
+
+1. Linting with `black`, `isort`, and `mypy`
+2. Running the full test suite
+3. Generating coverage reports
+4. Uploading coverage to Codecov
 ```
 
 ## 📚 API Documentation

@@ -8,9 +8,12 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session, joinedload
 
-from app import crud, models, schemas
+from app import crud
 from app.core.config import settings
-from app.models import Build, Profession
+from app.models import models
+from app.models.build import Build, BuildProfession
+from app.models.profession import Profession
+from app.schemas.build import BuildCreate, BuildUpdate, Build as BuildSchema
 
 logger = logging.getLogger(__name__)
 

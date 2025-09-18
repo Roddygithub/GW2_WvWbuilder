@@ -1,0 +1,1201 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="1" failures="33" skipped="0" tests="98" time="4.003" timestamp="2025-09-13T21:16:05.125626+02:00" hostname="archlinux"><testcase classname="tests.integration.api.test_build_crud" name="test_create_build" time="0.081"><failure message="AttributeError: 'TestClient' object has no attribute '_test_user'. Did you mean: 'test_user'?">client = &lt;starlette.testclient.TestClient object at 0x7f329e0deba0&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329dfd2cf0&gt;
+
+    def test_create_build(client: TestClient, db: Session) -&gt; None:
+        """Test creating a new build with associated professions."""
+        logger.info("=== Starting test_create_build ===")
+    
+        try:
+            # Use the test client's user
+&gt;           test_user = client._test_user
+                        ^^^^^^^^^^^^^^^^^
+E           AttributeError: 'TestClient' object has no attribute '_test_user'. Did you mean: 'test_user'?
+
+tests/integration/api/test_build_crud.py:91: AttributeError</failure></testcase><testcase classname="tests.integration.api.test_build_crud" name="test_get_build" time="0.011"><failure message="AttributeError: 'TestClient' object has no attribute '_test_user'. Did you mean: 'test_user'?">client = &lt;starlette.testclient.TestClient object at 0x7f329e01d1d0&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e01f610&gt;
+
+    def test_get_build(client: TestClient, db: Session) -&gt; None:
+        """Test retrieving a build by ID."""
+        try:
+            # Setup - use the test client's test user
+&gt;           test_user = client._test_user
+                        ^^^^^^^^^^^^^^^^^
+E           AttributeError: 'TestClient' object has no attribute '_test_user'. Did you mean: 'test_user'?
+
+tests/integration/api/test_build_crud.py:361: AttributeError</failure></testcase><testcase classname="tests.integration.api.test_build_crud" name="test_list_builds" time="0.014"><failure message="AttributeError: 'TestClient' object has no attribute '_test_user'. Did you mean: 'test_user'?">client = &lt;starlette.testclient.TestClient object at 0x7f329e01ec10&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329d7351d0&gt;
+
+    def test_list_builds(client: TestClient, db: Session) -&gt; None:
+        """Test listing builds with different visibility settings."""
+        try:
+            # Setup users
+&gt;           test_user = client._test_user
+                        ^^^^^^^^^^^^^^^^^
+E           AttributeError: 'TestClient' object has no attribute '_test_user'. Did you mean: 'test_user'?
+
+tests/integration/api/test_build_crud.py:391: AttributeError</failure></testcase><testcase classname="tests.integration.api.test_build_crud" name="test_update_build" time="0.015"><failure message="AttributeError: 'TestClient' object has no attribute '_test_user'. Did you mean: 'test_user'?">client = &lt;starlette.testclient.TestClient object at 0x7f329d735450&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329d6f2fd0&gt;
+
+    def test_update_build(client: TestClient, db: Session) -&gt; None:
+        """Test updating a build."""
+        try:
+            # Setup - use the test client's test user
+&gt;           test_user = client._test_user
+                        ^^^^^^^^^^^^^^^^^
+E           AttributeError: 'TestClient' object has no attribute '_test_user'. Did you mean: 'test_user'?
+
+tests/integration/api/test_build_crud.py:440: AttributeError</failure></testcase><testcase classname="tests.integration.api.test_build_crud" name="test_delete_build" time="0.028"><failure message="AttributeError: 'TestClient' object has no attribute '_test_user'. Did you mean: 'test_user'?">client = &lt;starlette.testclient.TestClient object at 0x7f329d734190&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329d730d60&gt;
+
+    def test_delete_build(client: TestClient, db: Session) -&gt; None:
+        """Test deleting a build."""
+        try:
+            # Setup - use the test client's test user
+&gt;           test_user = client._test_user
+                        ^^^^^^^^^^^^^^^^^
+E           AttributeError: 'TestClient' object has no attribute '_test_user'. Did you mean: 'test_user'?
+
+tests/integration/api/test_build_crud.py:503: AttributeError</failure></testcase><testcase classname="tests.integration.api.test_build_crud" name="test_unauthorized_access" time="0.027"><failure message="RuntimeError: No session provided.">client = &lt;starlette.testclient.TestClient object at 0x7f329d734e10&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329d69e570&gt;
+
+    def test_unauthorized_access(client: TestClient, db: Session) -&gt; None:
+        """Test unauthorized access to build operations."""
+        try:
+            # Setup users
+            owner = UserFactory()
+            other_user = UserFactory()
+&gt;           build = BuildFactory(created_by_id=owner.id, is_public=False)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/api/test_build_crud.py:546: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+venv/lib/python3.13/site-packages/factory/base.py:43: in __call__
+    return cls.create(**kwargs)
+           ^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.13/site-packages/factory/base.py:539: in create
+    return cls._generate(enums.CREATE_STRATEGY, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.13/site-packages/factory/alchemy.py:60: in _generate
+    return super()._generate(strategy, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.13/site-packages/factory/base.py:468: in _generate
+    return step.build()
+           ^^^^^^^^^^^^
+venv/lib/python3.13/site-packages/factory/builder.py:274: in build
+    instance = self.factory_meta.instantiate(
+venv/lib/python3.13/site-packages/factory/base.py:320: in instantiate
+    return self.factory._create(model, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+cls = &lt;class 'tests.integration.fixtures.factories.BuildFactory'&gt;
+model_class = &lt;class 'app.models.build.Build'&gt;, args = ()
+kwargs = {'config': {'roles': ['heal', 'dps', 'support']}, 'constraints': {'max_duplicates': 2}, 'created_by_id': 2, 'description': 'Street smile on serious attack. Set word management today citizen but into. House no itself deal establish.', ...}
+session_factory = None, session = None
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        """Create an instance of the model, and save it to the database."""
+        session_factory = cls._meta.sqlalchemy_session_factory
+        if session_factory:
+            cls._meta.sqlalchemy_session = session_factory()
+    
+        session = cls._meta.sqlalchemy_session
+    
+        if session is None:
+&gt;           raise RuntimeError("No session provided.")
+E           RuntimeError: No session provided.
+
+venv/lib/python3.13/site-packages/factory/alchemy.py:113: RuntimeError</failure></testcase><testcase classname="tests.integration.api.test_build_crud_clean" name="test_create_build" time="0.006"><error message="failed on setup with &quot;file /tmp/GW2_WvWbuilder/backend/tests/integration/api/test_build_crud_clean.py, line 20&#10;  def test_create_build(client: TestClient, db: Session, test_user: models.User) -&gt; None:&#10;E       fixture 'test_user' not found&#10;&gt;       available fixtures: _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_faker, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, client, cov, db, db_session, doctest_namespace, event_loop_policy, faker, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, session_mocker, setup_factories, test_data, test_engine, testrun_uid, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, worker_id&#10;&gt;       use 'pytest --fixtures [testpath]' for help on them.&#10;&#10;/tmp/GW2_WvWbuilder/backend/tests/integration/api/test_build_crud_clean.py:20&quot;">file /tmp/GW2_WvWbuilder/backend/tests/integration/api/test_build_crud_clean.py, line 20
+  def test_create_build(client: TestClient, db: Session, test_user: models.User) -&gt; None:
+E       fixture 'test_user' not found
+&gt;       available fixtures: _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_faker, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, client, cov, db, db_session, doctest_namespace, event_loop_policy, faker, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, session_mocker, setup_factories, test_data, test_engine, testrun_uid, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, worker_id
+&gt;       use 'pytest --fixtures [testpath]' for help on them.
+
+/tmp/GW2_WvWbuilder/backend/tests/integration/api/test_build_crud_clean.py:20</error></testcase><testcase classname="tests.integration.api.test_builds" name="test_generate_build" time="0.047" /><testcase classname="tests.integration.api.test_builds" name="test_generate_build_unauthorized" time="0.016"><failure message="AssertionError: Expected 401 Unauthorized when accessing protected endpoint without authentication&#10;assert 200 == 401&#10; +  where 200 = &lt;Response [200 OK]&gt;.status_code">client = &lt;starlette.testclient.TestClient object at 0x7f329d736ad0&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329d5c2ba0&gt;
+
+    def test_generate_build_unauthorized(client: TestClient, db: Session) -&gt; None:
+        """Test generating a build without authentication."""
+        # Clear any authentication from the client
+        client.clear_auth()
+    
+        # Try to generate a build without authentication
+        response = client.post(
+            f"{settings.API_V1_STR}/builds/generate/",
+            json={
+                "team_size": 5,
+                "required_roles": ["healer", "dps", "support"],
+                "max_duplicates": 2,
+                "min_healers": 1,
+                "min_dps": 2,
+                "min_support": 1
+            }
+        )
+    
+        # Should return 401 Unauthorized
+&gt;       assert response.status_code == 401, "Expected 401 Unauthorized when accessing protected endpoint without authentication"
+E       AssertionError: Expected 401 Unauthorized when accessing protected endpoint without authentication
+E       assert 200 == 401
+E        +  where 200 = &lt;Response [200 OK]&gt;.status_code
+
+tests/integration/api/test_builds.py:229: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_builds" name="test_generate_build_invalid_data" time="0.019" /><testcase classname="tests.integration.api.test_builds" name="test_create_build" time="0.034" /><testcase classname="tests.integration.api.test_builds" name="test_create_duplicate_build" time="0.041"><failure message="AssertionError: {&quot;name&quot;:&quot;Test Build&quot;,&quot;description&quot;:&quot;A test build for WvW&quot;,&quot;game_mode&quot;:&quot;wvw&quot;,&quot;team_size&quot;:5,&quot;is_public&quot;:true,&quot;config&quot;:{&quot;roles&quot;:[&quot;heal&quot;,&quot;dps&quot;,&quot;support&quot;]},&quot;constraints&quot;:{&quot;max_duplicates&quot;:2},&quot;profession_ids&quot;:[1,2],&quot;id&quot;:2,&quot;created_by_id&quot;:1,&quot;created_at&quot;:&quot;2025-09-13T19:16:05&quot;,&quot;updated_at&quot;:&quot;2025-09-13T19:16:05&quot;,&quot;professions&quot;:[{&quot;id&quot;:1,&quot;name&quot;:&quot;Test Profession 0&quot;,&quot;description&quot;:&quot;Test Profession 0 Description&quot;},{&quot;id&quot;:2,&quot;name&quot;:&quot;Test Profession 1&quot;,&quot;description&quot;:&quot;Test Profession 1 Description&quot;}],&quot;owner_id&quot;:1}&#10;assert 201 == 400&#10; +  where 201 = &lt;Response [201 Created]&gt;.status_code">client = &lt;starlette.testclient.TestClient object at 0x7f329d58fc50&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329d5c1be0&gt;
+
+    def test_create_duplicate_build(client: TestClient, db: Session) -&gt; None:
+        """Test creating a duplicate build (same name for same user)."""
+        # Use the test client's user
+        user = client.test_user
+    
+        # Create test professions
+        from app.models.profession import Profession
+        professions = []
+        for i in range(2):  # Only need 2 for this test
+            profession = Profession(
+                name=f"Test Profession {i}",
+                description=f"Test Profession {i} Description",
+                icon_url=f"icon_{i}.png"
+            )
+            db.add(profession)
+            professions.append(profession)
+        db.commit()
+    
+        # Create build data
+        build_data = TEST_BUILD_DATA.copy()
+        build_data["profession_ids"] = [p.id for p in professions]
+    
+        # Create first build
+        response = client.post(
+            f"{settings.API_V1_STR}/builds/",
+            json=build_data,
+        )
+        assert response.status_code == 201, response.text
+    
+        # Try to create duplicate build
+        response = client.post(
+            f"{settings.API_V1_STR}/builds/",
+            json=build_data,
+        )
+    
+        # Should fail with 400 status code
+&gt;       assert response.status_code == 400, response.text
+E       AssertionError: {"name":"Test Build","description":"A test build for WvW","game_mode":"wvw","team_size":5,"is_public":true,"config":{"roles":["heal","dps","support"]},"constraints":{"max_duplicates":2},"profession_ids":[1,2],"id":2,"created_by_id":1,"created_at":"2025-09-13T19:16:05","updated_at":"2025-09-13T19:16:05","professions":[{"id":1,"name":"Test Profession 0","description":"Test Profession 0 Description"},{"id":2,"name":"Test Profession 1","description":"Test Profession 1 Description"}],"owner_id":1}
+E       assert 201 == 400
+E        +  where 201 = &lt;Response [201 Created]&gt;.status_code
+
+tests/integration/api/test_builds.py:372: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_builds" name="test_create_build_with_nonexistent_professions" time="0.021"><failure message="AssertionError: {&quot;name&quot;:&quot;Test Build&quot;,&quot;description&quot;:&quot;A test build for WvW&quot;,&quot;game_mode&quot;:&quot;wvw&quot;,&quot;team_size&quot;:5,&quot;is_public&quot;:true,&quot;config&quot;:{&quot;roles&quot;:[&quot;heal&quot;,&quot;dps&quot;,&quot;support&quot;]},&quot;constraints&quot;:{&quot;max_duplicates&quot;:2},&quot;profession_ids&quot;:[1],&quot;id&quot;:1,&quot;created_by_id&quot;:1,&quot;created_at&quot;:&quot;2025-09-13T19:16:05&quot;,&quot;updated_at&quot;:&quot;2025-09-13T19:16:05&quot;,&quot;professions&quot;:[{&quot;id&quot;:1,&quot;name&quot;:&quot;Test Profession&quot;,&quot;description&quot;:&quot;Test Profession Description&quot;}],&quot;owner_id&quot;:1}&#10;assert 201 == 404&#10; +  where 201 = &lt;Response [201 Created]&gt;.status_code">client = &lt;starlette.testclient.TestClient object at 0x7f329e01ed50&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329dfd1010&gt;
+
+    def test_create_build_with_nonexistent_professions(client: TestClient, db: Session) -&gt; None:
+        """Test creating a build with non-existent profession IDs."""
+        # Create a valid profession first
+        from app.models.profession import Profession
+        profession = Profession(
+            name="Test Profession",
+            description="Test Profession Description",
+            icon_url="test_icon.png"
+        )
+        db.add(profession)
+        db.commit()
+    
+        # Create build data with one valid and one invalid profession ID
+        build_data = TEST_BUILD_DATA.copy()
+        build_data["profession_ids"] = [profession.id, 9999]  # One valid, one invalid
+    
+        # Try to create build with non-existent professions
+        response = client.post(
+            f"{settings.API_V1_STR}/builds/",
+            json=build_data,
+        )
+    
+        # Should fail with 404 status code
+&gt;       assert response.status_code == 404, response.text
+E       AssertionError: {"name":"Test Build","description":"A test build for WvW","game_mode":"wvw","team_size":5,"is_public":true,"config":{"roles":["heal","dps","support"]},"constraints":{"max_duplicates":2},"profession_ids":[1],"id":1,"created_by_id":1,"created_at":"2025-09-13T19:16:05","updated_at":"2025-09-13T19:16:05","professions":[{"id":1,"name":"Test Profession","description":"Test Profession Description"}],"owner_id":1}
+E       assert 201 == 404
+E        +  where 201 = &lt;Response [201 Created]&gt;.status_code
+
+tests/integration/api/test_builds.py:398: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_builds" name="test_create_build_validation_errors" time="0.012"><failure message="AssertionError: Expected error message containing 'String should have at least 1 character' for field name, got: [{'type': 'string_too_short', 'loc': ['body', 'name'], 'msg': 'String should have at least 3 characters', 'input': '', 'ctx': {'min_length': 3}, 'url': 'https://errors.pydantic.dev/2.11/v/string_too_short'}]&#10;assert False&#10; +  where False = any(&lt;generator object test_create_build_validation_errors.&lt;locals&gt;.&lt;genexpr&gt; at 0x7f329d6df920&gt;)">client = &lt;starlette.testclient.TestClient object at 0x7f329df8a990&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e0dc1a0&gt;
+
+    def test_create_build_validation_errors(client: TestClient, db: Session) -&gt; None:
+        """Test creating a build with invalid data (validation errors)."""
+        # Create a valid profession for the tests
+        from app.models.profession import Profession
+        profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
+        db.add(profession)
+        db.commit()
+    
+        # Create base build data with valid profession IDs
+        base_build_data = TEST_BUILD_DATA.copy()
+        base_build_data["profession_ids"] = [profession.id]
+    
+        # Test each invalid case
+        for invalid_data, field, error_msg in INVALID_BUILD_DATA:
+            build_data = base_build_data.copy()
+            build_data.update(invalid_data)
+    
+            response = client.post(
+                f"{settings.API_V1_STR}/builds/",
+                json=build_data,
+            )
+    
+            assert response.status_code == 422, f"Expected 422 for {field}, got {response.status_code}"
+            errors = response.json()["detail"]
+&gt;           assert any(error_msg.lower() in error["msg"].lower() for error in errors), \
+                f"Expected error message containing '{error_msg}' for field {field}, got: {errors}"
+E           AssertionError: Expected error message containing 'String should have at least 1 character' for field name, got: [{'type': 'string_too_short', 'loc': ['body', 'name'], 'msg': 'String should have at least 3 characters', 'input': '', 'ctx': {'min_length': 3}, 'url': 'https://errors.pydantic.dev/2.11/v/string_too_short'}]
+E           assert False
+E            +  where False = any(&lt;generator object test_create_build_validation_errors.&lt;locals&gt;.&lt;genexpr&gt; at 0x7f329d6df920&gt;)
+
+tests/integration/api/test_builds.py:425: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_builds" name="test_get_build" time="0.031" /><testcase classname="tests.integration.api.test_builds" name="test_get_nonexistent_build" time="0.014" /><testcase classname="tests.integration.api.test_builds" name="test_get_private_build_unauthorized" time="0.023"><failure message="AssertionError: {&quot;detail&quot;:&quot;Not enough permissions&quot;}&#10;assert 403 == 404&#10; +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code">client = &lt;starlette.testclient.TestClient object at 0x7f329e01f390&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e0df4d0&gt;
+
+    def test_get_private_build_unauthorized(client: TestClient, db: Session) -&gt; None:
+        """Test retrieving a private build without authorization."""
+        # Create a private build owned by another user
+        from app.models.user import User
+        from app.models.build import Build
+        from app.models.profession import Profession
+        from app.models.build_profession import BuildProfession
+    
+        # Create another user
+        other_user = User(
+            email="other@example.com",
+            username="otheruser",
+            hashed_password="hashed_password",
+            is_active=True
+        )
+        db.add(other_user)
+    
+        # Create a profession
+        profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
+        db.add(profession)
+        db.commit()
+        db.refresh(profession)
+    
+        # Create a private build owned by the other user
+        build = Build(
+            name="Private Build",
+            description="A private build",
+            game_mode="wvw",
+            team_size=5,
+            is_public=False,
+            config={"roles": ["dps", "support"]},
+            constraints={"max_duplicates": 1},
+            owner_id=other_user.id
+        )
+        db.add(build)
+        db.commit()
+        db.refresh(build)
+    
+        # Create build-profession association
+        build_profession = BuildProfession(
+            build_id=build.id,
+            profession_id=profession.id
+        )
+        db.add(build_profession)
+        db.commit()
+    
+        # Try to access the private build
+        response = client.get(
+            f"{settings.API_V1_STR}/builds/{build.id}",
+        )
+    
+        # Should return 404 (not 403) to avoid leaking existence of private builds
+&gt;       assert response.status_code == 404, response.text
+E       AssertionError: {"detail":"Not enough permissions"}
+E       assert 403 == 404
+E        +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code
+
+tests/integration/api/test_builds.py:533: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_builds" name="test_update_build" time="0.026"><failure message="AssertionError: assert 'Test Build' == 'Updated Build Name'&#10;  &#10;  - Updated Build Name&#10;  + Test Build">client = &lt;starlette.testclient.TestClient object at 0x7f329e01f110&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e0df770&gt;
+
+    def test_update_build(client: TestClient, db: Session) -&gt; None:
+        """Test updating a build with valid data."""
+        # First create a build to update
+        user = client.test_user
+    
+        # Create a profession for the build
+        from app.models.profession import Profession
+        profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
+        db.add(profession)
+        db.commit()
+    
+        # Create the build
+        build_data = TEST_BUILD_DATA.copy()
+        build_data["profession_ids"] = [profession.id]
+    
+        response = client.post(
+            f"{settings.API_V1_STR}/builds/",
+            json=build_data,
+        )
+        assert response.status_code == 201, response.text
+        build_id = response.json()["id"]
+    
+        # Update the build
+        update_data = {
+            "name": "Updated Build Name",
+            "description": "Updated description",
+            "is_public": False,
+            "config": {"roles": ["dps", "heal"]},
+            "constraints": {"max_duplicates": 2}
+        }
+    
+        response = client.put(
+            f"{settings.API_V1_STR}/builds/{build_id}",
+            json=update_data,
+        )
+    
+        print(f"\n=== Update Build Request ===")
+        print(f"URL: {settings.API_V1_STR}/builds/{build_id}")
+        print(f"Headers: {client.headers}")
+        print(f"Body: {update_data}")
+    
+        print(f"\n=== Update Build Response ===")
+        print(f"Status: {response.status_code}")
+        print(f"Headers: {dict(response.headers)}")
+        print(f"Body: {response.text}")
+    
+        # Assert response
+        assert response.status_code == 200, response.text
+        data = response.json()
+        assert data["name"] == update_data["name"]
+        assert data["description"] == update_data["description"]
+        assert data["is_public"] == update_data["is_public"]
+        assert data["config"] == update_data["config"]
+        assert data["constraints"] == update_data["constraints"]
+        assert data["updated_at"] is not None
+    
+        # Verify in database
+        db.refresh(build := db.get(Build, build_id))
+&gt;       assert build.name == update_data["name"]
+E       AssertionError: assert 'Test Build' == 'Updated Build Name'
+E         
+E         - Updated Build Name
+E         + Test Build
+
+tests/integration/api/test_builds.py:594: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_builds" name="test_update_nonexistent_build" time="0.012" /><testcase classname="tests.integration.api.test_builds" name="test_update_build_unauthorized" time="0.016"><failure message="AssertionError: assert 'not enough privileges' in 'not enough permissions'&#10; +  where 'not enough permissions' = &lt;built-in method lower of str object at 0x7f329d45ed70&gt;()&#10; +    where &lt;built-in method lower of str object at 0x7f329d45ed70&gt; = 'Not enough permissions'.lower">client = &lt;starlette.testclient.TestClient object at 0x7f329e01dbd0&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e0dfa10&gt;
+
+    def test_update_build_unauthorized(client: TestClient, db: Session) -&gt; None:
+        """Test updating a build without authorization."""
+        # Create a build owned by another user
+        from app.models.user import User
+        from app.models.build import Build
+        from app.models.profession import Profession
+        from app.models.build_profession import BuildProfession
+    
+        # Create another user
+        other_user = User(
+            email="other@example.com",
+            username="otheruser",
+            hashed_password="hashed_password",
+            is_active=True
+        )
+        db.add(other_user)
+    
+        # Create a profession
+        profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
+        db.add(profession)
+        db.commit()
+        db.refresh(profession)
+    
+        # Create a build owned by the other user
+        build = Build(
+            name="Test Build",
+            description="A test build",
+            game_mode="wvw",
+            team_size=5,
+            is_public=True,
+            config={"roles": ["dps", "support"]},
+            constraints={"max_duplicates": 1},
+            owner_id=other_user.id
+        )
+        db.add(build)
+        db.commit()
+        db.refresh(build)
+    
+        # Create build-profession association
+        build_profession = BuildProfession(
+            build_id=build.id,
+            profession_id=profession.id
+        )
+        db.add(build_profession)
+        db.commit()
+    
+        # Try to update the build
+        update_data = {
+            "name": "Unauthorized Update",
+            "description": "This update should fail"
+        }
+    
+        response = client.put(
+            f"{settings.API_V1_STR}/builds/{build.id}",
+            json=update_data,
+        )
+    
+        # Should return 403 Forbidden
+        assert response.status_code == 403, response.text
+&gt;       assert "not enough privileges" in response.json()["detail"].lower()
+E       AssertionError: assert 'not enough privileges' in 'not enough permissions'
+E        +  where 'not enough permissions' = &lt;built-in method lower of str object at 0x7f329d45ed70&gt;()
+E        +    where &lt;built-in method lower of str object at 0x7f329d45ed70&gt; = 'Not enough permissions'.lower
+
+tests/integration/api/test_builds.py:676: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_builds" name="test_update_build_validation_errors" time="0.028"><failure message="AssertionError: Expected error message containing 'String should have at least 1 character' for field name, got: [{'type': 'string_too_short', 'loc': ['body', 'name'], 'msg': 'String should have at least 3 characters', 'input': '', 'ctx': {'min_length': 3}, 'url': 'https://errors.pydantic.dev/2.11/v/string_too_short'}]&#10;assert False&#10; +  where False = any(&lt;generator object test_update_build_validation_errors.&lt;locals&gt;.&lt;genexpr&gt; at 0x7f329d6317e0&gt;)">client = &lt;starlette.testclient.TestClient object at 0x7f329df8a210&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e0dc2f0&gt;
+
+    def test_update_build_validation_errors(client: TestClient, db: Session) -&gt; None:
+        """Test updating a build with invalid data."""
+        # First create a build to update
+        # Create a profession for the build
+        from app.models.profession import Profession
+        profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
+        db.add(profession)
+        db.commit()
+    
+        # Create the build
+        build_data = TEST_BUILD_DATA.copy()
+        build_data["profession_ids"] = [profession.id]
+    
+        response = client.post(
+            f"{settings.API_V1_STR}/builds/",
+            json=build_data,
+        )
+        assert response.status_code == 201, response.text
+        build_id = response.json()["id"]
+    
+        # Test each invalid case
+        for invalid_data, field, error_msg in INVALID_BUILD_DATA:
+            update_data = {field: invalid_data[field]}
+    
+            response = client.put(
+                f"{settings.API_V1_STR}/builds/{build_id}",
+                json=update_data,
+            )
+    
+            assert response.status_code == 422, f"Expected 422 for {field}, got {response.status_code}"
+            errors = response.json()["detail"]
+&gt;           assert any(error_msg.lower() in error["msg"].lower() for error in errors), \
+                f"Expected error message containing '{error_msg}' for field {field}, got: {errors}"
+E           AssertionError: Expected error message containing 'String should have at least 1 character' for field name, got: [{'type': 'string_too_short', 'loc': ['body', 'name'], 'msg': 'String should have at least 3 characters', 'input': '', 'ctx': {'min_length': 3}, 'url': 'https://errors.pydantic.dev/2.11/v/string_too_short'}]
+E           assert False
+E            +  where False = any(&lt;generator object test_update_build_validation_errors.&lt;locals&gt;.&lt;genexpr&gt; at 0x7f329d6317e0&gt;)
+
+tests/integration/api/test_builds.py:709: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_builds" name="test_list_builds" time="0.037"><failure message="fastapi.exceptions.ResponseValidationError: 3 validation errors:&#10;  {'type': 'datetime_type', 'loc': ('response', 0, 'updated_at'), 'msg': 'Input should be a valid datetime', 'input': None, 'url': 'https://errors.pydantic.dev/2.11/v/datetime_type'}&#10;  {'type': 'datetime_type', 'loc': ('response', 1, 'updated_at'), 'msg': 'Input should be a valid datetime', 'input': None, 'url': 'https://errors.pydantic.dev/2.11/v/datetime_type'}&#10;  {'type': 'datetime_type', 'loc': ('response', 2, 'updated_at'), 'msg': 'Input should be a valid datetime', 'input': None, 'url': 'https://errors.pydantic.dev/2.11/v/datetime_type'}">client = &lt;starlette.testclient.TestClient object at 0x7f329df8bed0&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e0df620&gt;
+
+    def test_list_builds(client: TestClient, db: Session) -&gt; None:
+        """Test listing builds with various filters and pagination."""
+        # Create test users
+        from app.models.user import User
+        from app.models.profession import Profession
+        from app.models.build import Build, BuildProfession
+    
+        # Create test professions
+        professions = []
+        for i in range(5):
+            profession = Profession(
+                name=f"Test Profession {i}",
+                description=f"Test Profession {i} Description",
+                icon_url=f"icon_{i}.png"
+            )
+            db.add(profession)
+            professions.append(profession)
+        db.commit()
+    
+        # Get the current user from the test client
+        current_user = client.test_user
+    
+        # Create another user
+        other_user = User(
+            email="other@example.com",
+            username="otheruser",
+            hashed_password="hashed_password",
+            is_active=True
+        )
+        db.add(other_user)
+        db.commit()
+    
+        # Create test builds
+        builds = [
+            # Current user's private build
+            Build(
+                name="Private Build 1",
+                description="A private build",
+                game_mode="wvw",
+                team_size=5,
+                is_public=False,
+                config={"roles": ["dps", "support"]},
+                constraints={"max_duplicates": 1},
+                owner_id=current_user.id,
+                created_at=datetime.utcnow() - timedelta(days=2)
+            ),
+            # Current user's public build
+            Build(
+                name="Public Build 1",
+                description="A public build",
+                game_mode="wvw",
+                team_size=10,
+                is_public=True,
+                config={"roles": ["heal", "support"]},
+                constraints={"max_duplicates": 2},
+                owner_id=current_user.id,
+                created_at=datetime.utcnow() - timedelta(days=1)
+            ),
+            # Other user's public build
+            Build(
+                name="Other's Public Build",
+                description="Another public build",
+                game_mode="pve",
+                team_size=5,
+                is_public=True,
+                config={"roles": ["dps"]},
+                constraints={"max_duplicates": 3},
+                owner_id=other_user.id
+            ),
+            # Other user's private build
+            Build(
+                name="Other's Private Build",
+                description="A private build",
+                game_mode="pvp",
+                team_size=3,
+                is_public=False,
+                config={"roles": ["support"]},
+                constraints={"max_duplicates": 1},
+                owner_id=other_user.id
+            )
+        ]
+    
+        # Add builds to session
+        db.add_all(builds)
+        db.commit()
+    
+        # Add profession associations
+        for i, build in enumerate(builds):
+            # Each build gets 2 professions
+            for j in range(2):
+                profession_idx = (i + j) % len(professions)
+                bp = BuildProfession(
+                    build_id=build.id,
+                    profession_id=professions[profession_idx].id
+                )
+                db.add(bp)
+        db.commit()
+    
+        # Test 1: List builds as owner (should see all own builds + public from others)
+&gt;       response = client.get(f"{settings.API_V1_STR}/builds/")
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/integration/api/test_builds.py:823: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+venv/lib/python3.13/site-packages/starlette/testclient.py:523: in get
+    return super().get(
+venv/lib/python3.13/site-packages/httpx/_client.py:1066: in get
+    return self.request(
+venv/lib/python3.13/site-packages/starlette/testclient.py:491: in request
+    return super().request(
+venv/lib/python3.13/site-packages/httpx/_client.py:837: in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.13/site-packages/httpx/_client.py:926: in send
+    response = self._send_handling_auth(
+venv/lib/python3.13/site-packages/httpx/_client.py:954: in _send_handling_auth
+    response = self._send_handling_redirects(
+venv/lib/python3.13/site-packages/httpx/_client.py:991: in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.13/site-packages/httpx/_client.py:1027: in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.13/site-packages/starlette/testclient.py:372: in handle_request
+    raise exc
+venv/lib/python3.13/site-packages/starlette/testclient.py:369: in handle_request
+    portal.call(self.app, scope, receive, send)
+venv/lib/python3.13/site-packages/anyio/from_thread.py:291: in call
+    return cast(T_Retval, self.start_task_soon(func, *args).result())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/concurrent/futures/_base.py:456: in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+/usr/lib/python3.13/concurrent/futures/_base.py:401: in __get_result
+    raise self._exception
+venv/lib/python3.13/site-packages/anyio/from_thread.py:222: in _call_func
+    retval = await retval_or_awaitable
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.13/site-packages/fastapi/applications.py:1054: in __call__
+    await super().__call__(scope, receive, send)
+venv/lib/python3.13/site-packages/starlette/applications.py:123: in __call__
+    await self.middleware_stack(scope, receive, send)
+venv/lib/python3.13/site-packages/starlette/middleware/errors.py:186: in __call__
+    raise exc
+venv/lib/python3.13/site-packages/starlette/middleware/errors.py:164: in __call__
+    await self.app(scope, receive, _send)
+venv/lib/python3.13/site-packages/starlette/middleware/sessions.py:83: in __call__
+    await self.app(scope, receive, send_wrapper)
+venv/lib/python3.13/site-packages/starlette/middleware/gzip.py:24: in __call__
+    await responder(scope, receive, send)
+venv/lib/python3.13/site-packages/starlette/middleware/gzip.py:44: in __call__
+    await self.app(scope, receive, self.send_with_gzip)
+venv/lib/python3.13/site-packages/starlette/middleware/cors.py:83: in __call__
+    await self.app(scope, receive, send)
+venv/lib/python3.13/site-packages/starlette/middleware/exceptions.py:62: in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+venv/lib/python3.13/site-packages/starlette/_exception_handler.py:64: in wrapped_app
+    raise exc
+venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    await app(scope, receive, sender)
+venv/lib/python3.13/site-packages/starlette/routing.py:758: in __call__
+    await self.middleware_stack(scope, receive, send)
+venv/lib/python3.13/site-packages/starlette/routing.py:778: in app
+    await route.handle(scope, receive, send)
+venv/lib/python3.13/site-packages/starlette/routing.py:299: in handle
+    await self.app(scope, receive, send)
+venv/lib/python3.13/site-packages/starlette/routing.py:79: in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+venv/lib/python3.13/site-packages/starlette/_exception_handler.py:64: in wrapped_app
+    raise exc
+venv/lib/python3.13/site-packages/starlette/_exception_handler.py:53: in wrapped_app
+    await app(scope, receive, sender)
+venv/lib/python3.13/site-packages/starlette/routing.py:74: in app
+    response = await func(request)
+               ^^^^^^^^^^^^^^^^^^^
+venv/lib/python3.13/site-packages/fastapi/routing.py:315: in app
+    content = await serialize_response(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+    async def serialize_response(
+        *,
+        field: Optional[ModelField] = None,
+        response_content: Any,
+        include: Optional[IncEx] = None,
+        exclude: Optional[IncEx] = None,
+        by_alias: bool = True,
+        exclude_unset: bool = False,
+        exclude_defaults: bool = False,
+        exclude_none: bool = False,
+        is_coroutine: bool = True,
+    ) -&gt; Any:
+        if field:
+            errors = []
+            if not hasattr(field, "serialize"):
+                # pydantic v1
+                response_content = _prepare_response_content(
+                    response_content,
+                    exclude_unset=exclude_unset,
+                    exclude_defaults=exclude_defaults,
+                    exclude_none=exclude_none,
+                )
+            if is_coroutine:
+                value, errors_ = field.validate(response_content, {}, loc=("response",))
+            else:
+                value, errors_ = await run_in_threadpool(
+                    field.validate, response_content, {}, loc=("response",)
+                )
+            if isinstance(errors_, list):
+                errors.extend(errors_)
+            elif errors_:
+                errors.append(errors_)
+            if errors:
+&gt;               raise ResponseValidationError(
+                    errors=_normalize_errors(errors), body=response_content
+                )
+E               fastapi.exceptions.ResponseValidationError: 3 validation errors:
+E                 {'type': 'datetime_type', 'loc': ('response', 0, 'updated_at'), 'msg': 'Input should be a valid datetime', 'input': None, 'url': 'https://errors.pydantic.dev/2.11/v/datetime_type'}
+E                 {'type': 'datetime_type', 'loc': ('response', 1, 'updated_at'), 'msg': 'Input should be a valid datetime', 'input': None, 'url': 'https://errors.pydantic.dev/2.11/v/datetime_type'}
+E                 {'type': 'datetime_type', 'loc': ('response', 2, 'updated_at'), 'msg': 'Input should be a valid datetime', 'input': None, 'url': 'https://errors.pydantic.dev/2.11/v/datetime_type'}
+
+venv/lib/python3.13/site-packages/fastapi/routing.py:155: ResponseValidationError</failure></testcase><testcase classname="tests.integration.api.test_builds_edge_cases" name="test_create_build_with_empty_name" time="0.010" /><testcase classname="tests.integration.api.test_builds_edge_cases" name="test_create_build_with_invalid_game_mode" time="0.011" /><testcase classname="tests.integration.api.test_builds_edge_cases" name="test_update_nonexistent_build" time="0.012" /><testcase classname="tests.integration.api.test_builds_edge_cases" name="test_delete_nonexistent_build" time="0.014" /><testcase classname="tests.integration.api.test_builds_edge_cases" name="test_generate_build_with_no_professions" time="0.008"><failure message="NameError: name 'Profession' is not defined">client = &lt;starlette.testclient.TestClient object at 0x7f329d58c690&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f32a237f8c0&gt;
+
+    def test_generate_build_with_no_professions(client: TestClient, db: Session) -&gt; None:
+        """Test generating a build with no professions available."""
+        # Clear all professions
+&gt;       db.query(Profession).delete()
+                 ^^^^^^^^^^
+E       NameError: name 'Profession' is not defined
+
+tests/integration/api/test_builds_edge_cases.py:75: NameError</failure></testcase><testcase classname="tests.integration.api.test_builds_edge_cases" name="test_list_builds_with_filters" time="0.083" /><testcase classname="tests.integration.api.test_compositions.TestCompositionCRUD" name="test_create_composition" time="0.026"><failure message="assert 1 == 2&#10; +  where 2 = &lt;User rodney22&gt;.id">self = &lt;test_compositions.TestCompositionCRUD object at 0x7f32a2355450&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d58e210&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f32a237fe00&gt;
+
+    def test_create_composition(self, client: TestClient, db: Session):
+        # Créer un utilisateur et un token
+        user = UserFactory()
+        db.add(user)
+        db.commit()
+    
+        token = create_access_token(subject=user.email)
+    
+        # Données de test pour la création
+        composition_data = {
+            "name": "Test Composition",
+            "description": "Test Description",
+            "squad_size": 10,
+            "is_public": True
+        }
+    
+        # Tester la création
+        response = client.post(
+            "/api/v1/compositions/",
+            json=composition_data,
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    
+        assert response.status_code == status.HTTP_201_CREATED
+        data = response.json()
+        assert data["name"] == composition_data["name"]
+&gt;       assert data["created_by"] == user.id
+E       assert 1 == 2
+E        +  where 2 = &lt;User rodney22&gt;.id
+
+tests/integration/api/test_compositions.py:44: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_compositions.TestCompositionCRUD" name="test_read_composition" time="0.021" /><testcase classname="tests.integration.api.test_compositions.TestCompositionCRUD" name="test_update_composition" time="0.017"><failure message="assert 403 == 200&#10; +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code&#10; +  and   200 = status.HTTP_200_OK">self = &lt;test_compositions.TestCompositionCRUD object at 0x7f32a236d480&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d734190&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e0df4d0&gt;
+
+    def test_update_composition(self, client: TestClient, db: Session):
+        # Créer une composition de test
+        user = UserFactory()
+        composition = CompositionFactory(created_by=user.id)
+        db.add_all([user, composition])
+        db.commit()
+    
+        token = create_access_token(subject=user.email)
+    
+        # Mettre à jour la composition
+        update_data = {"name": "Updated Name", "description": "Updated Description"}
+        response = client.put(
+            f"/api/v1/compositions/{composition.id}",
+            json=update_data,
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    
+&gt;       assert response.status_code == status.HTTP_200_OK
+E       assert 403 == 200
+E        +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code
+E        +  and   200 = status.HTTP_200_OK
+
+tests/integration/api/test_compositions.py:88: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_compositions.TestCompositionCRUD" name="test_delete_composition" time="0.022"><failure message="assert 403 == 200&#10; +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code&#10; +  and   200 = status.HTTP_200_OK">self = &lt;test_compositions.TestCompositionCRUD object at 0x7f32a236d5b0&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d7351d0&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f32a237f8c0&gt;
+
+    def test_delete_composition(self, client: TestClient, db: Session):
+        # Créer une composition de test
+        user = UserFactory()
+        composition = CompositionFactory(created_by=user.id)
+        db.add_all([user, composition])
+        db.commit()
+        composition_id = composition.id
+    
+        token = create_access_token(subject=user.email)
+    
+        # Supprimer la composition
+        response = client.delete(
+            f"/api/v1/compositions/{composition_id}",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    
+&gt;       assert response.status_code == status.HTTP_200_OK
+E       assert 403 == 200
+E        +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code
+E        +  and   200 = status.HTTP_200_OK
+
+tests/integration/api/test_compositions.py:113: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_compositions.TestCompositionMembers" name="test_add_member_to_composition" time="0.029"><failure message="assert 404 == 200&#10; +  where 404 = &lt;Response [404 Not Found]&gt;.status_code&#10; +  and   200 = status.HTTP_200_OK">self = &lt;test_compositions.TestCompositionMembers object at 0x7f32a23556d0&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d735e50&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329dfd2cf0&gt;
+
+    def test_add_member_to_composition(self, client: TestClient, db: Session):
+        # Créer des données de test
+        owner = UserFactory()
+        member = UserFactory()
+        role = RoleFactory()
+        profession = ProfessionFactory()
+        elite_spec = EliteSpecializationFactory(profession=profession)
+        composition = CompositionFactory(created_by=owner.id)
+    
+        db.add_all([owner, member, role, profession, elite_spec, composition])
+        db.commit()
+    
+        token = create_access_token(subject=owner.email)
+    
+        # Ajouter un membre à la composition
+        member_data = {
+            "user_id": member.id,
+            "role_id": role.id,
+            "profession_id": profession.id,
+            "elite_specialization_id": elite_spec.id,
+            "notes": "Test notes"
+        }
+    
+        response = client.post(
+            f"/api/v1/compositions/{composition.id}/members",
+            json=member_data,
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    
+&gt;       assert response.status_code == status.HTTP_200_OK
+E       assert 404 == 200
+E        +  where 404 = &lt;Response [404 Not Found]&gt;.status_code
+E        +  and   200 = status.HTTP_200_OK
+
+tests/integration/api/test_compositions.py:149: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_compositions.TestCompositionMembers" name="test_remove_member_from_composition" time="0.019"><failure message="assert 404 == 200&#10; +  where 404 = &lt;Response [404 Not Found]&gt;.status_code&#10; +  and   200 = status.HTTP_200_OK">self = &lt;test_compositions.TestCompositionMembers object at 0x7f32a2355810&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d734410&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329dfd17f0&gt;
+
+    def test_remove_member_from_composition(self, client: TestClient, db: Session):
+        # Créer une composition avec un membre
+        owner = UserFactory()
+        member = UserFactory()
+        composition = CompositionFactory(created_by=owner.id, members=[member])
+        db.add_all([owner, member, composition])
+        db.commit()
+    
+        token = create_access_token(subject=owner.email)
+    
+        # Retirer le membre de la composition
+        response = client.delete(
+            f"/api/v1/compositions/{composition.id}/members/{member.id}",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    
+&gt;       assert response.status_code == status.HTTP_200_OK
+E       assert 404 == 200
+E        +  where 404 = &lt;Response [404 Not Found]&gt;.status_code
+E        +  and   200 = status.HTTP_200_OK
+
+tests/integration/api/test_compositions.py:171: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_compositions.TestCompositionPermissions" name="test_non_owner_cannot_edit_composition" time="0.021" /><testcase classname="tests.integration.api.test_compositions.TestCompositionPermissions" name="test_admin_can_edit_any_composition" time="0.021"><failure message="assert 403 == 200&#10; +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code&#10; +  and   200 = status.HTTP_200_OK">self = &lt;test_compositions.TestCompositionPermissions object at 0x7f32a2355bd0&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d58f610&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f32a237fe00&gt;
+
+    def test_admin_can_edit_any_composition(self, client: TestClient, db: Session):
+        # Créer un admin et une composition appartenant à un autre utilisateur
+        admin = UserFactory(is_superuser=True)
+        owner = UserFactory()
+        composition = CompositionFactory(created_by=owner.id)
+        db.add_all([admin, owner, composition])
+        db.commit()
+    
+        token = create_access_token(subject=admin.email)
+    
+        # L'admin devrait pouvoir mettre à jour la composition
+        response = client.put(
+            f"/api/v1/compositions/{composition.id}",
+            json={"name": "Admin Update"},
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    
+&gt;       assert response.status_code == status.HTTP_200_OK
+E       assert 403 == 200
+E        +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code
+E        +  and   200 = status.HTTP_200_OK
+
+tests/integration/api/test_compositions.py:214: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_roles_professions.TestRoles" name="test_create_role" time="0.022"><failure message="assert 200 == 201&#10; +  where 200 = &lt;Response [200 OK]&gt;.status_code&#10; +  and   201 = status.HTTP_201_CREATED">self = &lt;test_roles_professions.TestRoles object at 0x7f32a2355f90&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d734190&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f32a237f8c0&gt;
+
+    def test_create_role(self, client: TestClient, db: Session):
+        # Créer un admin
+        admin = UserFactory(is_superuser=True)
+        db.add(admin)
+        db.commit()
+    
+        token = create_access_token(subject=admin.email)
+    
+        # Données de test
+        role_data = {
+            "name": "New Role",
+            "description": "Test Role Description",
+            "icon_url": "http://example.com/icon.png"
+        }
+    
+        # Tester la création
+        response = client.post(
+            "/api/v1/roles/",
+            json=role_data,
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    
+&gt;       assert response.status_code == status.HTTP_201_CREATED
+E       assert 200 == 201
+E        +  where 200 = &lt;Response [200 OK]&gt;.status_code
+E        +  and   201 = status.HTTP_201_CREATED
+
+tests/integration/api/test_roles_professions.py:38: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_roles_professions.TestRoles" name="test_list_roles" time="0.017" /><testcase classname="tests.integration.api.test_roles_professions.TestRoles" name="test_update_role" time="0.021"><failure message="AssertionError: assert 'Interview finish opportunity recognize.' == 'Updated Description'&#10;  &#10;  - Updated Description&#10;  + Interview finish opportunity recognize.">self = &lt;test_roles_professions.TestRoles object at 0x7f32a236d6e0&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d735e50&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e0df4d0&gt;
+
+    def test_update_role(self, client: TestClient, db: Session):
+        # Créer un admin et un rôle
+        admin = UserFactory(is_superuser=True)
+        role = RoleFactory()
+        db.add_all([admin, role])
+        db.commit()
+    
+        token = create_access_token(subject=admin.email)
+    
+        # Mettre à jour le rôle
+        update_data = {"description": "Updated Description"}
+        response = client.put(
+            f"/api/v1/roles/{role.id}",
+            json=update_data,
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["description"] == update_data["description"]
+    
+        # Vérifier la mise à jour en base
+        db.refresh(role)
+&gt;       assert role.description == update_data["description"]
+E       AssertionError: assert 'Interview finish opportunity recognize.' == 'Updated Description'
+E         
+E         - Updated Description
+E         + Interview finish opportunity recognize.
+
+tests/integration/api/test_roles_professions.py:96: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_roles_professions.TestRoles" name="test_delete_role" time="0.023" /><testcase classname="tests.integration.api.test_roles_professions.TestProfessions" name="test_create_profession" time="0.024"><failure message="assert 200 == 201&#10; +  where 200 = &lt;Response [200 OK]&gt;.status_code&#10; +  and   201 = status.HTTP_201_CREATED">self = &lt;test_roles_professions.TestProfessions object at 0x7f32a2356210&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d4bd310&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e0df770&gt;
+
+    def test_create_profession(self, client: TestClient, db: Session):
+        # Créer un admin
+        admin = UserFactory(is_superuser=True)
+        db.add(admin)
+        db.commit()
+    
+        token = create_access_token(subject=admin.email)
+    
+        # Données de test
+        profession_data = {
+            "name": "New Profession",
+            "description": "Test Profession Description",
+            "icon_url": "http://example.com/profession.png"
+        }
+    
+        # Tester la création
+        response = client.post(
+            "/api/v1/professions/",
+            json=profession_data,
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    
+&gt;       assert response.status_code == status.HTTP_201_CREATED
+E       assert 200 == 201
+E        +  where 200 = &lt;Response [200 OK]&gt;.status_code
+E        +  and   201 = status.HTTP_201_CREATED
+
+tests/integration/api/test_roles_professions.py:143: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_roles_professions.TestProfessions" name="test_list_professions" time="0.017" /><testcase classname="tests.integration.api.test_roles_professions.TestEliteSpecializations" name="test_create_elite_specialization" time="0.013"><failure message="assert 404 == 201&#10; +  where 404 = &lt;Response [404 Not Found]&gt;.status_code&#10; +  and   201 = status.HTTP_201_CREATED">self = &lt;test_roles_professions.TestEliteSpecializations object at 0x7f32a2355950&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d4bd810&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e0dc2f0&gt;
+
+    def test_create_elite_specialization(self, client: TestClient, db: Session):
+        # Créer un admin et une profession
+        admin = UserFactory(is_superuser=True)
+        profession = ProfessionFactory()
+        db.add_all([admin, profession])
+        db.commit()
+    
+        token = create_access_token(subject=admin.email)
+    
+        # Données de test
+        spec_data = {
+            "name": "New Elite Spec",
+            "profession_id": profession.id,
+            "description": "Test Elite Spec",
+            "icon_url": "http://example.com/elite.png"
+        }
+    
+        # Tester la création
+        response = client.post(
+            "/api/v1/elite-specializations/",
+            json=spec_data,
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    
+&gt;       assert response.status_code == status.HTTP_201_CREATED
+E       assert 404 == 201
+E        +  where 404 = &lt;Response [404 Not Found]&gt;.status_code
+E        +  and   201 = status.HTTP_201_CREATED
+
+tests/integration/api/test_roles_professions.py:202: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_roles_professions.TestEliteSpecializations" name="test_list_elite_specializations" time="0.018"><failure message="assert 404 == 200&#10; +  where 404 = &lt;Response [404 Not Found]&gt;.status_code&#10; +  and   200 = status.HTTP_200_OK">self = &lt;test_roles_professions.TestEliteSpecializations object at 0x7f32a2356490&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d4bd950&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329e0dc1a0&gt;
+
+    def test_list_elite_specializations(self, client: TestClient, db: Session):
+        # Créer une profession avec des spécialisations
+        profession = ProfessionFactory()
+        specs = [EliteSpecializationFactory(profession=profession) for _ in range(3)]
+        db.add_all([profession] + specs)
+        db.commit()
+    
+        # Créer un utilisateur normal
+        user = UserFactory()
+        db.add(user)
+        db.commit()
+    
+        token = create_access_token(subject=user.email)
+    
+        # Tester la liste par profession
+        response = client.get(
+            f"/api/v1/professions/{profession.id}/elite-specializations",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+    
+&gt;       assert response.status_code == status.HTTP_200_OK
+E       assert 404 == 200
+E        +  where 404 = &lt;Response [404 Not Found]&gt;.status_code
+E        +  and   200 = status.HTTP_200_OK
+
+tests/integration/api/test_roles_professions.py:234: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_users.TestAuth" name="test_login_success" time="0.021" /><testcase classname="tests.integration.api.test_users.TestAuth" name="test_login_invalid_credentials" time="0.016" /><testcase classname="tests.integration.api.test_users.TestUsers" name="test_read_users_me" time="0.018" /><testcase classname="tests.integration.api.test_users.TestUsers" name="test_create_user" time="0.019" /><testcase classname="tests.integration.api.test_users.TestUsers" name="test_read_user" time="0.019"><failure message="assert 403 == 200&#10; +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code&#10; +  and   200 = status.HTTP_200_OK">self = &lt;test_users.TestUsers object at 0x7f32a236d940&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d4bee90&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329dfd06e0&gt;
+
+    def test_read_user(self, client: TestClient, db: Session):
+        # Créer un utilisateur de test
+        user = UserFactory()
+        db.add(user)
+        db.commit()
+    
+        # Créer un admin et obtenir son en-tête d'authentification
+        admin = UserFactory(is_superuser=True)
+        db.add(admin)
+        db.commit()
+    
+        # Utiliser l'auth_header du client de test avec l'utilisateur admin
+        headers = client.auth_header(user=admin)
+    
+        # Tester la lecture du profil
+        response = client.get(
+            f"/api/v1/users/{user.id}",
+            headers=headers
+        )
+    
+&gt;       assert response.status_code == status.HTTP_200_OK
+E       assert 403 == 200
+E        +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code
+E        +  and   200 = status.HTTP_200_OK
+
+tests/integration/api/test_users.py:118: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_users.TestUsers" name="test_update_user" time="0.020" /><testcase classname="tests.integration.api.test_users.TestUserRoles" name="test_add_role_to_user" time="0.023"><failure message="AssertionError: Expected status code 200, got 401. Response: {&quot;detail&quot;:&quot;Could not validate credentials&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code&#10; +  and   200 = status.HTTP_200_OK">self = &lt;test_users.TestUserRoles object at 0x7f32a2356ad0&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d4be5d0&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329dfd01a0&gt;
+
+    def test_add_role_to_user(self, client: TestClient, db: Session):
+        # Create an admin user who has permission to add roles
+        admin = UserFactory(is_superuser=True)
+        user = UserFactory()
+        role = RoleFactory()
+        db.add_all([admin, user, role])
+        db.commit()
+    
+        # Use admin's token for authorization
+        admin_headers = client.auth_header(user=admin)
+    
+        # Add role to user
+        response = client.post(
+            f"/api/v1/users/{user.id}/roles/{role.id}",
+            headers=admin_headers
+        )
+    
+&gt;       assert response.status_code == status.HTTP_200_OK, f"Expected status code 200, got {response.status_code}. Response: {response.text}"
+E       AssertionError: Expected status code 200, got 401. Response: {"detail":"Could not validate credentials"}
+E       assert 401 == 200
+E        +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code
+E        +  and   200 = status.HTTP_200_OK
+
+tests/integration/api/test_users.py:176: AssertionError</failure></testcase><testcase classname="tests.integration.api.test_users.TestUserRoles" name="test_remove_role_from_user" time="0.022"><failure message="assert 403 == 200&#10; +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code&#10; +  and   200 = status.HTTP_200_OK">self = &lt;test_users.TestUserRoles object at 0x7f32a2356c10&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f329d735e50&gt;
+db = &lt;sqlalchemy.orm.session.Session object at 0x7f329dfd16a0&gt;
+
+    def test_remove_role_from_user(self, client: TestClient, db: Session):
+        # Create an admin user who has permission to remove roles
+        admin = UserFactory(is_superuser=True)
+        role = RoleFactory()
+        user = UserFactory(roles=[role])
+        db.add_all([admin, user, role])
+        db.commit()
+    
+        # Use admin's token for authorization
+        admin_headers = client.auth_header(user=admin)
+    
+        # First verify the role is assigned
+        response = client.get(
+            f"/api/v1/users/{user.id}",
+            headers=admin_headers
+        )
+&gt;       assert response.status_code == status.HTTP_200_OK
+E       assert 403 == 200
+E        +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code
+E        +  and   200 = status.HTTP_200_OK
+
+tests/integration/api/test_users.py:204: AssertionError</failure></testcase><testcase classname="tests.test_api_compositions.TestCompositionsAPI" name="test_crud_composition" time="0.068" /><testcase classname="tests.test_api_compositions.TestCompositionsAPI" name="test_member_validation_404s" time="0.016" /><testcase classname="tests.test_api_compositions_edges.TestCompositionsEdges" name="test_member_validation_branches" time="0.050" /><testcase classname="tests.test_api_compositions_edges.TestCompositionsEdges" name="test_filter_and_permissions" time="0.068" /><testcase classname="tests.test_api_professions.TestProfessionsAPI" name="test_list_and_crud_professions" time="0.065" /><testcase classname="tests.test_api_professions.TestProfessionsAPI" name="test_forbidden_for_non_superuser" time="0.018" /><testcase classname="tests.test_api_professions.TestProfessionsAPI" name="test_elite_specializations_crud_and_validation" time="0.072" /><testcase classname="tests.test_api_roles.TestRolesAPI" name="test_list_and_create_role" time="0.023" /><testcase classname="tests.test_api_roles.TestRolesAPI" name="test_create_forbidden_for_non_superuser" time="0.017" /><testcase classname="tests.test_api_roles.TestRolesAPI" name="test_get_update_delete_role" time="0.036" /><testcase classname="tests.test_api_users.TestUsersAPI" name="test_list_users_requires_superuser" time="0.013" /><testcase classname="tests.test_api_users.TestUsersAPI" name="test_create_user" time="0.016"><failure message="assert 201 == 200&#10; +  where 201 = &lt;Response [201 Created]&gt;.status_code&#10; +  and   200 = status.HTTP_200_OK">self = &lt;tests.test_api_users.TestUsersAPI object at 0x7f32a2357b10&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f3297e05f90&gt;
+db_session = &lt;sqlalchemy.orm.session.Session object at 0x7f329d5c1be0&gt;
+
+    def test_create_user(self, client, db_session):
+        su = make_superuser(db_session)
+        client.app.dependency_overrides[deps.get_current_active_superuser] = lambda: su
+    
+        payload = {
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password": "password123",
+            "is_active": True,
+            "is_superuser": False,
+        }
+        resp = client.post(f"{API_PREFIX}/users/", json=payload)
+&gt;       assert resp.status_code == status.HTTP_200_OK
+E       assert 201 == 200
+E        +  where 201 = &lt;Response [201 Created]&gt;.status_code
+E        +  and   200 = status.HTTP_200_OK
+
+tests/test_api_users.py:63: AssertionError</failure></testcase><testcase classname="tests.test_api_users.TestUsersAPI" name="test_me_and_get_by_id_and_update" time="0.028"><failure message="assert 403 == 400&#10; +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code&#10; +  and   400 = status.HTTP_400_BAD_REQUEST">self = &lt;tests.test_api_users.TestUsersAPI object at 0x7f32a236e190&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f3297e065d0&gt;
+db_session = &lt;sqlalchemy.orm.session.Session object at 0x7f32a237fe00&gt;
+
+    def test_me_and_get_by_id_and_update(self, client, db_session):
+        su = make_superuser(db_session)
+        other = make_user(db_session, username="alice", email="alice@example.com")
+    
+        client.app.dependency_overrides[deps.get_current_active_user] = lambda: su
+        client.app.dependency_overrides[deps.get_current_active_superuser] = lambda: su
+    
+        # /me returns current user
+        resp = client.get(f"{API_PREFIX}/users/me")
+        assert resp.status_code == status.HTTP_200_OK
+        me = resp.json()
+        assert me["username"] == su.username
+    
+        # get by id (as superuser)
+        resp = client.get(f"{API_PREFIX}/users/{other.id}")
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()["username"] == other.username
+    
+        # update other as superuser
+        payload = {"username": "alice_2"}
+        resp = client.put(f"{API_PREFIX}/users/{other.id}", json=payload)
+        assert resp.status_code == status.HTTP_200_OK
+        assert resp.json()["username"] == "alice_2"
+    
+        # Non-superuser trying to read another user should fail
+        client.app.dependency_overrides[deps.get_current_active_user] = lambda: other
+        resp = client.get(f"{API_PREFIX}/users/{su.id}")
+        # Endpoint returns 400 for insufficient privileges
+&gt;       assert resp.status_code == status.HTTP_400_BAD_REQUEST
+E       assert 403 == 400
+E        +  where 403 = &lt;Response [403 Forbidden]&gt;.status_code
+E        +  and   400 = status.HTTP_400_BAD_REQUEST
+
+tests/test_api_users.py:97: AssertionError</failure></testcase><testcase classname="tests.test_api_users_edges.TestUsersEdges" name="test_read_user_by_id_self_branch" time="0.012" /><testcase classname="tests.test_edges_more" name="test_model_reprs" time="0.005" /><testcase classname="tests.test_edges_more" name="test_composition_repr" time="0.002" /><testcase classname="tests.test_edges_more" name="test_get_current_active_user_inactive_raises" time="0.001" /><testcase classname="tests.test_edges_more" name="test_get_current_active_superuser_paths" time="0.001" /><testcase classname="tests.test_edges_more" name="test_get_current_user_404_and_403" time="0.002" /><testcase classname="tests.test_edges_more" name="test_get_current_user_success_path" time="0.002" /><testcase classname="tests.test_edges_more" name="test_get_db_finally_closes" time="0.001" /><testcase classname="tests.test_edges_more" name="test_get_current_active_user_happy_path" time="0.002" /><testcase classname="tests.test_edges_more.TestTinyEdges" name="test_roles_delete_not_found" time="0.011" /><testcase classname="tests.test_edges_more.TestTinyEdges" name="test_professions_delete_not_found" time="0.010" /><testcase classname="tests.test_edges_more.TestTinyEdges" name="test_elite_specs_update_not_found" time="0.012" /><testcase classname="tests.test_edges_more.TestTinyEdges" name="test_users_create_duplicate_email" time="0.016"><failure message="assert 201 == 200&#10; +  where 201 = &lt;Response [201 Created]&gt;.status_code&#10; +  and   200 = status.HTTP_200_OK">self = &lt;tests.test_edges_more.TestTinyEdges object at 0x7f32a236e3f0&gt;
+client = &lt;starlette.testclient.TestClient object at 0x7f3297e07890&gt;
+db_session = &lt;sqlalchemy.orm.session.Session object at 0x7f329d5c2ba0&gt;
+
+    def test_users_create_duplicate_email(self, client, db_session):
+        su = User(email="admin@example.com", username="admin", hashed_password="x", is_superuser=True)
+        client.app.dependency_overrides[deps.get_current_active_superuser] = lambda: su
+        payload = {"email": "dup@example.com", "username": "dup", "password": "password123"}
+        resp1 = client.post(f"{API_PREFIX}/users/", json=payload)
+&gt;       assert resp1.status_code == status.HTTP_200_OK
+E       assert 201 == 200
+E        +  where 201 = &lt;Response [201 Created]&gt;.status_code
+E        +  and   200 = status.HTTP_200_OK
+
+tests/test_edges_more.py:146: AssertionError</failure></testcase><testcase classname="tests.test_edges_more.TestTinyEdges" name="test_users_update_me_path" time="0.018" /><testcase classname="tests.test_edges_more" name="test_logging_exception_hook" time="0.004" /><testcase classname="tests.test_models" name="test_user_model" time="0.005" /><testcase classname="tests.test_models" name="test_role_model" time="0.004" /><testcase classname="tests.test_models" name="test_profession_model" time="0.007" /><testcase classname="tests.test_models" name="test_user_role_relationship" time="0.009" /><testcase classname="tests.test_models" name="test_unique_constraint_violation" time="0.005" /><testcase classname="tests.unit.crud.test_build" name="test_create_build" time="0.014" /><testcase classname="tests.unit.crud.test_build" name="test_update_build" time="0.010" /><testcase classname="tests.unit.crud.test_build" name="test_generate_build_success" time="0.018" /><testcase classname="tests.unit.crud.test_build" name="test_generate_build_no_professions" time="0.005" /><testcase classname="tests.unit.crud.test_build" name="test_get_multi_by_owner" time="0.011" /><testcase classname="tests.unit.crud.test_build_operations" name="test_create_build" time="0.012" /><testcase classname="tests.unit.crud.test_build_operations" name="test_get_build" time="0.008" /><testcase classname="tests.unit.crud.test_build_operations" name="test_update_build" time="0.010" /><testcase classname="tests.unit.crud.test_build_operations" name="test_delete_build" time="0.011" /><testcase classname="tests.unit.crud.test_build_operations" name="test_get_public_builds" time="0.013" /><testcase classname="tests.unit.crud.test_build_operations" name="test_get_multi_by_owner_with_pagination" time="0.017" /><testcase classname="tests.unit.crud.test_build_operations" name="test_update_build_with_professions" time="0.012" /><testcase classname="tests.unit.test_coverage" name="test_coverage_setup" time="0.005" /></testsuite></testsuites>

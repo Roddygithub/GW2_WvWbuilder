@@ -13,19 +13,18 @@ from app.db.session import get_db
 from app.schemas.build import BuildCreate, BuildUpdate
 
 # Import models to ensure they are registered with SQLAlchemy
-from app.models import (
-    Build, 
-    Composition, 
-    CompositionTag,
-    Profession, 
-    EliteSpecialization,
-    Role,
-    User
-)  # noqa: F401
+from app.models import models  # noqa: F401
+from app.models.build import Build  # noqa: F401
+from app.models.build_profession import BuildProfession  # noqa: F401
+from app.models.models import Composition, CompositionTag  # noqa: F401
+from app.models.models import Profession, EliteSpecialization  # noqa: F401
+from app.models.role import Role  # noqa: F401
+from app.models.user import User  # noqa: F401
 
 # Import test utilities and helpers
 from tests.conftest import client, db
 from tests.integration.fixtures.factories import (
+    BuildFactory, 
     UserFactory, 
     ProfessionFactory,
     EliteSpecializationFactory,
@@ -105,23 +104,18 @@ def test_generate_build(client: TestClient, db: Session) -> None:
     user = client.test_user
     
     # Create some professions for testing
-    professions = [
-        ProfessionFactory(
-            name=f"Test Profession {i}",
-            game_modes=["wvw"]
-        ) for i in range(5)
-    ]
+    professions = [ProfessionFactory() for _ in range(3)]  # Only create 3 professions to respect the schema
     db.add_all(professions)
     db.commit()
     
     # Prepare build generation request data
     build_data = {
-        "team_size": 5,
+        "team_size": 3,  # Reduced to match the maximum allowed by the schema
         "required_roles": ["healer", "dps", "support"],
         "preferred_professions": [p.id for p in professions],
         "max_duplicates": 2,
         "min_healers": 1,
-        "min_dps": 2,
+        "min_dps": 1,
         "min_support": 1,
         "constraints": {
             "require_cc": True,
@@ -131,61 +125,93 @@ def test_generate_build(client: TestClient, db: Session) -> None:
         }
     }
     
-    # Set authentication header for the test user
-    headers = client.auth_header()
-    
-    # Make request to generate build
+    # Make request to generate build - no need to set headers as the client handles it
+    print(f"Sending request to {settings.API_V1_STR}/builds/generate/ with data: {build_data}")
     response = client.post(
         f"{settings.API_V1_STR}/builds/generate/",
         json=build_data,
         headers=headers
     )
     
-    # Debug output if test fails
-    if response.status_code != 200:
-        print(f"Test failed with status: {response.status_code}")
-        print(f"Response: {response.text}")
+    # Print full response for debugging
+    print(f"Response status code: {response.status_code}")
+    print(f"Response text: {response.text}")
     
-    # Assert response
-    assert response.status_code == 200, response.text
-    data = response.json()
+    # Parse the JSON response
+    try:
+        response_data = response.json()
+        print("\n=== RESPONSE DATA ===")
+        print(f"Success: {response_data.get('success')}")
+        print(f"Message: {response_data.get('message')}")
+        print(f"Build data: {response_data.get('build')}")
+        print(f"Suggested composition: {response_data.get('suggested_composition')}")
+        print(f"Metrics: {response_data.get('metrics')}")
+        print("==================\n")
+    except Exception as e:
+        print(f"Error parsing response JSON: {e}")
     
-    # Verify the response structure
-    assert "success" in data, f"Response missing 'success' key: {data}"
-    assert data["success"] is True, f"Expected success=True, got {data['success']}"
-    assert "message" in data, f"Response missing 'message' key: {data}"
-    assert "build" in data, f"Response missing 'build' key: {data}"
-    assert "suggested_composition" in data, f"Response missing 'suggested_composition' key: {data}"
+    # If the response indicates an error, print more details
+    if response.status_code != 200 or not response.json().get('success', False):
+        print("\n=== SERVER LOGS ===")
+        print("Check server logs for more details on the error.")
+        print("==================\n")
+    
+    # Parse the response
+    response_data = response.json()
+    print(f"API Response: {response_data}")
+    
+    # Check if the response indicates failure
+    if not response_data.get('success', False):
+        error_msg = response_data.get('message', 'No error message provided')
+        print(f"Build generation failed with message: {error_msg}")
+        
+        # If there's a validation error, print details
+        if 'detail' in response_data:
+            print(f"Validation error details: {response_data['detail']}")
+        
+        # Check if professions are missing
+        if 'No valid professions available' in error_msg:
+            # Query the database to see what professions exist
+            from app.models import Profession
+            profs = db.query(Profession).all()
+            print(f"Available professions in DB: {[p.name for p in profs]}")
+            print(f"Preferred professions in request: {build_data.get('preferred_professions', [])}")
+    
+    # Assert the response structure
+    assert response.status_code == 200, f"Status code: {response.status_code}, Response: {response.text}"
+    
+    # Check if the response indicates success
+    assert response_data.get('success') is True, f"Expected success=True, got {response_data.get('success')}"
+    
+    # Check for required fields in the response
+    assert "build" in response_data, f"'build' not in response: {response_data}"
+    assert "suggested_composition" in response_data, f"'suggested_composition' not in response: {response_data}"
     
     # Verify build data in the response
-    build = data["build"]
-    required_build_fields = ["id", "name", "description", "game_mode", "team_size"]
-    for field in required_build_fields:
-        assert field in build, f"Build missing required field: {field}"
-    
-    # Handle the case where updated_at might be None in the response
-    if build.get("updated_at") is None:
-        build["updated_at"] = build["created_at"]
-    
+    build = response_data["build"]
+    print(f"Build data: {build}")
+    assert "id" in build, f"'id' not in build data: {build}"
+    assert "name" in build, f"'name' not in build data: {build}"
+    assert "description" in build, f"'description' not in build data: {build}"
+    assert "game_mode" in build, f"'game_mode' not in build data: {build}"
+    assert "team_size" in build, f"'team_size' not in build data: {build}"
     assert build["team_size"] == build_data["team_size"], \
         f"Expected team_size={build_data['team_size']}, got {build['team_size']}"
     
     # Verify composition data
-    assert isinstance(data["suggested_composition"], list), \
-        f"Expected suggested_composition to be a list, got {type(data['suggested_composition'])}"
+    suggested_composition = response_data["suggested_composition"]
+    print(f"Suggested composition: {suggested_composition}")
+    assert isinstance(suggested_composition, list), \
+        f"Expected suggested_composition to be a list, got {type(suggested_composition)}"
+    assert len(suggested_composition) == build_data["team_size"], \
+        f"Expected {build_data['team_size']} items in suggested_composition, got {len(suggested_composition)}"
     
-    # Verify metrics if present
-    if "metrics" in data:
-        metrics = data["metrics"]
-        if "boon_coverage" in metrics:
-            assert isinstance(metrics["boon_coverage"], dict), \
-                f"Expected boon_coverage to be a dict, got {type(metrics['boon_coverage'])}"
-        if "role_distribution" in metrics:
-            assert isinstance(metrics["role_distribution"], dict), \
-                f"Expected role_distribution to be a dict, got {type(metrics['role_distribution'])}"
-    
-    # Verify the build ID is present in the response
-    assert "id" in data["build"], "Build ID is missing from the response"
+    # Verify metrics
+    metrics = response_data["metrics"]
+    print(f"Metrics: {metrics}")
+    assert "boon_coverage" in metrics, f"'boon_coverage' not in metrics: {metrics}"
+    assert "role_distribution" in metrics, f"'role_distribution' not in metrics: {metrics}"
+    assert "profession_distribution" in metrics, f"'profession_distribution' not in metrics: {metrics}"
 
 @pytest.fixture
 def setup_test_professions(db: Session) -> None:
@@ -547,7 +573,7 @@ def test_generate_build_invalid_data(client: TestClient, db: Session) -> None:
 def test_create_build(client: TestClient, db: Session) -> None:
     """Test creating a build with valid data."""
     # Use the test client's user
-    test_user = client._test_user
+    test_user = client.test_user
     
     # Create test professions
     profession1 = create_test_profession(db, name="Test Profession 1", description="Test Profession 1 Description")
@@ -709,8 +735,9 @@ def test_get_build(client: TestClient, db: Session) -> None:
     user = client.test_user
     
     # Create some test professions
-    profession1 = Profession(name="Test Profession 1", icon="icon1.png")
-    profession2 = Profession(name="Test Profession 2", icon="icon2.png")
+    from app.models.profession import Profession
+    profession1 = Profession(name="Test Profession 1", icon_url="icon1.png")
+    profession2 = Profession(name="Test Profession 2", icon_url="icon2.png")
     db.add_all([profession1, profession2])
     db.commit()
     
@@ -760,7 +787,8 @@ def test_get_private_build_unauthorized(client: TestClient, db: Session) -> None
     # Create a private build owned by another user
     from app.models.user import User
     from app.models.build import Build
-    from app.models.profession import Profession, BuildProfession
+    from app.models.profession import Profession
+    from app.models.build_profession import BuildProfession
     
     # Create another user
     other_user = User(
@@ -895,7 +923,8 @@ def test_update_build_unauthorized(client: TestClient, db: Session) -> None:
     # Create a build owned by another user
     from app.models.user import User
     from app.models.build import Build
-    from app.models.profession import Profession, BuildProfession
+    from app.models.profession import Profession
+    from app.models.build_profession import BuildProfession
     
     # Create another user
     other_user = User(

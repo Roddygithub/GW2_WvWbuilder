@@ -21,6 +21,9 @@ from .base_models import (
     build_profession
 )
 
+from .build import Build
+from .build_profession import BuildProfession
+
 __all__ = [
     # Classe de base
     "Base",
@@ -32,10 +35,7 @@ __all__ = [
     "EliteSpecialization",
     "Composition",
     "CompositionTag",
-    "Build",
-    
-    # Tables de jonction
     "composition_members",
-    "user_roles",
-    "build_profession"
+    "Build",
+    "BuildProfession"
 ]

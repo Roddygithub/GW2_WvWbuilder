@@ -50,7 +50,6 @@ jobs:
       - name: Install dependencies
         working-directory: ./backend
         run: |
-          cd backend
           # Install dependencies in one go to avoid timeouts
           poetry add email-validator itsdangerous python-json-logger pytest-asyncio pytest-trio pytest-mock pytest-cov codecov pytest-factoryboy --group dev --no-interaction
           # Install the project in development mode with all extras
@@ -69,10 +68,14 @@ jobs:
 
       - name: Set up test database
         working-directory: ./backend
+        env:
+          DATABASE_URL: sqlite:///test.db
+          PYTHONPATH: ${{ github.workspace }}/backend
         run: |
           # Create test database and run migrations
-          export DATABASE_URL=sqlite:///./test.db
           poetry run alembic upgrade head
+          # Verify database is accessible
+          sqlite3 test.db ".tables"
 
       - name: Run tests with coverage
         working-directory: ./backend
@@ -95,15 +98,27 @@ jobs:
             --log-cli-level=INFO \
             2>&1 | tee test-results/pytest.log
 
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            backend/test-results/**/*
+            backend/htmlcov/**/*
+            backend/coverage.xml
+            backend/.coverage
+          retention-days: 7
+
       - name: Upload coverage to Codecov
-        if: success() && github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+        if: success() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         uses: codecov/codecov-action@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN || '' }}
-          file: ./coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: backend/coverage.xml
           flags: unittests
           name: codecov-umbrella
-          fail_ci_if_error: false
+          fail_ci_if_error: true
           verbose: true
 
       - name: Upload test results
