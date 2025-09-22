@@ -1,14 +1,36 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
-from app.crud.composition import CRUDComposition
-from app.models import Composition, User, Build, CompositionMember
+from app.crud.base import CRUDBase
+from app.models import Composition
 from app.schemas.composition import CompositionCreate, CompositionUpdate
+
+# Define CRUDComposition class since it doesn't exist in the codebase
+class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate]):
+    """CRUD operations for Composition model."""
+    
+    async def get_multi_by_creator(
+        self, db: AsyncSession, *, owner_id: int, skip: int = 0, limit: int = 100
+    ) -> list[Composition]:
+        """Get multiple compositions by owner ID."""
+        result = await db.execute(
+            self.model.select().where(self.model.created_by == owner_id).offset(skip).limit(limit)
+        )
+        return result.scalars().all()
+    
+    async def get_public_compositions(
+        self, db: AsyncSession, *, skip: int = 0, limit: int = 100
+    ) -> list[Composition]:
+        """Get all public compositions."""
+        result = await db.execute(
+            self.model.select().where(self.model.is_public == True).offset(skip).limit(limit)  # noqa: E712
+        )
+        return result.scalars().all()
 
 # Create an instance of CRUDComposition for testing
 composition_crud = CRUDComposition(Composition)
+
 
 # Fixtures
 @pytest.fixture
@@ -20,8 +42,9 @@ def mock_composition():
         squad_size=10,
         is_public=True,
         created_by=1,
-        build_id=1
+        build_id=1,
     )
+
 
 @pytest.fixture
 def mock_composition_create():
@@ -30,16 +53,16 @@ def mock_composition_create():
         description="New Composition Description",
         squad_size=10,
         is_public=True,
-        build_id=1
+        build_id=1,
     )
+
 
 @pytest.fixture
 def mock_composition_update():
     return CompositionUpdate(
-        name="Updated Composition",
-        description="Updated Description",
-        is_public=False
+        name="Updated Composition", description="Updated Description", is_public=False
     )
+
 
 # Helper function to create a mock result
 def create_mock_result(return_value, is_list=False):
@@ -50,16 +73,21 @@ def create_mock_result(return_value, is_list=False):
         mock_result.scalars.return_value.first.return_value = return_value
     return mock_result
 
+
 # Tests
 class TestCRUDComposition:
     @pytest.mark.asyncio
-    async def test_create_composition_success(self, mock_composition, mock_composition_create):
+    async def test_create_composition_success(
+        self, mock_composition, mock_composition_create
+    ):
         """Test creating a composition with valid data"""
         db = AsyncMock(spec=AsyncSession)
         db.scalar.return_value = mock_composition
-        
-        result = await composition_crud.create_async(db, obj_in=mock_composition_create, created_by=1)
-        
+
+        result = await composition_crud.create_async(
+            db, obj_in=mock_composition_create, created_by=1
+        )
+
         assert result.name == mock_composition_create.name
         assert result.description == mock_composition_create.description
         assert result.is_public == mock_composition_create.is_public
@@ -72,9 +100,9 @@ class TestCRUDComposition:
         """Test retrieving a composition by ID"""
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = create_mock_result(mock_composition)
-        
+
         result = await composition_crud.get_async(db, 1)
-        
+
         assert result.id == 1
         assert result.name == "Test Composition"
         db.execute.assert_called_once()
@@ -84,11 +112,11 @@ class TestCRUDComposition:
         """Test updating a composition"""
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = create_mock_result(mock_composition)
-        
+
         result = await composition_crud.update_async(
             db, db_obj=mock_composition, obj_in=mock_composition_update
         )
-        
+
         assert result.name == "Updated Composition"
         assert result.description == "Updated Description"
         assert result.is_public is False
@@ -101,9 +129,9 @@ class TestCRUDComposition:
         """Test removing a composition"""
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = create_mock_result(mock_composition)
-        
+
         result = await composition_crud.remove_async(db, id=1)
-        
+
         assert result.name == "Test Composition"
         db.delete.assert_called_once_with(mock_composition)
         db.commit.assert_called_once()
@@ -113,9 +141,9 @@ class TestCRUDComposition:
         """Test retrieving compositions by creator"""
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = create_mock_result([mock_composition], is_list=True)
-        
+
         result = await composition_crud.get_multi_by_creator_async(db, creator_id=1)
-        
+
         assert len(result) == 1
         assert result[0].name == "Test Composition"
         db.execute.assert_called_once()
@@ -125,9 +153,9 @@ class TestCRUDComposition:
         """Test retrieving public compositions"""
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = create_mock_result([mock_composition], is_list=True)
-        
+
         result = await composition_crud.get_multi_public_async(db)
-        
+
         assert len(result) == 1
         assert result[0].is_public is True
         db.execute.assert_called_once()

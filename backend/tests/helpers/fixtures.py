@@ -1,16 +1,14 @@
 """Test fixtures and data generators."""
+
 import random
 import string
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, List, Type, TypeVar
 
 from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_password_hash
-from app.models import (
-    User, Role, Profession, EliteSpecialization, Build, Composition, CompositionTag
-)
+from app.models import User, Role, Profession, Build, Composition
 from app.schemas.user import UserCreate, UserUpdate
 from app.schemas.role import RoleCreate, RoleUpdate
 from app.schemas.profession import ProfessionCreate, ProfessionUpdate
@@ -18,7 +16,7 @@ from app.schemas.build import BuildCreate, BuildUpdate, GameMode
 from app.schemas.composition import CompositionCreate, CompositionUpdate
 
 # Type variable for SQLAlchemy models
-T = TypeVar('T')
+T = TypeVar("T")
 
 # Initialize Faker
 fake = Faker()
@@ -27,7 +25,7 @@ fake = Faker()
 def random_string(length: int = 10) -> str:
     """Generate a random string of fixed length."""
     letters = string.ascii_letters + string.digits
-    return ''.join(random.choice(letters) for _ in range(length))
+    return "".join(random.choice(letters) for _ in range(length))
 
 
 def random_email() -> str:
@@ -57,21 +55,21 @@ def random_choice(choices: list) -> Any:
 
 class ModelFactory:
     """Base factory for creating test data."""
-    
+
     model: Type[T]
-    
+
     @classmethod
     def _create_instance(cls, **kwargs: Any) -> T:
         """Create a model instance."""
         return cls.model(**kwargs)
-    
+
     @classmethod
     def create(cls, **kwargs: Any) -> T:
         """Create a model instance with test data."""
         data = cls.get_test_data()
         data.update(kwargs)
         return cls._create_instance(**data)
-    
+
     @classmethod
     def get_test_data(cls) -> Dict[str, Any]:
         """Get test data for the model."""
@@ -80,9 +78,9 @@ class ModelFactory:
 
 class UserFactory(ModelFactory):
     """Factory for creating User test data."""
-    
+
     model = User
-    
+
     @classmethod
     def get_test_data(cls) -> Dict[str, Any]:
         """Get test data for a User."""
@@ -93,7 +91,7 @@ class UserFactory(ModelFactory):
             "is_active": True,
             "is_superuser": False,
         }
-    
+
     @classmethod
     def create_user_create(cls, **kwargs: Any) -> UserCreate:
         """Create a UserCreate instance."""
@@ -106,7 +104,7 @@ class UserFactory(ModelFactory):
         }
         data.update(kwargs)
         return UserCreate(**data)
-    
+
     @classmethod
     def create_user_update(cls, **kwargs: Any) -> UserUpdate:
         """Create a UserUpdate instance."""
@@ -122,9 +120,9 @@ class UserFactory(ModelFactory):
 
 class RoleFactory(ModelFactory):
     """Factory for creating Role test data."""
-    
+
     model = Role
-    
+
     @classmethod
     def get_test_data(cls) -> Dict[str, Any]:
         """Get test data for a Role."""
@@ -134,7 +132,7 @@ class RoleFactory(ModelFactory):
             "permission_level": random.randint(1, 10),
             "is_default": random_bool(),
         }
-    
+
     @classmethod
     def create_role_create(cls, **kwargs: Any) -> RoleCreate:
         """Create a RoleCreate instance."""
@@ -146,7 +144,7 @@ class RoleFactory(ModelFactory):
         }
         data.update(kwargs)
         return RoleCreate(**data)
-    
+
     @classmethod
     def create_role_update(cls, **kwargs: Any) -> RoleUpdate:
         """Create a RoleUpdate instance."""
@@ -161,9 +159,9 @@ class RoleFactory(ModelFactory):
 
 class ProfessionFactory(ModelFactory):
     """Factory for creating Profession test data."""
-    
+
     model = Profession
-    
+
     @classmethod
     def get_test_data(cls) -> Dict[str, Any]:
         """Get test data for a Profession."""
@@ -172,7 +170,7 @@ class ProfessionFactory(ModelFactory):
             "description": fake.paragraph(),
             "icon": f"icon_{random_string(8)}.png",
         }
-    
+
     @classmethod
     def create_profession_create(cls, **kwargs: Any) -> ProfessionCreate:
         """Create a ProfessionCreate instance."""
@@ -183,7 +181,7 @@ class ProfessionFactory(ModelFactory):
         }
         data.update(kwargs)
         return ProfessionCreate(**data)
-    
+
     @classmethod
     def create_profession_update(cls, **kwargs: Any) -> ProfessionUpdate:
         """Create a ProfessionUpdate instance."""
@@ -197,9 +195,9 @@ class ProfessionFactory(ModelFactory):
 
 class BuildFactory(ModelFactory):
     """Factory for creating Build test data."""
-    
+
     model = Build
-    
+
     @classmethod
     def get_test_data(cls) -> Dict[str, Any]:
         """Get test data for a Build."""
@@ -214,7 +212,7 @@ class BuildFactory(ModelFactory):
             "traits": [
                 ["Radiance", "Zeal", "Virtues"],
                 ["Radiance", "Zeal", "Virtues"],
-                ["Radiance", "Zeal", "Virtues"]
+                ["Radiance", "Zeal", "Virtues"],
             ],
             "specializations": ["Radiance", "Zeal", "Virtues"],
             "attributes": {"Power": 2500, "Precision": 2000, "Ferocity": 1500},
@@ -224,13 +222,10 @@ class BuildFactory(ModelFactory):
             "rune": "Scholar Rune",
             "sigils": ["Force", "Impact"],
         }
-    
+
     @classmethod
     def create_build_create(
-        cls,
-        profession_id: int,
-        user_id: int,
-        **kwargs: Any
+        cls, profession_id: int, user_id: int, **kwargs: Any
     ) -> BuildCreate:
         """Create a BuildCreate instance."""
         data = {
@@ -246,14 +241,14 @@ class BuildFactory(ModelFactory):
             "traits": [
                 ["Radiance", "Zeal", "Virtues"],
                 ["Radiance", "Zeal", "Virtues"],
-                ["Radiance", "Zeal", "Virtues"]
+                ["Radiance", "Zeal", "Virtues"],
             ],
             "specializations": ["Radiance", "Zeal", "Virtues"],
             "attributes": {"Power": 2500, "Precision": 2000, "Ferocity": 1500},
         }
         data.update(kwargs)
         return BuildCreate(**data)
-    
+
     @classmethod
     def create_build_update(cls, **kwargs: Any) -> BuildUpdate:
         """Create a BuildUpdate instance."""
@@ -272,9 +267,9 @@ class BuildFactory(ModelFactory):
 
 class CompositionFactory(ModelFactory):
     """Factory for creating Composition test data."""
-    
+
     model = Composition
-    
+
     @classmethod
     def get_test_data(cls) -> Dict[str, Any]:
         """Get test data for a Composition."""
@@ -287,12 +282,10 @@ class CompositionFactory(ModelFactory):
             "builds": [],
             "tags": [],
         }
-    
+
     @classmethod
     def create_composition_create(
-        cls,
-        user_id: int,
-        **kwargs: Any
+        cls, user_id: int, **kwargs: Any
     ) -> CompositionCreate:
         """Create a CompositionCreate instance."""
         data = {
@@ -307,7 +300,7 @@ class CompositionFactory(ModelFactory):
         }
         data.update(kwargs)
         return CompositionCreate(**data)
-    
+
     @classmethod
     def create_composition_update(cls, **kwargs: Any) -> CompositionUpdate:
         """Create a CompositionUpdate instance."""
@@ -324,7 +317,7 @@ class CompositionFactory(ModelFactory):
 
 class TestDataGenerator:
     """Helper class for generating test data."""
-    
+
     def __init__(self, session: AsyncSession):
         """Initialize the test data generator."""
         self.session = session
@@ -333,7 +326,7 @@ class TestDataGenerator:
         self._professions: List[Profession] = []
         self._builds: List[Build] = []
         self._compositions: List[Composition] = []
-    
+
     async def create_user(self, **kwargs: Any) -> User:
         """Create a test user."""
         user = UserFactory.create(**kwargs)
@@ -342,7 +335,7 @@ class TestDataGenerator:
         await self.session.refresh(user)
         self._users.append(user)
         return user
-    
+
     async def create_role(self, **kwargs: Any) -> Role:
         """Create a test role."""
         role = RoleFactory.create(**kwargs)
@@ -351,7 +344,7 @@ class TestDataGenerator:
         await self.session.refresh(role)
         self._roles.append(role)
         return role
-    
+
     async def create_profession(self, **kwargs: Any) -> Profession:
         """Create a test profession."""
         profession = ProfessionFactory.create(**kwargs)
@@ -360,41 +353,29 @@ class TestDataGenerator:
         await self.session.refresh(profession)
         self._professions.append(profession)
         return profession
-    
+
     async def create_build(
-        self,
-        user_id: int,
-        profession_id: int,
-        **kwargs: Any
+        self, user_id: int, profession_id: int, **kwargs: Any
     ) -> Build:
         """Create a test build."""
         build = BuildFactory.create(
-            user_id=user_id,
-            profession_id=profession_id,
-            **kwargs
+            user_id=user_id, profession_id=profession_id, **kwargs
         )
         self.session.add(build)
         await self.session.commit()
         await self.session.refresh(build)
         self._builds.append(build)
         return build
-    
-    async def create_composition(
-        self,
-        user_id: int,
-        **kwargs: Any
-    ) -> Composition:
+
+    async def create_composition(self, user_id: int, **kwargs: Any) -> Composition:
         """Create a test composition."""
-        composition = CompositionFactory.create(
-            user_id=user_id,
-            **kwargs
-        )
+        composition = CompositionFactory.create(user_id=user_id, **kwargs)
         self.session.add(composition)
         await self.session.commit()
         await self.session.refresh(composition)
         self._compositions.append(composition)
         return composition
-    
+
     async def create_standard_test_data(self) -> Dict[str, Any]:
         """Create a standard set of test data."""
         # Create roles
@@ -402,16 +383,13 @@ class TestDataGenerator:
             name="admin",
             description="Administrator",
             permission_level=10,
-            is_default=False
+            is_default=False,
         )
-        
+
         user_role = await self.create_role(
-            name="user",
-            description="Regular User",
-            permission_level=1,
-            is_default=True
+            name="user", description="Regular User", permission_level=1, is_default=True
         )
-        
+
         # Create users
         admin_user = await self.create_user(
             username="admin",
@@ -419,31 +397,31 @@ class TestDataGenerator:
             hashed_password=get_password_hash("admin123"),
             is_active=True,
             is_superuser=True,
-            roles=[admin_role]
+            roles=[admin_role],
         )
-        
+
         test_user = await self.create_user(
             username="testuser",
             email="test@example.com",
             hashed_password=get_password_hash("test123"),
             is_active=True,
             is_superuser=False,
-            roles=[user_role]
+            roles=[user_role],
         )
-        
+
         # Create professions
         guardian = await self.create_profession(
             name="Guardian",
             description="A versatile profession that can fill multiple roles.",
-            icon="guardian.png"
+            icon="guardian.png",
         )
-        
+
         warrior = await self.create_profession(
             name="Warrior",
             description="A heavy armor profession that excels at melee combat.",
-            icon="warrior.png"
+            icon="warrior.png",
         )
-        
+
         # Create builds
         guardian_build = await self.create_build(
             name="Power Dragonhunter",
@@ -457,7 +435,7 @@ class TestDataGenerator:
             weapon_set_2={"two_handed": "Greatsword"},
             skills={"heal": "Signet of Resolve", "elite": "Renewed Focus"},
         )
-        
+
         warrior_build = await self.create_build(
             name="Berserker Banner Slave",
             description="Support Warrior with banners for PvE.",
@@ -470,7 +448,7 @@ class TestDataGenerator:
             weapon_set_2={"main_hand": "Axe", "off_hand": "Axe"},
             skills={"heal": "Mending", "elite": "Head Butt"},
         )
-        
+
         # Create compositions
         raid_comp = await self.create_composition(
             name="Power Quickness Firebrand",
@@ -479,9 +457,9 @@ class TestDataGenerator:
             is_public=True,
             user_id=admin_user.id,
             game_mode="pve",
-            builds=[guardian_build]
+            builds=[guardian_build],
         )
-        
+
         wvw_comp = await self.create_composition(
             name="WvW Zerg Frontline",
             description="Frontline composition for WvW zergs.",
@@ -489,9 +467,9 @@ class TestDataGenerator:
             is_public=True,
             user_id=test_user.id,
             game_mode="wvw",
-            builds=[guardian_build, warrior_build]
+            builds=[guardian_build, warrior_build],
         )
-        
+
         return {
             "users": {"admin": admin_user, "test": test_user},
             "roles": {"admin": admin_role, "user": user_role},
