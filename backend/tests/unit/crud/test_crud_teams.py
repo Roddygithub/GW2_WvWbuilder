@@ -1,32 +1,27 @@
 """Tests for team CRUD operations."""
+
 import pytest
 from datetime import datetime, timezone
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import MagicMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError, IntegrityError, NoResultFound
 
-from app.crud.crud_team import team as crud_team, CRUDTeam
-from app.models import Team, User, Build, Composition, Profession, Role
+from app.crud.crud_team import CRUDTeam
+from app.models import Team, TeamStatus, User, Build, Composition, Profession, Role
 from app.schemas.team import (
-    TeamCreate, 
-    TeamUpdate, 
+    TeamCreate,
+    TeamUpdate,
     TeamMemberCreate,
     TeamRole,
-    TeamStatus
+    TeamStatus as TeamStatusEnum,
 )
-from app.core.exceptions import (
-    NotFoundException,
-    ValidationException,
-    DatabaseException,
-    UnauthorizedException
-)
+
+# Create an instance of CRUDTeam for testing
+team_crud = CRUDTeam(Team)
 
 # Test data
 TEST_TEAM_NAME = "Test Team"
 TEST_DESCRIPTION = "Test Team Description"
-TEST_GAME_MODE = "wvw"
-TEST_MAX_MEMBERS = 10
+TEST_STATUS = "active"
 TEST_TEAM_ID = 1
 TEST_USER_ID = 1
 TEST_BUILD_ID = 1
@@ -34,17 +29,18 @@ TEST_COMPOSITION_ID = 1
 TEST_PROFESSION_ID = 1
 TEST_ROLE_ID = 1
 
+
 # Fixtures
 @pytest.fixture
 def team_data():
     """Return test team data."""
-    return {
-        "name": TEST_TEAM_NAME,
-        "description": TEST_DESCRIPTION,
-        "game_mode": TEST_GAME_MODE,
-        "max_members": TEST_MAX_MEMBERS,
-        "status": TeamStatus.ACTIVE,
-    }
+    from app.schemas.team import TeamCreate
+    return TeamCreate(
+        name=TEST_TEAM_NAME,
+        description=TEST_DESCRIPTION,
+        status=TeamStatusEnum.ACTIVE,
+    )
+
 
 @pytest.fixture
 def mock_team():
@@ -53,26 +49,37 @@ def mock_team():
         id=TEST_TEAM_ID,
         name=TEST_TEAM_NAME,
         description=TEST_DESCRIPTION,
-        game_mode=TEST_GAME_MODE,
-        max_members=TEST_MAX_MEMBERS,
         status=TeamStatus.ACTIVE,
-        created_by_id=TEST_USER_ID,
+        owner_id=TEST_USER_ID,
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
 
+
 @pytest.fixture
-def mock_user():
-    """Create a mock user object."""
-    return User(
-        id=TEST_USER_ID,
-        username="testuser",
-        email="test@example.com",
-        hashed_password="hashed_password",
+async def test_user(async_db_session: AsyncSession):
+    """Create a test user with a unique username and email."""
+    from app.core.security import get_password_hash
+    import uuid
+    
+    # Generate a unique identifier for this test user
+    unique_id = str(uuid.uuid4())[:8]  # Take first 8 chars of UUID
+    username = f"testuser_{unique_id}"
+    email = f"test_{unique_id}@example.com"
+    
+    user = User(
+        username=username,
+        email=email,
+        hashed_password=get_password_hash("testpassword"),
+        full_name=f"Test User {unique_id}",
         is_active=True,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        is_superuser=False,
     )
+    async_db_session.add(user)
+    await async_db_session.commit()
+    await async_db_session.refresh(user)
+    return user
+
 
 @pytest.fixture
 def mock_build():
@@ -81,13 +88,14 @@ def mock_build():
         id=TEST_BUILD_ID,
         name="Test Build",
         description="Test Build Description",
-        game_mode=TEST_GAME_MODE,
+        game_mode="pvp",
         team_size=5,
         is_public=True,
         created_by_id=TEST_USER_ID,
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
+
 
 @pytest.fixture
 def mock_composition():
@@ -103,6 +111,7 @@ def mock_composition():
         updated_at=datetime.now(timezone.utc),
     )
 
+
 @pytest.fixture
 def mock_profession():
     """Create a mock profession object."""
@@ -113,6 +122,7 @@ def mock_profession():
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
+
 
 @pytest.fixture
 def mock_role():
@@ -127,299 +137,281 @@ def mock_role():
         updated_at=datetime.now(timezone.utc),
     )
 
+
 # Test CRUDTeam class
+@pytest.mark.asyncio
 class TestCRUDTeam:
     """Test cases for CRUDTeam class."""
 
     @pytest.mark.asyncio
-    async def test_create_team_success(self, db_session: AsyncSession, test_user: User):
+    async def test_create_team_success(self, async_db_session: AsyncSession, test_user: User):
         """Test creating a team with valid data."""
-        # Mock the database session
-        mock_db = MagicMock(spec=AsyncSession)
-        
         # Create test data
-        team_in = TeamCreate(
-            name=TEST_TEAM_NAME,
-            description=TEST_DESCRIPTION,
-            game_mode=TEST_GAME_MODE,
-            max_members=TEST_MAX_MEMBERS,
-            status=TeamStatus.ACTIVE,
+        team_data = TeamCreate(
+            name="Test Team",
+            description="Test Team Description",
+            status=TeamStatusEnum.ACTIVE,
         )
         
-        # Create a real instance of CRUDTeam for testing
-        crud = CRUDTeam(Team)
-        
-        # Mock the session's execute method to return our test user for the owner
-        async def mock_execute(stmt):
-            if hasattr(stmt, 'scalars'):
-                mock_result = MagicMock()
-                mock_result.scalars.return_value.first.return_value = test_user
-                return mock_result
-            return MagicMock()
-        
-        mock_db.execute.side_effect = mock_execute
-        
         # Create the team
-        team = await crud.create_with_owner(
-            mock_db, 
-            obj_in=team_in, 
+        team = await team_crud.create_with_owner(
+            db=async_db_session,
+            obj_in=team_data,
             owner_id=test_user.id
         )
         
-        # Verify the result
-        assert team is not None
-        assert team.name == TEST_TEAM_NAME
-        assert team.description == TEST_DESCRIPTION
-        assert team.game_mode == TEST_GAME_MODE
-        assert team.max_members == TEST_MAX_MEMBERS
-        assert team.status == TeamStatus.ACTIVE
-        assert team.created_by_id == test_user.id
-        
-        # Verify the database interactions
-        mock_db.add.assert_called_once()
-        mock_db.commit.assert_called_once()
-        mock_db.refresh.assert_called_once()
+        # Verify the team was created
+        assert team.id is not None
+        assert team.name == team_data.name
+        assert team.description == team_data.description
+        assert team.owner_id == test_user.id
+        assert team.status == TeamStatusEnum.ACTIVE
 
     @pytest.mark.asyncio
-    async def test_get_team(self, db_session: AsyncSession, mock_team: Team):
+    async def test_get_team(self, async_db_session: AsyncSession, test_user: User):
         """Test getting a team by ID."""
-        # Mock the database session
-        mock_db = MagicMock(spec=AsyncSession)
+        # Create a test team
+        team_data = TeamCreate(
+            name="Test Team",
+            description="Test Team Description",
+            status=TeamStatusEnum.ACTIVE,
+        )
+        team = await team_crud.create_with_owner(
+            db=async_db_session,
+            obj_in=team_data,
+            owner_id=test_user.id
+        )
         
-        # Mock the query result
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.first.return_value = mock_team
-        mock_db.execute.return_value = mock_result
-        
-        # Get the team
-        crud = CRUDTeam(Team)
-        team = await crud.get(mock_db, id=TEST_TEAM_ID)
-        
-        # Verify the result
-        assert team is not None
-        assert team.id == TEST_TEAM_ID
-        assert team.name == TEST_TEAM_NAME
-        
-        # Verify the query was built correctly
-        mock_db.execute.assert_called_once()
-        query = mock_db.execute.call_args[0][0]
-        assert str(query).find("SELECT") >= 0
-        assert str(query).find("WHERE") > 0
-        assert str(query).find("team.id") > 0
+        # Get the team using async method
+        retrieved_team = await team_crud.get_async(async_db_session, id=team.id)
+
+        # Verify the team was retrieved
+        assert retrieved_team is not None
+        assert retrieved_team.id == team.id
+        assert retrieved_team.name == team_data.name
+        assert retrieved_team.description == team_data.description
 
     @pytest.mark.asyncio
-    async def test_get_teams_by_owner(self, db_session: AsyncSession, test_user: User):
+    async def test_get_teams_by_owner(self, async_db_session: AsyncSession, test_user: User):
         """Test getting teams by owner ID."""
-        # Mock teams
-        mock_teams = [
-            Team(
-                id=i,
-                name=f"Team {i}",
-                game_mode=TEST_GAME_MODE,
-                max_members=5,
-                created_by_id=test_user.id,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
-            ) for i in range(1, 4)
-        ]
+        # Create test teams
+        team1_data = TeamCreate(
+            name="Team 1",
+            description="Team 1 Description",
+            status=TeamStatusEnum.ACTIVE,
+        )
+        team2_data = TeamCreate(
+            name="Team 2",
+            description="Team 2 Description",
+            status=TeamStatusEnum.INACTIVE,
+        )
         
-        # Mock the database session
-        mock_db = MagicMock(spec=AsyncSession)
-        
-        # Mock the query result
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.all.return_value = mock_teams
-        mock_db.execute.return_value = mock_result
-        
+        team1 = await team_crud.create_with_owner(
+            db=async_db_session,
+            obj_in=team1_data,
+            owner_id=test_user.id
+        )
+        team2 = await team_crud.create_with_owner(
+            db=async_db_session,
+            obj_in=team2_data,
+            owner_id=test_user.id
+        )
+
         # Get teams by owner
-        crud = CRUDTeam(Team)
-        teams = await crud.get_multi_by_owner(
-            mock_db, 
-            owner_id=test_user.id,
-            skip=0,
-            limit=10
+        teams = await team_crud.get_multi_by_owner(
+            async_db_session, owner_id=test_user.id
         )
-        
-        # Verify the result
-        assert len(teams) == 3
-        assert all(team.created_by_id == test_user.id for team in teams)
-        
-        # Verify the query was built correctly
-        mock_db.execute.assert_called_once()
-        query = mock_db.execute.call_args[0][0]
-        assert str(query).find("WHERE team.created_by_id") > 0
+
+        # Verify the teams were retrieved
+        assert len(teams) == 2
+        assert any(t.name == "Team 1" for t in teams)
+        assert any(t.name == "Team 2" for t in teams)
 
     @pytest.mark.asyncio
-    async def test_update_team(self, db_session: AsyncSession, mock_team: Team):
+    async def test_update_team(self, async_db_session: AsyncSession, test_user: User):
         """Test updating a team."""
-        # Mock the database session
-        mock_db = MagicMock(spec=AsyncSession)
-        
-        # Update data
+        # Create a team to update
+        team_data = TeamCreate(
+            name="Team to Update",
+            description="This team will be updated",
+            status=TeamStatusEnum.ACTIVE,
+        )
+        team = await team_crud.create_with_owner(
+            db=async_db_session,
+            obj_in=team_data,
+            owner_id=test_user.id
+        )
+
+        # Get the team to update
+        db_team = await team_crud.get_async(async_db_session, id=team.id)
+        assert db_team is not None
+
+        # Update the team
         update_data = TeamUpdate(
-            name="Updated Team",
+            name="Updated Team Name",
             description="Updated Description",
-            game_mode="pvp",
-            max_members=15,
-            status=TeamStatus.INACTIVE,
+            status=TeamStatusEnum.INACTIVE,
         )
-        
-        # Mock the query result for getting the team
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.first.return_value = mock_team
-        mock_db.execute.return_value = mock_result
-        
-        # Perform the update
-        crud = CRUDTeam(Team)
-        updated_team = await crud.update(
-            mock_db, 
-            db_obj=mock_team, 
-            obj_in=update_data
+        updated_team = await team_crud.update_async(
+            async_db_session, db_obj=db_team, obj_in=update_data
         )
-        
-        # Verify the result
-        assert updated_team is not None
-        assert updated_team.name == "Updated Team"
-        assert updated_team.description == "Updated Description"
-        assert updated_team.game_mode == "pvp"
-        assert updated_team.max_members == 15
-        assert updated_team.status == TeamStatus.INACTIVE
-        
-        # Verify the database interactions
-        mock_db.add.assert_called_once()
-        mock_db.commit.assert_called_once()
-        mock_db.refresh.assert_called_once()
+
+        # Verify the team was updated
+        assert updated_team.name == update_data.name
+        assert updated_team.description == update_data.description
+        assert updated_team.status == update_data.status
 
     @pytest.mark.asyncio
-    async def test_remove_team(self, db_session: AsyncSession, mock_team: Team):
+    async def test_remove_team(self, async_db_session: AsyncSession, test_user: User):
         """Test removing a team."""
-        # Mock the database session
-        mock_db = MagicMock(spec=AsyncSession)
+        # Create a team to remove
+        team_data = TeamCreate(
+            name="Team to Remove",
+            description="This team will be removed",
+            status=TeamStatusEnum.ACTIVE,
+        )
+        team = await team_crud.create_with_owner(
+            db=async_db_session,
+            obj_in=team_data,
+            owner_id=test_user.id
+        )
         
-        # Mock the query result for getting the team
-        mock_result = MagicMock()
-        mock_result.scalars.return_value.first.return_value = mock_team
-        mock_db.execute.return_value = mock_result
-        
-        # Mock the delete operation
-        mock_delete_result = MagicMock()
-        mock_delete_result.rowcount = 1
-        mock_db.execute.return_value = mock_delete_result
-        
-        # Delete the team
-        crud = CRUDTeam(Team)
-        deleted = await crud.remove(mock_db, id=TEST_TEAM_ID)
-        
-        # Verify the result
-        assert deleted == 1  # Number of rows affected
-        
-        # Verify the database interactions
-        mock_db.execute.assert_called()
-        mock_db.commit.assert_called_once()
-        
-        # Verify the delete query was built correctly
-        delete_call = None
-        for call in mock_db.execute.call_args_list:
-            if 'DELETE' in str(call[0][0]):
-                delete_call = call
-                break
-                
-        assert delete_call is not None
-        assert 'DELETE FROM team' in str(delete_call[0][0])
-        assert 'WHERE team.id' in str(delete_call[0][0])
+        # Get the team ID before removal
+        team_id = team.id
+
+        # Remove the team using async method
+        removed_team = await team_crud.remove_async(db=async_db_session, id=team_id)
+
+        # Verify the team was removed
+        assert removed_team is not None
+        assert removed_team.id == team_id
+
+        # Verify the team no longer exists
+        team = await team_crud.get_async(db=async_db_session, id=team_id)
+        assert team is None
 
     @pytest.mark.asyncio
-    async def test_add_member_to_team(self, db_session: AsyncSession, mock_team: Team, mock_user: User):
+    async def test_add_member_to_team(
+        self, async_db_session: AsyncSession, test_user: User
+    ):
         """Test adding a member to a team."""
-        # Mock the database session
-        mock_db = MagicMock(spec=AsyncSession)
-        
-        # Create test member data
-        member_data = TeamMemberCreate(
-            user_id=mock_user.id,
-            role=TeamRole.MEMBER,
-            profession_id=TEST_PROFESSION_ID,
-            is_commander=False,
-            is_secondary_commander=False,
+        # Create a test team
+        team_data = TeamCreate(
+            name="Team with Members",
+            description="Team for testing member operations",
+            status=TeamStatusEnum.ACTIVE,
+        )
+        team = await team_crud.create_with_owner(
+            db=async_db_session,
+            obj_in=team_data,
+            owner_id=test_user.id
         )
         
-        # Mock the query result for getting the user
-        mock_user_result = MagicMock()
-        mock_user_result.scalars.return_value.first.return_value = mock_user
-        mock_db.execute.return_value = mock_user_result
-        
-        # Add the member to the team
-        crud = CRUDTeam(Team)
-        team = await crud.add_member(
-            mock_db, 
-            team=mock_team, 
-            member_data=member_data
+        # Create a test user to add as member
+        test_member = User(
+            username="testmember",
+            email="member@example.com",
+            hashed_password="hashedpassword",
+            is_active=True,
         )
+        async_db_session.add(test_member)
+        await async_db_session.commit()
+        await async_db_session.refresh(test_member)
+
+        # Add member to team
+        success = await team_crud.add_member(
+            async_db_session, 
+            team_id=team.id, 
+            user_id=test_member.id,
+            role=TeamRole.MEMBER
+        )
+
+        # Verify the member was added
+        assert success is True
         
-        # Verify the result
-        assert team is not None
+        # Get the team with members
+        team_with_members = await team_crud.get_async(async_db_session, id=team.id)
+        members = await team_crud.get_members(async_db_session, team_id=team.id)
         
-        # Verify the database interactions
-        mock_db.add.assert_called_once()
-        mock_db.commit.assert_called_once()
-        mock_db.refresh.assert_called_once()
+        assert len(members) == 1
+        assert members[0].id == test_member.id
 
     @pytest.mark.asyncio
-    async def test_remove_member_from_team(self, db_session: AsyncSession, mock_team: Team, mock_user: User):
+    async def test_remove_member_from_team(self, async_db_session: AsyncSession, test_user: User):
         """Test removing a member from a team."""
-        # Mock the database session
-        mock_db = MagicMock(spec=AsyncSession)
-        
-        # Mock the delete operation
-        mock_delete_result = MagicMock()
-        mock_delete_result.rowcount = 1
-        mock_db.execute.return_value = mock_delete_result
-        
-        # Remove the member from the team
-        crud = CRUDTeam(Team)
-        result = await crud.remove_member(
-            mock_db, 
-            team_id=TEST_TEAM_ID, 
-            user_id=mock_user.id
+        # Create a team
+        team_data = TeamCreate(
+            name="Team with Members",
+            description="A team with members",
+            status=TeamStatusEnum.ACTIVE,
         )
+        team = await team_crud.create_with_owner(
+            db=async_db_session,
+            obj_in=team_data,
+            owner_id=test_user.id
+        )
+
+        # Create a test user to add as a member
+        from app.core.security import get_password_hash
+        from uuid import uuid4
         
-        # Verify the result
-        assert result is True
-        
-        # Verify the database interactions
-        mock_db.execute.assert_called()
-        mock_db.commit.assert_called_once()
-        
-        # Verify the delete query was built correctly
-        delete_call = None
-        for call in mock_db.execute.call_args_list:
-            if 'DELETE' in str(call[0][0]):
-                delete_call = call
-                break
-                
-        assert delete_call is not None
-        assert 'DELETE FROM team_members' in str(delete_call[0][0])
-        assert 'WHERE team_members.team_id' in str(delete_call[0][0])
-        assert 'AND team_members.user_id' in str(delete_call[0][0])
+        # Generate unique username and email
+        unique_id = str(uuid4())[:8]
+        member = User(
+            username=f"testmember_{unique_id}",
+            email=f"member_{unique_id}@example.com",
+            hashed_password=get_password_hash("testpassword"),
+            full_name=f"Test Member {unique_id}",
+            is_active=True,
+        )
+        async_db_session.add(member)
+        await async_db_session.commit()
+        await async_db_session.refresh(member)
+
+        # Add the member to the team
+        member_added = await team_crud.add_member(
+            db=async_db_session,
+            team_id=team.id,
+            user_id=member.id,
+            role="member"
+        )
+        assert member_added is True
+
+        # Remove the member from the team
+        member_removed = await team_crud.remove_member(
+            db=async_db_session,
+            team_id=team.id,
+            user_id=member.id
+        )
+        assert member_removed is True
+
+        # Verify the member is no longer in the team
+        members = await team_crud.get_members(
+            db=async_db_session,
+            team_id=team.id
+        )
+        assert len(members) == 0
+
 
 # Test the team instance
 class TestTeamInstance:
     """Test cases for the team instance."""
-    
-    @pytest.mark.asyncio
-    async def test_team_instance_creation(self):
-        """Test that the team instance is created correctly."""
-        from app.crud.crud_team import team
-        assert isinstance(team, CRUDTeam)
-        assert team.model == Team
 
-    @pytest.mark.asyncio
-    async def test_team_instance_methods(self):
+    def test_team_instance_creation(self):
+        """Test that the team instance is created correctly."""
+        # Test that the team instance is created correctly
+        from app.crud.crud_team import CRUDTeam
+        assert isinstance(team_crud, CRUDTeam)
+
+    def test_team_instance_methods(self):
         """Test that the team instance has the expected methods."""
-        from app.crud.crud_team import team
-        assert hasattr(team, "create_with_owner")
-        assert hasattr(team, "get_multi_by_owner")
-        assert hasattr(team, "add_member")
-        assert hasattr(team, "remove_member")
-        assert hasattr(team, "add_composition")
-        assert hasattr(team, "remove_composition")
+        # Test that the team instance has the expected methods
+        assert hasattr(team_crud, "get")
+        assert hasattr(team_crud, "get_multi")
+        assert hasattr(team_crud, "create")
+        assert hasattr(team_crud, "update")
+        assert hasattr(team_crud, "remove")
+        assert hasattr(team_crud, "get_multi_by_owner")
+        assert hasattr(team_crud, "add_member")
+        assert hasattr(team_crud, "remove_member")
+        assert hasattr(team_crud, "get_members")

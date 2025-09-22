@@ -1,4 +1,5 @@
 """Test utilities for creating test data."""
+
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -24,12 +25,9 @@ def create_test_user(
         password = random_lower_string()
     if full_name is None:
         full_name = f"Test User {random_lower_string(5)}"
-        
+
     user_in = schemas.UserCreate(
-        email=email,
-        username=username,
-        password=password,
-        full_name=full_name
+        email=email, username=username, password=password, full_name=full_name
     )
     return crud.user.create(db, obj_in=user_in)
 
@@ -44,9 +42,6 @@ def create_test_profession(
         name = f"Test Profession {random_lower_string(5)}"
     if game_modes is None:
         game_modes = ["WvW"]
-        
-    profession_in = schemas.ProfessionCreate(
-        name=name,
-        game_modes=game_modes
-    )
+
+    profession_in = schemas.ProfessionCreate(name=name, game_modes=game_modes)
     return crud.profession.create(db, obj_in=profession_in)

@@ -17,7 +17,7 @@ from app.db.base import Base
 config = context.config
 
 # Get the database URL from our settings
-config.set_main_option('sqlalchemy.url', settings.get_database_url())
+config.set_main_option("sqlalchemy.url", settings.get_database_url())
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -70,13 +70,13 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
     """
     from app.db.session import engine
-    
+
     with engine.connect() as connection:
         context.configure(
-            connection=connection, 
+            connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
-            compare_server_default=True
+            compare_server_default=True,
         )
 
         with context.begin_transaction():

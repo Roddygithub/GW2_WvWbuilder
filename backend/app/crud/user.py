@@ -20,7 +20,9 @@ class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
         stmt = select(self.model).where(self.model.email == email)
         return db.scalars(stmt).first()
 
-    async def get_by_email_async(self, db: AsyncSession, *, email: str) -> Optional[UserModel]:
+    async def get_by_email_async(
+        self, db: AsyncSession, *, email: str
+    ) -> Optional[UserModel]:
         """Get a user by email (asynchronous)."""
         stmt = select(self.model).where(self.model.email == email)
         result = await db.execute(stmt)
@@ -28,12 +30,22 @@ class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
 
     def get_with_roles(self, db: Session, *, id: int) -> Optional[UserModel]:
         """Get a user with roles loaded (synchronous)."""
-        stmt = select(self.model).where(self.model.id == id).options(selectinload(self.model.roles))
+        stmt = (
+            select(self.model)
+            .where(self.model.id == id)
+            .options(selectinload(self.model.roles))
+        )
         return db.scalars(stmt).first()
 
-    async def get_with_roles_async(self, db: AsyncSession, *, id: int) -> Optional[UserModel]:
+    async def get_with_roles_async(
+        self, db: AsyncSession, *, id: int
+    ) -> Optional[UserModel]:
         """Get a user with roles loaded (asynchronous)."""
-        stmt = select(self.model).where(self.model.id == id).options(selectinload(self.model.roles))
+        stmt = (
+            select(self.model)
+            .where(self.model.id == id)
+            .options(selectinload(self.model.roles))
+        )
         result = await db.execute(stmt)
         return result.scalars().first()
 
@@ -41,7 +53,9 @@ class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
         """Check if user is a superuser."""
         return bool(getattr(user, "is_superuser", False))
 
-    def create(self, db: Session, *, obj_in: Union[UserCreate, Dict[str, Any]]) -> UserModel:
+    def create(
+        self, db: Session, *, obj_in: Union[UserCreate, Dict[str, Any]]
+    ) -> UserModel:
         """Create a new user (synchronous)."""
         if isinstance(obj_in, dict):
             user_data = obj_in.copy()
@@ -70,7 +84,9 @@ class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
             user_data = obj_in.model_dump(exclude_unset=True)
 
         # Check if email already exists
-        if "email" in user_data and await self.get_by_email_async(db, email=user_data["email"]):
+        if "email" in user_data and await self.get_by_email_async(
+            db, email=user_data["email"]
+        ):
             raise ValueError("Email already registered")
 
         # Handle password hashing
@@ -81,20 +97,22 @@ class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
 
         return await super().create_async(db, obj_in=user_data)
 
-    def authenticate(self, db: Session, *, email: str, password: str) -> Optional[UserModel]:
+    def authenticate(
+        self, db: Session, *, email: str, password: str
+    ) -> Optional[UserModel]:
         """Authenticate a user (synchronous)."""
         user = self.get_by_email(db, email=email)
         if not user or not user.is_active:
             return None
-        
+
         # For testing or when password is stored in plain text
         if user.hashed_password == password:
             return user
-            
+
         # Verify hashed password
         if not security.verify_password(password, user.hashed_password):
             return None
-            
+
         return user
 
     async def authenticate_async(
@@ -104,15 +122,15 @@ class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
         user = await self.get_by_email_async(db, email=email)
         if not user or not user.is_active:
             return None
-            
+
         # For testing or when password is stored in plain text
         if user.hashed_password == password:
             return user
-            
+
         # Verify hashed password
         if not security.verify_password(password, user.hashed_password):
             return None
-            
+
         return user
 
     def update(
@@ -133,7 +151,7 @@ class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
             hashed_password = security.get_password_hash(update_data["password"])
             update_data["hashed_password"] = hashed_password
             del update_data["password"]
-            
+
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     async def update_async(
@@ -160,34 +178,36 @@ class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
     def add_role(self, db: Session, *, user_id: int, role_id: int) -> bool:
         """Add a role to a user (synchronous)."""
         from app.models import Role
-        
+
         user = self.get(db, id=user_id, options=[selectinload(UserModel.roles)])
         role = db.get(Role, role_id)
-        
+
         if not user or not role:
             return False
-            
+
         if role not in user.roles:
             user.roles.append(role)
             db.commit()
             db.refresh(user)
-            
+
         return True
 
-    async def add_role_async(self, db: AsyncSession, *, user_id: int, role_id: int) -> bool:
+    async def add_role_async(
+        self, db: AsyncSession, *, user_id: int, role_id: int
+    ) -> bool:
         """Add a role to a user (asynchronous)."""
         from app.models import Role
-        
+
         user = await self.get_async(db, id=user_id)
         if not user:
             return False
-            
+
         result = await db.execute(select(Role).where(Role.id == role_id))
         role = result.scalars().first()
-        
+
         if not role:
             return False
-            
+
         # Refresh user with roles loaded
         result = await db.execute(
             select(UserModel)
@@ -195,13 +215,13 @@ class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
             .options(selectinload(UserModel.roles))
         )
         user = result.scalars().first()
-        
+
         if role not in user.roles:
             user.roles.append(role)
             db.add(user)
             await db.commit()
             await db.refresh(user)
-            
+
         return True
 
 

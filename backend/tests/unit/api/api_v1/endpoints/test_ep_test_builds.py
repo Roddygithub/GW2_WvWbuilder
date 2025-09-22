@@ -4,7 +4,7 @@ Comprehensive tests for the Builds API endpoints.
 This module contains extensive test cases covering all CRUD operations,
 edge cases, and error conditions for the Builds API.
 """
-import json
+
 import pytest
 from fastapi import status
 from httpx import AsyncClient
@@ -12,10 +12,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.core.config import settings
-from app.models import Build, User, Profession, Composition
-from app.schemas.build import BuildCreate, BuildUpdate
+from app.models import Build, User, Profession
 
 pytestmark = pytest.mark.asyncio
+
 
 class TestBuildsAPIComprehensive:
     """Comprehensive test suite for Builds API endpoints."""
@@ -30,12 +30,9 @@ class TestBuildsAPIComprehensive:
         "config": {
             "weapons": ["Greatsword", "Sword/Shield"],
             "traits": [1, 2, 3],
-            "skills": [1, 2, 3, 4, 5]
+            "skills": [1, 2, 3, 4, 5],
         },
-        "constraints": {
-            "min_healers": 1,
-            "max_same_profession": 2
-        }
+        "constraints": {"min_healers": 1, "max_same_profession": 2},
     }
 
     # ========== Test Create Operations ==========
@@ -49,15 +46,15 @@ class TestBuildsAPIComprehensive:
             "game_mode": "wvw",
             "team_size": 5,
             "profession_ids": [test_profession.id],
-            "config": {}
+            "config": {},
         }
-        
+
         response = await async_client.post(
             f"{settings.API_V1_STR}/builds/",
             json=minimal_data,
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["name"] == minimal_data["name"]
@@ -78,9 +75,9 @@ class TestBuildsAPIComprehensive:
         response = await async_client.post(
             f"{settings.API_V1_STR}/builds/",
             json={**self.VALID_BUILD_DATA, "profession_ids": [test_profession.id]},
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         for field in ["name", "description", "game_mode", "team_size", "is_public"]:
@@ -92,24 +89,30 @@ class TestBuildsAPIComprehensive:
         assert data["professions"][0]["id"] == test_profession.id
 
     async def test_create_build_with_multiple_professions(
-        self, async_client: AsyncClient, test_user: User, test_profession: Profession, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_user: User,
+        test_profession: Profession,
+        db: AsyncSession,
     ):
         """Test creating a build associated with multiple professions."""
         # Create a second profession
-        prof2 = Profession(name="Test Profession 2", description="Another test profession")
+        prof2 = Profession(
+            name="Test Profession 2", description="Another test profession"
+        )
         db.add(prof2)
         await db.commit()
         await db.refresh(prof2)
-        
+
         response = await async_client.post(
             f"{settings.API_V1_STR}/builds/",
             json={
                 **self.VALID_BUILD_DATA,
-                "profession_ids": [test_profession.id, prof2.id]
+                "profession_ids": [test_profession.id, prof2.id],
             },
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert len(data["professions"]) == 2
@@ -125,11 +128,11 @@ class TestBuildsAPIComprehensive:
             f"{settings.API_V1_STR}/builds/",
             json={
                 **self.VALID_BUILD_DATA,
-                "profession_ids": [999999]  # Non-existent ID
+                "profession_ids": [999999],  # Non-existent ID
             },
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
         assert "profession" in response.text.lower()
 
@@ -142,11 +145,11 @@ class TestBuildsAPIComprehensive:
             json={
                 **self.VALID_BUILD_DATA,
                 "game_mode": "invalid_mode",
-                "profession_ids": [test_profession.id]
+                "profession_ids": [test_profession.id],
             },
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         assert "game_mode" in response.text.lower()
 
@@ -160,9 +163,9 @@ class TestBuildsAPIComprehensive:
                 json={
                     **self.VALID_BUILD_DATA,
                     "team_size": invalid_size,
-                    "profession_ids": [test_profession.id]
+                    "profession_ids": [test_profession.id],
                 },
-                headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+                headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
             )
             assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
             assert "team_size" in response.text.lower()
@@ -170,14 +173,18 @@ class TestBuildsAPIComprehensive:
     # ========== Test Read Operations ==========
 
     async def test_get_build_with_relationships(
-        self, async_client: AsyncClient, test_build: Build, test_user: User, test_profession: Profession
+        self,
+        async_client: AsyncClient,
+        test_build: Build,
+        test_user: User,
+        test_profession: Profession,
     ):
         """Test retrieving a build with all its relationships."""
         response = await async_client.get(
             f"{settings.API_V1_STR}/builds/{test_build.id}",
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["id"] == test_build.id
@@ -187,7 +194,11 @@ class TestBuildsAPIComprehensive:
         assert any(p["id"] == test_profession.id for p in data["professions"])
 
     async def test_get_private_build_as_owner(
-        self, async_client: AsyncClient, test_user: User, test_profession: Profession, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_user: User,
+        test_profession: Profession,
+        db: AsyncSession,
     ):
         """Test that a user can retrieve their own private build."""
         # Create a private build
@@ -197,27 +208,31 @@ class TestBuildsAPIComprehensive:
             "team_size": 5,
             "is_public": False,
             "profession_ids": [test_profession.id],
-            "config": {}
+            "config": {},
         }
-        
+
         create_response = await async_client.post(
             f"{settings.API_V1_STR}/builds/",
             json=build_data,
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
         build_id = create_response.json()["id"]
-        
+
         # Try to retrieve it
         get_response = await async_client.get(
             f"{settings.API_V1_STR}/builds/{build_id}",
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert get_response.status_code == status.HTTP_200_OK
         assert get_response.json()["id"] == build_id
 
     async def test_get_private_build_as_other_user(
-        self, async_client: AsyncClient, test_user: User, test_profession: Profession, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_user: User,
+        test_profession: Profession,
+        db: AsyncSession,
     ):
         """Test that a user cannot retrieve another user's private build."""
         # Create a private build
@@ -227,38 +242,42 @@ class TestBuildsAPIComprehensive:
             "team_size": 5,
             "is_public": False,
             "profession_ids": [test_profession.id],
-            "config": {}
+            "config": {},
         }
-        
+
         create_response = await async_client.post(
             f"{settings.API_V1_STR}/builds/",
             json=build_data,
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
         build_id = create_response.json()["id"]
-        
+
         # Create a second user
         from app.crud.crud_user import user as crud_user
         from app.schemas.user import UserCreate
-        
+
         user2_data = UserCreate(
             email="test2@example.com",
             username="testuser2",
             password="testpassword",
-            full_name="Test User 2"
+            full_name="Test User 2",
         )
         user2 = await crud_user.create(db, obj_in=user2_data)
-        
+
         # Try to retrieve the build as the second user
         get_response = await async_client.get(
             f"{settings.API_V1_STR}/builds/{build_id}",
-            headers={"Authorization": f"Bearer {user2.create_access_token()}"}
+            headers={"Authorization": f"Bearer {user2.create_access_token()}"},
         )
-        
+
         assert get_response.status_code == status.HTTP_403_FORBIDDEN
 
     async def test_get_public_build_as_any_user(
-        self, async_client: AsyncClient, test_user: User, test_profession: Profession, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_user: User,
+        test_profession: Profession,
+        db: AsyncSession,
     ):
         """Test that any authenticated user can retrieve a public build."""
         # Create a public build
@@ -268,34 +287,34 @@ class TestBuildsAPIComprehensive:
             "team_size": 5,
             "is_public": True,
             "profession_ids": [test_profession.id],
-            "config": {}
+            "config": {},
         }
-        
+
         create_response = await async_client.post(
             f"{settings.API_V1_STR}/builds/",
             json=build_data,
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
         build_id = create_response.json()["id"]
-        
+
         # Create a second user
         from app.crud.crud_user import user as crud_user
         from app.schemas.user import UserCreate
-        
+
         user2_data = UserCreate(
             email="test2@example.com",
             username="testuser2",
             password="testpassword",
-            full_name="Test User 2"
+            full_name="Test User 2",
         )
         user2 = await crud_user.create(db, obj_in=user2_data)
-        
+
         # Try to retrieve the build as the second user
         get_response = await async_client.get(
             f"{settings.API_V1_STR}/builds/{build_id}",
-            headers={"Authorization": f"Bearer {user2.create_access_token()}"}
+            headers={"Authorization": f"Bearer {user2.create_access_token()}"},
         )
-        
+
         assert get_response.status_code == status.HTTP_200_OK
         assert get_response.json()["id"] == build_id
 
@@ -305,16 +324,14 @@ class TestBuildsAPIComprehensive:
         self, async_client: AsyncClient, test_build: Build, test_user: User
     ):
         """Test updating a build with partial data (PATCH-like behavior)."""
-        update_data = {
-            "description": "Updated description only"
-        }
-        
+        update_data = {"description": "Updated description only"}
+
         response = await async_client.put(
             f"{settings.API_V1_STR}/builds/{test_build.id}",
             json=update_data,
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["name"] == test_build.name  # Should remain unchanged
@@ -323,31 +340,41 @@ class TestBuildsAPIComprehensive:
         assert data["team_size"] == test_build.team_size
 
     async def test_update_build_change_professions(
-        self, async_client: AsyncClient, test_build: Build, test_user: User, test_profession: Profession, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_build: Build,
+        test_user: User,
+        test_profession: Profession,
+        db: AsyncSession,
     ):
         """Test updating a build to change its associated professions."""
         # Create a new profession
-        new_prof = Profession(name="New Test Profession", description="New test profession")
+        new_prof = Profession(
+            name="New Test Profession", description="New test profession"
+        )
         db.add(new_prof)
         await db.commit()
         await db.refresh(new_prof)
-        
+
         # Update the build to use the new profession
         response = await async_client.put(
             f"{settings.API_V1_STR}/builds/{test_build.id}",
             json={"profession_ids": [new_prof.id]},
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert len(data["professions"]) == 1
         assert data["professions"][0]["id"] == new_prof.id
-        
+
         # Verify the change in the database
         from sqlalchemy.orm import selectinload
+
         result = await db.execute(
-            select(Build).options(selectinload(Build.professions)).where(Build.id == test_build.id)
+            select(Build)
+            .options(selectinload(Build.professions))
+            .where(Build.id == test_build.id)
         )
         updated_build = result.scalar_one()
         assert len(updated_build.professions) == 1
@@ -360,9 +387,9 @@ class TestBuildsAPIComprehensive:
         response = await async_client.put(
             f"{settings.API_V1_STR}/builds/999999",
             json={"name": "Nonexistent Build"},
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_update_build_unauthorized(
@@ -372,22 +399,22 @@ class TestBuildsAPIComprehensive:
         # Create a second user
         from app.crud.crud_user import user as crud_user
         from app.schemas.user import UserCreate
-        
+
         user2_data = UserCreate(
             email="test2@example.com",
             username="testuser2",
             password="testpassword",
-            full_name="Test User 2"
+            full_name="Test User 2",
         )
         user2 = await crud_user.create(db, obj_in=user2_data)
-        
+
         # Try to update the build as the second user
         response = await async_client.put(
             f"{settings.API_V1_STR}/builds/{test_build.id}",
             json={"name": "Unauthorized Update"},
-            headers={"Authorization": f"Bearer {user2.create_access_token()}"}
+            headers={"Authorization": f"Bearer {user2.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     # ========== Test Delete Operations ==========
@@ -399,23 +426,23 @@ class TestBuildsAPIComprehensive:
         # Create a second user
         from app.crud.crud_user import user as crud_user
         from app.schemas.user import UserCreate
-        
+
         user2_data = UserCreate(
             email="test2@example.com",
             username="testuser2",
             password="testpassword",
-            full_name="Test User 2"
+            full_name="Test User 2",
         )
         user2 = await crud_user.create(db, obj_in=user2_data)
-        
+
         # Try to delete the build as the second user
         response = await async_client.delete(
             f"{settings.API_V1_STR}/builds/{test_build.id}",
-            headers={"Authorization": f"Bearer {user2.create_access_token()}"}
+            headers={"Authorization": f"Bearer {user2.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
-        
+
         # Verify the build still exists
         result = await db.execute(select(Build).where(Build.id == test_build.id))
         assert result.scalar_one_or_none() is not None
@@ -423,47 +450,64 @@ class TestBuildsAPIComprehensive:
     # ========== Test List Operations ==========
 
     async def test_list_builds_filter_by_public(
-        self, async_client: AsyncClient, test_user: User, test_profession: Profession, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_user: User,
+        test_profession: Profession,
+        db: AsyncSession,
     ):
         """Test filtering builds by public/private status."""
         # Create a mix of public and private builds
         builds_data = [
-            {"name": f"Build {i}", "game_mode": "wvw", "team_size": 5, "is_public": i % 2 == 0, "profession_ids": [test_profession.id], "config": {}}
+            {
+                "name": f"Build {i}",
+                "game_mode": "wvw",
+                "team_size": 5,
+                "is_public": i % 2 == 0,
+                "profession_ids": [test_profession.id],
+                "config": {},
+            }
             for i in range(5)
         ]
-        
+
         # Create the builds
         for build_data in builds_data:
             await async_client.post(
                 f"{settings.API_V1_STR}/builds/",
                 json=build_data,
-                headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+                headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
             )
-        
+
         # Test filtering public builds
         public_response = await async_client.get(
             f"{settings.API_V1_STR}/builds/",
             params={"is_public": True},
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
         assert public_response.status_code == status.HTTP_200_OK
         public_builds = public_response.json()
         assert len(public_builds) >= 2  # At least 2 public builds from the 5 we created
         assert all(build["is_public"] for build in public_builds)
-        
+
         # Test filtering private builds
         private_response = await async_client.get(
             f"{settings.API_V1_STR}/builds/",
             params={"is_public": False},
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
         assert private_response.status_code == status.HTTP_200_OK
         private_builds = private_response.json()
-        assert len(private_builds) >= 2  # At least 2 private builds from the 5 we created
+        assert (
+            len(private_builds) >= 2
+        )  # At least 2 private builds from the 5 we created
         assert all(not build["is_public"] for build in private_builds)
 
     async def test_list_builds_pagination(
-        self, async_client: AsyncClient, test_user: User, test_profession: Profession, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_user: User,
+        test_profession: Profession,
+        db: AsyncSession,
     ):
         """Test pagination when listing builds."""
         # Create multiple builds
@@ -474,34 +518,34 @@ class TestBuildsAPIComprehensive:
                 "team_size": 5,
                 "is_public": True,
                 "profession_ids": [test_profession.id],
-                "config": {}
+                "config": {},
             }
             await async_client.post(
                 f"{settings.API_V1_STR}/builds/",
                 json=build_data,
-                headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+                headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
             )
-        
+
         # Test first page (5 items)
         page1 = await async_client.get(
             f"{settings.API_V1_STR}/builds/",
             params={"skip": 0, "limit": 5},
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
         assert page1.status_code == status.HTTP_200_OK
         page1_data = page1.json()
         assert len(page1_data) == 5
-        
+
         # Test second page (next 5 items)
         page2 = await async_client.get(
             f"{settings.API_V1_STR}/builds/",
             params={"skip": 5, "limit": 5},
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
         assert page2.status_code == status.HTTP_200_OK
         page2_data = page2.json()
         assert len(page2_data) == 5
-        
+
         # Verify the pages don't have overlapping items
         page1_ids = {build["id"] for build in page1_data}
         page2_ids = {build["id"] for build in page2_data}
@@ -516,17 +560,15 @@ class TestBuildsAPIComprehensive:
         large_config = {
             "traits": list(range(100)),
             "skills": ["skill1"] * 50,
-            "equipment": {
-                f"slot_{i}": f"item_{i}" for i in range(20)
-            },
+            "equipment": {f"slot_{i}": f"item_{i}" for i in range(20)},
             "metadata": {
                 "created_at": "2023-01-01T00:00:00Z",
                 "updated_at": "2023-01-01T00:00:00Z",
                 "version": "1.0.0",
-                "tags": [f"tag{i}" for i in range(20)]
-            }
+                "tags": [f"tag{i}" for i in range(20)],
+            },
         }
-        
+
         response = await async_client.post(
             f"{settings.API_V1_STR}/builds/",
             json={
@@ -534,11 +576,11 @@ class TestBuildsAPIComprehensive:
                 "game_mode": "wvw",
                 "team_size": 5,
                 "profession_ids": [test_profession.id],
-                "config": large_config
+                "config": large_config,
             },
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["config"] == large_config
@@ -548,7 +590,7 @@ class TestBuildsAPIComprehensive:
     ):
         """Test creating a build with special characters in the name and description."""
         special_chars = "!@#$%^&*()_+-=[]{}|;:'\",.<>/?`~"
-        
+
         response = await async_client.post(
             f"{settings.API_V1_STR}/builds/",
             json={
@@ -557,11 +599,11 @@ class TestBuildsAPIComprehensive:
                 "game_mode": "wvw",
                 "team_size": 5,
                 "profession_ids": [test_profession.id],
-                "config": {}
+                "config": {},
             },
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["name"] == f"Build with special chars: {special_chars}"

@@ -1,0 +1,37 @@
+---
+name: "Custom CodeQL Configuration"
+
+# Disable default queries to run only security queries
+disabled-default-queries: true
+
+# Path to the security and quality query suite
+queries:
+  - uses: security-and-quality
+
+# Exclude test and example code from analysis
+paths-ignore:
+  - '**/test/**'
+  - '**/tests/**'
+  - '**/examples/**'
+  - '**/docs/**'
+  - '**/node_modules/**'
+  - '**/venv/**'
+  - '**/.venv/**'
+  - '**/__pycache__/**'
+  - '**/*.test.py'
+  - '**/test_*.py'
+  - '**/conftest.py'
+
+# Additional query options
+query-filters:
+  - exclude:
+      id: 
+        - "python/clear-text-logging"  # Ignore clear text logging for now
+        - "python/weak-crypto"         # Ignore weak crypto for now
+
+# Paths to include in the analysis
+paths:
+  - '**/app/**'
+  - '**/src/**'
+  - '**/lib/**'
+  - '**/api/**'

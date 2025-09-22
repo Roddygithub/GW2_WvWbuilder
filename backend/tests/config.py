@@ -1,4 +1,5 @@
 """Test configuration and settings."""
+
 import os
 from typing import Dict, Any
 
@@ -46,13 +47,16 @@ TEST_COMPOSITION = {
     "is_public": True,
 }
 
+
 def get_test_db_url() -> str:
     """Get the test database URL."""
     return os.getenv("TEST_DATABASE_URL", TEST_DATABASE_URL)
 
+
 def get_test_sync_db_url() -> str:
     """Get the test sync database URL."""
     return os.getenv("TEST_SYNC_DATABASE_URL", TEST_SYNC_DATABASE_URL)
+
 
 def get_test_settings() -> Dict[str, Any]:
     """Get test settings."""

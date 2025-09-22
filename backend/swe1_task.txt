@@ -1,0 +1,21 @@
+
+SWE-1, voici la situation :
+- Le backend FastAPI fonctionne correctement et est accessible sur http://127.0.0.1:8000/.
+- Les tests unitaires et d’intégration échouent massivement à cause de problèmes d’imports :
+    - Les fichiers CRUD n’ont pas le même préfixe que dans les tests (crud_composition vs composition.py).
+    - app.core.exceptions est manquant ou mal importé.
+    - get_async_db dans app.db.session n’est pas exporté ou mal importé.
+- Les __init__.py des modules CRUD et core sont vides, ce qui empêche l’import correct.
+
+Objectif :
+1. Corriger tous les imports dans les fichiers de test pour qu’ils correspondent aux fichiers existants et aux exports.
+2. Ajouter les exports nécessaires dans les __init__.py de app/crud, app/core, app/db pour rendre tous les modules importables.
+3. Vérifier l’existence et la bonne importation de get_async_db et app.core.exceptions.
+4. Relancer tous les tests unitaires et d’intégration (pytest -v --cov=app --cov-report=term-missing --cov-report=html) et générer le rapport de couverture.
+5. Mettre à jour le README et les fichiers explicatifs si nécessaire pour refléter la structure finale et les imports corrects.
+
+Fournis ensuite :
+- Le résumé des changements apportés.
+- Les fichiers modifiés.
+- Le résultat des tests avec couverture.
+

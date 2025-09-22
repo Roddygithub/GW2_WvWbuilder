@@ -11,7 +11,9 @@ from app.models import EliteSpecialization as EliteSpecModel
 from app.schemas.profession import EliteSpecializationCreate, EliteSpecializationUpdate
 
 
-class CRUDEliteSpecialization(CRUDBase[EliteSpecModel, EliteSpecializationCreate, EliteSpecializationUpdate]):
+class CRUDEliteSpecialization(
+    CRUDBase[EliteSpecModel, EliteSpecializationCreate, EliteSpecializationUpdate]
+):
     """CRUD operations for EliteSpecialization model with both sync and async support."""
 
     def get_by_name_and_profession(
@@ -19,10 +21,7 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecModel, EliteSpecializationCreate
     ) -> Optional[EliteSpecModel]:
         """Get an elite specialization by name and profession ID (synchronous)."""
         stmt = select(self.model).where(
-            and_(
-                self.model.name == name,
-                self.model.profession_id == profession_id
-            )
+            and_(self.model.name == name, self.model.profession_id == profession_id)
         )
         return db.scalars(stmt).first()
 
@@ -31,10 +30,7 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecModel, EliteSpecializationCreate
     ) -> Optional[EliteSpecModel]:
         """Get an elite specialization by name and profession ID (asynchronous)."""
         stmt = select(self.model).where(
-            and_(
-                self.model.name == name,
-                self.model.profession_id == profession_id
-            )
+            and_(self.model.name == name, self.model.profession_id == profession_id)
         )
         result = await db.execute(stmt)
         return result.scalars().first()
@@ -79,9 +75,7 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecModel, EliteSpecializationCreate
         result = await db.execute(stmt)
         return result.scalars().first()
 
-    def get_with_profession(
-        self, db: Session, *, id: int
-    ) -> Optional[EliteSpecModel]:
+    def get_with_profession(self, db: Session, *, id: int) -> Optional[EliteSpecModel]:
         """Get an elite specialization with its profession (synchronous)."""
         stmt = (
             select(self.model)
@@ -118,7 +112,9 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecModel, EliteSpecializationCreate
         stmt = select(self.model.id).where(self.model.name == name)
         return db.scalars(stmt).first()
 
-    async def get_id_by_name_async(self, db: AsyncSession, *, name: str) -> Optional[int]:
+    async def get_id_by_name_async(
+        self, db: AsyncSession, *, name: str
+    ) -> Optional[int]:
         """Get elite specialization ID by name (asynchronous)."""
         stmt = select(self.model.id).where(self.model.name == name)
         result = await db.execute(stmt)

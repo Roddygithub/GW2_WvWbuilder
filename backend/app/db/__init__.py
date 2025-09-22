@@ -3,12 +3,28 @@
 This module provides database session management and initialization.
 """
 
-from .session import SessionLocal, engine, Base, get_db, init_db
+from .base import Base
+from .session import (
+    SessionLocal,
+    AsyncSessionLocal,
+    engine,
+    async_engine,
+    get_db,
+    get_async_db,
+    init_db,
+)
 
 __all__ = [
-    'SessionLocal',
-    'engine',
-    'Base',
-    'get_db',
-    'init_db',
+    # SQLAlchemy Base
+    "Base",
+    # Session factories
+    "SessionLocal",
+    "AsyncSessionLocal",
+    # Engines
+    "engine",
+    "async_engine",
+    # DB utilities
+    "get_db",
+    "get_async_db",
+    "init_db",
 ]

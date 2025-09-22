@@ -1,6 +1,7 @@
 """
 Comprehensive tests for the Compositions API endpoints.
 """
+
 import pytest
 from fastapi import status
 from httpx import AsyncClient
@@ -8,15 +9,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.models import Composition, User, Build
-from app.schemas.composition import CompositionCreate, CompositionUpdate
 
 pytestmark = pytest.mark.asyncio
+
 
 class TestCompositionsAPI:
     """Test suite for Compositions API endpoints."""
 
     async def test_create_composition_success(
-        self, async_client: AsyncClient, test_user: User, test_build: Build, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_user: User,
+        test_build: Build,
+        db: AsyncSession,
     ):
         """Test creating a new composition with valid data."""
         composition_data = {
@@ -25,15 +30,15 @@ class TestCompositionsAPI:
             "squad_size": 10,
             "is_public": True,
             "build_ids": [test_build.id],
-            "tags": ["wvw", "gvg"]
+            "tags": ["wvw", "gvg"],
         }
-        
+
         response = await async_client.post(
             f"{settings.API_V1_STR}/compositions/",
             json=composition_data,
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["name"] == composition_data["name"]
@@ -47,9 +52,9 @@ class TestCompositionsAPI:
         """Test retrieving a composition by ID."""
         response = await async_client.get(
             f"{settings.API_V1_STR}/compositions/{test_composition.id}",
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["id"] == test_composition.id
@@ -63,15 +68,15 @@ class TestCompositionsAPI:
             "name": "Updated Composition Name",
             "description": "Updated description",
             "is_public": False,
-            "tags": ["updated", "tags"]
+            "tags": ["updated", "tags"],
         }
-        
+
         response = await async_client.put(
             f"{settings.API_V1_STR}/compositions/{test_composition.id}",
             json=update_data,
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["name"] == update_data["name"]
@@ -86,9 +91,9 @@ class TestCompositionsAPI:
         response = await async_client.get(
             f"{settings.API_V1_STR}/compositions/",
             params={"skip": 0, "limit": 10},
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert isinstance(data, list)
@@ -100,23 +105,23 @@ class TestCompositionsAPI:
     ):
         """Test filtering compositions by tag."""
         # First, ensure the test composition has the expected tag
-        if not test_composition.tags or "wvw" not in [t.name for t in test_composition.tags]:
-            update_data = {
-                "tags": ["wvw", "test"]
-            }
+        if not test_composition.tags or "wvw" not in [
+            t.name for t in test_composition.tags
+        ]:
+            update_data = {"tags": ["wvw", "test"]}
             await async_client.put(
                 f"{settings.API_V1_STR}/compositions/{test_composition.id}",
                 json=update_data,
-                headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+                headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
             )
-        
+
         # Now test the filter
         response = await async_client.get(
             f"{settings.API_V1_STR}/compositions/",
             params={"tag": "wvw"},
-            headers={"Authorization": f"Bearer {test_user.create_access_token()}"}
+            headers={"Authorization": f"Bearer {test_user.create_access_token()}"},
         )
-        
+
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert isinstance(data, list)

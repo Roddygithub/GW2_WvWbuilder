@@ -19,7 +19,9 @@ class CRUDRole(CRUDBase[RoleModel, RoleCreate, RoleUpdate]):
         stmt = select(self.model).where(self.model.name == name)
         return db.scalars(stmt).first()
 
-    async def get_by_name_async(self, db: AsyncSession, *, name: str) -> Optional[RoleModel]:
+    async def get_by_name_async(
+        self, db: AsyncSession, *, name: str
+    ) -> Optional[RoleModel]:
         """Get a role by name (asynchronous)."""
         stmt = select(self.model).where(self.model.name == name)
         result = await db.execute(stmt)
@@ -41,7 +43,13 @@ class CRUDRole(CRUDBase[RoleModel, RoleCreate, RoleUpdate]):
         return list(result.scalars().all())
 
     def get_multi_by_permission_range(
-        self, db: Session, *, min_level: int = 0, max_level: int = 100, skip: int = 0, limit: int = 100
+        self,
+        db: Session,
+        *,
+        min_level: int = 0,
+        max_level: int = 100,
+        skip: int = 0,
+        limit: int = 100,
     ) -> List[RoleModel]:
         """Get roles within a permission level range (synchronous)."""
         stmt = (
@@ -49,7 +57,7 @@ class CRUDRole(CRUDBase[RoleModel, RoleCreate, RoleUpdate]):
             .where(
                 and_(
                     self.model.permission_level >= min_level,
-                    self.model.permission_level <= max_level
+                    self.model.permission_level <= max_level,
                 )
             )
             .offset(skip)
@@ -58,7 +66,13 @@ class CRUDRole(CRUDBase[RoleModel, RoleCreate, RoleUpdate]):
         return list(db.scalars(stmt).all())
 
     async def get_multi_by_permission_range_async(
-        self, db: AsyncSession, *, min_level: int = 0, max_level: int = 100, skip: int = 0, limit: int = 100
+        self,
+        db: AsyncSession,
+        *,
+        min_level: int = 0,
+        max_level: int = 100,
+        skip: int = 0,
+        limit: int = 100,
     ) -> List[RoleModel]:
         """Get roles within a permission level range (asynchronous)."""
         stmt = (
@@ -66,7 +80,7 @@ class CRUDRole(CRUDBase[RoleModel, RoleCreate, RoleUpdate]):
             .where(
                 and_(
                     self.model.permission_level >= min_level,
-                    self.model.permission_level <= max_level
+                    self.model.permission_level <= max_level,
                 )
             )
             .offset(skip)
@@ -84,7 +98,9 @@ class CRUDRole(CRUDBase[RoleModel, RoleCreate, RoleUpdate]):
         )
         return db.scalars(stmt).first()
 
-    async def get_with_users_async(self, db: AsyncSession, *, id: int) -> Optional[RoleModel]:
+    async def get_with_users_async(
+        self, db: AsyncSession, *, id: int
+    ) -> Optional[RoleModel]:
         """Get a role with its users (asynchronous)."""
         stmt = (
             select(self.model)
@@ -110,7 +126,9 @@ class CRUDRole(CRUDBase[RoleModel, RoleCreate, RoleUpdate]):
         stmt = select(self.model.id).where(self.model.name == name)
         return db.scalars(stmt).first()
 
-    async def get_id_by_name_async(self, db: AsyncSession, *, name: str) -> Optional[int]:
+    async def get_id_by_name_async(
+        self, db: AsyncSession, *, name: str
+    ) -> Optional[int]:
         """Get role ID by name (asynchronous)."""
         stmt = select(self.model.id).where(self.model.name == name)
         result = await db.execute(stmt)

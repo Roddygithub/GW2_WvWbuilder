@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models import Profession as ProfessionModel
@@ -19,7 +19,9 @@ class CRUDProfession(CRUDBase[ProfessionModel, ProfessionCreate, ProfessionUpdat
         stmt = select(self.model).where(self.model.name == name)
         return db.scalars(stmt).first()
 
-    async def get_by_name_async(self, db: AsyncSession, *, name: str) -> Optional[ProfessionModel]:
+    async def get_by_name_async(
+        self, db: AsyncSession, *, name: str
+    ) -> Optional[ProfessionModel]:
         """Get a profession by name (asynchronous)."""
         stmt = select(self.model).where(self.model.name == name)
         result = await db.execute(stmt)
@@ -89,7 +91,9 @@ class CRUDProfession(CRUDBase[ProfessionModel, ProfessionCreate, ProfessionUpdat
         stmt = select(self.model.id).where(self.model.name == name)
         return db.scalars(stmt).first()
 
-    async def get_id_by_name_async(self, db: AsyncSession, *, name: str) -> Optional[int]:
+    async def get_id_by_name_async(
+        self, db: AsyncSession, *, name: str
+    ) -> Optional[int]:
         """Get profession ID by name (asynchronous)."""
         stmt = select(self.model.id).where(self.model.name == name)
         result = await db.execute(stmt)

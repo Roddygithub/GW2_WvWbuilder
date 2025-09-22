@@ -1,6 +1,6 @@
 """Tests for composition-related Pydantic schemas."""
+
 import pytest
-from datetime import datetime, timezone
 from pydantic import ValidationError
 
 from app.schemas.composition import (
@@ -9,21 +9,16 @@ from app.schemas.composition import (
     CompositionBase,
     CompositionCreate,
     CompositionUpdate,
-    CompositionInDBBase,
-    Composition,
     CompositionTagBase,
-    CompositionTagCreate,
-    CompositionTagUpdate,
-    CompositionTagInDBBase,
     CompositionSearch,
     CompositionOptimizationRequest,
-    CompositionOptimizationResult,
     CompositionEvaluation,
 )
 
+
 class TestCompositionMemberRole:
     """Tests for the CompositionMemberRole enum."""
-    
+
     def test_role_values(self):
         """Test that all role values are correct."""
         assert CompositionMemberRole.HEALER == "healer"
@@ -40,7 +35,7 @@ class TestCompositionMemberRole:
 
 class TestCompositionMemberBase:
     """Tests for the CompositionMemberBase schema."""
-    
+
     def test_valid_member(self):
         """Test valid composition member creation."""
         data = {
@@ -53,39 +48,31 @@ class TestCompositionMemberBase:
             "is_commander": True,
             "is_secondary_commander": False,
             "custom_build_url": "https://example.com/build",
-            "priority": 1
+            "priority": 1,
         }
         member = CompositionMemberBase(**data)
         assert member.user_id == data["user_id"]
         assert member.role_type == CompositionMemberRole.HEALER
         assert member.priority == 1
-    
+
     def test_priority_validation(self):
         """Test priority validation."""
         # Test priority below minimum
         with pytest.raises(ValidationError):
             CompositionMemberBase(
-                user_id=1, 
-                role_id=1, 
-                profession_id=1, 
-                role_type="healer",
-                priority=0
+                user_id=1, role_id=1, profession_id=1, role_type="healer", priority=0
             )
-        
+
         # Test priority above maximum
         with pytest.raises(ValidationError):
             CompositionMemberBase(
-                user_id=1, 
-                role_id=1, 
-                profession_id=1, 
-                role_type="healer",
-                priority=4
+                user_id=1, role_id=1, profession_id=1, role_type="healer", priority=4
             )
 
 
 class TestCompositionBase:
     """Tests for the CompositionBase schema."""
-    
+
     def test_valid_composition(self):
         """Test valid composition creation."""
         data = {
@@ -96,47 +83,41 @@ class TestCompositionBase:
             "tags": ["test", "wvw"],
             "game_mode": "wvw",
             "min_players": 5,
-            "max_players": 15
+            "max_players": 15,
         }
         comp = CompositionBase(**data)
         assert comp.name == data["name"]
         assert comp.squad_size == 10
         assert comp.is_public is True
         assert comp.tags == ["test", "wvw"]
-    
+
     def test_squad_size_validation(self):
         """Test squad size validation."""
         # Test squad size below minimum
         with pytest.raises(ValidationError):
-            CompositionBase(
-                name="Test",
-                squad_size=0,
-                game_mode="wvw"
-            )
-        
+            CompositionBase(name="Test", squad_size=0, game_mode="wvw")
+
         # Test squad size above maximum
         with pytest.raises(ValidationError):
-            CompositionBase(
-                name="Test",
-                squad_size=51,
-                game_mode="wvw"
-            )
-    
+            CompositionBase(name="Test", squad_size=51, game_mode="wvw")
+
     def test_max_players_gte_min_players(self):
         """Test that max_players cannot be less than min_players."""
-        with pytest.raises(ValueError, match="max_players must be greater than or equal to min_players"):
+        with pytest.raises(
+            ValueError, match="max_players must be greater than or equal to min_players"
+        ):
             CompositionBase(
                 name="Test",
                 squad_size=10,
                 game_mode="wvw",
                 min_players=5,
-                max_players=4
+                max_players=4,
             )
 
 
 class TestCompositionCreate:
     """Tests for the CompositionCreate schema."""
-    
+
     def test_create_with_members(self):
         """Test creating a composition with members."""
         data = {
@@ -144,14 +125,9 @@ class TestCompositionCreate:
             "squad_size": 5,
             "game_mode": "wvw",
             "members": [
-                {
-                    "user_id": 1,
-                    "role_id": 1,
-                    "profession_id": 1,
-                    "role_type": "healer"
-                }
+                {"user_id": 1, "role_id": 1, "profession_id": 1, "role_type": "healer"}
             ],
-            "created_by": 1
+            "created_by": 1,
         }
         comp = CompositionCreate(**data)
         assert len(comp.members) == 1
@@ -161,25 +137,20 @@ class TestCompositionCreate:
 
 class TestCompositionUpdate:
     """Tests for the CompositionUpdate schema."""
-    
+
     def test_partial_update(self):
         """Test updating a subset of fields."""
         update = CompositionUpdate(name="Updated Name")
         assert update.name == "Updated Name"
         assert update.description is None
-    
+
     def test_update_with_members(self):
         """Test updating composition members."""
         update = CompositionUpdate(
             name="Updated",
             members=[
-                {
-                    "user_id": 2,
-                    "role_id": 2,
-                    "profession_id": 2,
-                    "role_type": "dps"
-                }
-            ]
+                {"user_id": 2, "role_id": 2, "profession_id": 2, "role_type": "dps"}
+            ],
         )
         assert update.name == "Updated"
         assert len(update.members) == 1
@@ -188,7 +159,7 @@ class TestCompositionUpdate:
 
 class TestCompositionSearch:
     """Tests for the CompositionSearch schema."""
-    
+
     def test_search_params(self):
         """Test search parameters."""
         search = CompositionSearch(
@@ -201,14 +172,14 @@ class TestCompositionSearch:
             sort_by="created_at",
             sort_order="desc",
             offset=0,
-            limit=10
+            limit=10,
         )
         assert search.name == "zerg"
         assert search.min_players == 5
         assert search.max_players == 20
         assert search.tags == ["frontline", "meta"]
         assert search.limit == 10
-    
+
     def test_sort_order_validation(self):
         """Test sort order validation."""
         with pytest.raises(ValidationError):
@@ -217,13 +188,18 @@ class TestCompositionSearch:
 
 class TestCompositionOptimizationRequest:
     """Tests for the CompositionOptimizationRequest schema."""
-    
+
     def test_optimization_request(self):
         """Test optimization request creation."""
         request = CompositionOptimizationRequest(
             squad_size=10,
             fixed_roles=[
-                {"profession_id": 1, "elite_specialization_id": 3, "count": 2, "role_type": "healer"}
+                {
+                    "profession_id": 1,
+                    "elite_specialization_id": 3,
+                    "count": 2,
+                    "role_type": "healer",
+                }
             ],
             game_mode="wvw",
             preferred_roles={"healer": 2, "dps": 5, "support": 3},
@@ -236,7 +212,7 @@ class TestCompositionOptimizationRequest:
                 {"profession_id": 1, "weapon": "staff", "role_type": "healer"}
             ],
             excluded_elite_specializations=[10, 15],
-            optimization_goals=["boon_uptime", "healing", "damage"]
+            optimization_goals=["boon_uptime", "healing", "damage"],
         )
         assert request.squad_size == 10
         assert len(request.fixed_roles) == 1
@@ -247,22 +223,21 @@ class TestCompositionOptimizationRequest:
 
 class TestCompositionTagBase:
     """Tests for the CompositionTagBase schema."""
-    
+
     def test_tag_creation(self):
         """Test tag creation."""
         tag = CompositionTagBase(
-            name="zerg",
-            description="Ideal for large scale battles"
+            name="zerg", description="Ideal for large scale battles"
         )
         assert tag.name == "zerg"
         assert tag.description == "Ideal for large scale battles"
-    
+
     def test_name_validation(self):
         """Test name validation."""
         # Test empty name
         with pytest.raises(ValidationError):
             CompositionTagBase(name="")
-        
+
         # Test name too long
         with pytest.raises(ValidationError):
             CompositionTagBase(name="a" * 51)
@@ -270,7 +245,7 @@ class TestCompositionTagBase:
 
 class TestCompositionEvaluation:
     """Tests for the CompositionEvaluation schema."""
-    
+
     def test_evaluation_creation(self):
         """Test evaluation creation."""
         eval_data = {
@@ -282,31 +257,23 @@ class TestCompositionEvaluation:
             "is_public": True,
             "game_version": "2023-11-28",
             "game_mode": "wvw",
-            "tags": ["zerg", "frontline"]
+            "tags": ["zerg", "frontline"],
         }
         evaluation = CompositionEvaluation(**eval_data)
         assert evaluation.composition_id == 1
         assert evaluation.rating == 4
         assert evaluation.feedback == "Great composition!"
         assert evaluation.tags == ["zerg", "frontline"]
-    
+
     def test_rating_validation(self):
         """Test rating validation."""
         # Test rating below minimum
         with pytest.raises(ValidationError):
-            CompositionEvaluation(
-                composition_id=1,
-                evaluator_id=1,
-                rating=0
-            )
-        
+            CompositionEvaluation(composition_id=1, evaluator_id=1, rating=0)
+
         # Test rating above maximum
         with pytest.raises(ValidationError):
-            CompositionEvaluation(
-                composition_id=1,
-                evaluator_id=1,
-                rating=6
-            )
+            CompositionEvaluation(composition_id=1, evaluator_id=1, rating=6)
 
 
 if __name__ == "__main__":
