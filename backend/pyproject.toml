@@ -25,6 +25,7 @@ itsdangerous = "^2.2.0"
 python-json-logger = "^3.3.0"
 redis = "^6.4.0"
 fastapi-limiter = "^0.1.5"
+asyncpg = "^0.28.0"  # Pour le support asynchrone de PostgreSQL
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.0"
