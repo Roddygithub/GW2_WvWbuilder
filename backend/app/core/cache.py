@@ -5,6 +5,7 @@ from typing import Callable, Any, Optional
 from fastapi import Request, Response
 from app.core.config import settings
 from prometheus_client import Counter
+import redis.asyncio as redis
 
 # Prometheus metrics for cache
 CACHE_HITS = Counter("cache_hits_total", "Total number of cache hits", ["endpoint"])
@@ -48,3 +49,6 @@ def cache_response(ttl: int = settings.CACHE_TTL) -> Callable[[Callable[..., Any
 
         return wrapper
     return decorator
+
+# Initialize Redis client for caching
+cache = settings.redis_client
