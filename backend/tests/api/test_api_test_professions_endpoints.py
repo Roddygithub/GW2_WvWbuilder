@@ -4,6 +4,8 @@ Tests for the Professions API endpoints.
 import pytest
 from fastapi import status
 from httpx import AsyncClient
+from app.models import Profession
+
 
 from app.core.config import settings
 
@@ -42,6 +44,16 @@ class TestProfessionsAPI:
         assert data["id"] == profession.id
         assert data["name"] == "Readable Profession"
 
+    async def test_get_nonexistent_profession(self, async_client: AsyncClient, auth_headers):
+        """Test retrieving a non-existent profession by ID."""
+        headers = await auth_headers()
+        response = await async_client.get(f"{settings.API_V1_STR}/professions/999999", headers=headers)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        error_data = response.json()
+        assert "detail" in error_data
+        assert "not found" in error_data["detail"].lower()
+
     async def test_list_professions(self, async_client: AsyncClient, profession_factory, auth_headers):
         """Test listing all professions."""
         await profession_factory(name="Profession 1")
@@ -70,6 +82,17 @@ class TestProfessionsAPI:
         assert data["description"] == "Updated description"
         assert data["icon_url"] == "http://new.icon/url.png"
 
+    async def test_update_nonexistent_profession(self, async_client: AsyncClient, auth_headers):
+        """Test updating a non-existent profession (admin only)."""
+        admin_headers = await auth_headers(username="admin", is_superuser=True)
+        update_data = {"description": "This will fail"}
+
+        response = await async_client.put(
+            f"{settings.API_V1_STR}/professions/999999", json=update_data, headers=admin_headers
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
     async def test_delete_profession(self, async_client: AsyncClient, profession_factory, auth_headers):
         """Test deleting a profession (admin only)."""
         profession = await profession_factory()
@@ -82,6 +105,16 @@ class TestProfessionsAPI:
         # Verify it was deleted
         response = await async_client.get(f"{settings.API_V1_STR}/professions/{profession.id}", headers=admin_headers)
         assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    async def test_delete_nonexistent_profession(self, async_client: AsyncClient, auth_headers):
+        """Test deleting a non-existent profession (admin only)."""
+        admin_headers = await auth_headers(username="admin", is_superuser=True)
+
+        response = await async_client.delete(f"{settings.API_V1_STR}/professions/999999", headers=admin_headers)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        error_data = response.json()
+        assert "not found" in error_data["detail"].lower()
 
     async def test_unauthorized_create_profession(self, async_client: AsyncClient, auth_headers):
         """Test that non-admin users cannot create professions."""

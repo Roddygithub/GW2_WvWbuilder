@@ -1,0 +1,13 @@
+# Bandit Skip List
+# Last Updated: 2024-05-24
+# Format: BXXX # Description
+#
+# This file is used to skip specific Bandit security checks
+# that are known false positives or accepted risks.
+
+# B104 # Ignore potential binding to all interfaces (e.g., in development servers).
+# B105 # Ignore hardcoded passwords in test files.
+# B108 # Ignore hardcoded temporary file issues (if deemed safe in context).
+#
+# Exemple d'exclusion pour un fichier spécifique :
+# B105:tests/api/test_users.py # Ignorer les mots de passe de test dans ce fichier

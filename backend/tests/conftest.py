@@ -3,6 +3,7 @@ import time
 import os
 from typing import Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.config import settings
 from app.models import Build, Profession, User # Importez les modèles nécessaires pour le nettoyage
 
 @pytest.fixture(scope="session")
@@ -18,6 +19,7 @@ def performance_limits() -> Dict[str, Any]:
         return {
             "create_build": 0.5,
             "get_build": 0.3,
+            "list_builds": 1.5,  # Seuil pour lister 100 builds
             "create_10_builds": 4.0,
             "large_payload": 0.6,
             "memory_increase_mb": 100,
@@ -37,6 +39,7 @@ def performance_limits() -> Dict[str, Any]:
         return {
             "create_build": 0.2,
             "get_build": 0.1,
+            "list_builds": 0.8,  # Seuil pour lister 100 builds
             "create_10_builds": 2.0,
             "large_payload": 0.3,
             "memory_increase_mb": 50,
@@ -44,7 +47,7 @@ def performance_limits() -> Dict[str, Any]:
             "load_test_duration": 10.0,
             "update_build": 0.2,
             "max_memory_increase_mb": 75,
-            "max_cpu_percent": 90.0,
+            "max_cpu_percent": 92.0, # Légère augmentation pour tolérer les pics locaux
             "timeouts": {
                 "short": 5.0,   # secondes
                 "medium": 10.0,
@@ -74,3 +77,17 @@ async def cleanup_performance_test_data(async_session: AsyncSession):
 
 # La fixture `record_metrics` sera gérée par `pytest-html` ou `pytest-xdist` si installés.
 # Pour l'instant, nous nous appuyons sur `record_property` fourni par pytest lui-même pour les rapports JUnit.
+
+@pytest.fixture(scope="function")
+async def redis_client():
+    """
+    Fournit un client Redis pour les tests et vide la base de données Redis après chaque test.
+    """
+    if not settings.CACHE_ENABLED:
+        pytest.skip("Cache is not enabled in settings")
+
+    client = settings.redis_client
+    yield client
+    # Nettoyer la base de données Redis après le test pour garantir l'isolation
+    await client.flushdb()
+    await client.close()

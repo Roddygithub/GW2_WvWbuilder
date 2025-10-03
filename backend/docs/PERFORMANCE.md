@@ -74,9 +74,10 @@ Utilisez ce rapport pour rapidement identifier les tests qui échouent et pour l
 
 ## 5. Ajustement des Seuils
 
-Les seuils de performance sont centralisés dans la fixture `performance_limits` du fichier `tests/conftest.py`. Ils peuvent être ajustés si les performances de référence de l'application évoluent ou si l'environnement de test change. Toute modification doit être justifiée et validée par l'équipe.
+Les seuils de performance (temps de réponse, utilisation mémoire/CPU) sont définis dans `tests/conftest.py`. Ils sont séparés pour l'environnement local (`local`) et l'intégration continue (`ci`) afin de s'adapter aux différences de puissance des machines.
 
-## 6. Exemple de Sortie de Test (stdout)
+Si un test de performance échoue de manière constante, analysez d'abord si une régression a été introduite. Si la performance reste acceptable, vous pouvez ajuster les seuils dans `conftest.py` en justifiant ce changement.
+
 
 Voici un exemple de la sortie que vous pouvez attendre lors de l'exécution du test de charge :
 

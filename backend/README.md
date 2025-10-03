@@ -197,14 +197,35 @@ Authorization: Bearer <your-jwt-token>
 
 ### Available Endpoints
 
-- `GET /api/v1/builds/` - List all builds
-- `POST /api/v1/builds/` - Create a new build
-- `GET /api/v1/builds/{build_id}` - Get build details
-- `PUT /api/v1/builds/{build_id}` - Update a build
-- `DELETE /api/v1/builds/{build_id}` - Delete a build
-- `POST /api/v1/builds/generate/` - Generate a new build
+#### Builds
+- **`GET /api/v1/builds/`**: List all builds.
+  ```bash
+  curl -X GET "http://localhost:8000/api/v1/builds/" -H "Authorization: Bearer <token>"
+  ```
+- **`POST /api/v1/builds/`**: Create a new build.
+  ```bash
+  curl -X POST "http://localhost:8000/api/v1/builds/" \
+       -H "Authorization: Bearer <token>" \
+       -H "Content-Type: application/json" \
+       -d '{"name": "My New Build", "game_mode": "wvw", "profession_ids": [1]}'
+  ```
+- **`GET /api/v1/builds/{build_id}`**: Get build details.
+  ```bash
+  curl -X GET "http://localhost:8000/api/v1/builds/1" -H "Authorization: Bearer <token>"
+  ```
+- `PUT /api/v1/builds/{build_id}`: Update a build.
+- `DELETE /api/v1/builds/{build_id}`: Delete a build.
+- `POST /api/v1/builds/generate/`: Generate a new build.
 
 For detailed API documentation, visit the interactive documentation at `http://localhost:8000/docs` when running the development server.
+
+## 📊 Monitoring & Metrics
+
+The application exposes detailed performance and application metrics via a Prometheus-compatible endpoint at `/metrics`.
+
+This allows for real-time monitoring of request latency, error rates, cache performance, and more. You can set up dashboards and alerts using tools like Grafana and Alertmanager.
+
+For a complete guide on setting up and using the monitoring stack, please refer to the **Monitoring Guide**.
 
 ## 🚀 Deployment
 

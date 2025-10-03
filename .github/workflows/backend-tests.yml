@@ -49,6 +49,7 @@ jobs:
         sudo apt-get install -y libpq-dev python3-dev
     
     - name: Set up virtual environment
+      working-directory: ./backend
       run: |
         python -m venv venv
         source venv/bin/activate
@@ -56,17 +57,20 @@ jobs:
         pip install -e ".[test]"
     
     - name: Set environment variables
+      working-directory: ./backend
       run: |
         echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/test_db" >> $GITHUB_ENV
         echo "SECRET_KEY=test-secret-key" >> $GITHUB_ENV
         echo "PYTHONPATH=${{ github.workspace }}/backend" >> $GITHUB_ENV
     
     - name: Run database migrations
+      working-directory: ./backend
       run: |
         source venv/bin/activate
         alembic upgrade head
     
     - name: Run tests with coverage
+      working-directory: ./backend
       run: |
         source venv/bin/activate
         chmod +x ./run_tests.sh
@@ -87,7 +91,7 @@ jobs:
       with:
         name: test-results
         path: |
-          ./test-results/
-          ./coverage.xml
-          ./htmlcov/
+          ./backend/test-results/
+          ./backend/coverage.xml
+          ./backend/htmlcov/
         retention-days: 7

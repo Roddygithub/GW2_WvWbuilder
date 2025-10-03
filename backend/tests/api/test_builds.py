@@ -7,9 +7,17 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime, timezone
 
 from app.core.config import settings
 from app.models import User, Build, Profession
+from app.crud import user as user_crud
+
+NON_EXISTENT_ID = 999999
+TEST_USER_1 = {"username": "testuser1", "password": "password1"}
+TEST_USER_2 = {"username": "testuser2", "password": "password2"}
+ADMIN_USER = {"username": "adminuser", "password": "adminpassword", "is_superuser": True}
+
 
 
 @pytest.mark.api
@@ -18,9 +26,9 @@ class TestBuildsAPI:
 
     async def test_read_builds(self, async_client: AsyncClient, auth_headers, build_factory, user_factory, db: AsyncSession):
         """Teste que la liste des builds ne contient que les builds publics et ceux de l'utilisateur."""
-        user_headers = await auth_headers(username="testuser", password="password")
-        user = await user_crud.get_by_username_async(db, username="testuser")
-        another_user = await user_factory(username="anotheruser", email="another@user.com", password="password")
+        user_headers = await auth_headers(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
+        user = await user_crud.get_by_username_async(db, username=TEST_USER_1["username"])
+        another_user = await user_factory(username=TEST_USER_2["username"], email="another@user.com", password=TEST_USER_2["password"])
         
         public_build = await build_factory(name="Public Build", is_public=True, user=another_user)
         private_build_other_user = await build_factory(name="Private Build", is_public=False, user=another_user)
@@ -55,15 +63,95 @@ class TestBuildsAPI:
         assert data["id"] == build.id
         assert data["name"] == build.name
 
+    async def test_read_build_caching(self, async_client: AsyncClient, auth_headers, build_factory):
+        """Teste le comportement du cache pour la lecture d'un build."""
+        headers = await auth_headers()
+        build = await build_factory(name="Cacheable Build", is_public=True)
+        url = f"{settings.API_V1_STR}/builds/{build.id}"
+
+        # 1. Premier appel (devrait être un MISS)
+        response1 = await async_client.get(url, headers=headers)
+        assert response1.status_code == status.HTTP_200_OK
+        assert response1.headers.get("x-cache") == "MISS"
+        data1 = response1.json()
+        assert data1["name"] == "Cacheable Build"
+
+        # 2. Deuxième appel (devrait être un HIT)
+        response2 = await async_client.get(url, headers=headers)
+        assert response2.status_code == status.HTTP_200_OK
+        assert response2.headers.get("x-cache") == "HIT"
+        data2 = response2.json()
+        assert data1 == data2 # Les données doivent être identiques
+
+    @pytest.mark.parametrize(
+        "method, payload, expected_final_status, expected_final_cache_header",
+        [
+            ("PUT", {"name": "Updated Name for Cache Test"}, status.HTTP_200_OK, "MISS"),
+            ("DELETE", None, status.HTTP_404_NOT_FOUND, None),
+        ],
+    )
+    async def test_cache_invalidation(
+        self, async_client: AsyncClient, auth_headers, build_factory, redis_client, method, payload, expected_final_status, expected_final_cache_header
+    ):
+        """Teste que le cache est invalidé après une opération PUT ou DELETE."""
+        headers = await auth_headers()
+        build = await build_factory(name=f"Cache Invalidation Test for {method}", is_public=True)
+        url = f"{settings.API_V1_STR}/builds/{build.id}"
+        # Le format de la clé est défini dans app/core/cache.py
+        cache_key = f"cache:{url.replace('http://test', '')}:"
+
+        # 1. Premier appel pour mettre en cache
+        response1 = await async_client.get(url, headers=headers)
+        assert response1.status_code == status.HTTP_200_OK
+        assert response1.headers.get("x-cache") == "MISS"
+
+        # 2. Vérifier que la clé existe bien dans Redis
+        assert await redis_client.exists(cache_key)
+
+        # 2b. Vérifier que le deuxième appel est un HIT
+        response2 = await async_client.get(url, headers=headers)
+        assert response2.status_code == status.HTTP_200_OK
+        assert response2.headers.get("x-cache") == "HIT"
+
+        # 3. Exécuter l'opération d'invalidation (PUT ou DELETE)
+        op_response = None
+        if method == "PUT":
+            op_response = await async_client.put(url, json=payload, headers=headers)
+        elif method == "DELETE":
+            op_response = await async_client.delete(url, headers=headers)
+        
+        # Vérifier que l'opération a réussi
+        assert op_response.status_code == status.HTTP_200_OK
+
+        # 4. Vérifier que la clé de cache a bien été supprimée de Redis
+        assert not await redis_client.exists(cache_key)
+
+        # 5. Vérifier le résultat de l'API après l'invalidation
+        final_response = await async_client.get(url, headers=headers)
+        assert final_response.status_code == expected_final_status
+        if expected_final_cache_header:
+            assert final_response.headers.get("x-cache") == expected_final_cache_header
+
+    async def test_read_nonexistent_build(self, async_client: AsyncClient, auth_headers):
+        """Teste la tentative de lecture d'un build qui n'existe pas."""
+        headers = await auth_headers()
+        response = await async_client.get(f"{settings.API_V1_STR}/builds/{NON_EXISTENT_ID}", headers=headers)
+        
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        error_data = response.json()
+        assert "detail" in error_data
+        assert "not found" in error_data["detail"].lower()
+
+
     async def test_read_private_build_unauthorized(
         self, async_client: AsyncClient, auth_headers, build_factory, user_factory
     ):
         """Teste qu'un utilisateur ne peut pas accéder à un build privé qui ne lui appartient pas."""
-        owner = await user_factory(username="owner", password="password")
+        owner = await user_factory(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
         private_build = await build_factory(name="Private Build", is_public=False, user=owner)
         
         # A different user tries to access it
-        other_user_headers = await auth_headers(username="other", password="password")
+        other_user_headers = await auth_headers(username=TEST_USER_2["username"], password=TEST_USER_2["password"])
 
         response = await async_client.get(
             f"{settings.API_V1_STR}/builds/{private_build.id}",
@@ -78,7 +166,7 @@ class TestBuildsAPI:
         self, async_client: AsyncClient, auth_headers, profession_factory
     ):
         """Teste un cycle de vie complet : création, lecture, mise à jour et suppression."""
-        user_headers = await auth_headers(username="lifecycle_user", password="password")
+        user_headers = await auth_headers(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
         profession = await profession_factory()
 
         # 1. Création
@@ -112,6 +200,11 @@ class TestBuildsAPI:
         updated_data = update_response.json()
         assert updated_data["name"] == "Updated Lifecycle Build"
         assert updated_data["is_public"] is False
+        
+        # Vérifier que la date de mise à jour a changé
+        created_at = datetime.fromisoformat(created_data["created_at"])
+        updated_at = datetime.fromisoformat(updated_data["updated_at"])
+        assert updated_at > created_at
 
         # 4. Suppression
         delete_response = await async_client.delete(f"{settings.API_V1_STR}/builds/{build_id}", headers=user_headers)
@@ -127,7 +220,7 @@ class TestBuildsAPI:
     ):
         """Teste la création d'un nouveau build et vérifie son propriétaire."""
         # Crée un utilisateur et obtient ses headers d'authentification
-        user_headers = await auth_headers(username="creator", password="password")
+        user_headers = await auth_headers(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
         profession = await profession_factory()
 
         build_data = {
@@ -155,7 +248,7 @@ class TestBuildsAPI:
         
         # Vérification explicite en base de données
         from app.crud import user_crud
-        user = await user_crud.get_by_username_async(db, username="creator")
+        user = await user_crud.get_by_username_async(db, username=TEST_USER_1["username"])
         assert user is not None
         assert data["created_by_id"] == user.id
 
@@ -163,7 +256,7 @@ class TestBuildsAPI:
         self, async_client: AsyncClient, db: AsyncSession, auth_headers, profession_factory
     ):
         """Teste la création d'un build avec plusieurs professions et vérifie les associations."""
-        user_headers = await auth_headers(username="multi_prof_user", password="password")
+        user_headers = await auth_headers(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
         prof1 = await profession_factory(name="Profession A")
         prof2 = await profession_factory(name="Profession B")
 
@@ -198,8 +291,8 @@ class TestBuildsAPI:
         self, async_client: AsyncClient, auth_headers, build_factory, user_factory
     ):
         """Teste la mise à jour d'un build existant."""
-        user = await user_factory(username="owner", password="password")
-        headers = await auth_headers(username="owner", password="password")
+        user = await user_factory(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
+        headers = await auth_headers(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
         user_build = await build_factory(user=user)
 
         update_data = {
@@ -220,14 +313,19 @@ class TestBuildsAPI:
         assert data["name"] == "Updated Build Name"
         assert data["description"] == "Updated description via API"
         assert data["is_public"] is False
+        
+        # Vérifier que la date de mise à jour a été modifiée
+        created_at = datetime.fromisoformat(user_build.created_at.isoformat()).replace(tzinfo=timezone.utc)
+        updated_at = datetime.fromisoformat(data["updated_at"])
+        assert updated_at > created_at
 
     async def test_update_build_professions(
         self, async_client: AsyncClient, db: AsyncSession, auth_headers, build_factory, profession_factory, user_factory
     ):
         """Teste la mise à jour des professions associées à un build."""
         # 1. Créer un utilisateur, des professions et un build initial
-        user = await user_factory(username="update_prof_user", password="password")
-        headers = await auth_headers(username="update_prof_user", password="password")
+        user = await user_factory(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
+        headers = await auth_headers(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
         
         prof1 = await profession_factory(name="Initial Prof 1")
         prof2 = await profession_factory(name="Initial Prof 2")
@@ -262,10 +360,10 @@ class TestBuildsAPI:
         self, async_client: AsyncClient, auth_headers, build_factory, user_factory
     ):
         """Teste qu'un utilisateur ne peut pas mettre à jour un build qui ne lui appartient pas."""
-        owner = await user_factory(username="owner", password="password")
+        owner = await user_factory(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
         other_user_build = await build_factory(user=owner)
 
-        other_user_headers = await auth_headers(username="other", password="password")
+        other_user_headers = await auth_headers(username=TEST_USER_2["username"], password=TEST_USER_2["password"])
 
         response = await async_client.put(
             f"{settings.API_V1_STR}/builds/{other_user_build.id}",
@@ -281,8 +379,8 @@ class TestBuildsAPI:
         self, async_client: AsyncClient, auth_headers, build_factory, user_factory
     ):
         """Teste la suppression d'un build."""
-        user = await user_factory(username="owner", password="password")
-        headers = await auth_headers(username="owner", password="password")
+        user = await user_factory(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
+        headers = await auth_headers(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
         build_to_delete = await build_factory(user=user)
 
         delete_response = await async_client.delete(
@@ -522,14 +620,38 @@ class TestBuildsAPIEdgeCases:
         assert "detail" in response.json()
         assert "Not enough permissions" in response.json()["detail"]
 
+    async def test_update_nonexistent_build(self, async_client: AsyncClient, auth_headers):
+        """Teste que la mise à jour d'un build qui n'existe pas retourne une erreur 404."""
+        headers = await auth_headers()
+        update_data = {"name": "This will fail"}
+
+        response = await async_client.put(
+            f"{settings.API_V1_STR}/builds/{NON_EXISTENT_ID}",
+            json=update_data,
+            headers=headers,
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "not found" in response.json()["detail"].lower()
+
+    async def test_delete_nonexistent_build(self, async_client: AsyncClient, auth_headers):
+        """Teste que la suppression d'un build qui n'existe pas retourne une erreur 404."""
+        headers = await auth_headers()
+
+        response = await async_client.delete(
+            f"{settings.API_V1_STR}/builds/{NON_EXISTENT_ID}", headers=headers
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "not found" in response.json()["detail"].lower()
 
     async def test_update_build_to_forbidden_combination(
         self, async_client: AsyncClient, auth_headers, build_factory, profession_factory, user_factory
     ):
         """Teste la mise à jour d'un build vers une combinaison de professions interdite."""
         # 1. Créer un utilisateur et des professions initiales valides
-        user = await user_factory(username="update_forbidden_user", password="password")
-        headers = await auth_headers(username="update_forbidden_user", password="password")
+        user = await user_factory(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
+        headers = await auth_headers(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
         
         # Professions initiales (non interdites)
         prof_valid_1 = await profession_factory(id=3, name="Valid Prof 1")
@@ -593,10 +715,10 @@ class TestBuildsAPIPermissions:
         self, async_client: AsyncClient, auth_headers, build_factory, user_factory
     ):
         """Teste qu'un administrateur peut accéder à tous les builds."""
-        owner = await user_factory(username="owner", password="password")
+        owner = await user_factory(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
         private_build = await build_factory(user=owner, is_public=False)
 
-        admin_headers = await auth_headers(username="admin", password="password", is_superuser=True)
+        admin_headers = await auth_headers(**ADMIN_USER)
 
         response = await async_client.get(
             f"{settings.API_V1_STR}/builds/{private_build.id}",
@@ -610,10 +732,10 @@ class TestBuildsAPIPermissions:
         self, async_client: AsyncClient, auth_headers, build_factory, user_factory
     ):
         """Teste qu'un administrateur peut supprimer n'importe quel build."""
-        owner = await user_factory(username="owner", password="password")
+        owner = await user_factory(username=TEST_USER_1["username"], password=TEST_USER_1["password"])
         build_to_delete = await build_factory(user=owner)
 
-        admin_headers = await auth_headers(username="admin", password="password", is_superuser=True)
+        admin_headers = await auth_headers(**ADMIN_USER)
 
         delete_response = await async_client.delete(
             f"{settings.API_V1_STR}/builds/{build_to_delete.id}", headers=admin_headers

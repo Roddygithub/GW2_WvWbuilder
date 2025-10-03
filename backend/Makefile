@@ -1,54 +1,47 @@
-# Makefile for GW2 WvW Builder Backend
+.PHONY: help install test test-cov coverage lint format check-types run clean
 
-.PHONY: install test test-cov test-coverage lint format clean help
+help:
+	@echo "Commands:"
+	@echo "  install       : Install dependencies using Poetry."
+	@echo "  test          : Run all tests."
+	@echo "  test-cov      : Run all tests with a terminal coverage report."
+	@echo "  coverage      : Generate an HTML coverage report and open it."
+	@echo "  lint          : Run linters (black, isort, flake8)."
+	@echo "  format        : Format code with black and isort."
+	@echo "  check-types   : Run mypy for static type checking."
+	@echo "  run           : Run the development server with uvicorn."
+	@echo "  clean         : Remove temporary files and caches."
 
-# Install dependencies
 install:
-	poetry install
+	poetry install --with test,dev
 
-# Run tests
-TEST_PATH=./tests
-
-# Run all tests
 test:
-	poetry run pytest $(TEST_PATH) -v
+	poetry run pytest -v
 
-# Run tests with coverage report in terminal
 test-cov:
-	poetry run pytest --cov=app --cov-report=term-missing $(TEST_PATH)
+	poetry run pytest -v --cov=app --cov-report=term-missing
 
-# Run tests with HTML coverage report
-test-coverage:
-	poetry run pytest --cov=app --cov-report=term-missing --cov-report=html:test_reports/coverage/html $(TEST_PATH)
+coverage:
+	poetry run pytest --cov=app --cov-report=html
+	@echo "HTML coverage report generated in htmlcov/ folder."
+	@# Tente d'ouvrir le rapport, fonctionne sur macOS et la plupart des Linux
+	@sh -c 'which open &>/dev/null && open htmlcov/index.html || which xdg-open &>/dev/null && xdg-open htmlcov/index.html || echo "Please open htmlcov/index.html in your browser."'
 
-# Run linter
 lint:
+	poetry run flake8 app tests
 	poetry run black --check .
 	poetry run isort --check-only .
-	poetry run mypy .
 
-# Format code
 format:
 	poetry run black .
 	poetry run isort .
 
-# Clean up Python cache and test artifacts
-clean:
-	find . -type d -name "__pycache__" -exec rm -r {} +
-	find . -type d -name ".pytest_cache" -exec rm -r {} +
-	rm -rf .mypy_cache
-	rm -rf .coverage
-	rm -rf htmlcov
-	rm -rf test_reports
+check-types:
+	poetry run mypy app
 
-# Help command to show available targets
-help:
-	@echo "Available targets:"
-	@echo "  install      - Install dependencies"
-	@echo "  test         - Run tests"
-	@echo "  test-cov     - Run tests with coverage report in terminal"
-	@echo "  test-coverage- Run tests with HTML coverage report"
-	@echo "  lint         - Run linters (black, isort, mypy)"
-	@echo "  format       - Format code (black, isort)"
-	@echo "  clean        - Clean up Python cache and test artifacts"
-	@echo "  help         - Show this help message"
+run:
+	poetry run uvicorn app.main:app --reload
+
+clean:
+	rm -rf .pytest_cache .mypy_cache .coverage htmlcov
+	find . -type d -name "__pycache__" -exec rm -r {} +
