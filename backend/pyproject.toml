@@ -26,6 +26,7 @@ python-json-logger = "^3.3.0"
 redis = "^6.4.0"
 fastapi-limiter = "^0.1.5"
 asyncpg = "^0.28.0"  # Pour le support asynchrone de PostgreSQL
+prometheus-client = "^0.20.0"  # Pour la surveillance des métriques
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.0"
