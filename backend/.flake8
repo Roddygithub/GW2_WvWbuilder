@@ -1,0 +1,26 @@
+[flake8]
+# Longueur maximale des lignes
+max-line-length = 88
+
+# Exclure les dossiers à ignorer
+exclude = .git,__pycache__,venv,build,dist,migrations
+
+# Ignorer les erreurs spécifiques
+per-file-ignores =
+    # Ignorer les imports non utilisés dans les fichiers __init__.py
+    __init__.py: F401
+
+# Configuration supplémentaire
+max-complexity = 10
+ignore = E203, E266, E501, W503, F403, F401
+max-doc-length = 80
+
+# Activer les plugins
+# plugins = flake8-docstrings, flake8-import-order
+
+# Configuration pour flake8-docstrings
+docstring-convention = google
+
+# Configuration pour flake8-import-order
+import-order-style = google
+known_third_party = pytest

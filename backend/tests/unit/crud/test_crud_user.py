@@ -1,129 +1,139 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.crud.user import CRUDUser
-from app.models import User, Role, Build, Composition
+from app.models import User as UserModel
 from app.schemas.user import UserCreate, UserUpdate
 
-# Create an instance of CRUDUser for testing
-user_crud = CRUDUser(User)
+# Use the user instance from the module, which is a CRUDUser instance
+from app.crud.user import user as user_crud
+
 
 # Fixtures
 @pytest.fixture
-def mock_user():
-    return User(
+def mock_user() -> UserModel:
+    """Fixture for a mock user model instance."""
+    return UserModel(
         id=1,
-        username="testuser",
         email="test@example.com",
-        hashed_password="hashed_password",
+        hashed_password="hashed_password_string",
         is_active=True,
-        role_id=1
+        is_superuser=False,
     )
+
 
 @pytest.fixture
-def mock_user_create():
-    return UserCreate(
-        username="newuser",
-        email="new@example.com",
-        password="password123",
-        role_id=1
-    )
+def mock_user_create() -> UserCreate:
+    """Fixture for a user creation schema."""
+    return UserCreate(email="new@example.com", password="new_password")
+
 
 @pytest.fixture
-def mock_user_update():
-    return UserUpdate(
-        email="updated@example.com",
-        is_active=False
-    )
+def mock_user_update() -> UserUpdate:
+    """Fixture for a user update schema."""
+    return UserUpdate(email="updated@example.com", full_name="Updated Name")
 
-# Helper function to create a mock result
-def create_mock_result(return_value, is_list=False):
+
+# Helper function to create a mock result for SQLAlchemy queries
+def create_mock_sql_result(return_value):
     mock_result = MagicMock()
-    if is_list:
-        mock_result.scalars.return_value.all.return_value = return_value
-    else:
-        mock_result.scalars.return_value.first.return_value = return_value
+    mock_result.scalars.return_value.first.return_value = return_value
     return mock_result
 
-# Tests
+
 class TestCRUDUser:
-    @pytest.mark.asyncio
-    async def test_create_user_success(self, mock_user, mock_user_create):
-        """Test creating a user with valid data"""
-        db = AsyncMock(spec=AsyncSession)
-        db.scalar.return_value = mock_user
-        
-        result = await user_crud.create_async(db, obj_in=mock_user_create)
-        
-        assert result.username == mock_user_create.username
-        assert result.email == mock_user_create.email
-        assert result.is_active is True
-        db.add.assert_called_once()
-        db.commit.assert_called_once()
-        db.refresh.assert_called_once()
+    """Test suite for asynchronous user CRUD operations."""
 
     @pytest.mark.asyncio
-    async def test_get_user_by_id(self, mock_user):
-        """Test retrieving a user by ID"""
+    async def test_get_by_email_async(self, mock_user):
+        """Test getting a user by email asynchronously."""
         db = AsyncMock(spec=AsyncSession)
-        db.execute.return_value = create_mock_result(mock_user)
-        
-        result = await user_crud.get_async(db, 1)
-        
-        assert result.id == 1
-        assert result.username == "testuser"
-        db.execute.assert_called_once()
+        db.execute.return_value = create_mock_sql_result(mock_user)
 
-    @pytest.mark.asyncio
-    async def test_get_user_by_email(self, mock_user):
-        """Test retrieving a user by email"""
-        db = AsyncMock(spec=AsyncSession)
-        db.execute.return_value = create_mock_result(mock_user)
-        
         result = await user_crud.get_by_email_async(db, email="test@example.com")
-        
-        assert result.email == "test@example.com"
-        db.execute.assert_called_once()
+
+        assert result is not None
+        assert result.id == mock_user.id
+        db.execute.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_update_user(self, mock_user, mock_user_update):
-        """Test updating a user"""
+    @patch("app.core.security.get_password_hash", return_value="hashed_new_password")
+    async def test_create_async(self, mock_get_password_hash, mock_user_create):
+        """Test creating a user asynchronously."""
         db = AsyncMock(spec=AsyncSession)
-        db.execute.return_value = create_mock_result(mock_user)
-        
-        result = await user_crud.update_async(db, db_obj=mock_user, obj_in=mock_user_update)
-        
-        assert result.email == "updated@example.com"
-        assert result.is_active is False
-        db.add.assert_called_once()
-        db.commit.assert_called_once()
-        db.refresh.assert_called_once()
+
+        # Mock the check for existing email to return None (user does not exist)
+        with patch.object(user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=None):
+            created_user = await user_crud.create_async(db, obj_in=mock_user_create)
+
+            mock_get_password_hash.assert_called_once_with("new_password")
+            db.add.assert_called_once()
+            db.commit.assert_awaited_once()
+            db.refresh.assert_awaited_once()
+            assert created_user.email == mock_user_create.email
+            assert created_user.hashed_password == "hashed_new_password"
 
     @pytest.mark.asyncio
-    async def test_remove_user(self, mock_user):
-        """Test removing a user"""
+    async def test_create_async_existing_email(self, mock_user_create, mock_user):
+        """Test that creating a user with an existing email raises ValueError."""
         db = AsyncMock(spec=AsyncSession)
-        db.execute.return_value = create_mock_result(mock_user)
-        
-        result = await user_crud.remove_async(db, id=1)
-        
-        assert result.username == "testuser"
-        db.delete.assert_called_once_with(mock_user)
-        db.commit.assert_called_once()
+
+        # Mock the check for existing email to return a user
+        with patch.object(user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=mock_user):
+            with pytest.raises(ValueError, match="Email already registered"):
+                await user_crud.create_async(db, obj_in=mock_user_create)
 
     @pytest.mark.asyncio
-    async def test_authenticate_user(self, mock_user):
-        """Test user authentication"""
+    @patch("app.core.security.verify_password", return_value=True)
+    async def test_authenticate_async_success(self, mock_verify_password, mock_user):
+        """Test successful user authentication."""
         db = AsyncMock(spec=AsyncSession)
-        db.execute.return_value = create_mock_result(mock_user)
-        
-        with patch("app.crud.user.verify_password", return_value=True):
-            result = await user_crud.authenticate_async(
-                db, username="testuser", password="password123"
+        with patch.object(user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=mock_user):
+            authenticated_user = await user_crud.authenticate_async(
+                db, email="test@example.com", password="correct_password"
             )
-            
-            assert result.username == "testuser"
-            assert result.email == "test@example.com"
-            db.execute.assert_called_once()
+
+            mock_verify_password.assert_called_once_with("correct_password", mock_user.hashed_password)
+            assert authenticated_user == mock_user
+
+    @pytest.mark.asyncio
+    async def test_authenticate_async_user_not_found(self):
+        """Test authentication failure when user does not exist."""
+        db = AsyncMock(spec=AsyncSession)
+        with patch.object(user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=None):
+            authenticated_user = await user_crud.authenticate_async(
+                db, email="nonexistent@example.com", password="any_password"
+            )
+            assert authenticated_user is None
+
+    @pytest.mark.asyncio
+    @patch("app.core.security.verify_password", return_value=False)
+    async def test_authenticate_async_wrong_password(self, mock_verify_password, mock_user):
+        """Test authentication failure with wrong password."""
+        db = AsyncMock(spec=AsyncSession)
+        with patch.object(user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=mock_user):
+            authenticated_user = await user_crud.authenticate_async(
+                db, email="test@example.com", password="wrong_password"
+            )
+            assert authenticated_user is None
+
+    @pytest.mark.asyncio
+    @patch("app.core.security.get_password_hash", return_value="hashed_updated_password")
+    async def test_update_async_with_password(self, mock_get_password_hash, mock_user):
+        """Test updating a user, including their password."""
+        db = AsyncMock(spec=AsyncSession)
+        update_data = UserUpdate(password="updated_password")
+
+        updated_user = await user_crud.update_async(db, db_obj=mock_user, obj_in=update_data)
+
+        mock_get_password_hash.assert_called_once_with("updated_password")
+        assert updated_user.hashed_password == "hashed_updated_password"
+        db.commit.assert_awaited_once()
+        db.refresh.assert_awaited_once()
+
+    def test_is_superuser(self, mock_user):
+        """Test the is_superuser check."""
+        assert user_crud.is_superuser(mock_user) is False
+        mock_user.is_superuser = True
+        assert user_crud.is_superuser(mock_user) is True

@@ -1,0 +1,71 @@
+version: 2
+updates:
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Add a custom label to all pull requests
+    labels:
+      - "dependencies"
+    # Only update the GitHub Actions that manage the GitHub Pages
+    # deployment workflow
+    target-branch: "develop"
+    reviewers:
+      - "Roddygithub"
+    assignees:
+      - "Roddygithub"
+
+  # Enable version updates for pip
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    target-branch: "develop"
+    reviewers:
+      - "Roddygithub"
+    assignees:
+      - "Roddygithub"
+    versioning-strategy: increase-if-necessary
+    ignore:
+      # Ignore major version updates
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    target-branch: "develop"
+    reviewers:
+      - "Roddygithub"
+    assignees:
+      - "Roddygithub"
+    versioning-strategy: increase-if-necessary
+    ignore:
+      # Ignore major version updates
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Enable version updates for Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+    target-branch: "develop"
+    reviewers:
+      - "Roddygithub"
+    assignees:
+      - "Roddygithub"
+    versioning-strategy: increase-if-necessary
+    ignore:
+      # Ignore major version updates
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

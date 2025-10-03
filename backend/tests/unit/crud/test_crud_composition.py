@@ -1,133 +1,148 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
-from app.crud.composition import CRUDComposition
-from app.models import Composition, User, Build, CompositionMember
-from app.schemas.composition import CompositionCreate, CompositionUpdate
+from app.crud.crud_composition import CRUDComposition
+from app.models import Composition, User, Tag
+from app.schemas.composition import CompositionCreate
 
-# Create an instance of CRUDComposition for testing
+# Create an instance of the CRUD class for testing
 composition_crud = CRUDComposition(Composition)
 
-# Fixtures
-@pytest.fixture
-def mock_composition():
-    return Composition(
-        id=1,
-        name="Test Composition",
-        description="Test Description",
-        squad_size=10,
-        is_public=True,
-        created_by=1,
-        build_id=1
-    )
 
 @pytest.fixture
-def mock_composition_create():
-    return CompositionCreate(
-        name="New Composition",
-        description="New Composition Description",
-        squad_size=10,
-        is_public=True,
-        build_id=1
-    )
+def mock_user() -> User:
+    """Fixture for a mock user."""
+    return User(id=1, username="testuser")
+
 
 @pytest.fixture
-def mock_composition_update():
-    return CompositionUpdate(
-        name="Updated Composition",
-        description="Updated Description",
-        is_public=False
-    )
+def mock_composition() -> Composition:
+    """Fixture for a mock composition."""
+    return Composition(id=1, name="Test Comp", created_by=1, tags=[])
 
-# Helper function to create a mock result
-def create_mock_result(return_value, is_list=False):
+
+@pytest.fixture
+def mock_tag() -> Tag:
+    """Fixture for a mock tag."""
+    return Tag(id=1, name="Test Tag")
+
+
+# Helper function to create a mock result for SQLAlchemy queries
+def create_mock_sql_result(return_value):
     mock_result = MagicMock()
-    if is_list:
-        mock_result.scalars.return_value.all.return_value = return_value
-    else:
-        mock_result.scalars.return_value.first.return_value = return_value
+    mock_result.scalars.return_value.first.return_value = return_value
     return mock_result
 
-# Tests
+
+@patch('app.crud.crud_composition.composition.invalidate_composition_cache', new_callable=AsyncMock)
 class TestCRUDComposition:
+    """Test suite for composition CRUD operations."""
+
     @pytest.mark.asyncio
-    async def test_create_composition_success(self, mock_composition, mock_composition_create):
-        """Test creating a composition with valid data"""
+    async def test_create_with_owner(self, mock_invalidate_cache, mock_user):
+        """Test creating a composition with an owner."""
         db = AsyncMock(spec=AsyncSession)
-        db.scalar.return_value = mock_composition
-        
-        result = await composition_crud.create_async(db, obj_in=mock_composition_create, created_by=1)
-        
-        assert result.name == mock_composition_create.name
-        assert result.description == mock_composition_create.description
-        assert result.is_public == mock_composition_create.is_public
+        comp_in = CompositionCreate(name="New Comp")
+
+        created_comp = await composition_crud.create_with_owner(db, obj_in=comp_in, user_id=mock_user.id)
+
+        assert created_comp.name == comp_in.name
+        assert created_comp.created_by == mock_user.id
         db.add.assert_called_once()
-        db.commit.assert_called_once()
-        db.refresh.assert_called_once()
+        db.commit.assert_awaited_once()
+        db.refresh.assert_awaited_once()
+        mock_invalidate_cache.assert_called_once_with(db, comp_id=created_comp.id)
 
     @pytest.mark.asyncio
-    async def test_get_composition_by_id(self, mock_composition):
-        """Test retrieving a composition by ID"""
+    async def test_get_with_all_details(self, mock_invalidate_cache, mock_composition):
+        """Test getting a composition with all its related details."""
         db = AsyncMock(spec=AsyncSession)
-        db.execute.return_value = create_mock_result(mock_composition)
-        
-        result = await composition_crud.get_async(db, 1)
-        
-        assert result.id == 1
-        assert result.name == "Test Composition"
-        db.execute.assert_called_once()
+        db.execute.return_value = create_mock_sql_result(mock_composition)
+
+        with patch('app.crud.crud_composition.settings.CACHE_ENABLED', False):
+            result = await composition_crud.get_with_all_details(db, comp_id=1)
+
+        assert result is not None
+        assert result.id == mock_composition.id
+        db.execute.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_update_composition(self, mock_composition, mock_composition_update):
-        """Test updating a composition"""
+    async def test_add_tag_to_composition(self, mock_invalidate_cache, mock_composition, mock_tag):
+        """Test adding a tag to a composition."""
         db = AsyncMock(spec=AsyncSession)
-        db.execute.return_value = create_mock_result(mock_composition)
-        
-        result = await composition_crud.update_async(
-            db, db_obj=mock_composition, obj_in=mock_composition_update
-        )
-        
-        assert result.name == "Updated Composition"
-        assert result.description == "Updated Description"
-        assert result.is_public is False
-        db.add.assert_called_once()
-        db.commit.assert_called_once()
-        db.refresh.assert_called_once()
+        mock_composition.tags = []
+
+        result = await composition_crud.add_tag_to_composition(db, composition=mock_composition, tag=mock_tag)
+
+        assert result is not None
+        assert mock_tag in result.tags
+        db.add.assert_called_once_with(result)
+        db.commit.assert_awaited_once()
+        db.refresh.assert_awaited_once_with(result)
+        mock_invalidate_cache.assert_called_once_with(db, comp_id=mock_composition.id)
 
     @pytest.mark.asyncio
-    async def test_remove_composition(self, mock_composition):
-        """Test removing a composition"""
+    async def test_add_existing_tag_to_composition(self, mock_invalidate_cache, mock_composition, mock_tag):
+        """Test that adding an existing tag does not cause issues."""
         db = AsyncMock(spec=AsyncSession)
-        db.execute.return_value = create_mock_result(mock_composition)
-        
-        result = await composition_crud.remove_async(db, id=1)
-        
-        assert result.name == "Test Composition"
-        db.delete.assert_called_once_with(mock_composition)
-        db.commit.assert_called_once()
+        mock_composition.tags = [mock_tag]
+
+        result = await composition_crud.add_tag_to_composition(db, composition=mock_composition, tag=mock_tag)
+
+        assert len(result.tags) == 1
+        db.add.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_get_compositions_by_creator(self, mock_composition):
-        """Test retrieving compositions by creator"""
+    async def test_remove_tag_from_composition(self, mock_invalidate_cache, mock_composition, mock_tag):
+        """Test removing a tag from a composition."""
         db = AsyncMock(spec=AsyncSession)
-        db.execute.return_value = create_mock_result([mock_composition], is_list=True)
-        
-        result = await composition_crud.get_multi_by_creator_async(db, creator_id=1)
-        
-        assert len(result) == 1
-        assert result[0].name == "Test Composition"
-        db.execute.assert_called_once()
+        mock_composition.tags = [mock_tag]
+
+        result = await composition_crud.remove_tag_from_composition(db, composition=mock_composition, tag=mock_tag)
+
+        assert result is not None
+        assert mock_tag not in result.tags
+        db.add.assert_called_once_with(result)
+        db.commit.assert_awaited_once()
+        db.refresh.assert_awaited_once_with(result)
+        mock_invalidate_cache.assert_called_once_with(db, comp_id=mock_composition.id)
+
+
+@patch('app.crud.crud_composition.settings.CACHE_ENABLED', True)
+@patch('app.crud.crud_composition.cache', new_callable=AsyncMock)
+class TestCRUDCompositionCache:
+    """Test suite for composition CRUD caching logic."""
 
     @pytest.mark.asyncio
-    async def test_get_public_compositions(self, mock_composition):
-        """Test retrieving public compositions"""
+    async def test_get_with_details_cache_hit(self, mock_cache, mock_composition):
+        """Test cache hit when getting composition details."""
         db = AsyncMock(spec=AsyncSession)
-        db.execute.return_value = create_mock_result([mock_composition], is_list=True)
-        
-        result = await composition_crud.get_multi_public_async(db)
-        
-        assert len(result) == 1
-        assert result[0].is_public is True
-        db.execute.assert_called_once()
+        mock_cache.get.return_value = mock_composition
+
+        result = await composition_crud.get_with_all_details(db, comp_id=1)
+
+        assert result is not None
+        mock_cache.get.assert_called_once_with("composition_details:1")
+        db.execute.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_get_with_details_cache_miss(self, mock_cache, mock_composition):
+        """Test cache miss when getting composition details."""
+        db = AsyncMock(spec=AsyncSession)
+        mock_cache.get.return_value = None
+        db.execute.return_value = create_mock_sql_result(mock_composition)
+
+        result = await composition_crud.get_with_all_details(db, comp_id=1)
+
+        assert result is not None
+        mock_cache.get.assert_called_once_with("composition_details:1")
+        db.execute.assert_awaited_once()
+        mock_cache.set.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_invalidate_composition_cache(self, mock_cache):
+        """Test the cache invalidation method."""
+        db = AsyncMock(spec=AsyncSession)
+        await composition_crud.invalidate_composition_cache(db, comp_id=1)
+        mock_cache.delete.assert_called_once_with("composition_details:1")

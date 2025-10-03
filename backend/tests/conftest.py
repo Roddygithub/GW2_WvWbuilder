@@ -1,296 +1,76 @@
-"""
-Configuration des tests d'intégration.
-
-Ce module contient les fixtures et configurations pour les tests d'intégration
-qui nécessitent une base de données ou d'autres services externes.
-"""
 import pytest
-import asyncio
-from typing import AsyncGenerator, Generator
+import time
+import os
+from typing import Dict, Any
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.models import Build, Profession, User # Importez les modèles nécessaires pour le nettoyage
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.pool import NullPool
-
-from app.core.config import settings
-from app.db.base import Base
-from app.db.session import get_db
-from app.main import app
-from fastapi.testclient import TestClient
-from httpx import AsyncClient
-
-# Configuration de la base de test
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
-
-# Surcharger la configuration pour les tests
-settings.TESTING = True
-settings.DATABASE_URL = TEST_DATABASE_URL
-
-# Créer un moteur asynchrone pour les tests
-engine = create_async_engine(
-    TEST_DATABASE_URL,
-    echo=False,
-    future=True,
-    poolclass=NullPool,  # Utiliser NullPool pour les tests
-)
-
-# Session de test asynchrone
-TestingSessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
-
-# Client de test HTTP
-@pytest.fixture
-def client() -> Generator:
-    """Client de test HTTP pour les requêtes d'API."""
-    with TestClient(app) as c:
-        yield c
-
-# Client de test HTTP asynchrone
-@pytest.fixture
-async def async_client() -> AsyncGenerator:
-    """Client de test HTTP asynchrone pour les requêtes d'API."""
-    async with AsyncClient(app=app, base_url="http://test") as ac:
-        yield ac
-
-# Session de base de données de test
-@pytest.fixture(scope="function")
-async def db() -> AsyncGenerator:
-    """Crée une nouvelle connexion de base de données pour chaque test."""
-    # Créer toutes les tables
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    
-    # Créer une nouvelle session
-    async with TestingSessionLocal() as session:
-        # Commencer une transaction
-        await session.begin()
-        
-        # Remplacer la dépendance get_db pour utiliser notre session de test
-        async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
-            try:
-                yield session
-            finally:
-                pass
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        try:
-            yield session
-        finally:
-            # Annuler la transaction
-            await session.rollback()
-    
-    # Créer un utilisateur de test par défaut
-    test_user = UserFactory()
-    db_session.add(test_user)
-    db_session.commit()
-    
-    # Surcharger les dépendances d'authentification pour les tests
-    def override_get_current_user():
-        # Retourne l'utilisateur de test par défaut
-        return test_user
-        
-    def override_get_current_active_user(current_user = Depends(override_get_current_user)):
-        return current_user
-        
-    def override_get_current_active_superuser():
-        # Créer un superutilisateur pour les tests
-        superuser = UserFactory(is_superuser=True)
-        db_session.add(superuser)
-        db_session.commit()
-        return superuser
-    
-    # Surcharger les dépendances
-    app.dependency_overrides[deps_get_db] = override_get_db
-    app.dependency_overrides[get_current_user] = override_get_current_user
-    app.dependency_overrides[get_current_active_user] = override_get_current_active_user
-    app.dependency_overrides[get_current_active_superuser] = override_get_current_active_superuser
-    
-    # Créer le client de test
-    with TestClient(app) as test_client:
-        # Ajouter un helper pour l'authentification
-        def auth_header(user=None):
-            if user is None:
-                user = test_user
-                db_session.add(user)
-                db_session.commit()
-            token = create_access_token(subject=user.id)
-            return {"Authorization": f"Bearer {token}"}
-            
-        # Ajouter les méthodes d'aide au client
-        test_client.auth_header = auth_header
-        test_client.test_user = test_user
-        
-        def clear_auth():
-            if hasattr(test_client, 'test_user'):
-                delattr(test_client, 'test_user')
-                
-        test_client.clear_auth = clear_auth
-        
-        # Set up default auth header
-        test_client.headers.update(auth_header())
-        
-        yield test_client
-    
-    # Nettoyage après les tests
-    app.dependency_overrides.clear()
-
-# Fixture pour les données de test
-@pytest.fixture(scope="function")
-async def test_data(db: AsyncSession):
-    """Fournit des données de test communes pour les tests d'intégration."""
-    from app.models import User, Role, Profession, EliteSpecialization, Build
-    
-    # Créer des rôles
-    admin_role = Role(name="admin", description="Administrator")
-    user_role = Role(name="user", description="Regular User")
-    db.add_all([admin_role, user_role])
-    await db.commit()
-    
-    # Créer des professions
-    warrior = Profession(name="Warrior", description="A strong fighter")
-    guardian = Profession(name="Guardian", description="A holy warrior")
-    db.add_all([warrior, guardian])
-    await db.commit()
-    
-    # Créer des spécialisations d'élite
-    berserker = EliteSpecialization(
-        name="Berserker",
-        description="A furious warrior",
-        profession_id=warrior.id,
-        icon="berserker_icon.png"
-    )
-    dragonhunter = EliteSpecialization(
-        name="Dragonhunter",
-        description="A trap-focused guardian",
-        profession_id=guardian.id,
-        icon="dragonhunter_icon.png"
-    )
-    db.add_all([berserker, dragonhunter])
-    await db.commit()
-    
-    # Créer des utilisateurs
-    admin_user = User(
-        email="admin@example.com",
-        username="admin",
-        hashed_password="$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # "secret"
-        is_active=True,
-        is_superuser=True,
-    )
-    test_user = User(
-        email="user@example.com",
-        username="testuser",
-        hashed_password="$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",  # "secret"
-        is_active=True,
-        is_superuser=False,
-    )
-    db.add_all([admin_user, test_user])
-    await db.commit()
-    
-    # Créer des builds de test
-    build1 = Build(
-        name="Power Berserker",
-        description="High DPS build for Berserker",
-        is_public=True,
-        user_id=test_user.id,
-        profession_id=warrior.id,
-        elite_spec_id=berserker.id,
-        weapons=["Axe", "Axe"],
-        skills=["Banner of Strength", "Banner of Discipline"],
-        traits={"Strength": [1, 2, 1], "Discipline": [2, 2, 1], "Berserker": [1, 2, 3]},
-    )
-    build2 = Build(
-        name="Dragonhunter Support",
-        description="Support build for Dragonhunter",
-        is_public=False,
-        user_id=admin_user.id,
-        profession_id=guardian.id,
-        elite_spec_id=dragonhunter.id,
-        weapons=["Staff", "Sword/Focus"],
-        skills=["""Signet of Courage"", """Mantra of Liberation""],
-        traits={"Virtues": [1, 2, 3], "Radiance": [2, 2, 2], "Dragonhunter": [1, 2, 1]},
-    )
-    db.add_all([build1, build2])
-    await db.commit()
-    
-    # Retourner les données de test
-    return {
-        "users": {"admin": admin_user, "user": test_user},
-        "roles": {"admin": admin_role, "user": user_role},
-        "professions": {"warrior": warrior, "guardian": guardian},
-        "elite_specs": {"berserker": berserker, "dragonhunter": dragonhunter},
-        "builds": {"berserker_build": build1, "dragonhunter_build": build2},
-    }
-
-# Fixture pour les jetons d'authentification
-@pytest.fixture(scope="function")
-async def test_tokens(test_data):
-    """Génère des jetons d'accès pour les utilisateurs de test."""
-    from app.core.security import create_access_token
-    from datetime import timedelta
-    
-    admin_user = test_data["users"]["admin"]
-    test_user = test_data["users"]["user"]
-    
-    admin_token = create_access_token(
-        subject=str(admin_user.id),
-        expires_delta=timedelta(minutes=30)
-    )
-    
-    user_token = create_access_token(
-        subject=str(test_user.id),
-        expires_delta=timedelta(minutes=30)
-    )
-    
-    return {
-        "admin": f"Bearer {admin_token}",
-        "user": f"Bearer {user_token}",
-    }
-
-# Configuration pour les tests asynchrones
 @pytest.fixture(scope="session")
-def event_loop():
-    """Crée une instance de la boucle d'événements pour les tests asynchrones."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+def performance_limits() -> Dict[str, Any]:
+    """
+    Définit les seuils de performance pour les tests.
+    Ces valeurs peuvent être ajustées en fonction de l'environnement de test.
+    """
+    env = os.getenv("TEST_ENV", "local")
 
-# S'assurer que la base de données est propre avant chaque test
-@pytest.fixture(autouse=True, scope="function")
-async def clean_db(db: AsyncSession):
-    """Nettoie la base de données avant chaque test."""
-    # Annuler toutes les transactions en cours
-    if db.in_transaction():
-        await db.rollback()
-    
-    # Supprimer toutes les données
-    for table in reversed(Base.metadata.sorted_tables):
-        await db.execute(table.delete())
-    
-    await db.commit()
-    
+    if env == "ci":
+        # Seuils plus tolérants pour les environnements CI
+        return {
+            "create_build": 0.5,
+            "get_build": 0.3,
+            "create_10_builds": 4.0,
+            "large_payload": 0.6,
+            "memory_increase_mb": 100,
+            "load_test_success_rate": 0.9,
+            "load_test_duration": 20.0,
+            "update_build": 0.5,
+            "max_memory_increase_mb": 150,
+            "max_cpu_percent": 95.0,
+            "timeouts": {
+                "short": 10.0,  # secondes
+                "medium": 20.0,
+                "long": 60.0,
+            },
+        }
+    else:
+        # Seuils plus stricts pour l'environnement local
+        return {
+            "create_build": 0.2,
+            "get_build": 0.1,
+            "create_10_builds": 2.0,
+            "large_payload": 0.3,
+            "memory_increase_mb": 50,
+            "load_test_success_rate": 0.95,
+            "load_test_duration": 10.0,
+            "update_build": 0.2,
+            "max_memory_increase_mb": 75,
+            "max_cpu_percent": 90.0,
+            "timeouts": {
+                "short": 5.0,   # secondes
+                "medium": 10.0,
+                "long": 30.0,
+            },
+        }
+
+@pytest.fixture(autouse=True)
+async def cleanup_performance_test_data(async_session: AsyncSession):
+    """
+    Nettoie les données de test spécifiques aux tests de performance après chaque test.
+    Ceci est important pour l'isolation des tests et pour éviter l'accumulation de données.
+    """
     yield
-    
-    # Nettoyage après le test
-    if db.in_transaction():
-        await db.rollback()
-    
-    # Supprimer toutes les données
-    for table in reversed(Base.metadata.sorted_tables):
-        await db.execute(table.delete())
-    
-    await db.commit()
+    # Supprimer tous les builds créés par les tests de performance
+    # Utilise un filtre sur le nom pour ne pas affecter d'autres builds
+    await async_session.execute(
+        Build.__table__.delete().where(
+            Build.name.like("Performance Test Build%") |
+            Build.name.like("Load Test Build%") |
+            Build.name.like("Large Payload Build%")
+        )
+    )
+    await async_session.execute(Profession.__table__.delete().where(Profession.name.like("PerfProf%")))
+    await async_session.execute(User.__table__.delete().where(User.username.like("mem_test_user%")))
+    await async_session.commit()
 
-# Fixture pour les requêtes HTTP authentifiées
-@pytest.fixture
-def auth_headers(test_tokens):
-    """Retourne des en-têtes d'authentification pour les tests d'API."""
-    return {
-        "admin": {"Authorization": test_tokens["admin"]},
-        "user": {"Authorization": test_tokens["user"]},
-    }
+# La fixture `record_metrics` sera gérée par `pytest-html` ou `pytest-xdist` si installés.
+# Pour l'instant, nous nous appuyons sur `record_property` fourni par pytest lui-même pour les rapports JUnit.

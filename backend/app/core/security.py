@@ -1,73 +1,203 @@
 from datetime import datetime, timedelta, timezone
-from typing import Any, Union, Optional
+from typing import Any, Dict, Optional, Union
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from app import crud, models
-from app.schemas.user import TokenData
+from app import models
 from app.core.config import settings
-from app.db.session import get_db
+from app.core.hashing import verify_password, pwd_context, get_password_hash
+from app.db.dependencies import get_db
+from app.schemas.token import TokenPayload
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def create_access_token(subject: Union[str, int], expires_delta: timedelta = None) -> str:
+def create_access_token(
+    subject: Union[str, int], expires_delta: timedelta = None, **kwargs
+) -> str:
     """
     Crée un token JWT d'accès.
-    
+
     Args:
         subject: Le sujet du token (ID de l'utilisateur)
         expires_delta: Durée de validité du token
-        
+        **kwargs: Données supplémentaires à inclure dans le token
+
     Returns:
         str: Le token JWT encodé
+        
+    Raises:
+        ValueError: Si le subject est None ou vide
     """
+    if subject is None:
+        raise ValueError("Subject cannot be None")
+    if not str(subject).strip():
+        raise ValueError("Subject cannot be empty")
+        
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(
             minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
         )
-    
-    # Utiliser l'ID de l'utilisateur comme sujet
-    to_encode = {"exp": expire, "sub": str(subject)}
+
+    # Utiliser l'ID de l'utilisateur comme sujet et inclure les données supplémentaires
+    # Convertir l'expiration en timestamp pour la compatibilité avec TokenPayload
+    to_encode = {
+        "exp": int(expire.timestamp()),
+        "sub": str(subject),
+        **kwargs
+    }
     encoded_jwt = jwt.encode(
-        to_encode, 
-        settings.SECRET_KEY, 
-        algorithm=settings.ALGORITHM
+        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
     )
     return encoded_jwt
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Vérifie si le mot de passe en clair correspond au hash.
-    
-    Args:
-        plain_password: Mot de passe en clair
-        hashed_password: Mot de passe hashé
-        
-    Returns:
-        bool: True si la vérification réussit, False sinon
-    """
-    return pwd_context.verify(plain_password, hashed_password)
 
-def get_password_hash(password: str) -> str:
+def create_refresh_token(subject: Union[str, int], expires_delta: timedelta = None, **kwargs) -> str:
     """
-    Hash un mot de passe.
-    
+    Crée un token de rafraîchissement JWT.
+
     Args:
-        password: Mot de passe en clair
-        
+        subject: Le sujet du token (ID de l'utilisateur)
+        expires_delta: Durée de validité du token (par défaut: settings.REFRESH_TOKEN_EXPIRE_DAYS)
+        **kwargs: Données supplémentaires à inclure dans le token
+
     Returns:
-        str: Le mot de passe hashé
+        str: Le token JWT encodé
+        
+    Raises:
+        ValueError: Si le subject est None ou vide
     """
-    return pwd_context.hash(password)
+    if subject is None:
+        raise ValueError("Subject cannot be None")
+    if not str(subject).strip():
+        raise ValueError("Subject cannot be empty")
+        
+    if expires_delta is None:
+        expires_delta = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    return create_access_token(subject, expires_delta, **kwargs)
+
+
+def verify_token(token: str) -> Dict[str, Any]:
+    """
+    Vérifie et décode un token JWT.
+
+    Args:
+        token: Le token JWT à vérifier
+
+    Returns:
+        Dict[str, Any]: Les données décodées du token
+
+    Raises:
+        HTTPException: Si le token est invalide ou expiré
+    """
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+            options={"verify_aud": False},
+        )
+        token_data = TokenPayload(**payload)
+        return token_data.dict()
+    except (JWTError, ValidationError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Impossible de valider les informations d'identification",
+        ) from e
+
+
+def verify_refresh_token(token: str) -> Dict[str, Any]:
+    """
+    Vérifie et décode un token de rafraîchissement JWT.
+
+    Args:
+        token: Le token JWT à vérifier
+
+    Returns:
+        Dict[str, Any]: Les données décodées du token
+
+    Raises:
+        HTTPException: Si le token est invalide ou expiré
+    """
+    try:
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
+        # Convertir le timestamp en datetime pour la validation
+        exp_datetime = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
+        
+        # Vérifier si le token est expiré
+        if exp_datetime < datetime.now(timezone.utc):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token expiré",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Créer le TokenPayload avec les données décodées
+        token_data = TokenPayload(
+            sub=payload["sub"],
+            exp=exp_datetime,
+            iat=payload.get("iat"),
+            jti=payload.get("jti")
+        )
+            
+        return token_data.dict()
+    except (JWTError, ValidationError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Impossible de valider les informations d'identification",
+            headers={"WWW-Authenticate": "Bearer"},
+        ) from e
+
 
 # OAuth2 scheme for token authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
+
+
+def get_token_from_request(request: Request) -> Optional[str]:
+    """
+    Extract the JWT token from the request.
+    
+    The token can be provided in:
+    - The Authorization header (Bearer token) - case insensitive
+    - A cookie named 'access_token'
+    - The query parameter 'token'
+    
+    Args:
+        request: The incoming request
+        
+    Returns:
+        Optional[str]: The extracted token or None if not found
+    """
+    # Debug: Afficher les en-têtes, cookies et paramètres de requête
+    print(f"DEBUG - Headers: {dict(request.headers)}")
+    print(f"DEBUG - Cookies: {dict(request.cookies) if hasattr(request.cookies, '__iter__') else request.cookies}")
+    print(f"DEBUG - Query params: {dict(request.query_params) if hasattr(request.query_params, '__iter__') else request.query_params}")
+    
+    # Check Authorization header (case insensitive)
+    auth_header = next((v for k, v in request.headers.items() if k.lower() == 'authorization'), None)
+    print(f"DEBUG - Auth header: {auth_header}")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
+        print(f"DEBUG - Token from auth header: {token}")
+        return token
+    
+    # Check cookie
+    token = request.cookies.get("access_token")
+    print(f"DEBUG - Token from cookie: {token}")
+    if token:
+        return token
+    
+    # Check query parameter
+    token = request.query_params.get("token")
+    print(f"DEBUG - Token from query params: {token}")
+    return token
+
 
 def get_current_user(
     db: Session = Depends(get_db),
@@ -75,34 +205,51 @@ def get_current_user(
 ) -> models.User:
     """
     Get the current authenticated user from the JWT token.
-    The token subject can be either the user's email or ID.
+    The token subject should be the user's ID.
+    
+    Args:
+        db: Session de base de données
+        token: Token JWT
+        
+    Returns:
+        models.User: L'utilisateur authentifié
+        
+    Raises:
+        HTTPException: Si les informations d'identification sont invalides
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Impossible de valider les informations d'identification",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            token, 
+            settings.SECRET_KEY, 
+            algorithms=[settings.ALGORITHM],
+            options={"verify_aud": False},
         )
-        subject: str = payload.get("sub")
-        if subject is None:
+        token_data = TokenPayload(**payload)
+        user_id = token_data.sub
+        
+        if user_id is None:
             raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+            
+    except (JWTError, ValidationError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Impossible de valider les informations d'identification",
+        ) from e
     
-    # First try to find user by email
-    user = crud.user.get_by_email(db, email=subject)
-    
-    # If not found by email, try by ID
-    if user is None and subject.isdigit():
-        user = db.query(models.User).filter(models.User.id == int(subject)).first()
+    # Récupérer l'utilisateur directement depuis la base de données
+    user = db.query(models.User).filter(models.User.id == int(user_id)).first()
     
     if user is None:
         raise credentials_exception
         
     return user
+
 
 def get_current_active_user(
     current_user: models.User = Depends(get_current_user),
@@ -113,6 +260,7 @@ def get_current_active_user(
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
 
 def get_current_active_superuser(
     current_user: models.User = Depends(get_current_user),

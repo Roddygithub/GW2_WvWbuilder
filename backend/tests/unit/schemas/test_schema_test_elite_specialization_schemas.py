@@ -1,4 +1,5 @@
 """Tests for Elite Specialization schemas and validations."""
+
 import pytest
 from datetime import datetime, timezone
 from pydantic import ValidationError
@@ -9,7 +10,7 @@ from app.schemas.elite_specialization import (
     EliteSpecializationUpdate,
     EliteSpecializationInDBBase,
     EliteSpecialization,
-    EliteSpecializationInDB
+    EliteSpecializationInDB,
 )
 
 
@@ -19,7 +20,7 @@ def test_elite_specialization_base_valid():
         "name": "Firebrand",
         "description": "Wields fire and tomes to support allies and burn foes",
         "icon_url": "https://example.com/icon.png",
-        "profession_id": 1
+        "profession_id": 1,
     }
     spec = EliteSpecializationBase(**data)
     assert spec.name == data["name"]
@@ -34,12 +35,12 @@ def test_elite_specialization_base_invalid():
     with pytest.raises(ValidationError) as exc_info:
         EliteSpecializationBase(name="", profession_id=1)
     assert "String should have at least 1 character" in str(exc_info.value)
-    
+
     # Test long name
     with pytest.raises(ValidationError) as exc_info:
         EliteSpecializationBase(name="A" * 101, profession_id=1)
     assert "String should have at most 100 characters" in str(exc_info.value)
-    
+
     # Test missing required field
     with pytest.raises(ValidationError) as exc_info:
         EliteSpecializationBase(name="Firebrand")
@@ -48,10 +49,7 @@ def test_elite_specialization_base_invalid():
 
 def test_elite_specialization_create_valid():
     """Test valid EliteSpecializationCreate."""
-    data = {
-        "name": "Firebrand",
-        "profession_id": 1
-    }
+    data = {"name": "Firebrand", "profession_id": 1}
     spec = EliteSpecializationCreate(**data)
     assert spec.name == data["name"]
     assert spec.profession_id == data["profession_id"]
@@ -67,13 +65,13 @@ def test_elite_specialization_update_partial():
     assert update.description is None
     assert update.icon_url is None
     assert update.profession_id is None
-    
+
     # Test partial update with all fields
     data = {
         "name": "New Name",
         "description": "New Description",
         "icon_url": "https://example.com/new.png",
-        "profession_id": 2
+        "profession_id": 2,
     }
     update = EliteSpecializationUpdate(**data)
     for field, value in data.items():
@@ -88,7 +86,7 @@ def test_elite_specialization_in_db_base():
         "name": "Firebrand",
         "profession_id": 1,
         "created_at": now,
-        "updated_at": now
+        "updated_at": now,
     }
     spec = EliteSpecializationInDBBase(**data)
     assert spec.id == data["id"]
@@ -107,15 +105,15 @@ def test_elite_specialization_serialization():
         "icon_url": "https://example.com/icon.png",
         "profession_id": 1,
         "created_at": now,
-        "updated_at": now
+        "updated_at": now,
     }
-    
+
     # Test serialization to dict
     spec = EliteSpecialization(**data)
     spec_dict = spec.model_dump()
     for field in ["id", "name", "description", "icon_url", "profession_id"]:
         assert spec_dict[field] == data[field]
-    
+
     # Test JSON serialization
     spec_json = spec.model_dump_json()
     assert "Firebrand" in spec_json
@@ -130,7 +128,7 @@ def test_elite_specialization_in_db():
         "name": "Firebrand",
         "profession_id": 1,
         "created_at": now,
-        "updated_at": now
+        "updated_at": now,
     }
     spec = EliteSpecializationInDB(**data)
     assert isinstance(spec, EliteSpecializationInDBBase)
@@ -141,13 +139,19 @@ def test_elite_specialization_in_db():
 def test_elite_specialization_examples():
     """Test that the example data in schemas is valid."""
     # Test create example
-    create_example = EliteSpecializationCreate.model_config["json_schema_extra"]["example"]
+    create_example = EliteSpecializationCreate.model_config["json_schema_extra"][
+        "example"
+    ]
     assert EliteSpecializationCreate(**create_example)
-    
+
     # Test update example
-    update_example = EliteSpecializationUpdate.model_config["json_schema_extra"]["example"]
+    update_example = EliteSpecializationUpdate.model_config["json_schema_extra"][
+        "example"
+    ]
     assert EliteSpecializationUpdate(**update_example)
-    
+
     # Test in-db example
-    in_db_example = EliteSpecializationInDBBase.model_config["json_schema_extra"]["example"]
+    in_db_example = EliteSpecializationInDBBase.model_config["json_schema_extra"][
+        "example"
+    ]
     assert EliteSpecializationInDBBase(**in_db_example)

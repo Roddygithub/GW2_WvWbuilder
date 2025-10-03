@@ -4,136 +4,118 @@ Tests for the Professions API endpoints.
 import pytest
 from fastapi import status
 from httpx import AsyncClient
-from unittest.mock import AsyncMock, MagicMock
 
-from app.models import Profession, EliteSpecialization
-from app.schemas.profession import ProfessionCreate, ProfessionUpdate, EliteSpecializationCreate
+from app.core.config import settings
+
 
 @pytest.mark.asyncio
-async def test_create_profession(client: AsyncClient, admin_token):
-    """Test creating a new profession (admin only)."""
-    # Test data
-    profession_data = {
-        "name": "Test Profession",
-        "description": "A test profession",
-        "icon": "test_icon.png"
-    }
-    
-    # Make request as admin
-    response = await client.post(
-        "/api/v1/professions/",
-        json=profession_data,
-        headers={"Authorization": f"Bearer {admin_token}"}
-    )
-    
-    # Verify response
-    assert response.status_code == status.HTTP_201_CREATED
-    data = response.json()
-    assert data["name"] == profession_data["name"]
-    assert data["description"] == profession_data["description"]
-    assert data["icon"] == profession_data["icon"]
+class TestProfessionsAPI:
+    """Test suite for Professions API endpoints."""
 
-@pytest.mark.asynbox async def test_get_profession(client: AsyncClient, test_profession):
-    """Test retrieving a profession by ID."""
-    # Make request
-    response = await client.get(f"/api/v1/professions/{test_profession.id}")
-    
-    # Verify response
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["id"] == test_profession.id
-    assert data["name"] == test_profession.name
+    async def test_create_profession(self, async_client: AsyncClient, auth_headers):
+        """Test creating a new profession (admin only)."""
+        admin_headers = await auth_headers(username="admin", is_superuser=True)
+        profession_data = {
+            "name": "Test Profession",
+            "description": "A test profession",
+            "icon_url": "http://example.com/icon.png",
+        }
 
-@pytest.mark.asynbox async def test_list_professions(client: AsyncClient, test_profession):
-    """Test listing all professions."""
-    # Make request
-    response = await client.get("/api/v1/professions/")
-    
-    # Verify response
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert isinstance(data, list)
-    assert any(prof["id"] == test_profession.id for prof in data)
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/professions/", json=profession_data, headers=admin_headers
+        )
 
-@pytest.mark.asynbox async def test_add_elite_specialization(client: AsyncClient, test_profession, admin_token):
-    """Test adding an elite specialization to a profession (admin only)."""
-    # Test data
-    elite_spec_data = {
-        "name": "Test Elite Spec",
-        "description": "A test elite specialization",
-        "icon": "elite_spec_icon.png"
-    }
-    
-    # Make request as admin
-    response = await client.post(
-        f"/api/v1/professions/{test_profession.id}/elite-specializations",
-        json=elite_spec_data,
-        headers={"Authorization": f"Bearer {admin_token}"}
-    )
-    
-    # Verify response
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert "elite_specializations" in data
-    assert any(spec["name"] == "Test Elite Spec" for spec in data["elite_specializations"])
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["name"] == profession_data["name"]
+        assert data["description"] == profession_data["description"]
 
-@pytest.mark.asynbox async def test_update_profession(client: AsyncClient, test_profession, admin_token):
-    """Test updating a profession (admin only)."""
-    # Update data
-    update_data = {
-        "description": "Updated description",
-        "icon": "updated_icon.png"
-    }
-    
-    # Make request as admin
-    response = await client.put(
-        f"/api/v1/professions/{test_profession.id}",
-        json=update_data,
-        headers={"Authorization": f"Bearer {admin_token}"}
-    )
-    
-    # Verify response
-    assert response.status_code == status.HTTP_200_OK
-    data = response.json()
-    assert data["description"] == update_data["description"]
-    assert data["icon"] == update_data["icon"]
+    async def test_get_profession(self, async_client: AsyncClient, profession_factory, auth_headers):
+        """Test retrieving a profession by ID."""
+        profession = await profession_factory(name="Readable Profession")
+        headers = await auth_headers()
 
-@pytest.mark.asynbox async def test_delete_profession(client: AsyncClient, test_profession, admin_token):
-    """Test deleting a profession (admin only)."""
-    # Make request as admin
-    response = await client.delete(
-        f"/api/v1/professions/{test_profession.id}",
-        headers={"Authorization": f"Bearer {admin_token}"}
-    )
-    
-    # Verify response
-    assert response.status_code == status.HTTP_204_NO_CONTENT
-    
-    # Verify profession was deleted
-    response = await client.get(f"/api/v1/professions/{test_profession.id}")
-    assert response.status_code == status.HTTP_404_NOT_FOUND
+        response = await async_client.get(f"{settings.API_V1_STR}/professions/{profession.id}", headers=headers)
 
-@pytest.mark.asynbox async def test_unauthorized_access(client: AsyncClient, test_profession, test_token):
-    """Test that non-admin users cannot modify professions."""
-    # Try to create (non-admin)
-    response = await client.post(
-        "/api/v1/professions/",
-        json={"name": "Should Fail"},
-        headers={"Authorization": f"Bearer {test_token}"}
-    )
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-    
-    # Try to update (non-admin)
-    response = await client.put(
-        f"/api/v1/professions/{test_profession.id}",
-        json={"name": "Should Fail"},
-        headers={"Authorization": f"Bearer {test_token}"}
-    )
-    assert response.status_code == status.HTTP_403_FORBIDDEN
-    
-    # Try to delete (non-admin)
-    response = await client.delete(
-        f"/api/v1/professions/{test_profession.id}",
-        headers={"Authorization": f"Bearer {test_token}"}
-    )
-    assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["id"] == profession.id
+        assert data["name"] == "Readable Profession"
+
+    async def test_list_professions(self, async_client: AsyncClient, profession_factory, auth_headers):
+        """Test listing all professions."""
+        await profession_factory(name="Profession 1")
+        await profession_factory(name="Profession 2")
+        headers = await auth_headers()
+
+        response = await async_client.get(f"{settings.API_V1_STR}/professions/", headers=headers)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) >= 2
+
+    async def test_update_profession(self, async_client: AsyncClient, profession_factory, auth_headers):
+        """Test updating a profession (admin only)."""
+        profession = await profession_factory()
+        admin_headers = await auth_headers(username="admin", is_superuser=True)
+        update_data = {"description": "Updated description", "icon_url": "http://new.icon/url.png"}
+
+        response = await async_client.put(
+            f"{settings.API_V1_STR}/professions/{profession.id}", json=update_data, headers=admin_headers
+        )
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["description"] == "Updated description"
+        assert data["icon_url"] == "http://new.icon/url.png"
+
+    async def test_delete_profession(self, async_client: AsyncClient, profession_factory, auth_headers):
+        """Test deleting a profession (admin only)."""
+        profession = await profession_factory()
+        admin_headers = await auth_headers(username="admin", is_superuser=True)
+
+        response = await async_client.delete(f"{settings.API_V1_STR}/professions/{profession.id}", headers=admin_headers)
+
+        assert response.status_code == status.HTTP_200_OK
+
+        # Verify it was deleted
+        response = await async_client.get(f"{settings.API_V1_STR}/professions/{profession.id}", headers=admin_headers)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+    async def test_unauthorized_create_profession(self, async_client: AsyncClient, auth_headers):
+        """Test that non-admin users cannot create professions."""
+        user_headers = await auth_headers()
+        profession_data = {"name": "Unauthorized Profession"}
+
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/professions/", json=profession_data, headers=user_headers
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+@pytest.mark.asyncio
+class TestEliteSpecializationsAPI:
+    """Test suite for Elite Specializations API endpoints."""
+
+    async def test_create_elite_specialization(self, async_client: AsyncClient, profession_factory, auth_headers):
+        """Test adding an elite specialization to a profession (admin only)."""
+        profession = await profession_factory()
+        admin_headers = await auth_headers(username="admin", is_superuser=True)
+        elite_spec_data = {
+            "name": "Test Elite Spec",
+            "description": "A test elite specialization",
+            "weapon_type": "Scepter",
+            "profession_id": profession.id,
+        }
+
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/professions/elite-specializations/",
+            json=elite_spec_data,
+            headers=admin_headers,
+        )
+
+        assert response.status_code == status.HTTP_201_CREATED
+        data = response.json()
+        assert data["name"] == "Test Elite Spec"
+        assert data["profession_id"] == profession.id

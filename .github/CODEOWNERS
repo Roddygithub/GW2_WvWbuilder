@@ -1,0 +1,30 @@
+# Default owners for everything in the repo
+*       @Roddygithub
+
+# Specific owners for certain paths
+/backend/    @Roddygithub
+/frontend/   @Roddygithub
+/.github/    @Roddygithub
+
+# Documentation
+/README.md   @Roddygithub
+/CONTRIBUTING.md @Roddygithub
+/CHANGELOG.md @Roddygithub
+/SECURITY.md @Roddygithub
+
+# Configuration files
+/.github/    @Roddygithub
+/.pre-commit-config.yaml @Roddygithub
+/.editorconfig @Roddygithub
+/.gitattributes @Roddygithub
+
+# Dependencies
+/requirements*.txt @Roddygithub
+/package*.json @Roddygithub
+/yarn.lock @Roddygithub
+/poetry.lock @Roddygithub
+
+# Docker
+/Dockerfile* @Roddygithub
+/docker-compose*.yml @Roddygithub
+/.dockerignore @Roddygithub
