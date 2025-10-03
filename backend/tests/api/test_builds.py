@@ -74,6 +74,54 @@ class TestBuildsAPI:
         assert "detail" in response.json()
         assert "Not enough permissions" in response.json()["detail"]
 
+    async def test_full_build_lifecycle(
+        self, async_client: AsyncClient, auth_headers, profession_factory
+    ):
+        """Teste un cycle de vie complet : création, lecture, mise à jour et suppression."""
+        user_headers = await auth_headers(username="lifecycle_user", password="password")
+        profession = await profession_factory()
+
+        # 1. Création
+        create_data = {
+            "name": "Lifecycle Build",
+            "game_mode": "wvw",
+            "profession_ids": [profession.id],
+        }
+        create_response = await async_client.post(f"{settings.API_V1_STR}/builds/", json=create_data, headers=user_headers)
+        assert create_response.status_code == status.HTTP_201_CREATED
+        created_data = create_response.json()
+        build_id = created_data["id"]
+        assert created_data["name"] == "Lifecycle Build"
+        assert created_data["game_mode"] == "wvw"
+        assert created_data["is_public"] is True # Default value
+        # Vérifier que la profession est bien associée au build créé
+        profession_ids = {p["id"] for p in created_data.get("professions", [])}
+        assert profession.id in profession_ids
+
+        # 2. Lecture (détail)
+        get_response = await async_client.get(f"{settings.API_V1_STR}/builds/{build_id}", headers=user_headers)
+        assert get_response.status_code == status.HTTP_200_OK
+        read_data = get_response.json()
+        assert read_data["id"] == build_id
+        assert read_data["name"] == "Lifecycle Build"
+
+        # 3. Mise à jour
+        update_data = {"name": "Updated Lifecycle Build", "is_public": False}
+        update_response = await async_client.put(f"{settings.API_V1_STR}/builds/{build_id}", json=update_data, headers=user_headers)
+        assert update_response.status_code == status.HTTP_200_OK
+        updated_data = update_response.json()
+        assert updated_data["name"] == "Updated Lifecycle Build"
+        assert updated_data["is_public"] is False
+
+        # 4. Suppression
+        delete_response = await async_client.delete(f"{settings.API_V1_STR}/builds/{build_id}", headers=user_headers)
+        assert delete_response.status_code == status.HTTP_200_OK
+        assert delete_response.json()["id"] == build_id
+
+        # 5. Vérification de la suppression
+        final_get_response = await async_client.get(f"{settings.API_V1_STR}/builds/{build_id}", headers=user_headers)
+        assert final_get_response.status_code == status.HTTP_404_NOT_FOUND
+
     async def test_create_build(
         self, async_client: AsyncClient, db: AsyncSession, auth_headers, profession_factory
     ):

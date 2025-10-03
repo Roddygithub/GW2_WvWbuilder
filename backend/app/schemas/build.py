@@ -2,6 +2,7 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 from datetime import datetime
 from enum import Enum
+import logging
 from app.core.config import settings
 
 
