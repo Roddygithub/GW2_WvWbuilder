@@ -2,6 +2,7 @@ from typing import Any, List
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body, Path, Request, Response
+from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app import models, schemas
