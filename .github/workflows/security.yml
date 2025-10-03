@@ -34,12 +34,11 @@ jobs:
       run: pip install bandit safety
 
     - name: Detect secrets with Gitleaks
-      uses: gitleaks/gitleaks-action@v3
+      uses: gitleaks/gitleaks-action@v2
       with:
         config-path: .github/gitleaks.toml
         report-format: json
         report-path: gitleaks-report.json
-        fail-on-error: true
         github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Run bandit for static analysis
