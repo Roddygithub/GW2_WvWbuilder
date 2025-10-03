@@ -4,6 +4,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Body, Path, Request, Response
 from fastapi_limiter.depends import RateLimiter
 from app.core.cache import cache_response
+from app.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app import models, schemas
