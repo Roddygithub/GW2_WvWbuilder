@@ -7,83 +7,62 @@ et l'initialisation de la base de données avec SQLAlchemy 2.0.
 
 from __future__ import annotations
 
-from typing import Generator
+from typing import Generator, AsyncGenerator
 
-from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
-from app.models.base import Base  # Import de la classe de base des modèles
+# Import des moteurs depuis le module de configuration
+try:
+    from .db_config import engine, async_engine
+except ImportError:
+    # Fallback pour les cas où db_config n'est pas encore disponible
+    from sqlalchemy import create_engine
+    from sqlalchemy.ext.asyncio import create_async_engine
+    from app.core.config import settings
+    
+    # Configuration minimale pour les moteurs
+    engine = create_engine(settings.get_database_url())
+    async_engine = create_async_engine(settings.get_async_database_url())
 
-# URL de base de données
-DATABASE_URL = settings.get_database_url()
-ASYNC_DATABASE_URL = settings.get_async_database_url()
-
-
-# Common engine arguments
-def get_engine_kwargs(is_async: bool = False) -> dict:
-    """Get the appropriate engine arguments based on database type and async status."""
-    db_url = ASYNC_DATABASE_URL if is_async else DATABASE_URL
-    is_sqlite = "sqlite" in db_url
-
-    # Base arguments
-    kwargs = {
-        "echo": settings.SQL_ECHO,
-        "pool_pre_ping": True,
-    }
-
-    # SQLite-specific settings
-    if is_sqlite:
-        kwargs["connect_args"] = {"check_same_thread": False}
-    else:
-        # Only use pooling for non-SQLite databases
-        kwargs.update(
-            {
-                "pool_size": settings.POOL_SIZE,
-                "max_overflow": settings.MAX_OVERFLOW,
-                "pool_recycle": settings.POOL_RECYCLE,
-                "pool_timeout": settings.POOL_TIMEOUT,
-                "echo_pool": settings.SQL_ECHO_POOL,
-            }
-        )
-
-    return kwargs
+# Import de la classe de base des modèles
+from app.models.base import Base
 
 
-# Moteur synchrone
-engine = create_engine(DATABASE_URL, **get_engine_kwargs(is_async=False))
+def init_db() -> None:
+    """
+    Initialise la base de données en créant toutes les tables.
+    Cette fonction est principalement utilisée pour les tests et l'initialisation
+    du développement. En production, utilisez les migrations Alembic.
+    """
+    import logging
 
-# Moteur asynchrone
-async_engine = create_async_engine(
-    ASYNC_DATABASE_URL, **get_engine_kwargs(is_async=True)
-)
+    logger = logging.getLogger(__name__)
+    logger.info("Création des tables de la base de données...")
 
-# Session locale synchrone
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-    class_=Session,
-    expire_on_commit=False,
-)
+    # Création de toutes les tables définies dans les modèles
+    Base.metadata.create_all(bind=engine)
 
-# Session locale asynchrone
+    logger.info("Tables créées avec succès")
+
+
+# Création des fabriques de sessions
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 AsyncSessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
     bind=async_engine,
     class_=AsyncSession,
-    expire_on_commit=False,
+    expire_on_commit=False
 )
 
 
 def get_db() -> Generator[Session, None, None]:
     """
-    Obtient une session de base de données synchrone pour les dépendances FastAPI.
-
-    Yields:
-        Session: Une instance de session SQLAlchemy synchrone
+    Fournit une instance de session de base de données synchrone.
+    
+    Cette fonction est utilisée comme dépendance dans les routes FastAPI pour obtenir
+    une session de base de données. La session est automatiquement fermée après utilisation.
     """
     db = SessionLocal()
     try:
@@ -94,40 +73,18 @@ def get_db() -> Generator[Session, None, None]:
 
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """
-    Obtient une session de base de données asynchrone pour les dépendances FastAPI.
-
-    Yields:
-        AsyncSession: Une instance de session SQLAlchemy asynchrone
+    Fournit une instance de session de base de données asynchrone.
+    
+    Cette fonction est utilisée comme dépendance dans les routes FastAPI pour obtenir
+    une session de base de données asynchrone. La session est automatiquement fermée
+    après utilisation.
     """
     async with AsyncSessionLocal() as session:
         try:
             yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
         finally:
             await session.close()
-
-
-def init_db() -> None:
-    """
-    Initialise la base de données en créant toutes les tables.
-
-    Cette fonction est principalement utilisée pour les tests et l'initialisation
-    du développement. En production, utilisez les migrations Alembic.
-    """
-    # Cette importation est nécessaire pour que SQLAlchemy découvre tous les modèles
-    # et crée les tables correspondantes dans la base de données.
-    from app.models import (
-        User,
-        Role,
-        Profession,
-        EliteSpecialization,
-        Composition,
-        CompositionTag,
-        Build,
-        BuildProfession,
-    )  # noqa: F401
-
-    # Création de toutes les tables définies dans les modèles
-    Base.metadata.create_all(bind=engine)
-
-    # Ajoutez ici toute logique d'initialisation supplémentaire si nécessaire
-    # Par exemple, création d'utilisateurs ou de rôles par défaut

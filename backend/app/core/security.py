@@ -4,16 +4,14 @@ from typing import Any, Dict, Optional, Union
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
-from app import crud, models
+from app import models
 from app.core.config import settings
-from app.db.session import get_db
+from app.core.hashing import verify_password, pwd_context, get_password_hash
+from app.db.dependencies import get_db
 from app.schemas.token import TokenPayload
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def create_access_token(
@@ -157,55 +155,6 @@ def verify_refresh_token(token: str) -> Dict[str, Any]:
         ) from e
 
 
-def verify_password(plain_password: Optional[str], hashed_password: Optional[str]) -> bool:
-    """
-    Vérifie si le mot de passe en clair correspond au hash.
-
-    Args:
-        plain_password: Mot de passe en clair (peut être None)
-        hashed_password: Mot de passe hashé (peut être None)
-
-    Returns:
-        bool: True si la vérification réussit, False sinon
-    """
-    if plain_password is None or hashed_password is None:
-        return False
-    try:
-        return pwd_context.verify(plain_password, hashed_password)
-    except (ValueError, TypeError):
-        return False
-
-
-def get_password_hash(password: str) -> str:
-    """
-    Hash un mot de passe.
-
-    Args:
-        password: Mot de passe en clair
-
-    Returns:
-        str: Le mot de passe hashé
-    """
-    return pwd_context.hash(password)
-
-
-def get_password_hash_sha256(password: str) -> str:
-    """
-    Hash un mot de passe avec SHA-256 (pour rétrocompatibilité).
-    
-    Note: Cette fonction est maintenue pour la rétrocompatibilité.
-    La fonction get_password_hash avec bcrypt est recommandée pour les nouveaux développements.
-    
-    Args:
-        password: Mot de passe en clair
-        
-    Returns:
-        str: Le mot de passe hashé avec SHA-256
-    """
-    import hashlib
-    return hashlib.sha256(password.encode('utf-8')).hexdigest()
-
-
 # OAuth2 scheme for token authentication
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
@@ -293,8 +242,8 @@ def get_current_user(
             detail="Impossible de valider les informations d'identification",
         ) from e
     
-    # Récupérer l'utilisateur par son ID
-    user = crud.user.get(db, id=int(user_id))
+    # Récupérer l'utilisateur directement depuis la base de données
+    user = db.query(models.User).filter(models.User.id == int(user_id)).first()
     
     if user is None:
         raise credentials_exception

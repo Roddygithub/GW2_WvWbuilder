@@ -21,25 +21,6 @@ from .enums import (
     PermissionLevel, TeamRole, TeamStatus
 )
 
-<<<<<<< HEAD
-from .build import Build
-from .build_profession import BuildProfession
-
-__all__ = [
-    # Classe de base
-    "Base",
-    
-    # Modèles principaux
-    "User",
-    "Role",
-    "Profession",
-    "EliteSpecialization",
-    "Composition",
-    "CompositionTag",
-    "composition_members",
-    "Build",
-    "BuildProfession"
-=======
 # Import des modèles
 from .user import User
 from .role import Role
@@ -48,65 +29,58 @@ from .token_models import Token, TokenPayload
 from .build import Build
 from .profession import Profession
 from .elite_specialization import EliteSpecialization
-from .team import Team
-from .composition import Composition
+from .composition import Composition, composition_members
 from .composition_tag import CompositionTag
+from .team import Team
+from .team_member import TeamMember
 from .tag import Tag
 
 # Tables d'association
-from .association_tables import (
-    user_roles,
-    build_profession,
-    composition_members,
-    role_permissions,
-    team_members,
-    # composition_tags est maintenant défini dans composition_tag.py
-)
+from .association_tables import user_roles, build_profession, role_permissions
 
-# Export des modèles et énumérations
-__all__: List[str] = [
+# Liste de tous les éléments à exporter
+__all__ = [
     # Classes de base
-    'Base',
-    'BaseModel',
-    'UUIDMixin',
-    'TimeStampedMixin',
-    'BaseUUIDModel',
-    'BaseTimeStampedModel',
-    'BaseUUIDTimeStampedModel',
+    "Base",
+    "BaseModel",
+    "UUIDMixin",
+    "TimeStampedMixin",
+    "BaseUUIDModel",
+    "BaseTimeStampedModel",
+    "BaseUUIDTimeStampedModel",
     
     # Énumérations
-    'GameMode',
-    'RoleType',
-    'BuildStatus',
-    'CompositionStatus',
-    'ProfessionType',
-    'EliteSpecializationType',
-    'BuildType',
-    'CompositionRole',
-    'Visibility',
-    'PermissionLevel',
-    'TeamRole',
-    'TeamStatus',
+    "GameMode",
+    "RoleType",
+    "BuildStatus",
+    "CompositionStatus",
+    "ProfessionType",
+    "EliteSpecializationType",
+    "BuildType",
+    "CompositionRole",
+    "Visibility",
+    "PermissionLevel",
+    "TeamRole",
+    "TeamStatus",
     
     # Modèles principaux
-    'User',
-    'Role',
-    'Permission',
-    'Team',
-    'Composition',
-    'Build',
-    'Tag',
-    'CompositionTag',
-    'EliteSpecialization',
-    'Profession',
-    'Token',
-    'TokenPayload',
+    "User",
+    "Role",
+    "Permission",
+    "Token",
+    "TokenPayload",
+    "Build",
+    "Profession",
+    "EliteSpecialization",
+    "Composition",
+    "CompositionTag",
+    "Team",
+    "TeamMember",
+    "Tag",
     
     # Tables d'association
-    'user_roles',
-    'build_profession',
-    'composition_members',
-    'role_permissions',
-    'team_members'
->>>>>>> a023051 (feat: optimized CRUD with Redis caching + full test coverage + docs and monitoring guide)
+    "user_roles",
+    "build_profession",
+    "role_permissions",
+    "composition_members"
 ]

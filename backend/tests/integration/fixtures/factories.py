@@ -4,7 +4,7 @@ import factory
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app.models import User, Role, Profession, Composition, EliteSpecialization, Build, BuildProfession
+from app.models import User, Role, Profession, Composition, EliteSpecialization, Build
 
 fake = Faker()
 
@@ -61,38 +61,6 @@ class UserFactory(factory.alchemy.SQLAlchemyModelFactory):
             for role in extracted:
                 self.roles.append(role)
 
-<<<<<<< HEAD
-class BuildProfessionFactory(factory.alchemy.SQLAlchemyModelFactory):
-    class Meta:
-        model = BuildProfession
-        sqlalchemy_session_persistence = "commit"
-    
-    profession = factory.SubFactory(ProfessionFactory)
-
-class BuildFactory(factory.alchemy.SQLAlchemyModelFactory):
-    class Meta:
-        model = Build
-        sqlalchemy_session_persistence = "commit"
-    
-    name = factory.Faker("catch_phrase")
-    description = factory.Faker("paragraph")
-    game_mode = "wvw"
-    team_size = 5
-    is_public = True
-    config = {"roles": ["heal", "dps", "support"]}
-    constraints = {"max_duplicates": 2}
-    owner = factory.SubFactory(UserFactory)
-    
-    @factory.post_generation
-    def professions(self, create, extracted, **kwargs):
-        if not create:
-            return
-            
-        if extracted:
-            for profession in extracted:
-                BuildProfessionFactory(build=self, profession=profession)
-=======
->>>>>>> a023051 (feat: optimized CRUD with Redis caching + full test coverage + docs and monitoring guide)
 
 class CompositionFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:

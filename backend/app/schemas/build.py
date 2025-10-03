@@ -2,6 +2,8 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 from datetime import datetime
 from enum import Enum
+import logging
+from app.core.config import settings
 
 
 # Enums for better type safety and documentation
@@ -111,11 +113,44 @@ class BuildBase(BaseModel):
 
     profession_ids: List[int] = Field(
         default_factory=list,
-        description="List of profession IDs that can use this build",
-        json_schema_extra={"example": [1, 2]},  # Assuming 1=Guardian, 2=Firebrand
+        description="""Liste des IDs de professions qui peuvent utiliser ce build.
+- Must contain between 1 and 3 unique profession IDs.
+- Each ID must reference an existing profession.
+- **Validation**: Certaines combinaisons de professions sont interdites (ex: Gardien et Incendiaire). L'API retournera une erreur 422 si une combinaison invalide est fournie.
+""",
+        json_schema_extra={
+            "example": [1, 2],
+            "notes": "Référez-vous à /api/v1/professions pour les IDs valides. Les combinaisons interdites sont définies dans la configuration du backend.",
+        },
         min_length=1,
         max_length=3,
     )
+
+    @field_validator("profession_ids")
+    @classmethod
+    def validate_unique_professions(cls, v: List[int]) -> List[int]:
+        if len(v) != len(set(v)):
+            raise ValueError("Profession IDs must be unique")
+        return v
+
+    @field_validator("profession_ids")
+    @classmethod
+    def validate_profession_combinations(cls, v: List[int]) -> List[int]:
+        """
+        Valide que certaines professions ne sont pas utilisées ensemble.
+        Exemple : Un build ne peut pas être pour Gardien et Incendiaire en même temps.
+        NOTE : Cette logique est un exemple et devrait être affinée selon les règles métier.
+        """
+        # Exemple de combinaisons interdites (IDs de professions)
+        logger = logging.getLogger(__name__)
+        forbidden_combinations = settings.FORBIDDEN_PROFESSION_COMBINATIONS
+        
+        profession_set = set(v)
+        for combo in forbidden_combinations:
+            if combo.issubset(profession_set):
+                logger.warning(f"Attempted to use forbidden profession combination: {combo} in build creation/update. Input professions: {v}")
+                raise ValueError(f"Professions with IDs {combo} cannot be used together in the same build.")
+        return v
 
     @field_validator("config")
     @classmethod
@@ -332,8 +367,8 @@ class BuildInDBBase(BaseModel):
     created_at: datetime = Field(
         ..., description="Timestamp when the build was created"
     )
-    updated_at: datetime = Field(
-        ..., description="Timestamp when the build was last updated"
+    updated_at: Optional[datetime] = Field(
+        None, description="Timestamp when the build was last updated"
     )
     profession_ids: List[int] = Field(
         default_factory=list,
@@ -471,8 +506,6 @@ class Build(BuildInDBBase, BuildBase):
             ]
         },
     )
-
-    owner_id: int = Field(..., description="ID of the user who owns this build")
 
     professions: List[BuildProfessionBase] = Field(
         default_factory=list,

@@ -113,24 +113,16 @@ class EliteSpecialization(Base):
         lazy="selectin"
     )
 
-    # Relation avec les builds via la table de jonction composition_members
-    builds: Mapped[List["Build"]] = relationship(
-        "Build",
-        secondary="composition_members",
-        primaryjoin="EliteSpecialization.id == CompositionMember.elite_specialization_id",
-        secondaryjoin="Build.id == CompositionMember.build_id",
-        back_populates="elite_specializations",
-        viewonly=True,
-        lazy="selectin"
-    )
-    
-    # Relation avec les membres de composition
-    composition_members: Mapped[List["CompositionMember"]] = relationship(
-        "CompositionMember",
-        back_populates="elite_specialization",
-        cascade="all, delete-orphan",
-        lazy="selectin"
-    )
+    # La relation avec les builds est gérée via la table d'association composition_members
+    # qui est liée aux compositions, pas directement aux builds
+    # Cette relation est commentée car elle nécessite une refonte du modèle de données
+    # pour être cohérente avec la structure actuelle
+    # builds: Mapped[List["Build"]] = relationship(
+    #     "Build",
+    #     secondary="composition_members",
+    #     viewonly=True,
+    #     lazy="selectin"
+    # )
 
     def __repr__(self) -> str:
         return f"<EliteSpecialization(id={self.id}, name='{self.name}')>"
@@ -156,11 +148,12 @@ class EliteSpecialization(Base):
             
         return result
         
-    def is_compatible_with_build(self, build: "Build") -> bool:
-        """Vérifie si cette spécialisation est compatible avec un build donné."""
-        return bool(build.profession and self.profession_id == build.profession.id)
+    def is_compatible_with_profession(self, profession_id: int) -> bool:
+        """Vérifie si cette spécialisation est compatible avec une profession donnée."""
+        return self.profession_id == profession_id
         
-    def get_related_builds(self, limit: int = 10) -> List["Build"]:
-        """Récupère une liste de builds populaires utilisant cette spécialisation."""
-        # Implémentation simplifiée
-        return sorted(self.builds, key=lambda b: len(b.composition_members), reverse=True)[:limit]
+    # Méthode commentée car elle nécessite une refonte du modèle de données
+    # def get_related_builds(self, limit: int = 10) -> List["Build"]:
+    #     """Récupère une liste de builds populaires utilisant cette spécialisation."""
+    #     # Implémentation simplifiée
+    #     return sorted(self.builds, key=lambda b: len(b.composition_members), reverse=True)[:limit]

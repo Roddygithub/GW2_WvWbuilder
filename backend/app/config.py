@@ -25,7 +25,10 @@ class Settings(BaseSettings):
     def get_database_url(self) -> str:
         if self.DATABASE_URI is not None:
             return self.DATABASE_URI
-        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
+        # Use SQLite for development
+        return "sqlite:///./test.db"
+        # For PostgreSQL:
+        # return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
 
 
 @lru_cache()

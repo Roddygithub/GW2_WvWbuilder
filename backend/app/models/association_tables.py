@@ -51,17 +51,8 @@ build_profession = Table(
     UniqueConstraint("build_id", "profession_id", name="uq_build_profession"),
 )
 
-# Table de jonction pour les membres d'équipe
-team_members = Table(
-    "team_members",
-    Base.metadata,
-    Column("team_id", Integer, ForeignKey("teams.id", ondelete="CASCADE"), primary_key=True),
-    Column("user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
-    Column("is_admin", Boolean, default=False, nullable=False),
-    Column("joined_at", DateTime(timezone=True), server_default=func.now()),
-    Column("left_at", DateTime(timezone=True), nullable=True),
-    Column("is_active", Boolean, default=True, nullable=False, index=True),
-)
+# La table team_members est maintenant définie dans team_member.py comme un modèle complet
+# pour gérer les relations many-to-many entre les utilisateurs et les équipes avec des attributs supplémentaires
 
 # La table composition_tags est maintenant définie dans composition_tag.py
 # pour éviter les conflits de définition

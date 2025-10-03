@@ -16,6 +16,7 @@ from .profession import (
     EliteSpecialization,
 )
 from .build import GameMode, RoleType, Build, BuildCreate, BuildUpdate, BuildInDB, BuildInDBBase, BuildProfessionBase, BuildGenerationRequest, TeamMember, BuildGenerationResponse
+from .msg import Msg, MsgWithCount
 from .team import (
     TeamBase, TeamCreate, TeamUpdate, TeamInDBBase, Team,
     TeamResponse
@@ -123,4 +124,7 @@ __all__ = [
     "BuildProfessionBase",
     "BuildGenerationRequest",
     "BuildGenerationResponse",
+    # Message schemas
+    "Msg",
+    "MsgWithCount",
 ]
