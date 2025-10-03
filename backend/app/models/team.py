@@ -19,7 +19,6 @@ if TYPE_CHECKING:
     from .team_member import TeamMember
     from .user import User
 
-from .association_tables import team_members
 
 
 class Team(Base):
@@ -49,16 +48,22 @@ class Team(Base):
         foreign_keys=[owner_id]
     )
     
+    # Relation avec les membres via la table d'association TeamMember
     members: Mapped[List["User"]] = relationship(
-        secondary=team_members,
-        back_populates="teams",
-        viewonly=True
+        "User",
+        secondary="team_members",
+        primaryjoin="and_(Team.id == TeamMember.team_id, TeamMember.is_active == True)",
+        secondaryjoin="User.id == TeamMember.user_id",
+        viewonly=True,
+        overlaps="member_associations"
     )
     
+    # Relation avec les associations de membres (pour accéder aux détails de la relation)
     member_associations: Mapped[List["TeamMember"]] = relationship(
         "TeamMember",
         back_populates="team",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        overlaps="members"
     )
     
     builds: Mapped[List["Build"]] = relationship(

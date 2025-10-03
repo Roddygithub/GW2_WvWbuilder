@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, model_validator, ConfigDict
 
 from app.models.enums import TeamRole, TeamStatus
 from app.schemas.user import User
@@ -26,9 +26,7 @@ class TeamBase(BaseModel):
         description="Indique si l'équipe est visible par tous les utilisateurs"
     )
 
-    class Config:
-        orm_mode = True
-
+    model_config = ConfigDict(from_attributes=True)
 
 class TeamCreate(TeamBase):
     """Schéma pour la création d'une équipe."""
@@ -53,9 +51,7 @@ class TeamInDBBase(TeamBase):
     created_at: datetime = Field(..., description="Date de création")
     updated_at: Optional[datetime] = Field(None, description="Date de mise à jour")
 
-    class Config:
-        orm_mode = True
-
+    model_config = ConfigDict(from_attributes=True)
 
 class TeamMemberBase(BaseModel):
     """Schéma de base pour un membre d'équipe."""
@@ -80,9 +76,7 @@ class TeamMember(TeamMemberBase):
     joined_at: datetime = Field(..., description="Date d'ajout à l'équipe")
     updated_at: Optional[datetime] = Field(None, description="Date de mise à jour du rôle")
 
-    class Config:
-        orm_mode = True
-
+    model_config = ConfigDict(from_attributes=True)
 
 class Team(TeamInDBBase):
     """Schéma complet d'une équipe avec ses membres."""
@@ -91,8 +85,8 @@ class Team(TeamInDBBase):
     )
     member_count: int = Field(0, description="Nombre de membres dans l'équipe")
 
-    @validator('member_count', pre=True, always=True)
-    def set_member_count(cls, v, values):
+    @model_validator(mode='before')
+    def set_member_count(cls, values):
         """Calcule automatiquement le nombre de membres."""
         if 'members' in values and values['members'] is not None:
             return len(values['members'])
@@ -106,8 +100,8 @@ class TeamResponse(BaseModel):
     message: str = Field(..., description="Message détaillé")
     team: Optional[Team] = Field(None, description="Équipe concernée")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "message": "Opération effectuée avec succès",
@@ -124,3 +118,4 @@ class TeamResponse(BaseModel):
                 }
             }
         }
+    )

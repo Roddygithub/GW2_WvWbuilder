@@ -13,7 +13,7 @@ from sqlalchemy.sql import func
 from .base import Base
 
 # Import des tables de jonction
-from .association_tables import composition_members, user_roles, team_members
+from .association_tables import composition_members, user_roles
 
 if TYPE_CHECKING:
     from .build import Build
@@ -70,17 +70,22 @@ class User(Base):
         cascade="all, delete-orphan"
     )
     
+    # Relation avec les équipes via la table d'association TeamMember
     teams: Mapped[List["Team"]] = relationship(
         "Team",
-        secondary=team_members,
-        back_populates="members",
-        viewonly=True
+        secondary="team_members",
+        primaryjoin="and_(User.id == TeamMember.user_id, TeamMember.is_active == True)",
+        secondaryjoin="Team.id == TeamMember.team_id",
+        viewonly=True,
+        overlaps="team_associations"
     )
     
+    # Relation avec les associations d'équipe (pour accéder aux détails de la relation)
     team_associations: Mapped[List["TeamMember"]] = relationship(
         "TeamMember",
         back_populates="user",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        overlaps="teams"
     )
 
     def __repr__(self) -> str:

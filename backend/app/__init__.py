@@ -1,24 +1,33 @@
 """
 Package principal de l'application GW2 WvW Builder.
-
 Ce package expose les composants principaux de l'application.
 """
 from typing import Any, Dict, List, Optional, Union
 from fastapi import FastAPI
 
-# Import des modèles
-from .models import (
-    Base,
-    User,
-    Role,
-    Permission,
-    Build,
-    Composition,
-    Profession,
-    EliteSpecialization,
-    Team,
-    Tag,
-    CompositionTag,
+# Import des modèles depuis leurs modules individuels
+from .models.base import Base
+from .models.user import User
+from .models.role import Role
+from .models.permission import Permission
+from .models.build import Build
+from .models.composition import Composition
+from .models.composition_tag import CompositionTag
+from .models.profession import Profession
+from .models.elite_specialization import EliteSpecialization
+from .models.team import Team
+from .models.tag import Tag
+
+# Import des opérations CRUD
+from .crud import (
+    user_crud,
+    permission_crud,
+    build_crud,
+    composition_crud,
+    profession_crud,
+    elite_spec_crud,
+    team_crud,
+    tag_crud,
 )
 
 # Import des schémas

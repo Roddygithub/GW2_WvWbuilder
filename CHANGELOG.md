@@ -1,6 +1,5 @@
 # Changelog
 
-<<<<<<< HEAD
 All notable changes to the GW2 WvW Builder project will be documented in this file.
 
 ## [Unreleased]
@@ -27,20 +26,3 @@ All notable changes to the GW2 WvW Builder project will be documented in this fi
 - Initial project setup
 - Core functionality implementation
 - Basic test suite
-=======
-Tous les changements notables dans ce projet seront documentés dans ce fichier.
-
-Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
-et ce projet adhère à [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Non publié]
-
-### Ajouté
-- Configuration initiale du projet
-- Structure de base du backend avec FastAPI
-- Configuration de la base de données avec SQLAlchemy
-- Système d'authentification JWT
-- Tests unitaires et d'intégration
-- Intégration continue avec GitHub Actions
-- Documentation du projet
->>>>>>> a023051 (feat: optimized CRUD with Redis caching + full test coverage + docs and monitoring guide)

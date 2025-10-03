@@ -10,13 +10,14 @@ from sqlalchemy.orm import selectinload
 from app.core.config import settings
 from app.db.session import get_async_db
 from app import crud, models
-from app.models.team import Team, team_members
+from app.models.team import Team
+from app.models.team_member import TeamMember
 from app.core.exceptions import (
     CredentialsException,
     InactiveUserException,
     NotSuperUserException,
     UserNotFoundException,
-    PermissionDeniedException
+    ForbiddenException as PermissionDeniedException
 )
 
 # OAuth2 scheme for token authentication

@@ -42,14 +42,22 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
         return list(db.scalars(stmt).all())
 
     async def get_multi_by_owner_async(
-        self, db: AsyncSession, *, owner_id: int, skip: int = 0, limit: int = 100
+        self,
+        db: AsyncSession,
+        *,
+        owner_id: int,
+        skip: int = 0,
+        limit: int = 100,
     ) -> List[models.Build]:
         """Get multiple builds by owner ID (asynchronous)."""
         stmt = (
             select(self.model)
+            .options(
+                selectinload(self.model.professions), selectinload(self.model.created_by)
+            )
             .where(self.model.created_by_id == owner_id)
             .offset(skip)
-            .limit(limit)
+            .limit(limit) 
         )
         result = await db.execute(stmt)
         return list(result.scalars().all())
@@ -72,6 +80,9 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
         """Get public builds (asynchronous)."""
         stmt = (
             select(self.model)
+            .options(
+                selectinload(self.model.professions), selectinload(self.model.created_by)
+            )
             .where(self.model.is_public == True)  # noqa: E712
             .offset(skip)
             .limit(limit)
@@ -177,17 +188,32 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
             build_data = obj_in.model_dump()
             profession_ids = build_data.pop("profession_ids", [])
 
+            # Verify all professions exist before starting the transaction
+            if profession_ids:
+                stmt = select(func.count(Profession.id)).where(
+                    Profession.id.in_(profession_ids)
+                )
+                result = await db.execute(stmt)
+                count = result.scalar_one()
+                if count != len(set(profession_ids)):
+                    # Find which ones are missing for a better error message
+                    existing_stmt = select(Profession.id).where(Profession.id.in_(profession_ids))
+                    existing_result = await db.execute(existing_stmt)
+                    existing_ids = {r[0] for r in existing_result}
+                    missing_ids = set(profession_ids) - existing_ids
+                    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Professions not found: {missing_ids}")
+
+
             # Add required fields
             build_data["created_by_id"] = owner_id
             now = datetime.now(timezone.utc)
-<<<<<<< HEAD
             build_data['created_at'] = now
             build_data['updated_at'] = now
             build_data.setdefault('config', {})
             build_data.setdefault('constraints', {})
             
             # Ensure we have at least one profession
-            if not professions:
+            if not profession_ids:
                 logger.warning("No professions available for build generation")
                 return schemas.BuildGenerationResponse(
                     success=False,
@@ -286,41 +312,6 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
                 suggested_composition=suggested_composition,
                 metrics=metrics
             )
-            
-=======
-            build_data["created_at"] = now
-            build_data["updated_at"] = now
-            build_data.setdefault("config", {})
-            build_data.setdefault("constraints", {})
-
-            # Create build
-            db_obj = Build(**build_data)
-            db.add(db_obj)
-            await db.flush()
-
-            # Add profession associations if any
-            if profession_ids:
-                # Verify all professions exist in a single query
-                stmt = select(Profession.id).where(Profession.id.in_(profession_ids))
-                result = await db.execute(stmt)
-                existing_ids = {row[0] for row in result.all()}
-
-                for prof_id in profession_ids:
-                    if prof_id not in existing_ids:
-                        raise ValueError(
-                            f"Profession with ID {prof_id} not found in database"
-                        )
-
-                    stmt = build_profession.insert().values(
-                        build_id=db_obj.id, profession_id=prof_id
-                    )
-                    db.execute(stmt)
-
-            await db.commit()
-            await db.refresh(db_obj)
-            return db_obj
-
->>>>>>> a023051 (feat: optimized CRUD with Redis caching + full test coverage + docs and monitoring guide)
         except Exception as e:
             return schemas.BuildGenerationResponse(
                 success=False,

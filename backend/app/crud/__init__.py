@@ -6,7 +6,7 @@ This module exports all CRUD operations for the application.
 
 from .base import CRUDBase
 from .base_async import CRUDBaseAsync
-from .crud_user import user as user_crud, CRUDUser
+from .user import user as user_crud, CRUDUser
 from .crud_role import role as role_crud, CRUDRole
 from .crud_permission import permission as permission_crud
 from .crud_profession import profession as profession_crud, CRUDProfession

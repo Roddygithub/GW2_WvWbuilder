@@ -16,10 +16,11 @@ from app.models import (
     User, 
     Team, 
     Tag, 
-    composition_tags,
     CompositionTag,
-    Build
+    Build,
+    composition_members
 )
+from app.models.enums import CompositionRole
 from app.schemas.composition import CompositionCreate, CompositionUpdate
 from app.core.cache import cache
 from app.core.config import settings
@@ -161,7 +162,7 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
         *,
         composition_id: int,
         user: User,
-        role: CompositionMemberRole = CompositionMemberRole.HEALER,
+        role: CompositionRole = CompositionRole.HEALER,
         profession_id: Optional[int] = None,
         elite_specialization_id: Optional[int] = None,
         notes: Optional[str] = None,

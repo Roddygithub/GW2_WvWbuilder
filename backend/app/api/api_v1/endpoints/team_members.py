@@ -4,6 +4,7 @@ Endpoints pour la gestion des membres d'équipe.
 Ce module contient les endpoints pour gérer les membres d'une équipe,
 y compris l'ajout, la suppression et la mise à jour des rôles des membres.
 """
+from datetime import datetime
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -14,7 +15,8 @@ from sqlalchemy.future import select
 from app import models, schemas
 from app.api import deps
 from app.db.session import get_db
-from app.models.team import Team, team_members
+from app.models.team import Team
+from app.models.team_member import TeamMember
 from app.models.user import User
 from app.schemas.team import TeamMemberUpdate
 
@@ -46,15 +48,16 @@ async def add_team_member(
     # Vérifier que l'utilisateur est le propriétaire de l'équipe ou un administrateur
     if team.owner_id != current_user.id and not current_user.is_superuser:
         # Vérifier si l'utilisateur est administrateur de l'équipe
-        stmt = select(team_members).where(
+        stmt = select(TeamMember).where(
             and_(
-                team_members.c.team_id == team_id,
-                team_members.c.user_id == current_user.id,
-                team_members.c.is_admin == True  # noqa: E712
+                TeamMember.team_id == team_id,
+                TeamMember.user_id == current_user.id,
+                TeamMember.is_admin == True,  # noqa: E712
+                TeamMember.is_active == True  # noqa: E712
             )
         )
         result = await db.execute(stmt)
-        if not result.first():
+        if not result.scalar_one_or_none():
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Seul le propriétaire ou un administrateur peut ajouter des membres",
@@ -72,29 +75,30 @@ async def add_team_member(
         )
     
     # Vérifier que l'utilisateur n'est pas déjà membre de l'équipe
-    stmt = select(team_members).where(
+    stmt = select(TeamMember).where(
         and_(
-            team_members.c.team_id == team_id,
-            team_members.c.user_id == user_id,
-            team_members.c.is_active == True  # noqa: E712
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+            TeamMember.is_active == True  # noqa: E712
         )
     )
     result = await db.execute(stmt)
-    if result.first():
+    if result.scalar_one_or_none():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="L'utilisateur est déjà membre de cette équipe",
         )
     
     # Ajouter l'utilisateur à l'équipe
-    stmt = team_members.insert().values(
+    team_member = TeamMember(
         team_id=team_id,
         user_id=user_id,
         is_admin=False,
         is_active=True
     )
-    await db.execute(stmt)
+    db.add(team_member)
     await db.commit()
+    await db.refresh(team_member)
     
     return {"msg": f"Utilisateur {user_to_add.email} ajouté à l'équipe {team.name}"}
 
@@ -125,30 +129,31 @@ async def update_team_member(
     # Vérifier que l'utilisateur est le propriétaire de l'équipe ou un administrateur
     if team.owner_id != current_user.id and not current_user.is_superuser:
         # Vérifier si l'utilisateur est administrateur de l'équipe
-        stmt = select(team_members).where(
+        stmt = select(TeamMember).where(
             and_(
-                team_members.c.team_id == team_id,
-                team_members.c.user_id == current_user.id,
-                team_members.c.is_admin == True  # noqa: E712
+                TeamMember.team_id == team_id,
+                TeamMember.user_id == current_user.id,
+                TeamMember.is_admin == True,  # noqa: E712
+                TeamMember.is_active == True  # noqa: E712
             )
         )
         result = await db.execute(stmt)
-        if not result.first():
+        if not result.scalar_one_or_none():
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Seul le propriétaire ou un administrateur peut modifier les rôles",
             )
     
     # Vérifier que l'utilisateur cible est bien membre de l'équipe
-    stmt = select(team_members).where(
+    stmt = select(TeamMember).where(
         and_(
-            team_members.c.team_id == team_id,
-            team_members.c.user_id == user_id,
-            team_members.c.is_active == True  # noqa: E712
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+            TeamMember.is_active == True  # noqa: E712
         )
     )
     result = await db.execute(stmt)
-    member = result.first()
+    member = result.scalar_one_or_none()
     
     if not member:
         raise HTTPException(
@@ -156,21 +161,14 @@ async def update_team_member(
             detail="Membre non trouvé dans l'équipe",
         )
     
-    # Mettre à jour le rôle du membre
+    # Mettre à jour le membre
     update_data = member_in.dict(exclude_unset=True)
-    stmt = (
-        team_members.update()
-        .where(
-            and_(
-                team_members.c.team_id == team_id,
-                team_members.c.user_id == user_id
-            )
-        )
-        .values(**update_data)
-    )
+    for field, value in update_data.items():
+        setattr(member, field, value)
     
-    await db.execute(stmt)
+    db.add(member)
     await db.commit()
+    await db.refresh(member)
     
     return {"msg": "Membre mis à jour avec succès"}
 
@@ -200,30 +198,31 @@ async def remove_team_member(
     # Vérifier que l'utilisateur est le propriétaire de l'équipe ou un administrateur
     if team.owner_id != current_user.id and not current_user.is_superuser:
         # Vérifier si l'utilisateur est administrateur de l'équipe
-        stmt = select(team_members).where(
+        stmt = select(TeamMember).where(
             and_(
-                team_members.c.team_id == team_id,
-                team_members.c.user_id == current_user.id,
-                team_members.c.is_admin == True  # noqa: E712
+                TeamMember.team_id == team_id,
+                TeamMember.user_id == current_user.id,
+                TeamMember.is_admin == True,  # noqa: E712
+                TeamMember.is_active == True  # noqa: E712
             )
         )
         result = await db.execute(stmt)
-        if not result.first():
+        if not result.scalar_one_or_none():
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Seul le propriétaire ou un administrateur peut supprimer des membres",
             )
     
     # Vérifier que l'utilisateur cible est bien membre de l'équipe
-    stmt = select(team_members).where(
+    stmt = select(TeamMember).where(
         and_(
-            team_members.c.team_id == team_id,
-            team_members.c.user_id == user_id,
-            team_members.c.is_active == True  # noqa: E712
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+            TeamMember.is_active == True  # noqa: E712
         )
     )
     result = await db.execute(stmt)
-    member = result.first()
+    member = result.scalar_one_or_none()
     
     if not member:
         raise HTTPException(
@@ -232,18 +231,11 @@ async def remove_team_member(
         )
     
     # Marquer le membre comme inactif au lieu de le supprimer pour conserver l'historique
-    stmt = (
-        team_members.update()
-        .where(
-            and_(
-                team_members.c.team_id == team_id,
-                team_members.c.user_id == user_id
-            )
-        )
-        .values(is_active=False, left_at=func.now())
-    )
+    member.is_active = False
+    member.left_at = datetime.utcnow()
     
-    await db.execute(stmt)
+    db.add(member)
     await db.commit()
+    await db.refresh(member)
     
     return {"msg": "Membre retiré de l'équipe avec succès"}

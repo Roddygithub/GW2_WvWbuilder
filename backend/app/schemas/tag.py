@@ -4,7 +4,7 @@ Schémas Pydantic pour la gestion des tags.
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class TagBase(BaseModel):
@@ -34,8 +34,7 @@ class TagInDBBase(TagBase):
     created_at: datetime = Field(..., description="Date de création")
     updated_at: Optional[datetime] = Field(None, description="Date de mise à jour")
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TagStats(TagInDBBase):
@@ -45,8 +44,7 @@ class TagStats(TagInDBBase):
     """
     usage_count: int = Field(0, description="Nombre d'utilisations du tag")
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Tag(TagInDBBase):
@@ -61,8 +59,8 @@ class TagResponse(BaseModel):
     message: str = Field(..., description="Message détaillé")
     tag: Optional[Tag] = Field(None, description="Tag concerné")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "message": "Opération réussie",
@@ -71,7 +69,8 @@ class TagResponse(BaseModel):
                     "name": "WvW",
                     "description": "Pour les builds orientés Monde contre Monde",
                     "created_at": "2023-01-01T00:00:00",
-                    "updated_at": "2023-01-01T00:00:00"
-                }
+                    "updated_at": "2023-01-01T00:00:00",
+                },
             }
         }
+    )

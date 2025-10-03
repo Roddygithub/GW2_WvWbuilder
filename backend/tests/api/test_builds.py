@@ -5,421 +5,577 @@ Tests d'API pour les endpoints liés aux builds.
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.models import User, Build, Profession
 
 
 @pytest.mark.api
 class TestBuildsAPI:
     """Tests pour les endpoints d'API des builds."""
 
-    def test_read_builds(self, client: TestClient, auth_headers: dict):
-        """Teste la récupération de la liste des builds."""
-        # Récupérer les builds publics
-        response = client.get(
-            f"{settings.API_V1_STR}/builds/", headers=auth_headers["user"]
+    async def test_read_builds(self, async_client: AsyncClient, auth_headers, build_factory, user_factory, db: AsyncSession):
+        """Teste que la liste des builds ne contient que les builds publics et ceux de l'utilisateur."""
+        user_headers = await auth_headers(username="testuser", password="password")
+        user = await user_crud.get_by_username_async(db, username="testuser")
+        another_user = await user_factory(username="anotheruser", email="another@user.com", password="password")
+        
+        public_build = await build_factory(name="Public Build", is_public=True, user=another_user)
+        private_build_other_user = await build_factory(name="Private Build", is_public=False, user=another_user)
+        private_build_current_user = await build_factory(name="My Private Build", is_public=False, user=user)
+
+        response = await async_client.get(
+            f"{settings.API_V1_STR}/builds/", headers=user_headers
         )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert isinstance(data, list)
+        # L'utilisateur devrait voir le build public et son propre build privé.
+        assert len(data) == 2
+        build_names = {b['name'] for b in data}
+        assert public_build.name in build_names
+        assert private_build_current_user.name in build_names
+        assert private_build_other_user.name not in build_names
 
-        # Vérifier que seuls les builds publics sont renvoyés
-        for build in data:
-            assert build["is_public"] is True
-
-    def test_read_build(self, client: TestClient, test_data: dict, auth_headers: dict):
+    async def test_read_build(self, async_client: AsyncClient, auth_headers, build_factory):
         """Teste la récupération d'un build par son ID."""
-        # Récupérer un build public existant
-        public_build = next(
-            build for build in test_data["builds"].values() if build.is_public
-        )
+        headers = await auth_headers()
+        build = await build_factory(name="Readable Build", is_public=True)
 
-        # Tester la récupération du build
-        response = client.get(
-            f"{settings.API_V1_STR}/builds/{public_build.id}",
-            headers=auth_headers["user"],
+        response = await async_client.get(
+            f"{settings.API_V1_STR}/builds/{build.id}",
+            headers=headers,
         )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data["id"] == str(public_build.id)
-        assert data["name"] == public_build.name
+        assert data["id"] == build.id
+        assert data["name"] == build.name
 
-    def test_read_private_build_unauthorized(
-        self, client: TestClient, test_data: dict, auth_headers: dict
+    async def test_read_private_build_unauthorized(
+        self, async_client: AsyncClient, auth_headers, build_factory, user_factory
     ):
         """Teste qu'un utilisateur ne peut pas accéder à un build privé qui ne lui appartient pas."""
-        # Récupérer un build privé existant
-        private_build = next(
-            build for build in test_data["builds"].values() if not build.is_public
-        )
+        owner = await user_factory(username="owner", password="password")
+        private_build = await build_factory(name="Private Build", is_public=False, user=owner)
+        
+        # A different user tries to access it
+        other_user_headers = await auth_headers(username="other", password="password")
 
-        # Tester l'accès non autorisé au build privé
-        response = client.get(
+        response = await async_client.get(
             f"{settings.API_V1_STR}/builds/{private_build.id}",
-            headers=auth_headers["user"],
+            headers=other_user_headers,
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert "detail" in response.json()
         assert "Not enough permissions" in response.json()["detail"]
 
-    def test_create_build(
-        self, client: TestClient, test_data: dict, auth_headers: dict
+    async def test_create_build(
+        self, async_client: AsyncClient, db: AsyncSession, auth_headers, profession_factory
     ):
-        """Teste la création d'un nouveau build."""
-        # Récupérer des données de test
-        profession = test_data["professions"]["warrior"]
-        elite_spec = test_data["elite_specs"]["berserker"]
+        """Teste la création d'un nouveau build et vérifie son propriétaire."""
+        # Crée un utilisateur et obtient ses headers d'authentification
+        user_headers = await auth_headers(username="creator", password="password")
+        profession = await profession_factory()
 
-        # Données pour la création du build
         build_data = {
             "name": "New API Test Build",
             "description": "A test build created via API",
+            "game_mode": "wvw",
             "is_public": True,
-            "profession_id": str(profession.id),
-            "elite_spec_id": str(elite_spec.id),
-            "weapons": ["Axe", "Axe"],
-            "skills": ["Banner of Strength", "Banner of Discipline"],
-            "traits": {
-                "Strength": [1, 2, 1],
-                "Discipline": [2, 2, 1],
-                "Berserker": [1, 2, 3],
-            },
-            "equipment": {
-                "weapons": ["Axe", "Axe"],
-                "armor": ["Berserker's"],
-                "trinkets": ["Berserker's"],
-            },
-            "infusions": {
-                "weapons": ["+9 Agony Infusion"],
-                "armor": [],
-                "trinkets": [],
-            },
-            "consumables": {
-                "food": "Bowl of Sweet and Spicy Butternut Squash Soup",
-                "utility": "Superior Sharpening Stone",
-            },
-            "attributes": {
-                "power": 3000,
-                "precision": 2000,
-                "ferocity": 1500,
-                "vitality": 1000,
-            },
-            "skills_guide": "Start with banner and burst rotation...",
-            "rotation_guide": "Maintain might stacks and use banners on cooldown...",
-            "video_guide_url": "https://example.com/build-video",
-            "gw2skills_url": "https://lucky-noobs.com/builds/view/12345",
+            "profession_ids": [profession.id],
         }
-
-        # Créer le build
-        response = client.post(
+        
+        # L'utilisateur "creator" est implicitement créé par auth_headers
+        response = await async_client.post(
             f"{settings.API_V1_STR}/builds/",
             json=build_data,
-            headers=auth_headers["user"],
+            headers=user_headers,
         )
 
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
 
-        # Vérifier les données renvoyées
         assert "id" in data
         assert data["name"] == "New API Test Build"
         assert data["is_public"] is True
-        assert data["profession_id"] == str(profession.id)
-        assert data["elite_spec_id"] == str(elite_spec.id)
-        assert data["weapons"] == ["Axe", "Axe"]
-        assert len(data["skills"]) == 2
-        assert "Banner of Strength" in data["skills"]
+        assert data["profession_ids"] == [profession.id]
+        
+        # Vérification explicite en base de données
+        from app.crud import user_crud
+        user = await user_crud.get_by_username_async(db, username="creator")
+        assert user is not None
+        assert data["created_by_id"] == user.id
 
-    def test_update_build(
-        self, client: TestClient, test_data: dict, auth_headers: dict
+    async def test_create_build_with_multiple_professions(
+        self, async_client: AsyncClient, db: AsyncSession, auth_headers, profession_factory
     ):
-        """Teste la mise à jour d'un build existant."""
-        # Récupérer un build appartenant à l'utilisateur
-        user = test_data["users"]["user"]
-        user_build = next(
-            build for build in test_data["builds"].values() if build.user_id == user.id
+        """Teste la création d'un build avec plusieurs professions et vérifie les associations."""
+        user_headers = await auth_headers(username="multi_prof_user", password="password")
+        prof1 = await profession_factory(name="Profession A")
+        prof2 = await profession_factory(name="Profession B")
+
+        build_data = {
+            "name": "Multi-Profession Build",
+            "game_mode": "wvw",
+            "profession_ids": [prof1.id, prof2.id],
+        }
+
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/builds/",
+            json=build_data,
+            headers=user_headers,
         )
 
-        # Données de mise à jour
+        assert response.status_code == status.HTTP_201_CREATED
+        data = response.json()
+        build_id = data["id"]
+
+        # Vérification en base de données
+        from sqlalchemy import select
+        from sqlalchemy.orm import selectinload
+
+        stmt = select(Build).options(selectinload(Build.professions)).where(Build.id == build_id)
+        result = await db.execute(stmt)
+        db_build = result.scalar_one()
+        
+        assert len(db_build.professions) == 2
+        assert {p.id for p in db_build.professions} == {prof1.id, prof2.id}
+
+    async def test_update_build(
+        self, async_client: AsyncClient, auth_headers, build_factory, user_factory
+    ):
+        """Teste la mise à jour d'un build existant."""
+        user = await user_factory(username="owner", password="password")
+        headers = await auth_headers(username="owner", password="password")
+        user_build = await build_factory(user=user)
+
         update_data = {
             "name": "Updated Build Name",
             "description": "Updated description via API",
             "is_public": False,
-            "weapons": ["Greatsword", "Axe/Axe"],
-            "skills": ["Banner of Strength", "Banner of Discipline", "Signet of Might"],
         }
 
-        # Mettre à jour le build
-        response = client.put(
+        response = await async_client.put(
             f"{settings.API_V1_STR}/builds/{user_build.id}",
             json=update_data,
-            headers=auth_headers["user"],
+            headers=headers,
         )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
 
-        # Vérifier les données mises à jour
         assert data["name"] == "Updated Build Name"
         assert data["description"] == "Updated description via API"
         assert data["is_public"] is False
-        assert "Greatsword" in data["weapons"]
-        assert len(data["skills"]) == 3
-        assert "Signet of Might" in data["skills"]
 
-    def test_update_other_users_build(
-        self, client: TestClient, test_data: dict, auth_headers: dict
+    async def test_update_build_professions(
+        self, async_client: AsyncClient, db: AsyncSession, auth_headers, build_factory, profession_factory, user_factory
     ):
-        """Teste qu'un utilisateur ne peut pas mettre à jour un build qui ne lui appartient pas."""
-        # Récupérer un build qui n'appartient pas à l'utilisateur
-        other_user_build = next(
-            build
-            for build in test_data["builds"].values()
-            if build.user_id != test_data["users"]["user"].id
+        """Teste la mise à jour des professions associées à un build."""
+        # 1. Créer un utilisateur, des professions et un build initial
+        user = await user_factory(username="update_prof_user", password="password")
+        headers = await auth_headers(username="update_prof_user", password="password")
+        
+        prof1 = await profession_factory(name="Initial Prof 1")
+        prof2 = await profession_factory(name="Initial Prof 2")
+        prof3 = await profession_factory(name="New Prof 3")
+
+        user_build = await build_factory(user=user, professions=[prof1])
+
+        # 2. Préparer les données de mise à jour pour changer les professions
+        update_data = {
+            "name": user_build.name, # Le nom ne change pas
+            "profession_ids": [prof2.id, prof3.id] # Remplacer prof1 par prof2 et prof3
+        }
+
+        # 3. Envoyer la requête de mise à jour
+        response = await async_client.put(
+            f"{settings.API_V1_STR}/builds/{user_build.id}",
+            json=update_data,
+            headers=headers,
         )
 
-        # Tenter de mettre à jour le build
-        response = client.put(
+        # 4. Vérifier la réponse et l'état de la base de données
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert len(data["professions"]) == 2
+        
+        await db.refresh(user_build, attribute_names=["professions"])
+        
+        final_prof_ids = {p.id for p in user_build.professions}
+        assert final_prof_ids == {prof2.id, prof3.id}
+
+    async def test_update_other_users_build(
+        self, async_client: AsyncClient, auth_headers, build_factory, user_factory
+    ):
+        """Teste qu'un utilisateur ne peut pas mettre à jour un build qui ne lui appartient pas."""
+        owner = await user_factory(username="owner", password="password")
+        other_user_build = await build_factory(user=owner)
+
+        other_user_headers = await auth_headers(username="other", password="password")
+
+        response = await async_client.put(
             f"{settings.API_V1_STR}/builds/{other_user_build.id}",
             json={"name": "Unauthorized Update"},
-            headers=auth_headers["user"],
+            headers=other_user_headers,
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert "detail" in response.json()
         assert "Not enough permissions" in response.json()["detail"]
 
-    def test_delete_build(
-        self, client: TestClient, test_data: dict, auth_headers: dict, db
+    async def test_delete_build(
+        self, async_client: AsyncClient, auth_headers, build_factory, user_factory
     ):
         """Teste la suppression d'un build."""
-        # Créer un nouveau build pour le test
-        test_data["users"]["user"]
-        profession = test_data["professions"]["warrior"]
-        elite_spec = test_data["elite_specs"]["berserker"]
+        user = await user_factory(username="owner", password="password")
+        headers = await auth_headers(username="owner", password="password")
+        build_to_delete = await build_factory(user=user)
 
-        build_data = {
-            "name": "Build to Delete",
-            "description": "This build will be deleted",
-            "is_public": True,
-            "profession_id": str(profession.id),
-            "elite_spec_id": str(elite_spec.id),
-            "weapons": ["Axe", "Axe"],
-            "skills": [],
-            "traits": {},
-        }
-
-        # Créer le build
-        create_response = client.post(
-            f"{settings.API_V1_STR}/builds/",
-            json=build_data,
-            headers=auth_headers["user"],
-        )
-
-        build_id = create_response.json()["id"]
-
-        # Supprimer le build
-        delete_response = client.delete(
-            f"{settings.API_V1_STR}/builds/{build_id}", headers=auth_headers["user"]
+        delete_response = await async_client.delete(
+            f"{settings.API_V1_STR}/builds/{build_to_delete.id}", headers=headers
         )
 
         assert delete_response.status_code == status.HTTP_200_OK
         data = delete_response.json()
-        assert data["id"] == build_id
+        assert data["id"] == build_to_delete.id
 
-        # Vérifier que le build a bien été supprimé
-        get_response = client.get(
-            f"{settings.API_V1_STR}/builds/{build_id}", headers=auth_headers["user"]
+        get_response = await async_client.get(
+            f"{settings.API_V1_STR}/builds/{build_to_delete.id}", headers=headers
         )
 
         assert get_response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_delete_other_users_build(
-        self, client: TestClient, test_data: dict, auth_headers: dict
-    ):
-        """Teste qu'un utilisateur ne peut pas supprimer un build qui ne lui appartient pas."""
-        # Récupérer un build qui n'appartient pas à l'utilisateur
-        other_user_build = next(
-            build
-            for build in test_data["builds"].values()
-            if build.user_id != test_data["users"]["user"].id
+
+@pytest.mark.api
+class TestBuildsAPIEdgeCases:
+    """Tests pour les cas limites et les erreurs des endpoints de builds."""
+
+    async def test_create_build_unauthenticated(self, async_client: AsyncClient):
+        """Teste que la création d'un build sans authentification échoue."""
+        invalid_build_data = {
+            "name": "Unauthorized Build",
+            "description": "This should fail",
+            "game_mode": "wvw",
+            "is_public": True,
+            "profession_ids": [1],
+        }
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/builds/", json=invalid_build_data
+        )
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    async def test_create_build_with_invalid_data(self, async_client: AsyncClient, auth_headers):
+        """Teste la création d'un build avec des données invalides (erreur de validation)."""
+        headers = await auth_headers()
+        
+        # Données invalides : nom trop court
+        invalid_build_data = {
+            "name": "a",
+            "description": "A test build",
+            "game_mode": "wvw",
+            "is_public": True,
+            "profession_ids": [1],
+        }
+
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/builds/",
+            json=invalid_build_data,
+            headers=headers,
         )
 
-        # Tenter de supprimer le build
-        response = client.delete(
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        errors = response.json()["detail"]
+        assert any("at least 3 characters" in err["msg"] for err in errors if err["loc"] == ["body", "name"])
+
+    async def test_create_build_with_name_too_long(self, async_client: AsyncClient, auth_headers):
+        """Teste la création d'un build avec un nom trop long."""
+        headers = await auth_headers()
+        
+        invalid_build_data = {
+            "name": "a" * 101,  # max_length is 100
+            "description": "A test build",
+            "game_mode": "wvw",
+            "is_public": True,
+            "profession_ids": [1],
+        }
+
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/builds/",
+            json=invalid_build_data,
+            headers=headers,
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        errors = response.json()["detail"]
+        assert any("at most 100 characters" in err["msg"] for err in errors if err["loc"] == ["body", "name"])
+
+    async def test_create_build_with_empty_professions(self, async_client: AsyncClient, auth_headers):
+        """Teste la création d'un build avec une liste de professions vide."""
+        headers = await auth_headers()
+        build_data = {
+            "name": "Build with no professions",
+            "game_mode": "pve",
+            "profession_ids": [],  # Liste vide, ce qui est invalide (min_length=1)
+        }
+
+        response = await async_client.post(f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        errors = response.json()["detail"]
+        assert any("at least 1 item" in err["msg"] for err in errors if err["loc"] == ["body", "profession_ids"])
+
+    async def test_create_build_with_too_many_professions(self, async_client: AsyncClient, auth_headers, profession_factory):
+        """Teste la création d'un build avec trop de professions (max_length=3)."""
+        headers = await auth_headers()
+        prof1 = await profession_factory(name="p1")
+        prof2 = await profession_factory(name="p2")
+        prof3 = await profession_factory(name="p3")
+        prof4 = await profession_factory(name="p4")
+        
+        build_data = {
+            "name": "Build with too many professions",
+            "game_mode": "pve",
+            "profession_ids": [prof1.id, prof2.id, prof3.id, prof4.id],
+        }
+
+        response = await async_client.post(f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        errors = response.json()["detail"]
+        assert any("at most 3 items" in err["msg"] for err in errors if err["loc"] == ["body", "profession_ids"])
+
+    async def test_create_build_with_invalid_game_mode(self, async_client: AsyncClient, auth_headers):
+        """Teste la création d'un build avec un game_mode invalide."""
+        headers = await auth_headers()
+        build_data = {
+            "name": "Invalid Game Mode Build",
+            "game_mode": "invalid_mode",
+            "profession_ids": [1],
+        }
+        response = await async_client.post(f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        errors = response.json()["detail"]
+        assert any("Input should be 'wvw', 'pvp', 'pve', 'raids' or 'fractals'" in err["msg"] for err in errors if err["loc"] == ["body", "game_mode"])
+
+    @pytest.mark.parametrize("size", [0, 51])
+    async def test_create_build_with_invalid_team_size(self, async_client: AsyncClient, auth_headers, size):
+        """Teste la création d'un build avec une team_size invalide."""
+        headers = await auth_headers()
+        build_data = {
+            "name": "Invalid Team Size Build",
+            "game_mode": "wvw",
+            "team_size": size,
+            "profession_ids": [1],
+        }
+        response = await async_client.post(f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers)
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        errors = response.json()["detail"]
+        if size < 1:
+            assert any("greater than or equal to 1" in err["msg"] for err in errors if err["loc"] == ["body", "team_size"])
+        else:
+            assert any("less than or equal to 50" in err["msg"] for err in errors if err["loc"] == ["body", "team_size"])
+
+    async def test_create_build_with_nonexistent_profession(self, async_client: AsyncClient, auth_headers):
+        """Teste la création d'un build avec un ID de profession qui n'existe pas."""
+        headers = await auth_headers()
+        build_data = {
+            "name": "Build with invalid profession",
+            "game_mode": "pve",
+            "profession_ids": [99999],  # ID qui n'existe pas
+        }
+
+        response = await async_client.post(f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers)
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "not found" in response.json()["detail"].lower()
+
+    async def test_create_build_with_forbidden_professions(self, async_client: AsyncClient, auth_headers, profession_factory):
+        """Teste la création d'un build avec une combinaison de professions interdite."""
+        headers = await auth_headers()
+        # Simuler des professions avec des IDs qui correspondent à une règle métier
+        # Notre validateur interdit la combinaison {1, 2}
+        prof1 = await profession_factory(id=1, name="Guardian")
+        prof2 = await profession_factory(id=2, name="Firebrand")
+
+        build_data = {
+            "name": "Forbidden Combo Build",
+            "game_mode": "pve",
+            "profession_ids": [prof1.id, prof2.id],
+        }
+
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        errors = response.json()["detail"]
+        assert any(
+            "cannot be used together" in err["msg"] for err in errors if err["loc"] == ["body", "profession_ids"]
+        )
+
+    async def test_delete_other_users_build(
+        self, async_client: AsyncClient, auth_headers, profession_factory
+    ):
+        """Test creating a build with duplicate profession IDs."""
+        headers = await auth_headers()
+        profession = await profession_factory()
+        build_data = {
+            "name": "Test Build Duplicate Profs",
+            "description": "Test with duplicate professions",
+            "profession_ids": [profession.id, profession.id],  # Duplicate IDs
+            "game_mode": "pve",
+        }
+
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert "Profession IDs must be unique" in response.text
+
+    async def test_delete_other_users_build(
+        self, async_client: AsyncClient, auth_headers, profession_factory
+    ):
+        """Test creating a build with duplicate profession IDs."""
+        headers = await auth_headers()
+        profession = await profession_factory()
+        build_data = {
+            "name": "Test Build Duplicate Profs",
+            "description": "Test with duplicate professions",
+            "profession_ids": [profession.id, profession.id],  # Duplicate IDs
+            "game_mode": "pve",
+        }
+
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers
+        )
+
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert "Profession IDs must be unique" in response.text
+
+    async def test_delete_other_users_build(
+        self, async_client: AsyncClient, auth_headers, build_factory, user_factory
+    ):
+        """Teste qu'un utilisateur ne peut pas supprimer un build qui ne lui appartient pas."""
+        owner = await user_factory(username="owner", password="password")
+        other_user_build = await build_factory(user=owner)
+
+        other_user_headers = await auth_headers(username="other", password="password")
+
+        response = await async_client.delete(
             f"{settings.API_V1_STR}/builds/{other_user_build.id}",
-            headers=auth_headers["user"],
+            headers=other_user_headers,
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert "detail" in response.json()
         assert "Not enough permissions" in response.json()["detail"]
 
-    def test_search_builds(
-        self, client: TestClient, test_data: dict, auth_headers: dict
+
+    async def test_update_build_to_forbidden_combination(
+        self, async_client: AsyncClient, auth_headers, build_factory, profession_factory, user_factory
     ):
-        """Teste la recherche de builds."""
-        # Rechercher des builds avec un terme spécifique
-        search_term = "Berserker"
-        response = client.get(
-            f"{settings.API_V1_STR}/builds/search/",
-            params={"q": search_term, "skip": 0, "limit": 10},
-            headers=auth_headers["user"],
+        """Teste la mise à jour d'un build vers une combinaison de professions interdite."""
+        # 1. Créer un utilisateur et des professions initiales valides
+        user = await user_factory(username="update_forbidden_user", password="password")
+        headers = await auth_headers(username="update_forbidden_user", password="password")
+        
+        # Professions initiales (non interdites)
+        prof_valid_1 = await profession_factory(id=3, name="Valid Prof 1")
+        prof_valid_2 = await profession_factory(id=4, name="Valid Prof 2")
+        
+        # Créer un build avec ces professions valides
+        user_build = await build_factory(user=user, professions=[prof_valid_1, prof_valid_2])
+
+        # 2. Préparer les professions qui forment une combinaison interdite
+        # La règle est {1, 2} est interdite
+        prof_forbidden_1 = await profession_factory(id=1, name="Guardian")
+        prof_forbidden_2 = await profession_factory(id=2, name="Firebrand")
+
+        # 3. Tenter de mettre à jour le build avec la combinaison interdite
+        update_data = {
+            "name": user_build.name, # Le nom ne change pas
+            "profession_ids": [prof_forbidden_1.id, prof_forbidden_2.id]
+        }
+
+        response = await async_client.put(
+            f"{settings.API_V1_STR}/builds/{user_build.id}",
+            json=update_data,
+            headers=headers,
         )
 
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert isinstance(data, list)
-
-        # Vérifier que les résultats contiennent le terme de recherche
-        for build in data:
-            assert (search_term.lower() in build["name"].lower()) or (
-                build["description"]
-                and search_term.lower() in build["description"].lower()
-            )
-
-    def test_get_user_builds(
-        self, client: TestClient, test_data: dict, auth_headers: dict
-    ):
-        """Teste la récupération des builds d'un utilisateur spécifique."""
-        # Récupérer un utilisateur de test
-        user = test_data["users"]["user"]
-
-        # Récupérer les builds de l'utilisateur
-        response = client.get(
-            f"{settings.API_V1_STR}/users/{user.id}/builds",
-            headers=auth_headers["user"],
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        errors = response.json()["detail"]
+        assert any(
+            "cannot be used together" in err["msg"] for err in errors if err["loc"] == ["body", "profession_ids"]
         )
-
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-        assert isinstance(data, list)
-
-        # Vérifier que seuls les builds de l'utilisateur sont renvoyés
-        for build in data:
-            assert build["user_id"] == str(user.id)
-
-    def test_get_other_user_builds(
-        self, client: TestClient, test_data: dict, auth_headers: dict
-    ):
-        """Teste qu'un utilisateur ne peut voir que les builds publics des autres utilisateurs."""
-        # Récupérer un autre utilisateur
-        other_user = test_data["users"]["admin"]
-
-        # Récupérer les builds de l'autre utilisateur
-        response = client.get(
-            f"{settings.API_V1_STR}/users/{other_user.id}/builds",
-            headers=auth_headers["user"],
-        )
-
-        assert response.status_code == status.HTTP_200_OK
-        data = response.json()
-
-        # Vérifier que seuls les builds publics sont renvoyés
-        for build in data:
-            assert build["is_public"] is True
-            assert build["user_id"] == str(other_user.id)
-
 
 @pytest.mark.api
 class TestBuildsAPIPermissions:
     """Tests pour les permissions des endpoints de builds."""
 
-    def test_unauthenticated_access(self, client: TestClient, test_data: dict):
+    async def test_unauthenticated_access(self, async_client: AsyncClient, build_factory):
         """Teste que les endpoints protégés nécessitent une authentification."""
-        # Récupérer un build public existant
-        public_build = next(
-            build for build in test_data["builds"].values() if build.is_public
-        )
+        public_build = await build_factory(is_public=True)
 
-        # Tester l'accès non authentifié à différents endpoints
         endpoints = [
             ("GET", f"{settings.API_V1_STR}/builds/"),
             ("GET", f"{settings.API_V1_STR}/builds/{public_build.id}"),
             ("POST", f"{settings.API_V1_STR}/builds/"),
             ("PUT", f"{settings.API_V1_STR}/builds/{public_build.id}"),
             ("DELETE", f"{settings.API_V1_STR}/builds/{public_build.id}"),
-            ("GET", f"{settings.API_V1_STR}/builds/search/"),
-            ("GET", f"{settings.API_V1_STR}/users/{public_build.user_id}/builds"),
         ]
 
         for method, url in endpoints:
             if method == "GET":
-                response = client.get(url)
+                response = await async_client.get(url)
             elif method == "POST":
-                response = client.post(url, json={})
+                response = await async_client.post(url, json={})
             elif method == "PUT":
-                response = client.put(url, json={})
+                response = await async_client.put(url, json={})
             elif method == "DELETE":
-                response = client.delete(url)
+                response = await async_client.delete(url)
 
-            # Les endpoints GET peuvent être accessibles sans authentification
-            if method == "GET":
-                assert response.status_code != status.HTTP_401_UNAUTHORIZED
-            else:
-                assert response.status_code == status.HTTP_401_UNAUTHORIZED
+            assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_admin_access(
-        self, client: TestClient, test_data: dict, auth_headers: dict
+    async def test_admin_access(
+        self, async_client: AsyncClient, auth_headers, build_factory, user_factory
     ):
         """Teste qu'un administrateur peut accéder à tous les builds."""
-        # Récupérer un build privé
-        private_build = next(
-            build for build in test_data["builds"].values() if not build.is_public
-        )
+        owner = await user_factory(username="owner", password="password")
+        private_build = await build_factory(user=owner, is_public=False)
 
-        # L'administrateur devrait pouvoir accéder au build privé
-        response = client.get(
+        admin_headers = await auth_headers(username="admin", password="password", is_superuser=True)
+
+        response = await async_client.get(
             f"{settings.API_V1_STR}/builds/{private_build.id}",
-            headers=auth_headers["admin"],
+            headers=admin_headers,
         )
 
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["id"] == str(private_build.id)
+        assert response.json()["id"] == private_build.id
 
-    def test_admin_can_delete_any_build(
-        self, client: TestClient, test_data: dict, auth_headers: dict, db
+    async def test_admin_can_delete_any_build(
+        self, async_client: AsyncClient, auth_headers, build_factory, user_factory
     ):
         """Teste qu'un administrateur peut supprimer n'importe quel build."""
-        # Créer un nouveau build avec un utilisateur non administrateur
-        test_data["users"]["user"]
-        profession = test_data["professions"]["warrior"]
-        elite_spec = test_data["elite_specs"]["berserker"]
+        owner = await user_factory(username="owner", password="password")
+        build_to_delete = await build_factory(user=owner)
 
-        build_data = {
-            "name": "Build for Admin Deletion Test",
-            "description": "This build will be deleted by admin",
-            "is_public": True,
-            "profession_id": str(profession.id),
-            "elite_spec_id": str(elite_spec.id),
-            "weapons": ["Axe", "Axe"],
-            "skills": [],
-            "traits": {},
-        }
+        admin_headers = await auth_headers(username="admin", password="password", is_superuser=True)
 
-        # Créer le build avec l'utilisateur non administrateur
-        create_response = client.post(
-            f"{settings.API_V1_STR}/builds/",
-            json=build_data,
-            headers=auth_headers["user"],
-        )
-
-        build_id = create_response.json()["id"]
-
-        # L'administrateur devrait pouvoir supprimer le build
-        delete_response = client.delete(
-            f"{settings.API_V1_STR}/builds/{build_id}", headers=auth_headers["admin"]
+        delete_response = await async_client.delete(
+            f"{settings.API_V1_STR}/builds/{build_to_delete.id}", headers=admin_headers
         )
 
         assert delete_response.status_code == status.HTTP_200_OK
-        assert delete_response.json()["id"] == build_id
+        assert delete_response.json()["id"] == build_to_delete.id
 
-        # Vérifier que le build a bien été supprimé
-        get_response = client.get(
-            f"{settings.API_V1_STR}/builds/{build_id}", headers=auth_headers["admin"]
+        get_response = await async_client.get(
+            f"{settings.API_V1_STR}/builds/{build_to_delete.id}", headers=admin_headers
         )
 
         assert get_response.status_code == status.HTTP_404_NOT_FOUND

@@ -17,9 +17,9 @@ from app.models import (
     CompositionTag,
     Tag
 )
-from app.schemas.team import TeamCreate, TeamUpdate
+from app.schemas.team import TeamCreate, TeamUpdate, TeamMemberCreate, TeamMemberUpdate
 from app.core.cache import cache
-from app.core.config import settings, TeamMemberCreate, TeamMemberUpdate
+from app.core.config import settings
 
 
 class CRUDTeam(CRUDBase[Team, TeamCreate, TeamUpdate]):

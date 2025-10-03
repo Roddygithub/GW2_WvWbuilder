@@ -1,6 +1,8 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
+
+from .role import Role
 
 
 class UserBase(BaseModel):
@@ -58,7 +60,7 @@ class UserInDBBase(UserBase):
 
 class User(UserInDBBase):
     """Schema for user data returned by API"""
-
+    roles: List[Role] = []
 
 class UserInDB(UserInDBBase):
     """Schema for user data stored in database"""

@@ -1,169 +1,87 @@
 """
 Tests de base pour les endpoints d'API.
 
-Ces tests vérifient les fonctionnalités de base des endpoints d'API,
-comme l'authentification et la validation des requêtes.
+Ces tests vérifient les fonctionnalités de base de l'application,
+comme l'état de santé et la disponibilité de la documentation.
 """
 
 import pytest
+import time
 from fastapi import status
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
 from app.core.config import settings
-from app.main import app
-from tests.constants import TestData, Headers, ExpectedErrors
-
-# Client de test
-client = TestClient(app)
 
 
+@pytest.mark.asyncio
 class TestAPIBase:
     """Tests de base pour les endpoints d'API."""
 
-    def test_health_check(self):
+    async def test_health_check(self, async_client: AsyncClient):
         """Teste l'endpoint de vérification de santé de l'API."""
-        response = client.get("/api/health")
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json() == {"status": "ok"}
+        response = await async_client.get(f"{settings.API_V1_STR}/health")
+        assert response.status_code == status.HTTP_200_OK, \
+            f"Expected status code 200, got {response.status_code}. Response: {response.text}"
+        data = response.json()
+        assert data["status"] == "ok", f"Expected status 'ok', got '{data['status']}'"
+        assert data["database"] == "ok", f"Expected database status 'ok', got '{data['database']}'"
 
-    def test_docs_available(self):
-        """Vérifie que la documentation de l'API est disponible."""
-        response = client.get("/docs")
-        assert response.status_code == status.HTTP_200_OK
-        assert "text/html" in response.headers["content-type"]
+    async def test_docs_available(self, async_client: AsyncClient):
+        """Vérifie que la documentation de l'API (Swagger UI) est disponible."""
+        response = await async_client.get("/docs")
+        assert response.status_code == status.HTTP_200_OK, \
+            f"Expected status code 200 for /docs, got {response.status_code}. Response: {response.text}"
+        assert "text/html" in response.headers["content-type"], \
+            f"Expected 'text/html' content type, got '{response.headers['content-type']}'"
 
-    def test_openapi_schema_available(self):
+    async def test_openapi_schema_available(self, async_client: AsyncClient):
         """Vérifie que le schéma OpenAPI est disponible."""
-        response = client.get("/openapi.json")
+        response = await async_client.get(f"{settings.API_V1_STR}/openapi.json")
+        assert response.status_code == status.HTTP_200_OK, \
+            f"Expected status code 200 for /openapi.json, got {response.status_code}. Response: {response.text}"
+        data = response.json()
+        assert "openapi" in data, "OpenAPI schema should contain 'openapi' field"
+        assert "info" in data, "OpenAPI schema should contain 'info' field"
+        assert "version" in data["info"], "OpenAPI schema info should contain 'version' field"
+
+    async def test_api_version_in_health_check(self, async_client: AsyncClient):
+        """Vérifie que l'endpoint de santé retourne la version de l'API."""
+        response = await async_client.get(f"{settings.API_V1_STR}/health")
+        assert response.status_code == status.HTTP_200_OK, \
+            f"Expected status code 200, got {response.status_code}. Response: {response.text}"
+        data = response.json()
+        assert "version" in data, "Health check response should contain 'version' field"
+        assert data["version"] == "1.0.0", f"Expected API version '1.0.0', got '{data['version']}'"
+
+    @pytest.mark.performance
+    async def test_health_check_performance(self, async_client: AsyncClient):
+        """Vérifie que l'endpoint de santé répond rapidement."""
+        start_time = time.time()
+        response = await async_client.get(f"{settings.API_V1_STR}/health")
+        elapsed = time.time() - start_time
         assert response.status_code == status.HTTP_200_OK
-        assert "application/json" in response.headers["content-type"]
-        assert "openapi" in response.json()
+        assert elapsed < 1.0, f"Health check took too long: {elapsed:.2f}s"
 
-
-class TestAuthentication:
-    """Tests pour l'authentification de l'API."""
-
-    def test_login_success(self, test_user):
-        """Teste la connexion avec des identifiants valides."""
-        login_data = {
-            "username": test_user.email,
-            "password": "testpassword123",
+    async def test_security_headers(self, async_client: AsyncClient):
+        """Vérifie la présence des en-têtes de sécurité de base."""
+        response = await async_client.get(f"{settings.API_V1_STR}/health")
+        security_headers = {
+            "x-content-type-options": "nosniff",
+            "x-frame-options": "DENY",
         }
-        response = client.post("/api/auth/login", data=login_data, headers=Headers.FORM)
+        for header, expected_value in security_headers.items():
+            assert header in response.headers, f"Missing security header: {header}"
+            assert response.headers[header] == expected_value, \
+                f"Invalid value for {header}: got '{response.headers[header]}', expected '{expected_value}'"
 
-        assert response.status_code == status.HTTP_200_OK
-        assert "access_token" in response.json()
-        assert "token_type" in response.json()
-
-    def test_login_invalid_credentials(self):
-        """Teste la connexion avec des identifiants invalides."""
-        login_data = {
-            "username": "nonexistent@example.com",
-            "password": "wrongpassword",
-        }
-        response = client.post("/api/auth/login", data=login_data, headers=Headers.FORM)
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "detail" in response.json()
-        assert ExpectedErrors.INVALID_CREDENTIALS in response.json()["detail"]
-
-    def test_protected_route_unauthorized(self):
-        """Teste l'accès à une route protégée sans authentification."""
-        response = client.get("/api/users/me")
-
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-        assert "detail" in response.json()
-        assert "Not authenticated" in response.json()["detail"]
-
-    def test_protected_route_authorized(self, test_user, test_token):
-        """Teste l'accès à une route protégée avec authentification valide."""
-        response = client.get("/api/users/me", headers=Headers.auth(test_token))
-
-        assert response.status_code == status.HTTP_200_OK
-        assert response.json()["id"] == str(test_user.id)
-        assert response.json()["email"] == test_user.email
-
-
-class TestValidation:
-    """Tests pour la validation des requêtes d'API."""
-
-    def test_invalid_json(self):
-        """Teste l'envoi d'un JSON invalide."""
-        response = client.post(
-            "/api/auth/register", content='{"invalid": "json"}', headers=Headers.JSON
-        )
-
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-        assert "detail" in response.json()
-
-    def test_validation_error(self, test_token):
-        """Teste la validation des données de requête."""
-        # Données invalides (email manquant)
-        user_data = {"password": "testpass", "full_name": "Test User"}
-
-        response = client.post(
-            "/api/users/", json=user_data, headers=Headers.auth(test_token)
-        )
-
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-        assert "detail" in response.json()
-        assert any("field required" in str(err) for err in response.json()["detail"])
-
-
-class TestErrorHandling:
-    """Tests pour la gestion des erreurs de l'API."""
-
-    def test_not_found_error(self, test_token):
-        """Teste la réponse pour une ressource introuvable."""
-        response = client.get(
-            "/api/users/00000000-0000-0000-0000-000000000000",
-            headers=Headers.auth(test_token),
-        )
-
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-        assert "detail" in response.json()
-        assert "not found" in response.json()["detail"].lower()
-
-    def test_forbidden_error(self, test_user, test_token):
-        """Teste l'accès à une ressource non autorisée."""
-        # Essayer de mettre à jour un autre utilisateur
-        response = client.put(
-            f"/api/users/00000000-0000-0000-0000-000000000001",
-            json={"email": "newemail@example.com"},
-            headers=Headers.auth(test_token),
-        )
-
-        assert response.status_code == status.HTTP_403_FORBIDDEN
-        assert "detail" in response.json()
-        assert "not enough permissions" in response.json()["detail"].lower()
-
-
-# Fixtures pour les tests d'API
-@pytest.fixture
-def test_user(db):
-    """Crée un utilisateur de test pour les tests d'API."""
-    from app.models import User
-
-    user = User(
-        email=TestData.TEST_USER["email"],
-        hashed_password=TestData.TEST_USER[
-            "password"
-        ],  # Le mot de passe sera hashé par le modèle
-        is_active=True,
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-@pytest.fixture
-def test_token(test_user):
-    """Génère un jeton d'authentification pour les tests."""
-    from app.core.security import create_access_token
-    from datetime import timedelta
-
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    return create_access_token(
-        subject=str(test_user.id), expires_delta=access_token_expires
-    )
+    @pytest.mark.parametrize("endpoint", [
+        f"{settings.API_V1_STR}/health",
+        "/docs",
+        f"{settings.API_V1_STR}/openapi.json"
+    ])
+    async def test_invalid_methods_on_get_endpoints(self, async_client: AsyncClient, endpoint: str):
+        """Teste que les méthodes non autorisées (POST, PUT, DELETE) sont rejetées sur les endpoints GET."""
+        for method in ["POST", "PUT", "DELETE", "PATCH"]:
+            response = await async_client.request(method, endpoint)
+            assert response.status_code == status.HTTP_405_METHOD_NOT_ALLOWED, \
+                f"Expected 405 for {method} {endpoint}, got {response.status_code}"

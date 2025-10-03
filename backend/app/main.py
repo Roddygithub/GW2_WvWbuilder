@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import RequestValidationError, HTTPException
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
@@ -75,6 +75,20 @@ def create_application() -> FastAPI:
         session_cookie="session",
         max_age=14 * 24 * 60 * 60,  # 14 days in seconds
     )
+
+    # Add security headers middleware
+    @application.middleware("http")
+    async def add_security_headers(request: Request, call_next):
+        """Ajoute des en-têtes de sécurité de base aux réponses."""
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        # La ligne ci-dessous est souvent utilisée, mais peut être redondante avec des CSP modernes.
+        # response.headers["X-XSS-Protection"] = "1; mode=block"
+        # Un Content-Security-Policy plus strict est généralement préférable.
+        # response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; object-src 'none';"
+        return response
+
 
     # Include API routes
     application.include_router(api_router, prefix=settings.API_V1_STR)

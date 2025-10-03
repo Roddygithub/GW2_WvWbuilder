@@ -76,3 +76,51 @@ jobs:
           echo "Error: Test coverage (${COVERAGE}%) is below the required 90%"
           exit 1
         fi
+
+  performance-test:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: test # S'exécute seulement si le job 'test' a réussi
+    if: github.ref == 'refs/heads/main' # S'exécute uniquement sur la branche main
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python and dependencies
+      uses: ./.github/actions/setup-python
+
+    - name: Run Performance Tests
+      run: |
+        TEST_ENV=ci poetry run pytest -v -m "performance or load_test" --html=reports/performance-report.html --self-contained-html --junitxml=reports/performance-results.xml
+
+    - name: Check Performance Test Results
+      if: always() # Run this step even if the previous one failed
+      run: |
+        # Vérifier si le fichier de rapport existe
+        if [ ! -f backend/reports/performance-results.xml ]; then
+          echo "::error::Le rapport de performance (performance-results.xml) n'a pas été trouvé."
+          exit 1
+        fi
+        # Vérifier si le rapport contient des échecs ou des erreurs
+        if grep -q 'failure message' backend/reports/performance-results.xml || grep -q 'error message' backend/reports/performance-results.xml; then
+          echo "::error::Des tests de performance ont échoué. Consultez le rapport pour plus de détails."
+          exit 1
+        else
+          echo "Tous les tests de performance ont réussi."
+        fi
+
+    - name: Upload Performance Report
+      uses: actions/upload-artifact@v4
+      if: always() # Toujours exécuter cette étape pour archiver le rapport
+      with:
+        name: performance-report
+        path: backend/reports/

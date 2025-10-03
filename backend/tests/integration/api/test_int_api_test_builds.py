@@ -9,25 +9,6 @@ from datetime import datetime, timedelta
 from app.core.config import settings
 
 # Import models to ensure they are registered with SQLAlchemy
-<<<<<<< HEAD
-from app.models import models  # noqa: F401
-from app.models.build import Build  # noqa: F401
-from app.models.build_profession import BuildProfession  # noqa: F401
-from app.models.models import Composition, CompositionTag  # noqa: F401
-from app.models.models import Profession, EliteSpecialization  # noqa: F401
-from app.models.role import Role  # noqa: F401
-from app.models.user import User  # noqa: F401
-
-# Import test utilities and helpers
-from tests.conftest import client, db
-from tests.integration.fixtures.factories import (
-    BuildFactory, 
-    UserFactory, 
-    ProfessionFactory,
-    EliteSpecializationFactory,
-    create_test_data
-)
-=======
 from app.models.build import Build
 from app.models.composition import Composition
 from app.models.composition_tag import CompositionTag
@@ -38,7 +19,6 @@ from app.models.user import User
 
 # Import test utilities and helpers
 from tests.integration.fixtures.factories import UserFactory, ProfessionFactory
->>>>>>> a023051 (feat: optimized CRUD with Redis caching + full test coverage + docs and monitoring guide)
 
 # Test data
 TEST_BUILD_DATA = {
@@ -119,14 +99,10 @@ def test_generate_build(client: TestClient, db: Session) -> None:
     client.test_user
 
     # Create some professions for testing
-<<<<<<< HEAD
-    professions = [ProfessionFactory() for _ in range(3)]  # Only create 3 professions to respect the schema
-=======
     professions = [
-        ProfessionFactory(name=f"Test Profession {i}", game_modes=["wvw"])
+        ProfessionFactory(name=f"Test Profession {i}", game_modes=["wvw"]) 
         for i in range(5)
     ]
->>>>>>> a023051 (feat: optimized CRUD with Redis caching + full test coverage + docs and monitoring guide)
     db.add_all(professions)
     db.commit()
 
@@ -146,102 +122,14 @@ def test_generate_build(client: TestClient, db: Session) -> None:
             "require_projectile_mitigation": True,
         },
     }
-<<<<<<< HEAD
-    
-    # Make request to generate build - no need to set headers as the client handles it
-    print(f"Sending request to {settings.API_V1_STR}/builds/generate/ with data: {build_data}")
-=======
 
     # Set authentication header for the test user
     headers = client.auth_header()
 
     # Make request to generate build
->>>>>>> a023051 (feat: optimized CRUD with Redis caching + full test coverage + docs and monitoring guide)
     response = client.post(
         f"{settings.API_V1_STR}/builds/generate/", json=build_data, headers=headers
     )
-<<<<<<< HEAD
-    
-    # Print full response for debugging
-    print(f"Response status code: {response.status_code}")
-    print(f"Response text: {response.text}")
-    
-    # Parse the JSON response
-    try:
-        response_data = response.json()
-        print("\n=== RESPONSE DATA ===")
-        print(f"Success: {response_data.get('success')}")
-        print(f"Message: {response_data.get('message')}")
-        print(f"Build data: {response_data.get('build')}")
-        print(f"Suggested composition: {response_data.get('suggested_composition')}")
-        print(f"Metrics: {response_data.get('metrics')}")
-        print("==================\n")
-    except Exception as e:
-        print(f"Error parsing response JSON: {e}")
-    
-    # If the response indicates an error, print more details
-    if response.status_code != 200 or not response.json().get('success', False):
-        print("\n=== SERVER LOGS ===")
-        print("Check server logs for more details on the error.")
-        print("==================\n")
-    
-    # Parse the response
-    response_data = response.json()
-    print(f"API Response: {response_data}")
-    
-    # Check if the response indicates failure
-    if not response_data.get('success', False):
-        error_msg = response_data.get('message', 'No error message provided')
-        print(f"Build generation failed with message: {error_msg}")
-        
-        # If there's a validation error, print details
-        if 'detail' in response_data:
-            print(f"Validation error details: {response_data['detail']}")
-        
-        # Check if professions are missing
-        if 'No valid professions available' in error_msg:
-            # Query the database to see what professions exist
-            from app.models import Profession
-            profs = db.query(Profession).all()
-            print(f"Available professions in DB: {[p.name for p in profs]}")
-            print(f"Preferred professions in request: {build_data.get('preferred_professions', [])}")
-    
-    # Assert the response structure
-    assert response.status_code == 200, f"Status code: {response.status_code}, Response: {response.text}"
-    
-    # Check if the response indicates success
-    assert response_data.get('success') is True, f"Expected success=True, got {response_data.get('success')}"
-    
-    # Check for required fields in the response
-    assert "build" in response_data, f"'build' not in response: {response_data}"
-    assert "suggested_composition" in response_data, f"'suggested_composition' not in response: {response_data}"
-    
-    # Verify build data in the response
-    build = response_data["build"]
-    print(f"Build data: {build}")
-    assert "id" in build, f"'id' not in build data: {build}"
-    assert "name" in build, f"'name' not in build data: {build}"
-    assert "description" in build, f"'description' not in build data: {build}"
-    assert "game_mode" in build, f"'game_mode' not in build data: {build}"
-    assert "team_size" in build, f"'team_size' not in build data: {build}"
-    assert build["team_size"] == build_data["team_size"], \
-        f"Expected team_size={build_data['team_size']}, got {build['team_size']}"
-    
-    # Verify composition data
-    suggested_composition = response_data["suggested_composition"]
-    print(f"Suggested composition: {suggested_composition}")
-    assert isinstance(suggested_composition, list), \
-        f"Expected suggested_composition to be a list, got {type(suggested_composition)}"
-    assert len(suggested_composition) == build_data["team_size"], \
-        f"Expected {build_data['team_size']} items in suggested_composition, got {len(suggested_composition)}"
-    
-    # Verify metrics
-    metrics = response_data["metrics"]
-    print(f"Metrics: {metrics}")
-    assert "boon_coverage" in metrics, f"'boon_coverage' not in metrics: {metrics}"
-    assert "role_distribution" in metrics, f"'role_distribution' not in metrics: {metrics}"
-    assert "profession_distribution" in metrics, f"'profession_distribution' not in metrics: {metrics}"
-=======
 
     # Debug output if test fails
     if response.status_code != 200:
@@ -271,30 +159,29 @@ def test_generate_build(client: TestClient, db: Session) -> None:
     if build.get("updated_at") is None:
         build["updated_at"] = build["created_at"]
 
-    assert (
-        build["team_size"] == build_data["team_size"]
-    ), f"Expected team_size={build_data['team_size']}, got {build['team_size']}"
+    assert \
+        build["team_size"] == build_data["team_size"],
+    f"Expected team_size={build_data['team_size']}, got {build['team_size']}"
 
     # Verify composition data
     assert isinstance(
-        data["suggested_composition"], list
-    ), f"Expected suggested_composition to be a list, got {type(data['suggested_composition'])}"
+        data["suggested_composition"],
+    list), f"Expected suggested_composition to be a list, got {type(data['suggested_composition'])}"
 
     # Verify metrics if present
     if "metrics" in data:
         metrics = data["metrics"]
         if "boon_coverage" in metrics:
             assert isinstance(
-                metrics["boon_coverage"], dict
-            ), f"Expected boon_coverage to be a dict, got {type(metrics['boon_coverage'])}"
+                metrics["boon_coverage"],
+            dict), f"Expected boon_coverage to be a dict, got {type(metrics['boon_coverage'])}"
         if "role_distribution" in metrics:
             assert isinstance(
-                metrics["role_distribution"], dict
-            ), f"Expected role_distribution to be a dict, got {type(metrics['role_distribution'])}"
+                metrics["role_distribution"],
+            dict), f"Expected role_distribution to be a dict, got {type(metrics['role_distribution'])}"
 
     # Verify the build ID is present in the response
     assert "id" in data["build"], "Build ID is missing from the response"
->>>>>>> a023051 (feat: optimized CRUD with Redis caching + full test coverage + docs and monitoring guide)
 
 
 @pytest.fixture
@@ -316,7 +203,8 @@ def setup_test_professions(db: Session) -> None:
     for prof_data in professions:
         # Check if profession exists
         existing = (
-            db.query(Profession).filter(Profession.name == prof_data["name"]).first()
+            db.query(Profession).filter(Profession.name == prof_data["name"])
+            .first()
         )
         if not existing:
             ProfessionFactory.create(**prof_data)
@@ -345,9 +233,9 @@ def test_generate_build_unauthorized(db: Session, setup_test_professions) -> Non
         )
 
         # Should return 401 Unauthorized
-        assert (
+        assert \
             response.status_code == 401
-        ), "Expected 401 Unauthorized when accessing protected endpoint without authentication"
+        "Expected 401 Unauthorized when accessing protected endpoint without authentication"
         assert "Not authenticated" in response.text
 
 
@@ -425,7 +313,9 @@ class TestGenerateBuild:
 
     @pytest.mark.parametrize("team_size", [5, 10, 15])
     def test_generate_build_different_team_sizes(
-        self, client: TestClient, team_size: int
+        self,
+        client: TestClient,
+        team_size: int,
     ):
         """Test build generation with different team sizes."""
         response = self._make_request(client, {"team_size": team_size})
@@ -476,9 +366,9 @@ class TestGenerateBuild:
 
         # Verify role distribution in the generated composition
         composition = data["suggested_composition"]
-        assert (
+        assert \
             len(composition) == team_size
-        ), f"Expected {team_size} team members, got {len(composition)}"
+        "Expected {team_size} team members, got {len(composition)}"
 
         # Count actual roles in the composition
         actual_roles = {"healer": 0, "dps": 0, "support": 0}
@@ -500,17 +390,17 @@ class TestGenerateBuild:
             actual_count = actual_roles.get(role, 0)
             # For all tests, just check minimums
             if role == "healer":
-                assert (
+                assert \
                     actual_count >= min_healers
-                ), f"Expected at least {min_healers} {role}s, got {actual_count}"
+                "Expected at least {min_healers} {role}s, got {actual_count}"
             elif role == "dps":
-                assert (
+                assert \
                     actual_count >= min_dps
-                ), f"Expected at least {min_dps} {role}s, got {actual_count}"
+                "Expected at least {min_dps} {role}s, got {actual_count}"
             elif role == "support":
-                assert (
+                assert \
                     actual_count >= min_support
-                ), f"Expected at least {min_support} {role}s, got {actual_count}"
+                "Expected at least {min_support} {role}s, got {actual_count}"
 
     def test_all_dps_composition(self, client: TestClient):
         """Test build generation with all DPS composition."""
@@ -604,9 +494,9 @@ class TestGenerateBuild:
     ):
         """Test build generation with invalid input data."""
         response = self._make_request(client, invalid_data)
-        assert (
+        assert \
             response.status_code == expected_status
-        ), f"Expected {expected_status} for {invalid_data}, got {response.status_code}: {response.text}"
+        "Expected {expected_status} for {invalid_data}, got {response.status_code}: {response.text}"
 
         if expected_message:
             errors = response.json()["detail"]
@@ -668,9 +558,9 @@ class TestGenerateBuild:
         )
 
         # Should return 422 for invalid role type
-        assert (
+        assert \
             response.status_code == 422
-        ), "Expected validation error for invalid role type"
+        "Expected validation error for invalid role type"
 
         # Verify the error message contains information about the invalid role
         error_data = response.json()
@@ -697,12 +587,12 @@ class TestGenerateBuild:
         assert response.status_code == 200, response.text
         data = response.json()
         assert "build" in data, "Build should be included in the response"
-        assert (
-            "suggested_composition" in data
-        ), "Suggested composition should be included in the response"
-        assert (
+        assert \
+            "suggested_composition" in data,
+        "Suggested composition should be included in the response"
+        assert \
             len(data["suggested_composition"]) == 5
-        ), "Should generate a team of 5 characters"
+        "Should generate a team of 5 characters"
 
 
 def test_generate_build_invalid_data(client: TestClient, db: Session) -> None:
@@ -743,13 +633,8 @@ def test_generate_build_invalid_data(client: TestClient, db: Session) -> None:
 def test_create_build(client: TestClient, db: Session) -> None:
     """Test creating a build with valid data."""
     # Use the test client's user
-<<<<<<< HEAD
-    test_user = client.test_user
-    
-=======
     test_user = client._test_user
 
->>>>>>> a023051 (feat: optimized CRUD with Redis caching + full test coverage + docs and monitoring guide)
     # Create test professions
     profession1 = create_test_profession(
         db, name="Test Profession 1", description="Test Profession 1 Description"
@@ -775,9 +660,9 @@ def test_create_build(client: TestClient, db: Session) -> None:
     response = client.post(f"{settings.API_V1_STR}/builds/", json=build_data)
 
     # Verify the response
-    assert (
+    assert \
         response.status_code == 201
-    ), f"Expected status code 201, got {response.status_code}. Response: {response.text}"
+    "Expected status code 201, got {response.status_code}. Response: {response.text}"
 
     # Parse the response
     build_response = response.json()
@@ -785,13 +670,12 @@ def test_create_build(client: TestClient, db: Session) -> None:
     assert build_response["description"] == build_data["description"]
     assert build_response["created_by_id"] == test_user.id
     assert len(build_response["professions"]) == 2
-    assert {p["id"] for p in build_response["professions"]} == {
-        profession1.id,
-        profession2.id,
-    }
+    assert {p["id"] for p in build_response["professions"]} == \
+        {profession1.id, profession2.id}
 
     # Verify the build was saved to the database
-    db_build = db.query(Build).filter(Build.id == build_response["id"]).first()
+    db_build = db.query(Build).filter(Build.id == build_response["id"])
+    .first()
     assert db_build is not None
     assert db_build.name == build_data["name"]
     assert len(db_build.professions) == 2
@@ -910,9 +794,9 @@ def test_create_build_validation_errors(client: TestClient, db: Session) -> None
             json=build_data,
         )
 
-        assert (
+        assert \
             response.status_code == 422
-        ), f"Expected 422 for {field}, got {response.status_code}"
+        "Expected 422 for {field}, got {response.status_code}"
         errors = response.json()["detail"]
         assert any(
             error_msg.lower() in error["msg"].lower() for error in errors
@@ -979,14 +863,8 @@ def test_get_private_build_unauthorized(client: TestClient, db: Session) -> None
     # Create a private build owned by another user
     from app.models import User
     from app.models.build import Build
-<<<<<<< HEAD
-    from app.models.profession import Profession
-    from app.models.build_profession import BuildProfession
-    
-=======
     from app.models.profession import Profession, BuildProfession
 
->>>>>>> a023051 (feat: optimized CRUD with Redis caching + full test coverage + docs and monitoring guide)
     # Create another user
     other_user = User(
         email="other@example.com",
@@ -1122,14 +1000,8 @@ def test_update_build_unauthorized(client: TestClient, db: Session) -> None:
     # Create a build owned by another user
     from app.models import User
     from app.models.build import Build
-<<<<<<< HEAD
-    from app.models.profession import Profession
-    from app.models.build_profession import BuildProfession
-    
-=======
     from app.models.profession import Profession, BuildProfession
 
->>>>>>> a023051 (feat: optimized CRUD with Redis caching + full test coverage + docs and monitoring guide)
     # Create another user
     other_user = User(
         email="other@example.com",
@@ -1213,9 +1085,9 @@ def test_update_build_validation_errors(client: TestClient, db: Session) -> None
             json=update_data,
         )
 
-        assert (
+        assert \
             response.status_code == 422
-        ), f"Expected 422 for {field}, got {response.status_code}"
+        "Expected 422 for {field}, got {response.status_code}"
         errors = response.json()["detail"]
         assert any(
             error_msg.lower() in error["msg"].lower() for error in errors
