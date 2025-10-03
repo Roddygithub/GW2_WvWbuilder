@@ -1,8 +1,8 @@
-"""merge heads and fix build_professions
+"""fix_missing_migration_reference
 
-Revision ID: df27d93012b6
-Revises: 0cad28c6411f  # Référence à la migration précédente existante
-Create Date: 2025-09-08 18:09:21.930407+00:00
+Revision ID: a1b2c3d4e5f6
+Revises: df27d93012b6
+Create Date: 2025-10-03 13:00:00.000000+00:00
 
 """
 
@@ -10,11 +10,10 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = "df27d93012b6"
-down_revision: str = "0cad28c6411f"  # Référence à la migration précédente
+revision: str = "a1b2c3d4e5f6"
+down_revision: Union[str, Sequence[str], None] = "df27d93012b6"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -36,7 +35,7 @@ def upgrade() -> None:
             sa.PrimaryKeyConstraint('build_id', 'profession_id')
         )
         
-        # Ajouter des index pour améliorer les performances
+        # Ajouter un index pour améliorer les performances des requêtes
         op.create_index(
             'ix_build_professions_build_id', 
             'build_professions', 
