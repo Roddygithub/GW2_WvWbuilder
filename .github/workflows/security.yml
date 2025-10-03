@@ -10,6 +10,12 @@ on:
     paths:
       - 'backend/**'
 
+# Set the permissions at the workflow level to avoid repetition
+permissions:
+  contents: read  # for actions/checkout to fetch code
+  security-events: write  # for github/codeql-action/upload-sarif to upload SARIF results
+  actions: read  # for github/codeql-action/init to get the Action's status
+
 jobs:
   security-scan:
     name: Security Scan
@@ -28,10 +34,13 @@ jobs:
       run: pip install bandit safety
 
     - name: Detect secrets with Gitleaks
-      uses: gitleaks/gitleaks-action@v2
+      uses: gitleaks/gitleaks-action@v3
       with:
-        report_format: json
-        report_path: gitleaks-report.json
+        config-path: .github/gitleaks.toml
+        report-format: json
+        report-path: gitleaks-report.json
+        fail-on-error: true
+        github-token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Run bandit for static analysis
       # Scans for high-severity, high-confidence issues and outputs a JSON report.
