@@ -23,6 +23,7 @@ email-validator = "^2.3.0"
 itsdangerous = "^2.2.0"
 python-json-logger = "^3.3.0"
 redis = "^6.4.0"
+fastapi-limiter = "^0.1.5"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.0"
@@ -46,6 +47,7 @@ black = "^24.1.0"
 isort = "^5.13.2"
 bandit = "^1.7.9"
 mypy = "^1.7.1"
+safety = "^3.0.1"
 flake8 = "^7.0.0"
 
 [build-system]

@@ -163,14 +163,20 @@ class TestBuildsPerformance:
         # Créer 100 builds pour cet utilisateur
         builds = [await build_factory(user=user, is_public=False) for _ in range(100)]
 
+        start_time = time.time()
         initial_memory = process.memory_info().rss / 1024 / 1024  # en Mo
         response = await async_client.get(f"{settings.API_V1_STR}/builds/", headers=headers)
         final_memory = process.memory_info().rss / 1024 / 1024  # en Mo
+        duration = time.time() - start_time
 
         assert response.status_code == status.HTTP_200_OK, f"Expected 200, got {response.status_code}: {response.text}"
+        
         memory_increase = final_memory - initial_memory
         assert memory_increase < performance_limits["memory_increase_mb"], f"L'augmentation de la mémoire est trop élevée : {memory_increase:.2f} Mo (limite: {performance_limits['memory_increase_mb']:.2f} Mo)"
+        assert duration < performance_limits["list_builds"], f"La récupération de la liste de builds a pris trop de temps : {duration:.4f}s (limite: {performance_limits['list_builds']:.4f}s)"
+        
         print(f"\nAugmentation mémoire pour lister 100 builds : {memory_increase:.2f} Mo")
+        print(f"Temps de récupération de 100 builds : {duration:.4f}s")
 
     def _analyze_failures(self, responses):
         """Analyse les échecs et retourne un message détaillé."""
@@ -260,3 +266,84 @@ class TestBuildsPerformance:
 
         assert success_rate >= performance_limits["load_test_success_rate"], f"Taux de réussite trop faible: {success_rate:.2%} (attendu: {performance_limits['load_test_success_rate']:.2%})"
         assert duration < performance_limits["load_test_duration"], f"Le test de charge a pris trop de temps : {duration:.4f}s (limite: {performance_limits['load_test_duration']:.4f}s)"
+
+    @pytest.mark.load_test
+    async def test_user_journey_under_load(self, async_client: AsyncClient, auth_headers, profession_factory, performance_limits):
+        """Teste un parcours utilisateur complet (CRUD) sous une charge modérée."""
+        
+        async def user_journey_task(i: int):
+            try:
+                # Chaque tâche utilise un utilisateur différent pour simuler des sessions parallèles
+                headers = await auth_headers(username=f"journey_user_{i}", password="password")
+                profession = await profession_factory()
+
+                # 1. Création
+                create_data = {"name": f"Journey Build {i}", "game_mode": "wvw", "profession_ids": [profession.id]}
+                create_res = await async_client.post(f"{settings.API_V1_STR}/builds/", json=create_data, headers=headers)
+                if create_res.status_code != status.HTTP_201_CREATED:
+                    return create_res
+
+                build_id = create_res.json()["id"]
+
+                # 2. Lecture
+                read_res = await async_client.get(f"{settings.API_V1_STR}/builds/{build_id}", headers=headers)
+                if read_res.status_code != status.HTTP_200_OK:
+                    return read_res
+
+                # 3. Mise à jour
+                update_data = {"description": "Updated during journey test"}
+                update_res = await async_client.put(f"{settings.API_V1_STR}/builds/{build_id}", json=update_data, headers=headers)
+                if update_res.status_code != status.HTTP_200_OK:
+                    return update_res
+
+                # 4. Suppression
+                return await async_client.delete(f"{settings.API_V1_STR}/builds/{build_id}", headers=headers)
+
+            except Exception as e:
+                return e
+
+        start_time = time.time()
+        # Exécuter 20 parcours utilisateurs en parallèle
+        tasks = [user_journey_task(i) for i in range(20)]
+        responses = await asyncio.gather(*tasks, return_exceptions=True)
+        duration = time.time() - start_time
+
+        success_count = sum(1 for r in responses if hasattr(r, 'status_code') and r.status_code == status.HTTP_200_OK)
+        response_times = [r.elapsed.total_seconds() for r in responses if hasattr(r, 'elapsed')]
+        
+        print(f"\n--- Test de Parcours Utilisateur ---")
+        print(f"Taux de réussite : {success_count}/{len(tasks)} en {duration:.2f}s")
+        if response_times:
+            avg_response_time = mean(response_times)
+            print(f"Temps de réponse moyen : {avg_response_time:.4f}s")
+            # Add an assertion for average response time
+            assert avg_response_time < 1.0, f"Le temps de réponse moyen ({avg_response_time:.4f}s) est trop élevé."
+
+        assert (success_count / len(tasks)) >= 0.9, f"Le taux de réussite du parcours utilisateur est trop faible: {success_count}/{len(tasks)}"
+
+    @pytest.mark.security
+    async def test_rate_limiting_on_build_creation(self, async_client: AsyncClient, auth_headers, profession_factory):
+        """Teste que le rate limiting est appliqué sur la création de builds."""
+        headers = await auth_headers()
+        profession = await profession_factory()
+        build_data = {
+            "name": "Rate Limit Test Build",
+            "game_mode": "wvw",
+            "profession_ids": [profession.id],
+        }
+
+        # Le endpoint est limité à 10 requêtes par minute.
+        # Faisons 11 appels rapides pour déclencher la limite.
+        responses = []
+        for i in range(11):
+            response = await async_client.post(
+                f"{settings.API_V1_STR}/builds/",
+                json={**build_data, "name": f"Rate Limit Test {i}"},
+                headers=headers,
+            )
+            responses.append(response)
+
+        # Les 10 premiers appels devraient réussir, le 11ème devrait échouer.
+        assert all(r.status_code == status.HTTP_201_CREATED for r in responses[:10])
+        assert responses[10].status_code == status.HTTP_429_TOO_MANY_REQUESTS
+        assert "Rate limit exceeded" in responses[10].text
