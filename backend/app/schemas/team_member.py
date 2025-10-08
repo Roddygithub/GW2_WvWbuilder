@@ -50,7 +50,7 @@ class TeamMember(TeamMemberBase):
     is_active: bool = Field(..., description="Indique si le membre est actif")
 
     class Config:
-        orm_mode = True
+        from_attributes = True  # Remplacé orm_mode pour la compatibilité Pydantic v2
 
 
 # Schéma pour la réponse de l'API
@@ -64,7 +64,7 @@ class TeamMemberResponse(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {  # Remplacé schema_extra pour la compatibilité Pydantic v2
             "example": {
                 "success": True,
                 "message": "Membre ajouté avec succès",

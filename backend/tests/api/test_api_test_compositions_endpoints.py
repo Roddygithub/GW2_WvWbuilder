@@ -6,6 +6,8 @@ from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.crud import user as user_crud
+from app.schemas.user import UserCreate
 from app.core.config import settings
 from app.models import Composition, User
 
@@ -68,6 +70,16 @@ class TestCompositionsAPI:
         assert data["id"] == comp.id
         assert data["name"] == "Readable Comp"
 
+    async def test_read_nonexistent_composition(self, async_client: AsyncClient, auth_headers):
+        """Test retrieving a non-existent composition by ID."""
+        headers = await auth_headers()
+        response = await async_client.get(f"{settings.API_V1_STR}/compositions/999999", headers=headers)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        error_data = response.json()
+        assert "detail" in error_data
+        assert "not found" in error_data["detail"].lower()
+
     async def test_update_composition(self, async_client: AsyncClient, composition_factory, user_factory, auth_headers):
         """Test updating an existing composition."""
         user = await user_factory(username="updater")
@@ -84,6 +96,17 @@ class TestCompositionsAPI:
         assert data["name"] == "Updated Name"
         assert data["is_public"] is False
 
+    async def test_update_nonexistent_composition(self, async_client: AsyncClient, auth_headers):
+        """Test updating a non-existent composition."""
+        headers = await auth_headers()
+        update_data = {"name": "This will fail"}
+
+        response = await async_client.put(
+            f"{settings.API_V1_STR}/compositions/999999", json=update_data, headers=headers
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
     async def test_delete_composition(self, async_client: AsyncClient, db: AsyncSession, composition_factory, user_factory, auth_headers):
         """Test deleting a composition."""
         user = await user_factory(username="deleter")
@@ -98,6 +121,16 @@ class TestCompositionsAPI:
         # Verify it's gone from DB
         deleted_comp = await db.get(Composition, comp.id)
         assert deleted_comp is None
+
+    async def test_delete_nonexistent_composition(self, async_client: AsyncClient, auth_headers):
+        """Test deleting a non-existent composition."""
+        headers = await auth_headers()
+
+        response = await async_client.delete(f"{settings.API_V1_STR}/compositions/999999", headers=headers)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        error_data = response.json()
+        assert "not found" in error_data["detail"].lower()
 
     async def test_unauthorized_update_composition(self, async_client: AsyncClient, composition_factory, user_factory, auth_headers):
         """Test that a user cannot update a composition they don't own."""
@@ -141,6 +174,33 @@ class TestCompositionsAPI:
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert "detail" in response.json()
+        assert "Not enough permissions" in response.json()["detail"]
+
+    async def test_read_private_composition_as_unauthenticated(self, async_client: AsyncClient, composition_factory, user_factory):
+        """Test that an unauthenticated user cannot read a private composition."""
+        owner = await user_factory(username="owner_unauth")
+        private_comp = await composition_factory(user=owner, is_public=False)
+
+        response = await async_client.get(f"{settings.API_V1_STR}/compositions/{private_comp.id}")
+
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    async def test_read_private_composition_as_admin(self, async_client: AsyncClient, composition_factory, user_factory, auth_headers):
+        """Test that an admin can read any private composition."""
+        owner = await user_factory(username="owner_admin_read")
+        private_comp = await composition_factory(user=owner, is_public=False)
+
+        admin_headers = await auth_headers(username="admin_comp_reader", is_superuser=True)
+
+        response = await async_client.get(f"{settings.API_V1_STR}/compositions/{private_comp.id}", headers=admin_headers)
+
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["id"] == private_comp.id
+        assert data["name"] == private_comp.name
+        assert data["is_public"] is False
+
 
     async def test_admin_can_access_private_composition(self, async_client: AsyncClient, composition_factory, user_factory, auth_headers):
         """Test that an admin can read any private composition."""

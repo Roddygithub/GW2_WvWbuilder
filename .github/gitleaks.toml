@@ -1,0 +1,46 @@
+# Gitleaks configuration for GW2_WvWbuilder
+# This file defines rules for detecting secrets in the codebase
+
+# Default configuration with common secret patterns
+title = "Gitleaks configuration for GW2_WvWbuilder"
+
+# Global allowlist - files to exclude from scanning
+[allowlist]
+description = "Files to exclude from scanning"
+paths = [
+  "**/*.md",
+  "**/*.txt",
+  "**/*.json",
+  "**/tests/**",
+  "**/migrations/**",
+  "**/node_modules/**",
+  "**/venv/**",
+  "**/__pycache__/**"
+]
+
+# Rules for specific secret types
+[[rules]]
+description = "Generic API Key"
+regex = '''(?i)(?:key|api[_-]?key|apikey|secret|token|password|passwd|pwd|auth|credential)[=:][\s]?(?:"|'|`)?([a-z0-9_\-\+=\/\.]{10,150})(?:["'`\s]|\z)'''
+tags = ["key", "api-key", "secret"]
+
+[[rules]]
+description = "Google API Key"
+regex = '''AIza[0-9A-Za-z\-_]{35}'''
+tags = ["key", "gcp", "google"]
+
+[[rules]]
+description = "AWS Access Key ID"
+regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+tags = ["key", "aws"]
+
+[[rules]]
+description = "GitHub Personal Access Token"
+regex = '''(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36}'''
+tags = ["key", "github"]
+
+# Allowlist for false positives
+[allowlist.regexes]
+# Example: Allow specific test tokens
+# description = "Test tokens"
+# regex = '''test_token_\w+'''

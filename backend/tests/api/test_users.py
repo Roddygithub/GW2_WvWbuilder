@@ -6,6 +6,8 @@ from fastapi import status
 from httpx import AsyncClient
 
 from app.core.config import settings
+from app.models import User
+from app.crud import user as user_crud
 from app.schemas.user import User
 from tests.constants import TestData
 
@@ -77,6 +79,16 @@ class TestUserEndpoints:
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["username"] == "find_me"
 
+    async def test_read_nonexistent_user_as_admin(self, async_client: AsyncClient, auth_headers):
+        """Test that an admin cannot retrieve a non-existent user by ID."""
+        admin_headers = await auth_headers(username="admin_reader_nonexistent", is_superuser=True)
+
+        response = await async_client.get(f"{settings.API_V1_STR}/users/999999", headers=admin_headers)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        error_data = response.json()
+        assert "not found" in error_data["detail"].lower()
+
     async def test_read_user_by_id_forbidden_for_normal_user(self, async_client: AsyncClient, user_factory, auth_headers):
         """Test that a normal user cannot retrieve another user by ID."""
         user_to_find = await user_factory(username="hidden_user")
@@ -107,6 +119,17 @@ class TestUserEndpoints:
 
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["is_active"] is False
+
+    async def test_admin_update_nonexistent_user(self, async_client: AsyncClient, auth_headers):
+        """Test that an admin cannot update a non-existent user."""
+        admin_headers = await auth_headers(username="admin_updater_nonexistent", is_superuser=True)
+        update_data = {"is_active": False}
+
+        response = await async_client.put(f"{settings.API_V1_STR}/users/999999", json=update_data, headers=admin_headers)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        error_data = response.json()
+        assert "not found" in error_data["detail"].lower()
 
     async def test_normal_user_cannot_update_other_user(self, async_client: AsyncClient, user_factory, auth_headers):
         """Test that a normal user cannot update another user's information."""

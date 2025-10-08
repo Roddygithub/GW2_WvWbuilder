@@ -5,6 +5,7 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 
+from app.models import Role
 from app.core.config import settings
 from app.models import Role, User
 
@@ -51,6 +52,16 @@ class TestRolesAPI:
         data = response.json()
         assert data["id"] == role.id
         assert data["name"] == "Readable Role"
+
+    async def test_get_nonexistent_role(self, async_client: AsyncClient, auth_headers):
+        """Test retrieving a non-existent role by ID."""
+        headers = await auth_headers()
+        response = await async_client.get(f"{settings.API_V1_STR}/roles/999999", headers=headers)
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        error_data = response.json()
+        assert "detail" in error_data
+        assert "not found" in error_data["detail"].lower()
 
     async def test_list_roles(self, async_client: AsyncClient, role_factory, auth_headers):
         """Test listing all roles."""

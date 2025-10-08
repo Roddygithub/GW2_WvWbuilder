@@ -58,19 +58,34 @@ jobs:
       run: |
         poetry run bandit -r app -ll -c pyproject.toml
     
+    - name: Check for vulnerable dependencies
+      run: |
+        poetry run safety check
+
     - name: Run tests with coverage
       run: |
         pip install pytest-cov
         pytest tests/ -v --cov=app --cov-report=xml --cov-report=term-missing
     
+    - name: Check if Codecov token is available
+      id: check_token
+      run: |
+        if [ -n "${{ secrets.CODECOV_TOKEN }}" ]; then
+          echo "token_available=true" >> $GITHUB_OUTPUT
+        else
+          echo "token_available=false" >> $GITHUB_OUTPUT
+        fi
+    
     - name: Upload coverage to Codecov
+      if: steps.check_token.outputs.token_available == 'true' && success()
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
-        fail_ci_if_error: true
+        # Ne pas faire échouer le build si l'upload vers Codecov échoue.
+        # Ceci est utile pour les forks ou les environnements où le token n'est pas configuré.
+        fail_ci_if_error: false
         verbose: true
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TOKEN }}
     
     - name: Check coverage
       run: |

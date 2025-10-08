@@ -60,6 +60,23 @@ Tip: keep overrides minimal and restore them after each test if needed to avoid 
 - Linting/formatting: prefer Black and isort.
 
 ## Running the Backend Locally (optional)
+
+### Documenting New API Endpoints
+
+When adding or modifying an API endpoint, documentation is crucial. Please update the following files:
+
+1.  **`backend/README.md`**: Add the new endpoint to the `Available Endpoints` section. Include a `curl` example for easy testing.
+    ```markdown
+    - **`GET /api/v1/new-endpoint/`**: Description of the endpoint.
+      ```bash
+      curl -X GET "http://localhost:8000/api/v1/new-endpoint/" -H "Authorization: Bearer <token>"
+      ```
+    ```
+
+2.  **OpenAPI Schema (Code)**: Use Pydantic's `Field` to provide clear descriptions and examples directly in your schemas (`app/schemas/`). This will automatically enrich the interactive documentation at `/docs`.
+
+3.  **Performance Tests**: If the endpoint is critical, consider adding a performance test in `backend/tests/api/test_builds_performance.py` to monitor its latency.
+
 ```bash
 cd backend
 poetry run uvicorn app.main:app --reload

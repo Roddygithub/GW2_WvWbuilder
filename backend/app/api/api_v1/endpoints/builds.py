@@ -1,7 +1,10 @@
 from typing import Any, List
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Body, Path
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Body, Path, Request, Response
+from fastapi_limiter.depends import RateLimiter
+from app.core.cache import cache_response
+from app.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from app import models, schemas
@@ -156,6 +159,7 @@ async def create_build(
         examples={"example": {"value": BUILD_CREATE_EXAMPLE}},
         description="Build data including name, description, and configuration",
     ),
+    dependencies=[Depends(RateLimiter(times=10, minutes=1))],
     current_user: models.User = Depends(get_current_user),
 ) -> Any:
     """
@@ -402,16 +406,17 @@ async def create_build(
     "/{build_id}",
     response_model=schemas.Build,
     responses={
-        200: {"description": "Successfully retrieved build"},
-        401: {"description": "Not authenticated"},
-        403: {"description": "Not enough permissions"},
+        200: {
+            "description": "Successful Response. The `X-Cache` header will indicate if the response was served from cache (`HIT` or `MISS`)."
+        },
         404: {"description": "Build not found"},
     },
 )
+@cache_response(ttl=settings.CACHE_TTL)
 async def read_build(
-    *,
+    request: Request,  # Request doit être en premier car il n'a pas de valeur par défaut
+    build_id: int,
     db: AsyncSession = Depends(get_async_db),
-    build_id: int = Path(..., description="The ID of the build to retrieve"),
     current_user: models.User = Depends(get_current_user),
 ) -> Any:
     """
@@ -419,17 +424,12 @@ async def read_build(
     """
     build = await build_crud.get_async(db, id=build_id)
     if not build:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Build not found",
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Build not found")
 
-    # Only allow access to owner or public builds
-    if build.created_by_id != current_user.id and not build.is_public:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
+    # Check permissions
+    # Cache should be cleared if permissions change or build is updated
+    if not build.is_public and build.created_by_id != current_user.id and not current_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
 
     return build
 
@@ -475,6 +475,11 @@ async def update_build(
             detail="Not enough permissions",
         )
 
+    # Invalidate cache for this build
+    cache_key = f"cache:{router.prefix}{router.tags[0]}/{build_id}:"
+    if settings.CACHE_ENABLED:
+        await settings.redis_client.delete(cache_key)
+
     return await build_crud.update_async(db=db, db_obj=build, obj_in=update_data)
 
 
@@ -510,6 +515,11 @@ async def delete_build(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
+
+    # Invalidate cache for this build
+    cache_key = f"cache:{router.prefix}{router.tags[0]}/{build_id}:"
+    if settings.CACHE_ENABLED:
+        await settings.redis_client.delete(cache_key)
 
     return await build_crud.remove_async(db=db, id=build_id)
 

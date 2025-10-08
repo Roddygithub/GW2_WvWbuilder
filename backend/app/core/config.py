@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List, Optional, Union
+import redis.asyncio as redis
 
 
 class Settings(BaseSettings):
@@ -54,6 +55,10 @@ class Settings(BaseSettings):
     # Optional override used by tests
     DATABASE_URL: Optional[str] = None
 
+    # Redis client for rate limiting
+    @property
+    def redis_client(self):
+        return redis.from_url(self.REDIS_URL, encoding="utf-8", decode_responses=True)
     class Config:
         case_sensitive = True
         env_file = ".env"
