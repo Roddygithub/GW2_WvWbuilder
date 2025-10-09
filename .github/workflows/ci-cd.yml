@@ -1,16 +1,5 @@
 name: CI/CD Pipeline
 
-# Configuration des notifications
-notify:
-  on_success: never  # Désactive les notifications de succès
-  on_failure: always # Notifie en cas d'échec
-
-# Configuration des variables globales
-env:
-  PYTHON_VERSION: '3.11'
-  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-  REDIS_URL: redis://localhost:6379/0
-
 on:
   push:
     branches: [ main, develop ]
@@ -18,6 +7,7 @@ on:
     branches: [ main, develop ]
   workflow_dispatch:
 
+# Configuration des variables globales
 env:
   PYTHON_VERSION: '3.11'
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
