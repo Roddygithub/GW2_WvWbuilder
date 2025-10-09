@@ -68,7 +68,7 @@ jobs:
     - name: Run tests with coverage
       run: |
         cd backend
-        pytest -n auto --cov=app --cov-report=xml --cov-report=term-missing tests/
+        pytest --cov=app --cov-report=xml --cov-report=term-missing tests/
       env:
         DATABASE_URL: ${{ env.DATABASE_URL }}
         REDIS_URL: ${{ env.REDIS_URL }}
