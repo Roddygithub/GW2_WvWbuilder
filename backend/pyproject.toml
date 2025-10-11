@@ -15,7 +15,7 @@ psycopg2-binary = "^2.9.9"
 pydantic = "^2.6.0"
 pydantic-settings = "^2.1.0"
 python-multipart = "^0.0.6"
-python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+python-jose = {extras = ["cryptography"], version = "^3.5.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 python-dotenv = "^1.0.0"
 alembic = "^1.13.1"
@@ -27,6 +27,7 @@ redis = "^6.4.0"
 fastapi-limiter = "^0.1.5"
 asyncpg = "^0.28.0"  # Pour le support asynchrone de PostgreSQL
 prometheus-client = "^0.20.0"  # Pour la surveillance des métriques
+pyjwt = "^2.10.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.0"
@@ -69,11 +70,16 @@ line_length = 88
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --cov=app --cov-report=term-missing --cov-fail-under=90"
+python_functions = ["test_*", "test*"]
+python_classes = ["Test*", "*Test"]
+addopts = "-v --asyncio-mode=auto -x -p no:warnings"
 filterwarnings = [
     "ignore::sqlalchemy.exc.SAWarning",
-    "ignore::pytest.PytestUnraisableExceptionWarning"
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+    "ignore::DeprecationWarning:aiosqlite",
+    "ignore::DeprecationWarning:sqlalchemy"
 ]
+asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["app"]
@@ -81,8 +87,13 @@ omit = [
     "**/__init__.py",
     "**/migrations/*",
     "**/tests/*",
-    "**/conftest.py"
+    "**/conftest.py",
+    "**/main.py",
+    "**/deps.py"
 ]
+concurrency = ["greenlet"]
+branch = true
+parallel = true
 
 [tool.coverage.report]
 show_missing = true

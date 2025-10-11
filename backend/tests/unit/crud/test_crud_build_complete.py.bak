@@ -1,0 +1,465 @@
+"""
+Comprehensive tests for Build CRUD operations.
+Tests for app/crud/build.py to achieve 80%+ coverage.
+"""
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.crud.build import CRUDBuild
+from app.models.build import Build
+from app.models.user import User
+from app.models.profession import Profession
+from app.schemas.build import BuildCreate, BuildUpdate
+
+
+@pytest.fixture
+async def test_user(db_session: AsyncSession):
+    """Create a test user."""
+    user = User(
+        email="testuser@example.com",
+        username="testuser",
+        hashed_password="hashed_password_here",
+        is_active=True,
+        is_superuser=False
+    )
+    db_session.add(user)
+    await db_session.commit()
+    await db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+async def test_profession(db_session: AsyncSession):
+    """Create a test profession."""
+    profession = Profession(
+        name="Guardian",
+        description="A heavy armor profession",
+        armor_type="Heavy"
+    )
+    db_session.add(profession)
+    await db_session.commit()
+    await db_session.refresh(profession)
+    return profession
+
+
+@pytest.fixture
+def crud_build():
+    """Create CRUDBuild instance."""
+    return CRUDBuild(Build)
+
+
+class TestCRUDBuildCreate:
+    """Test Build creation operations."""
+
+    async def test_create_build_basic(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test creating a basic build."""
+        build_data = BuildCreate(
+            name="Test Build",
+            description="A test build description",
+            profession_id=test_profession.id,
+            is_public=True
+        )
+        
+        build = await crud_build.create_async(
+            db_session,
+            obj_in=build_data,
+            created_by_id=test_user.id
+        )
+        
+        assert build.id is not None
+        assert build.name == "Test Build"
+        assert build.description == "A test build description"
+        assert build.profession_id == test_profession.id
+        assert build.is_public is True
+        assert build.created_by_id == test_user.id
+
+    async def test_create_build_with_all_fields(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test creating a build with all optional fields."""
+        build_data = BuildCreate(
+            name="Complete Build",
+            description="A complete build with all fields",
+            profession_id=test_profession.id,
+            specialization_ids=[],
+            skills={
+                "heal": "Shelter",
+                "utility1": "Stand Your Ground",
+                "utility2": "Hold the Line",
+                "utility3": "Save Yourselves",
+                "elite": "Renewed Focus"
+            },
+            traits={},
+            equipment={},
+            is_public=True,
+            tags=["wvw", "support"]
+        )
+        
+        build = await crud_build.create_async(
+            db_session,
+            obj_in=build_data,
+            created_by_id=test_user.id
+        )
+        
+        assert build.id is not None
+        assert build.name == "Complete Build"
+        assert build.skills is not None
+        assert build.is_public is True
+
+    async def test_create_build_private(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test creating a private build."""
+        build_data = BuildCreate(
+            name="Private Build",
+            description="A private build",
+            profession_id=test_profession.id,
+            is_public=False
+        )
+        
+        build = await crud_build.create_async(
+            db_session,
+            obj_in=build_data,
+            created_by_id=test_user.id
+        )
+        
+        assert build.is_public is False
+
+
+class TestCRUDBuildRead:
+    """Test Build read operations."""
+
+    async def test_get_build_by_id(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test getting a build by ID."""
+        # Create a build first
+        build_data = BuildCreate(
+            name="Test Build",
+            description="Test description",
+            profession_id=test_profession.id,
+            is_public=True
+        )
+        created_build = await crud_build.create_async(
+            db_session,
+            obj_in=build_data,
+            created_by_id=test_user.id
+        )
+        
+        # Get the build
+        retrieved_build = await crud_build.get_async(db_session, id=created_build.id)
+        
+        assert retrieved_build is not None
+        assert retrieved_build.id == created_build.id
+        assert retrieved_build.name == "Test Build"
+
+    async def test_get_nonexistent_build(self, db_session: AsyncSession, crud_build: CRUDBuild):
+        """Test getting a non-existent build."""
+        build = await crud_build.get_async(db_session, id=99999)
+        assert build is None
+
+    async def test_get_multi_builds(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test getting multiple builds."""
+        # Create multiple builds
+        for i in range(5):
+            build_data = BuildCreate(
+                name=f"Build {i}",
+                description=f"Description {i}",
+                profession_id=test_profession.id,
+                is_public=True
+            )
+            await crud_build.create_async(
+                db_session,
+                obj_in=build_data,
+                created_by_id=test_user.id
+            )
+        
+        # Get builds
+        builds = await crud_build.get_multi_async(db_session, skip=0, limit=10)
+        
+        assert len(builds) >= 5
+
+    async def test_get_builds_by_owner(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test getting builds by owner."""
+        # Create builds for the user
+        for i in range(3):
+            build_data = BuildCreate(
+                name=f"User Build {i}",
+                description=f"Description {i}",
+                profession_id=test_profession.id,
+                is_public=True
+            )
+            await crud_build.create_async(
+                db_session,
+                obj_in=build_data,
+                created_by_id=test_user.id
+            )
+        
+        # Get builds by owner
+        builds = await crud_build.get_multi_by_owner_async(
+            db_session,
+            owner_id=test_user.id,
+            skip=0,
+            limit=10
+        )
+        
+        assert len(builds) >= 3
+        for build in builds:
+            assert build.created_by_id == test_user.id
+
+
+class TestCRUDBuildUpdate:
+    """Test Build update operations."""
+
+    async def test_update_build_name(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test updating build name."""
+        # Create a build
+        build_data = BuildCreate(
+            name="Original Name",
+            description="Description",
+            profession_id=test_profession.id,
+            is_public=True
+        )
+        build = await crud_build.create_async(
+            db_session,
+            obj_in=build_data,
+            created_by_id=test_user.id
+        )
+        
+        # Update the build
+        update_data = BuildUpdate(name="Updated Name")
+        updated_build = await crud_build.update_async(
+            db_session,
+            db_obj=build,
+            obj_in=update_data
+        )
+        
+        assert updated_build.name == "Updated Name"
+        assert updated_build.description == "Description"  # Unchanged
+
+    async def test_update_build_multiple_fields(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test updating multiple build fields."""
+        # Create a build
+        build_data = BuildCreate(
+            name="Original Build",
+            description="Original description",
+            profession_id=test_profession.id,
+            is_public=True
+        )
+        build = await crud_build.create_async(
+            db_session,
+            obj_in=build_data,
+            created_by_id=test_user.id
+        )
+        
+        # Update multiple fields
+        update_data = BuildUpdate(
+            name="Updated Build",
+            description="Updated description",
+            is_public=False
+        )
+        updated_build = await crud_build.update_async(
+            db_session,
+            db_obj=build,
+            obj_in=update_data
+        )
+        
+        assert updated_build.name == "Updated Build"
+        assert updated_build.description == "Updated description"
+        assert updated_build.is_public is False
+
+    async def test_update_build_skills(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test updating build skills."""
+        # Create a build
+        build_data = BuildCreate(
+            name="Build",
+            description="Description",
+            profession_id=test_profession.id,
+            skills={"heal": "Skill1"},
+            is_public=True
+        )
+        build = await crud_build.create_async(
+            db_session,
+            obj_in=build_data,
+            created_by_id=test_user.id
+        )
+        
+        # Update skills
+        update_data = BuildUpdate(
+            skills={
+                "heal": "Skill2",
+                "utility1": "Skill3"
+            }
+        )
+        updated_build = await crud_build.update_async(
+            db_session,
+            db_obj=build,
+            obj_in=update_data
+        )
+        
+        assert updated_build.skills is not None
+
+
+class TestCRUDBuildDelete:
+    """Test Build delete operations."""
+
+    async def test_delete_build(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test deleting a build."""
+        # Create a build
+        build_data = BuildCreate(
+            name="Build to Delete",
+            description="This will be deleted",
+            profession_id=test_profession.id,
+            is_public=True
+        )
+        build = await crud_build.create_async(
+            db_session,
+            obj_in=build_data,
+            created_by_id=test_user.id
+        )
+        build_id = build.id
+        
+        # Delete the build
+        deleted_build = await crud_build.remove_async(db_session, id=build_id)
+        
+        assert deleted_build.id == build_id
+        
+        # Verify it's deleted
+        retrieved_build = await crud_build.get_async(db_session, id=build_id)
+        assert retrieved_build is None
+
+    async def test_delete_nonexistent_build(self, db_session: AsyncSession, crud_build: CRUDBuild):
+        """Test deleting a non-existent build."""
+        deleted_build = await crud_build.remove_async(db_session, id=99999)
+        assert deleted_build is None
+
+
+class TestCRUDBuildFiltering:
+    """Test Build filtering and search operations."""
+
+    async def test_filter_public_builds(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test filtering public builds."""
+        # Create public and private builds
+        public_build = BuildCreate(
+            name="Public Build",
+            description="Public",
+            profession_id=test_profession.id,
+            is_public=True
+        )
+        await crud_build.create_async(
+            db_session,
+            obj_in=public_build,
+            created_by_id=test_user.id
+        )
+        
+        private_build = BuildCreate(
+            name="Private Build",
+            description="Private",
+            profession_id=test_profession.id,
+            is_public=False
+        )
+        await crud_build.create_async(
+            db_session,
+            obj_in=private_build,
+            created_by_id=test_user.id
+        )
+        
+        # Get all builds (would need a filter method in actual implementation)
+        all_builds = await crud_build.get_multi_async(db_session)
+        
+        assert len(all_builds) >= 2
+
+    async def test_filter_by_profession(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test filtering builds by profession."""
+        # Create builds with the profession
+        for i in range(3):
+            build_data = BuildCreate(
+                name=f"Guardian Build {i}",
+                description=f"Description {i}",
+                profession_id=test_profession.id,
+                is_public=True
+            )
+            await crud_build.create_async(
+                db_session,
+                obj_in=build_data,
+                created_by_id=test_user.id
+            )
+        
+        # Get builds (would need profession filter in actual implementation)
+        builds = await crud_build.get_multi_async(db_session)
+        
+        assert len(builds) >= 3
+
+
+class TestCRUDBuildPagination:
+    """Test Build pagination."""
+
+    async def test_pagination_skip_limit(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test pagination with skip and limit."""
+        # Create 10 builds
+        for i in range(10):
+            build_data = BuildCreate(
+                name=f"Build {i}",
+                description=f"Description {i}",
+                profession_id=test_profession.id,
+                is_public=True
+            )
+            await crud_build.create_async(
+                db_session,
+                obj_in=build_data,
+                created_by_id=test_user.id
+            )
+        
+        # Get first 5
+        first_page = await crud_build.get_multi_async(db_session, skip=0, limit=5)
+        assert len(first_page) <= 5
+        
+        # Get next 5
+        second_page = await crud_build.get_multi_async(db_session, skip=5, limit=5)
+        assert len(second_page) <= 5
+        
+        # Verify different results
+        if len(first_page) > 0 and len(second_page) > 0:
+            assert first_page[0].id != second_page[0].id
+
+
+class TestCRUDBuildEdgeCases:
+    """Test edge cases and error handling."""
+
+    async def test_create_build_without_description(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test creating build without description."""
+        build_data = BuildCreate(
+            name="No Description Build",
+            profession_id=test_profession.id,
+            is_public=True
+        )
+        
+        build = await crud_build.create_async(
+            db_session,
+            obj_in=build_data,
+            created_by_id=test_user.id
+        )
+        
+        assert build.id is not None
+        assert build.name == "No Description Build"
+
+    async def test_update_with_empty_data(self, db_session: AsyncSession, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+        """Test updating with empty update data."""
+        # Create a build
+        build_data = BuildCreate(
+            name="Original Build",
+            description="Original",
+            profession_id=test_profession.id,
+            is_public=True
+        )
+        build = await crud_build.create_async(
+            db_session,
+            obj_in=build_data,
+            created_by_id=test_user.id
+        )
+        
+        # Update with empty data
+        update_data = BuildUpdate()
+        updated_build = await crud_build.update_async(
+            db_session,
+            db_obj=build,
+            obj_in=update_data
+        )
+        
+        # Should remain unchanged
+        assert updated_build.name == "Original Build"
+        assert updated_build.description == "Original"

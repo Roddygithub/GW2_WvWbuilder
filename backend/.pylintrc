@@ -1,0 +1,148 @@
+[MASTER]
+# Fichiers et dossiers à ignorer
+ignore = 
+    .git,
+    __pycache__,
+    .pytest_cache,
+    .mypy_cache,
+    venv,
+    .venv,
+    env,
+    build,
+    dist,
+    migrations,
+    htmlcov,
+    .coverage
+
+# Charger les plugins
+extension-pkg-whitelist=pydantic
+load-plugins=pylint_pydantic
+
+# Activer les messages d'erreur
+enable=
+    # Erreurs de base
+    wrong-import-order,
+    ungrouped-imports,
+    wrong-import-position,
+    
+    # Bonnes pratiques
+    consider-using-f-string,
+    consider-using-with,
+    use-list-literal,
+    use-dict-literal,
+    use-set-literal,
+    
+    # Style de code
+    line-too-long,
+    trailing-newlines,
+    trailing-whitespace,
+    
+    # Documentation
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring
+
+# Désactiver les messages d'erreur
+disable=
+    # Désactiver les avertissements de docstring pour les méthodes magiques
+    missing-function-docstring,
+    
+    # Désactiver les avertissements de docstring pour les méthodes privées
+    missing-any-param-doc,
+    missing-return-type-doc,
+    missing-param-doc,
+    
+    # Désactiver les avertissements pour les tests
+    redefined-outer-name,
+    unused-argument,
+    too-few-public-methods,
+    protected-access,
+    too-many-arguments,
+    too-many-locals,
+    too-many-statements,
+    too-many-branches,
+    too-many-nested-blocks,
+    too-many-instance-attributes,
+    too-many-public-methods,
+    too-many-lines,
+    too-many-return-statements
+
+[FORMAT]
+# Longueur maximale des lignes
+max-line-length=88
+
+# Style de docstring
+docstring-min-length=10
+docstring-max-length=100
+
+[DESIGN]
+# Nombre maximum d'arguments pour une fonction / méthode
+max-args=5
+
+# Nombre maximum d'attributs dans une classe
+max-attributes=7
+
+# Nombre maximum de méthodes publiques dans une classe
+max-public-methods=20
+
+[IMPORTS]
+# Style d'import
+import-order-style=pylama
+
+# Modules connus
+known-standard-library=os,sys,json,datetime,time,re,itertools,functools,typing,collections,abc,contextlib,pathlib,shutil,tempfile,io,base64,hashlib,hmac,secrets,random,string,math,decimal,fractions,statistics,operator,enum,argparse,getopt,logging,threading,multiprocessing,subprocess,signal,atexit,errno,ctypes,mmap,select,selectors,socket,ssl,ssl,asyncio,concurrent
+
+# Modules tiers connus
+known-third-party=fastapi,uvicorn,sqlalchemy,pydantic,pydantic_settings,python_dotenv,alembic,httpx,email_validator,itsdangerous,python_json_logger,redis,fastapi_limiter,asyncpg,prometheus_client,pytest,pytest_cov,pytest_asyncio,pytest_mock,pytest_factoryboy,pytest_httpx,Faker,factory_boy,coverage_badge,black,isort,bandit,mypy,safety,flake8
+
+# Modules de l'application
+known-first-party=app
+
+[TYPECHECK]
+# Activer la vérification des types
+check-untyped-defs=yes
+disallow-any-generics=yes
+disallow-untyped-decorators=yes
+disallow-untyped-defs=yes
+disallow-untyped-calls=yes
+disallow-untyped-functions=yes
+disallow-untyped-methods=yes
+disallow-untyped-variables=yes
+disallow-untyped-returns=yes
+disallow-untyped-arguments=yes
+
+[DOCSTRING]
+# Style de docstring
+docstring-style=google
+
+[TEST]
+# Fichiers de test
+test-file-naming-convention=test_*.py
+
+# Fonctions de test
+test-function-naming-convention=test_*
+
+# Classes de test
+test-class-naming-convention=Test*
+
+# Méthodes de test
+test-method-naming-convention=test_*
+
+[SECURITY]
+# Activer la vérification de sécurité
+check-security=yes
+
+[PERFORMANCE]
+# Activer la vérification des performances
+check-performance=yes
+
+[QUALITY]
+# Activer la vérification de la qualité du code
+check-code-quality=yes
+
+[REPORTS]
+# Format du rapport
+output-format=colorized
+
+# Activer les rapports détaillés
+reports=yes

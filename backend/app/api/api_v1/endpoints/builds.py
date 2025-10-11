@@ -1,14 +1,13 @@
 from typing import Any, List
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Body, Path, Request, Response
-from fastapi_limiter.depends import RateLimiter
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Body, Path, Request
+from app.core.limiter import get_rate_limiter
 from app.core.cache import cache_response
 from app.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 from app import models, schemas
-from app.crud import build_crud, user_crud
+from app.crud import build_crud
 from app.api.deps import get_current_user, get_async_db
 
 logger = logging.getLogger(__name__)
@@ -118,23 +117,19 @@ async def generate_build(
     # Convertir la requête en dict pour la compatibilité
     build_data = build_in.dict()
     build_data["created_by_id"] = current_user.id
-    
+
     # Créer un objet BuildCreate à partir des données générées
     build_create = schemas.BuildCreate(**build_data)
-    
+
     # Créer le build avec les données générées
-    db_build = await build_crud.create_with_owner_async(
-        db=db, 
-        obj_in=build_create, 
-        owner_id=current_user.id
-    )
-    
+    db_build = await build_crud.create_with_owner_async(db=db, obj_in=build_create, owner_id=current_user.id)
+
     # Retourner la réponse formatée
     return {
         "success": True,
         "message": "Build generated successfully",
         "build": db_build,
-        "suggested_composition": []  # À implémenter avec la logique de génération
+        "suggested_composition": [],  # À implémenter avec la logique de génération
     }
 
 
@@ -159,7 +154,7 @@ async def create_build(
         examples={"example": {"value": BUILD_CREATE_EXAMPLE}},
         description="Build data including name, description, and configuration",
     ),
-    dependencies=[Depends(RateLimiter(times=10, minutes=1))],
+    _rate_limit: None = Depends(get_rate_limiter(times=10, seconds=60)),
     current_user: models.User = Depends(get_current_user),
 ) -> Any:
     """
@@ -196,15 +191,11 @@ async def create_build(
                 bp_count = db.query(models.BuildProfession).count()
                 logger.info(f"- Total build-profession associations: {bp_count}")
             except Exception as db_err:
-                logger.error(
-                    f"Error querying database state: {str(db_err)}", exc_info=True
-                )
+                logger.error(f"Error querying database state: {str(db_err)}", exc_info=True)
 
             # Call the create_with_owner method
             try:
-                existing_build = await build_crud.get_by_name_async(
-                    db, name=build_in.name, owner_id=current_user.id
-                )
+                existing_build = await build_crud.get_by_name_async(db, name=build_in.name, owner_id=current_user.id)
 
                 if existing_build:
                     logger.error(f"Build with name '{build_in.name}' already exists")
@@ -213,15 +204,11 @@ async def create_build(
                         detail="Build with this name already exists",
                     )
 
-                db_build = await build_crud.create_with_owner(
-                    db=db, obj_in=build_in, owner_id=current_user.id
-                )
+                db_build = await build_crud.create_with_owner(db=db, obj_in=build_in, owner_id=current_user.id)
 
                 # Log the result
                 if db_build:
-                    logger.info(
-                        f"Successfully created build with ID: {getattr(db_build, 'id', 'N/A')}"
-                    )
+                    logger.info(f"Successfully created build with ID: {getattr(db_build, 'id', 'N/A')}")
                 else:
                     logger.error("create_with_owner returned None")
                     raise HTTPException(
@@ -233,9 +220,7 @@ async def create_build(
 
             except ValueError as ve:
                 # Handle validation errors with a 400 Bad Request
-                logger.error(
-                    f"Validation error in create_with_owner: {str(ve)}", exc_info=True
-                )
+                logger.error(f"Validation error in create_with_owner: {str(ve)}", exc_info=True)
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Invalid build data: {str(ve)}",
@@ -283,9 +268,7 @@ async def create_build(
 
             # Log the build data that caused the error
             try:
-                logger.error(
-                    f"Build data that caused the error: {build_in.model_dump_json()}"
-                )
+                logger.error(f"Build data that caused the error: {build_in.model_dump_json()}")
             except Exception as json_err:
                 logger.error(f"Could not serialize build data: {str(json_err)}")
 
@@ -295,9 +278,7 @@ async def create_build(
                 builds = db.query(models.Build).all()
                 logger.info(f"- Total builds: {len(builds)}")
                 for b in builds[:5]:  # Limit to first 5 builds to avoid huge logs
-                    logger.info(
-                        f"  - Build {b.id}: {b.name} (owner: {getattr(b, 'created_by_id', 'N/A')})"
-                    )
+                    logger.info(f"  - Build {b.id}: {b.name} (owner: {getattr(b, 'created_by_id', 'N/A')})")
 
                 logger.info("Current professions in database:")
                 profs = db.query(models.Profession).all()
@@ -306,9 +287,7 @@ async def create_build(
                     logger.info(f"  - Profession {p.id}: {p.name}")
 
             except Exception as db_err:
-                logger.error(
-                    f"Error querying database state: {str(db_err)}", exc_info=True
-                )
+                logger.error(f"Error querying database state: {str(db_err)}", exc_info=True)
 
             # Re-raise with a generic error message to avoid leaking internal details
             raise HTTPException(
@@ -320,9 +299,7 @@ async def create_build(
 
         # Explicitly load the build with its professions
         logger.info("Loading build with professions...")
-        db_build = build_crud.get_with_professions(
-            db=db, id=db_build.id, user_id=current_user.id
-        )
+        db_build = build_crud.get_with_professions(db=db, id=db_build.id, user_id=current_user.id)
 
         if not db_build:
             logger.error(f"Failed to load build with ID {db_build.id}")
@@ -348,9 +325,7 @@ async def create_build(
             detail=f"Failed to create build: {str(e)}",
         )
     if hasattr(db_build, "professions") and db_build.professions:
-        logger.info(
-            f"Build has {len(db_build.professions)} professions: {[p.id for p in db_build.professions]}"
-        )
+        logger.info(f"Build has {len(db_build.professions)} professions: {[p.id for p in db_build.professions]}")
     else:
         logger.warning("Build has no professions attribute or empty professions list")
 
@@ -548,20 +523,15 @@ async def read_builds(
     Results are paginated using skip and limit parameters.
     """
     # Get user's builds
-    user_builds = await build_crud.get_multi_by_owner_async(
-        db, owner_id=current_user.id, skip=skip, limit=limit
-    )
-    
+    user_builds = await build_crud.get_multi_by_owner_async(db, owner_id=current_user.id, skip=skip, limit=limit)
+
     # If we have less than the limit, add public builds
     if len(user_builds) < limit:
         remaining = limit - len(user_builds)
         public_builds = await build_crud.get_public_builds_async(db, skip=0, limit=remaining)
-        
+
         # Filter out builds that are already in user_builds
-        public_builds = [
-            b for b in public_builds 
-            if b.id not in {b.id for b in user_builds}
-        ]
+        public_builds = [b for b in public_builds if b.id not in {b.id for b in user_builds}]
         user_builds.extend(public_builds[:remaining])
 
     return user_builds

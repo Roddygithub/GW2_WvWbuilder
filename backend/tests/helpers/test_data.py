@@ -65,9 +65,7 @@ def random_choice(choices: list) -> Any:
     return random.choice(choices)
 
 
-def random_datetime(
-    start: Optional[datetime] = None, end: Optional[datetime] = None
-) -> datetime:
+def random_datetime(start: Optional[datetime] = None, end: Optional[datetime] = None) -> datetime:
     """Generate a random datetime between two dates."""
     if start is None:
         start = datetime(2020, 1, 1)

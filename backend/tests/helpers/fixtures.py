@@ -224,9 +224,7 @@ class BuildFactory(ModelFactory):
         }
 
     @classmethod
-    def create_build_create(
-        cls, profession_id: int, user_id: int, **kwargs: Any
-    ) -> BuildCreate:
+    def create_build_create(cls, profession_id: int, user_id: int, **kwargs: Any) -> BuildCreate:
         """Create a BuildCreate instance."""
         data = {
             "name": f"build_{random_string(8)}",
@@ -284,9 +282,7 @@ class CompositionFactory(ModelFactory):
         }
 
     @classmethod
-    def create_composition_create(
-        cls, user_id: int, **kwargs: Any
-    ) -> CompositionCreate:
+    def create_composition_create(cls, user_id: int, **kwargs: Any) -> CompositionCreate:
         """Create a CompositionCreate instance."""
         data = {
             "name": f"comp_{random_string(8)}",
@@ -354,13 +350,9 @@ class TestDataGenerator:
         self._professions.append(profession)
         return profession
 
-    async def create_build(
-        self, user_id: int, profession_id: int, **kwargs: Any
-    ) -> Build:
+    async def create_build(self, user_id: int, profession_id: int, **kwargs: Any) -> Build:
         """Create a test build."""
-        build = BuildFactory.create(
-            user_id=user_id, profession_id=profession_id, **kwargs
-        )
+        build = BuildFactory.create(user_id=user_id, profession_id=profession_id, **kwargs)
         self.session.add(build)
         await self.session.commit()
         await self.session.refresh(build)
@@ -386,9 +378,7 @@ class TestDataGenerator:
             is_default=False,
         )
 
-        user_role = await self.create_role(
-            name="user", description="Regular User", permission_level=1, is_default=True
-        )
+        user_role = await self.create_role(name="user", description="Regular User", permission_level=1, is_default=True)
 
         # Create users
         admin_user = await self.create_user(

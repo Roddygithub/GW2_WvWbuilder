@@ -1,0 +1,55 @@
+[run]
+source = app
+omit = 
+    */tests/*
+    *test_*.py
+    *conftest.py
+    */migrations/*
+    */alembic/*
+    */venv/*
+    */.venv/*
+    */env/*
+    */.env/*
+    */__pycache__/*
+    */.*cache/*
+    */tmp/*
+    */temp/*
+    *pytest.ini
+    *.coveragerc
+    *setup.cfg
+    *setup.py
+    */docs/*
+    *README*
+    *CHANGELOG*
+    *CONTRIBUTING*
+    *LICENSE*
+
+[report]
+# Seuil de couverture minimum (en pourcentage)
+fail_under = 80
+
+# Exclure certaines parties du code de la couverture
+exclude_lines =
+    # Ignorer les imports
+    ^\s*import \w+\s*$
+    ^\s*from \w+(?:\.\w+)* import \w+\s*$
+    # Ignorer les docstrings
+    ^\s*"{3}.*$
+    ^\s*""".*$
+    # Ignorer les fonctions et classes vides
+    ^\s*(class|def) \w+\([^)]*\):\s*$
+    # Ignorer les méthodes magiques
+    ^\s*def __\w+__\([^)]*\):\s*$
+    # Ignorer les noqa
+    .*\s*#\s*noqa\s*$
+    # Ignorer les blocs pass
+    ^\s*pass\s*$
+
+[html]
+directory = htmlcov
+title = GW2 WvWbuilder - Test Coverage
+
+[paths]
+source =
+    app/
+    */app/

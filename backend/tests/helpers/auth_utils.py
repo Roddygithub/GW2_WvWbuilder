@@ -14,9 +14,7 @@ from app.schemas.user import UserCreate, UserUpdate
 from app.tests.helpers.assertions import assert_status_code
 
 
-def get_auth_headers(
-    user_id: Union[str, int], scopes: Optional[List[str]] = None
-) -> Dict[str, str]:
+def get_auth_headers(user_id: Union[str, int], scopes: Optional[List[str]] = None) -> Dict[str, str]:
     """Get authentication headers for a user.
 
     Args:
@@ -228,28 +226,20 @@ def assert_token_payload(
     payload = get_token_payload(token)
 
     if expected_sub is not None:
-        assert str(payload["sub"]) == str(
-            expected_sub
-        ), f"Expected subject '{expected_sub}', got '{payload['sub']}'"
+        assert str(payload["sub"]) == str(expected_sub), f"Expected subject '{expected_sub}', got '{payload['sub']}'"
 
     if expected_scopes is not None:
         scopes = payload.get("scopes", [])
         if not isinstance(scopes, list):
             scopes = [scopes]
 
-        assert set(scopes) == set(
-            expected_scopes
-        ), f"Expected scopes {expected_scopes}, got {scopes}"
+        assert set(scopes) == set(expected_scopes), f"Expected scopes {expected_scopes}, got {scopes}"
 
     if expected_iss is not None:
-        assert (
-            payload["iss"] == expected_iss
-        ), f"Expected issuer '{expected_iss}', got '{payload['iss']}'"
+        assert payload["iss"] == expected_iss, f"Expected issuer '{expected_iss}', got '{payload['iss']}'"
 
     if expected_aud is not None:
-        assert (
-            payload["aud"] == expected_aud
-        ), f"Expected audience '{expected_aud}', got '{payload['aud']}'"
+        assert payload["aud"] == expected_aud, f"Expected audience '{expected_aud}', got '{payload['aud']}'"
 
     return payload
 
@@ -344,6 +334,4 @@ def assert_user_data(
             continue
 
         assert key in user_data, f"Missing field: {key}"
-        assert (
-            user_data[key] == expected_value
-        ), f"Expected {key}={expected_value}, got {user_data[key]}"
+        assert user_data[key] == expected_value, f"Expected {key}={expected_value}, got {user_data[key]}"

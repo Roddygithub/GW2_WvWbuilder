@@ -26,9 +26,7 @@ def create_test_user(
     if full_name is None:
         full_name = f"Test User {random_lower_string(5)}"
 
-    user_in = schemas.UserCreate(
-        email=email, username=username, password=password, full_name=full_name
-    )
+    user_in = schemas.UserCreate(email=email, username=username, password=password, full_name=full_name)
     return crud.user.create(db, obj_in=user_in)
 
 

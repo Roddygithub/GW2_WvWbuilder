@@ -29,9 +29,7 @@ def create_test_professions(db: Session, count: int = 5) -> List[Profession]:
     return professions
 
 
-def create_test_build(
-    db: Session, owner_id: int, is_public: bool = True, **overrides
-) -> Build:
+def create_test_build(db: Session, owner_id: int, is_public: bool = True, **overrides) -> Build:
     """Helper to create a test build."""
     build_data = {
         "name": "Test Build",
@@ -82,9 +80,7 @@ class TestBuildAuthentication:
         user = create_test_user(db, email="test1@example.com")
         build = create_test_build(db, owner_id=user.id)
 
-        response = client.put(
-            f"{settings.API_V1_STR}/builds/{build.id}", json={"name": "Updated Name"}
-        )
+        response = client.put(f"{settings.API_V1_STR}/builds/{build.id}", json={"name": "Updated Name"})
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_delete_build_unauthenticated(self, client: TestClient, db: Session):
@@ -132,9 +128,7 @@ class TestBuildAuthorization:
 
         # Other user tries to delete the build
         headers = get_auth_headers(other_user.id)
-        response = client.delete(
-            f"{settings.API_V1_STR}/builds/{build.id}", headers=headers
-        )
+        response = client.delete(f"{settings.API_V1_STR}/builds/{build.id}", headers=headers)
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -168,9 +162,7 @@ class TestBuildErrorHandling:
             "profession_ids": [*valid_profession_ids, 99999],  # Invalid ID
         }
 
-        response = client.post(
-            f"{settings.API_V1_STR}/builds/", headers=headers, json=invalid_build_data
-        )
+        response = client.post(f"{settings.API_V1_STR}/builds/", headers=headers, json=invalid_build_data)
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "not found" in response.json()["detail"].lower()
@@ -187,9 +179,7 @@ class TestBuildErrorHandling:
             "team_size": 5,
         }
 
-        response = client.post(
-            f"{settings.API_V1_STR}/builds/", headers=headers, json=invalid_data
-        )
+        response = client.post(f"{settings.API_V1_STR}/builds/", headers=headers, json=invalid_data)
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         assert "field required" in str(response.json()["detail"][0]["msg"]).lower()
@@ -206,9 +196,7 @@ class TestBuildPagination:
 
         # Create 15 test builds
         for i in range(15):
-            create_test_build(
-                db, owner_id=user.id, name=f"Test Build {i+1}", is_public=True
-            )
+            create_test_build(db, owner_id=user.id, name=f"Test Build {i+1}", is_public=True)
 
         # Test first page (limit=10, skip=0)
         response = client.get(

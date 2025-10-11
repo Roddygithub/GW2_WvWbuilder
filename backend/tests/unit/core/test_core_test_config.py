@@ -26,10 +26,7 @@ class TestSettings:
         assert config.ALGORITHM == "HS256"
         assert config.BACKEND_CORS_ORIGINS == ["*"]
         assert config.SQLALCHEMY_DATABASE_URI == "sqlite:///./gw2_wvwbuilder.db"
-        assert (
-            config.ASYNC_SQLALCHEMY_DATABASE_URI
-            == "sqlite+aiosqlite:///./gw2_wvwbuilder.db"
-        )
+        assert config.ASYNC_SQLALCHEMY_DATABASE_URI == "sqlite+aiosqlite:///./gw2_wvwbuilder.db"
 
     def test_environment_variables(self):
         """Test that environment variables override defaults."""
@@ -69,9 +66,7 @@ class TestSettings:
     def test_list_environment_variables(self):
         """Test that list environment variables are parsed correctly."""
         # Test with JSON array (Pydantic v2 with SettingsConfigDict requires JSON for list fields)
-        with patch.dict(
-            os.environ, {"BACKEND_CORS_ORIGINS": '["http://x", "http://y"]'}
-        ):
+        with patch.dict(os.environ, {"BACKEND_CORS_ORIGINS": '["http://x", "http://y"]'}):
             config = Settings()
             assert config.BACKEND_CORS_ORIGINS == ["http://x", "http://y"]
 
@@ -101,22 +96,15 @@ class TestSettings:
         config = Settings()
 
         # Test with default SQLite URL
-        assert (
-            config.get_async_database_url() == "sqlite+aiosqlite:///./gw2_wvwbuilder.db"
-        )
+        assert config.get_async_database_url() == "sqlite+aiosqlite:///./gw2_wvwbuilder.db"
 
         # Test with PostgreSQL DATABASE_URL
         config.DATABASE_URL = "postgresql://user:pass@localhost/db"
-        assert (
-            config.get_async_database_url()
-            == "postgresql+asyncpg://user:pass@localhost/db"
-        )
+        assert config.get_async_database_url() == "postgresql+asyncpg://user:pass@localhost/db"
 
         # Test with MySQL DATABASE_URL
         config.DATABASE_URL = "mysql://user:pass@localhost/db"
-        assert (
-            config.get_async_database_url() == "mysql+asyncmy://user:pass@localhost/db"
-        )
+        assert config.get_async_database_url() == "mysql+asyncmy://user:pass@localhost/db"
 
     def test_env_file_loading(self, tmp_path):
         """Test loading settings from environment variables."""

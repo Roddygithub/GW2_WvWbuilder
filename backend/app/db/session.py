@@ -20,10 +20,31 @@ except ImportError:
     from sqlalchemy import create_engine
     from sqlalchemy.ext.asyncio import create_async_engine
     from app.core.config import settings
-    
+
     # Configuration minimale pour les moteurs
-    engine = create_engine(settings.get_database_url())
-    async_engine = create_async_engine(settings.get_async_database_url())
+    sync_url = settings.get_database_url()
+    async_url = settings.get_async_database_url()
+
+    # Configuration spécifique pour SQLite
+    connect_args = {}
+    if "sqlite" in sync_url:
+        connect_args = {"check_same_thread": False}
+        if "memory" in sync_url:
+            connect_args["uri"] = True
+
+    engine = create_engine(sync_url, connect_args=connect_args)
+
+    # Configuration pour le moteur asynchrone
+    if "sqlite" in async_url and "aiosqlite" in async_url:
+        # Utilisation d'une URL simplifiée pour SQLite en mémoire
+        async_engine = create_async_engine(
+            "sqlite+aiosqlite:///:memory:",
+            connect_args={"check_same_thread": False},
+            echo=settings.DEBUG,
+            poolclass=None,  # Désactive le pool pour SQLite en mémoire
+        )
+    else:
+        async_engine = create_async_engine(async_url, echo=settings.DEBUG)
 
 # Import de la classe de base des modèles
 from app.models.base import Base
@@ -35,32 +56,42 @@ def init_db() -> None:
     Cette fonction est principalement utilisée pour les tests et l'initialisation
     du développement. En production, utilisez les migrations Alembic.
     """
-    import logging
 
-    logger = logging.getLogger(__name__)
-    logger.info("Création des tables de la base de données...")
+    logger.info("Initialisation de la base de données...")
 
-    # Création de toutes les tables définies dans les modèles
+    # Création des tables
     Base.metadata.create_all(bind=engine)
 
-    logger.info("Tables créées avec succès")
+    logger.info("Base de données initialisée avec succès")
+
+
+async def init_async_db() -> None:
+    """
+    Initialise la base de données de manière asynchrone en créant toutes les tables.
+    Cette fonction est principalement utilisée pour les tests et l'initialisation
+    du développement avec des opérations asynchrones.
+    """
+
+    logger.info("Initialisation asynchrone de la base de données...")
+
+    # Création des tables de manière asynchrone
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    logger.info("Base de données asynchrone initialisée avec succès")
 
 
 # Création des fabriques de sessions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 AsyncSessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=async_engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+    autocommit=False, autoflush=False, bind=async_engine, class_=AsyncSession, expire_on_commit=False
 )
 
 
 def get_db() -> Generator[Session, None, None]:
     """
     Fournit une instance de session de base de données synchrone.
-    
+
     Cette fonction est utilisée comme dépendance dans les routes FastAPI pour obtenir
     une session de base de données. La session est automatiquement fermée après utilisation.
     """
@@ -74,7 +105,7 @@ def get_db() -> Generator[Session, None, None]:
 async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Fournit une instance de session de base de données asynchrone.
-    
+
     Cette fonction est utilisée comme dépendance dans les routes FastAPI pour obtenir
     une session de base de données asynchrone. La session est automatiquement fermée
     après utilisation.

@@ -2,7 +2,6 @@
 
 import pytest
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.crud_team import CRUDTeam
@@ -10,7 +9,6 @@ from app.models import Team, TeamStatus, User, Build, Composition, Profession, R
 from app.schemas.team import (
     TeamCreate,
     TeamUpdate,
-    TeamMemberCreate,
     TeamRole,
     TeamStatus as TeamStatusEnum,
 )
@@ -35,6 +33,7 @@ TEST_ROLE_ID = 1
 def team_data():
     """Return test team data."""
     from app.schemas.team import TeamCreate
+
     return TeamCreate(
         name=TEST_TEAM_NAME,
         description=TEST_DESCRIPTION,
@@ -61,12 +60,12 @@ async def test_user(async_db_session: AsyncSession):
     """Create a test user with a unique username and email."""
     from app.core.security import get_password_hash
     import uuid
-    
+
     # Generate a unique identifier for this test user
     unique_id = str(uuid.uuid4())[:8]  # Take first 8 chars of UUID
     username = f"testuser_{unique_id}"
     email = f"test_{unique_id}@example.com"
-    
+
     user = User(
         username=username,
         email=email,
@@ -152,14 +151,10 @@ class TestCRUDTeam:
             description="Test Team Description",
             status=TeamStatusEnum.ACTIVE,
         )
-        
+
         # Create the team
-        team = await team_crud.create_with_owner(
-            db=async_db_session,
-            obj_in=team_data,
-            owner_id=test_user.id
-        )
-        
+        team = await team_crud.create_with_owner(db=async_db_session, obj_in=team_data, owner_id=test_user.id)
+
         # Verify the team was created
         assert team.id is not None
         assert team.name == team_data.name
@@ -176,12 +171,8 @@ class TestCRUDTeam:
             description="Test Team Description",
             status=TeamStatusEnum.ACTIVE,
         )
-        team = await team_crud.create_with_owner(
-            db=async_db_session,
-            obj_in=team_data,
-            owner_id=test_user.id
-        )
-        
+        team = await team_crud.create_with_owner(db=async_db_session, obj_in=team_data, owner_id=test_user.id)
+
         # Get the team using async method
         retrieved_team = await team_crud.get_async(async_db_session, id=team.id)
 
@@ -205,22 +196,12 @@ class TestCRUDTeam:
             description="Team 2 Description",
             status=TeamStatusEnum.INACTIVE,
         )
-        
-        team1 = await team_crud.create_with_owner(
-            db=async_db_session,
-            obj_in=team1_data,
-            owner_id=test_user.id
-        )
-        team2 = await team_crud.create_with_owner(
-            db=async_db_session,
-            obj_in=team2_data,
-            owner_id=test_user.id
-        )
+
+        await team_crud.create_with_owner(db=async_db_session, obj_in=team1_data, owner_id=test_user.id)
+        await team_crud.create_with_owner(db=async_db_session, obj_in=team2_data, owner_id=test_user.id)
 
         # Get teams by owner
-        teams = await team_crud.get_multi_by_owner(
-            async_db_session, owner_id=test_user.id
-        )
+        teams = await team_crud.get_multi_by_owner(async_db_session, owner_id=test_user.id)
 
         # Verify the teams were retrieved
         assert len(teams) == 2
@@ -236,11 +217,7 @@ class TestCRUDTeam:
             description="This team will be updated",
             status=TeamStatusEnum.ACTIVE,
         )
-        team = await team_crud.create_with_owner(
-            db=async_db_session,
-            obj_in=team_data,
-            owner_id=test_user.id
-        )
+        team = await team_crud.create_with_owner(db=async_db_session, obj_in=team_data, owner_id=test_user.id)
 
         # Get the team to update
         db_team = await team_crud.get_async(async_db_session, id=team.id)
@@ -252,9 +229,7 @@ class TestCRUDTeam:
             description="Updated Description",
             status=TeamStatusEnum.INACTIVE,
         )
-        updated_team = await team_crud.update_async(
-            async_db_session, db_obj=db_team, obj_in=update_data
-        )
+        updated_team = await team_crud.update_async(async_db_session, db_obj=db_team, obj_in=update_data)
 
         # Verify the team was updated
         assert updated_team.name == update_data.name
@@ -270,12 +245,8 @@ class TestCRUDTeam:
             description="This team will be removed",
             status=TeamStatusEnum.ACTIVE,
         )
-        team = await team_crud.create_with_owner(
-            db=async_db_session,
-            obj_in=team_data,
-            owner_id=test_user.id
-        )
-        
+        team = await team_crud.create_with_owner(db=async_db_session, obj_in=team_data, owner_id=test_user.id)
+
         # Get the team ID before removal
         team_id = team.id
 
@@ -291,9 +262,7 @@ class TestCRUDTeam:
         assert team is None
 
     @pytest.mark.asyncio
-    async def test_add_member_to_team(
-        self, async_db_session: AsyncSession, test_user: User
-    ):
+    async def test_add_member_to_team(self, async_db_session: AsyncSession, test_user: User):
         """Test adding a member to a team."""
         # Create a test team
         team_data = TeamCreate(
@@ -301,12 +270,8 @@ class TestCRUDTeam:
             description="Team for testing member operations",
             status=TeamStatusEnum.ACTIVE,
         )
-        team = await team_crud.create_with_owner(
-            db=async_db_session,
-            obj_in=team_data,
-            owner_id=test_user.id
-        )
-        
+        team = await team_crud.create_with_owner(db=async_db_session, obj_in=team_data, owner_id=test_user.id)
+
         # Create a test user to add as member
         test_member = User(
             username="testmember",
@@ -320,19 +285,16 @@ class TestCRUDTeam:
 
         # Add member to team
         success = await team_crud.add_member(
-            async_db_session, 
-            team_id=team.id, 
-            user_id=test_member.id,
-            role=TeamRole.MEMBER
+            async_db_session, team_id=team.id, user_id=test_member.id, role=TeamRole.MEMBER
         )
 
         # Verify the member was added
         assert success is True
-        
+
         # Get the team with members
-        team_with_members = await team_crud.get_async(async_db_session, id=team.id)
+        await team_crud.get_async(async_db_session, id=team.id)
         members = await team_crud.get_members(async_db_session, team_id=team.id)
-        
+
         assert len(members) == 1
         assert members[0].id == test_member.id
 
@@ -345,16 +307,12 @@ class TestCRUDTeam:
             description="A team with members",
             status=TeamStatusEnum.ACTIVE,
         )
-        team = await team_crud.create_with_owner(
-            db=async_db_session,
-            obj_in=team_data,
-            owner_id=test_user.id
-        )
+        team = await team_crud.create_with_owner(db=async_db_session, obj_in=team_data, owner_id=test_user.id)
 
         # Create a test user to add as a member
         from app.core.security import get_password_hash
         from uuid import uuid4
-        
+
         # Generate unique username and email
         unique_id = str(uuid4())[:8]
         member = User(
@@ -370,26 +328,16 @@ class TestCRUDTeam:
 
         # Add the member to the team
         member_added = await team_crud.add_member(
-            db=async_db_session,
-            team_id=team.id,
-            user_id=member.id,
-            role="member"
+            db=async_db_session, team_id=team.id, user_id=member.id, role="member"
         )
         assert member_added is True
 
         # Remove the member from the team
-        member_removed = await team_crud.remove_member(
-            db=async_db_session,
-            team_id=team.id,
-            user_id=member.id
-        )
+        member_removed = await team_crud.remove_member(db=async_db_session, team_id=team.id, user_id=member.id)
         assert member_removed is True
 
         # Verify the member is no longer in the team
-        members = await team_crud.get_members(
-            db=async_db_session,
-            team_id=team.id
-        )
+        members = await team_crud.get_members(db=async_db_session, team_id=team.id)
         assert len(members) == 0
 
 
@@ -401,6 +349,7 @@ class TestTeamInstance:
         """Test that the team instance is created correctly."""
         # Test that the team instance is created correctly
         from app.crud.crud_team import CRUDTeam
+
         assert isinstance(team_crud, CRUDTeam)
 
     def test_team_instance_methods(self):

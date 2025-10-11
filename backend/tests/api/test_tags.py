@@ -1,11 +1,11 @@
 """
 Tests for the Tags API endpoints.
 """
+
 import pytest
 from fastapi import status
 from httpx import AsyncClient
 
-from app.models import Tag
 from app.core.config import settings
 
 
@@ -37,22 +37,28 @@ class TestTagsAPI:
     async def test_create_tag_edge_cases(self, async_client: AsyncClient, auth_headers):
         """Test creating a tag with edge case names."""
         admin_headers = await auth_headers(username="tag_admin_edge", is_superuser=True)
-        
+
         # Test avec un nom très long (devrait échouer à la validation Pydantic)
         long_name_data = {"name": "a" * 51, "description": "This name is too long"}
-        response_long = await async_client.post(f"{settings.API_V1_STR}/tags/", json=long_name_data, headers=admin_headers)
+        response_long = await async_client.post(
+            f"{settings.API_V1_STR}/tags/", json=long_name_data, headers=admin_headers
+        )
         assert response_long.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
         # Test avec des caractères spéciaux (devrait réussir)
         special_char_data = {"name": "Tag with !@#$%^&*()", "description": "Special characters test"}
-        response_special = await async_client.post(f"{settings.API_V1_STR}/tags/", json=special_char_data, headers=admin_headers)
+        response_special = await async_client.post(
+            f"{settings.API_V1_STR}/tags/", json=special_char_data, headers=admin_headers
+        )
         assert response_special.status_code == status.HTTP_201_CREATED
         data = response_special.json()
         assert data["name"] == "Tag with !@#$%^&*()"
 
         # Test avec un nom vide (devrait échouer)
         empty_name_data = {"name": "", "description": "Empty name"}
-        response_empty = await async_client.post(f"{settings.API_V1_STR}/tags/", json=empty_name_data, headers=admin_headers)
+        response_empty = await async_client.post(
+            f"{settings.API_V1_STR}/tags/", json=empty_name_data, headers=admin_headers
+        )
         assert response_empty.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_read_tags(self, async_client: AsyncClient, tag_factory, auth_headers):
@@ -96,7 +102,9 @@ class TestTagsAPI:
         admin_headers = await auth_headers(username="tag_updater", is_superuser=True)
         update_data = {"name": "New Name", "description": "Updated description"}
 
-        response = await async_client.put(f"{settings.API_V1_STR}/tags/{tag.id}", json=update_data, headers=admin_headers)
+        response = await async_client.put(
+            f"{settings.API_V1_STR}/tags/{tag.id}", json=update_data, headers=admin_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -108,9 +116,7 @@ class TestTagsAPI:
         admin_headers = await auth_headers(username="tag_updater", is_superuser=True)
         update_data = {"name": "This will fail"}
 
-        response = await async_client.put(
-            f"{settings.API_V1_STR}/tags/999999", json=update_data, headers=admin_headers
-        )
+        response = await async_client.put(f"{settings.API_V1_STR}/tags/999999", json=update_data, headers=admin_headers)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 

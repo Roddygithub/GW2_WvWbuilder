@@ -98,9 +98,7 @@ class TestCRUDRole:
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = create_mock_result(mock_role)
 
-        result = await role_crud.update_async(
-            db, db_obj=mock_role, obj_in=mock_role_update
-        )
+        result = await role_crud.update_async(db, db_obj=mock_role, obj_in=mock_role_update)
 
         assert result.name == "Updated Role"
         assert result.description == "Updated Description"
@@ -127,9 +125,7 @@ class TestCRUDRole:
         """Test retrieving roles by permission level"""
         db = AsyncMock(spec=AsyncSession)
         mock_role2 = Role(id=2, name="Admin", permission_level=10, is_default=False)
-        db.execute.return_value = create_mock_result(
-            [mock_role, mock_role2], is_list=True
-        )
+        db.execute.return_value = create_mock_result([mock_role, mock_role2], is_list=True)
 
         result = await role_crud.get_by_permission_level_async(db, permission_level=1)
 

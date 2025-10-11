@@ -9,6 +9,7 @@ from app.models import User, Build
 
 pytestmark = pytest.mark.asyncio
 
+
 class TestBuildsErrorHandling:
     """Test error handling for Builds API endpoints."""
 
@@ -26,7 +27,7 @@ class TestBuildsErrorHandling:
         )
         async_db.add(other_user)
         await async_db.commit()
-        
+
         private_build = Build(
             name="Private Build",
             game_mode="wvw",
@@ -37,15 +38,15 @@ class TestBuildsErrorHandling:
         )
         async_db.add(private_build)
         await async_db.commit()
-        
+
         response = await async_client.get(
             f"{settings.API_V1_STR}/builds/{private_build.id}",
             headers={"Authorization": f"Bearer {test_user['access_token']}"},
         )
-        
+
         assert response.status_code == status.HTTP_403_FORBIDDEN
         assert "not authorized" in response.json()["detail"].lower()
-        
+
     async def test_update_build_with_invalid_data(
         self,
         async_client: AsyncClient,
@@ -59,30 +60,24 @@ class TestBuildsErrorHandling:
             "game_mode": "invalid_mode",  # Invalid game mode
             "team_size": 0,  # Invalid team size
         }
-        
+
         response = await async_client.put(
             f"{settings.API_V1_STR}/builds/{test_build['id']}",
             json=invalid_data,
             headers={"Authorization": f"Bearer {test_user['access_token']}"},
         )
-        
+
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         errors = response.json()["detail"]
-        
+
         # Check for validation errors
-        error_fields = [
-            str(error.get("loc", [""])[1])
-            for error in errors
-            if len(error.get("loc", [])) > 1
-        ]
-        
+        error_fields = [str(error.get("loc", [""])[1]) for error in errors if len(error.get("loc", [])) > 1]
+
         assert "name" in error_fields
         assert "game_mode" in error_fields
         assert "team_size" in error_fields
 
-    async def test_create_build_with_invalid_constraints(
-        self, async_client: AsyncClient, test_user: Dict[str, Any]
-    ):
+    async def test_create_build_with_invalid_constraints(self, async_client: AsyncClient, test_user: Dict[str, Any]):
         """Test creating a build with invalid constraints."""
         invalid_constraints = {
             "name": "Test Build with Invalid Constraints",
@@ -94,20 +89,18 @@ class TestBuildsErrorHandling:
                 "min_support": 10,  # Invalid: sum > team_size
             },
         }
-        
+
         response = await async_client.post(
             f"{settings.API_V1_STR}/builds/",
             json=invalid_constraints,
             headers={"Authorization": f"Bearer {test_user['access_token']}"},
         )
-        
+
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
         errors = response.json()["detail"]
         assert any("constraints" in str(error.get("loc", [])) for error in errors)
 
-    async def test_list_builds_with_invalid_pagination(
-        self, async_client: AsyncClient, test_user: Dict[str, Any]
-    ):
+    async def test_list_builds_with_invalid_pagination(self, async_client: AsyncClient, test_user: Dict[str, Any]):
         """Test listing builds with invalid pagination parameters."""
         # Test with negative skip
         response = await async_client.get(
@@ -116,7 +109,7 @@ class TestBuildsErrorHandling:
             headers={"Authorization": f"Bearer {test_user['access_token']}"},
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-        
+
         # Test with zero limit
         response = await async_client.get(
             f"{settings.API_V1_STR}/builds/",
@@ -124,7 +117,7 @@ class TestBuildsErrorHandling:
             headers={"Authorization": f"Bearer {test_user['access_token']}"},
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-        
+
         # Test with non-integer values
         response = await async_client.get(
             f"{settings.API_V1_STR}/builds/",

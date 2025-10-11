@@ -19,9 +19,7 @@ async def init_test_db() -> AsyncGenerator[AsyncSession, None]:
         AsyncSession: Database session for testing
     """
     # Create async engine and session factory
-    engine = create_async_engine(
-        settings.ASYNC_SQLALCHEMY_DATABASE_URI, echo=False, future=True
-    )
+    engine = create_async_engine(settings.ASYNC_SQLALCHEMY_DATABASE_URI, echo=False, future=True)
 
     # Create all tables
     async with engine.begin() as conn:
@@ -121,13 +119,10 @@ def assert_models_equal(model1: Any, model2: Any, exclude: list = None) -> None:
     exclude = exclude or []
 
     # Get all column names
-    columns = [
-        c.key for c in inspect(model1).mapper.column_attrs if c.key not in exclude
-    ]
+    columns = [c.key for c in inspect(model1).mapper.column_attrs if c.key not in exclude]
 
     # Compare each column
     for column in columns:
         assert getattr(model1, column) == getattr(model2, column), (
-            f"{column} does not match: "
-            f"{getattr(model1, column)} != {getattr(model2, column)}"
+            f"{column} does not match: " f"{getattr(model1, column)} != {getattr(model2, column)}"
         )

@@ -1,15 +1,12 @@
 """
 Tests for User and Authentication API endpoints.
 """
+
 import pytest
 from fastapi import status
 from httpx import AsyncClient
 
 from app.core.config import settings
-from app.models import User
-from app.crud import user as user_crud
-from app.schemas.user import User
-from tests.constants import TestData
 
 
 @pytest.mark.asyncio
@@ -35,9 +32,7 @@ class TestAuthEndpoints:
         user = await user_factory(username="login_user", password="testpassword")
         login_data = {"username": user.username, "password": "testpassword"}
 
-        response = await async_client.post(
-            f"{settings.API_V1_STR}/auth/login", data=login_data
-        )
+        response = await async_client.post(f"{settings.API_V1_STR}/auth/login", data=login_data)
         assert response.status_code == status.HTTP_200_OK
         token = response.json()
         assert "access_token" in token
@@ -46,9 +41,7 @@ class TestAuthEndpoints:
     async def test_login_invalid_credentials(self, async_client: AsyncClient):
         """Test login with invalid credentials fails."""
         login_data = {"username": "nouser", "password": "wrongpassword"}
-        response = await async_client.post(
-            f"{settings.API_V1_STR}/auth/login", data=login_data
-        )
+        response = await async_client.post(f"{settings.API_V1_STR}/auth/login", data=login_data)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Incorrect email or password" in response.json()["detail"]
 
@@ -89,7 +82,9 @@ class TestUserEndpoints:
         error_data = response.json()
         assert "not found" in error_data["detail"].lower()
 
-    async def test_read_user_by_id_forbidden_for_normal_user(self, async_client: AsyncClient, user_factory, auth_headers):
+    async def test_read_user_by_id_forbidden_for_normal_user(
+        self, async_client: AsyncClient, user_factory, auth_headers
+    ):
         """Test that a normal user cannot retrieve another user by ID."""
         user_to_find = await user_factory(username="hidden_user")
         normal_user_headers = await auth_headers(username="normal_user")
@@ -115,7 +110,9 @@ class TestUserEndpoints:
         admin_headers = await auth_headers(username="admin_updater", is_superuser=True)
         update_data = {"is_active": False}
 
-        response = await async_client.put(f"{settings.API_V1_STR}/users/{user_to_update.id}", json=update_data, headers=admin_headers)
+        response = await async_client.put(
+            f"{settings.API_V1_STR}/users/{user_to_update.id}", json=update_data, headers=admin_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         assert response.json()["is_active"] is False
@@ -125,7 +122,9 @@ class TestUserEndpoints:
         admin_headers = await auth_headers(username="admin_updater_nonexistent", is_superuser=True)
         update_data = {"is_active": False}
 
-        response = await async_client.put(f"{settings.API_V1_STR}/users/999999", json=update_data, headers=admin_headers)
+        response = await async_client.put(
+            f"{settings.API_V1_STR}/users/999999", json=update_data, headers=admin_headers
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         error_data = response.json()
@@ -135,9 +134,11 @@ class TestUserEndpoints:
         """Test that a normal user cannot update another user's information."""
         user_to_update = await user_factory(username="protected_user")
         normal_user_headers = await auth_headers(username="attacker_user")
-        update_data = {"is_superuser": True} # Malicious attempt
+        update_data = {"is_superuser": True}  # Malicious attempt
 
-        response = await async_client.put(f"{settings.API_V1_STR}/users/{user_to_update.id}", json=update_data, headers=normal_user_headers)
+        response = await async_client.put(
+            f"{settings.API_V1_STR}/users/{user_to_update.id}", json=update_data, headers=normal_user_headers
+        )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
@@ -152,4 +153,4 @@ class TestUserEndpoints:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert isinstance(data, list)
-        assert len(data) >= 3 # The two created users + the admin
+        assert len(data) >= 3  # The two created users + the admin

@@ -5,16 +5,16 @@ Ce module contient les endpoints pour gérer les équipes, y compris la créatio
 la lecture, la mise à jour et la suppression des équipes, ainsi que la gestion
 des membres d'équipe.
 """
-from typing import Any, List, Optional
+
+from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
-from app import crud, models, schemas
+from app import models, schemas
 from app.api import deps
-from app.core.config import settings
 from app.db.session import get_db
 from app.models.team import Team
 from app.schemas.team import TeamCreate, TeamUpdate, Team as TeamSchema
@@ -35,14 +35,11 @@ async def read_teams(
     # Récupérer les équipes où l'utilisateur est membre ou propriétaire
     stmt = (
         select(Team)
-        .where(
-            (Team.owner_id == current_user.id) |
-            (Team.members.any(id=current_user.id))
-        )
+        .where((Team.owner_id == current_user.id) | (Team.members.any(id=current_user.id)))
         .offset(skip)
         .limit(limit)
     )
-    
+
     result = await db.execute(stmt)
     teams = result.scalars().all()
     return teams
@@ -64,11 +61,11 @@ async def create_team(
         is_public=team_in.is_public,
         owner_id=current_user.id,
     )
-    
+
     db.add(team)
     await db.commit()
     await db.refresh(team)
-    
+
     return team
 
 
@@ -81,27 +78,23 @@ async def read_team(
     """
     Récupère une équipe par son ID.
     """
-    stmt = (
-        select(Team)
-        .options(selectinload(Team.owner), selectinload(Team.members))
-        .where(Team.id == team_id)
-    )
+    stmt = select(Team).options(selectinload(Team.owner), selectinload(Team.members)).where(Team.id == team_id)
     result = await db.execute(stmt)
     team = result.scalar_one_or_none()
-    
+
     if not team:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Équipe non trouvée",
         )
-    
+
     # Vérifier que l'utilisateur a accès à l'équipe
     if not (team.owner_id == current_user.id or current_user in team.members):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Vous n'avez pas la permission d'accéder à cette équipe",
         )
-    
+
     return team
 
 
@@ -119,28 +112,28 @@ async def update_team(
     stmt = select(Team).where(Team.id == team_id)
     result = await db.execute(stmt)
     team = result.scalar_one_or_none()
-    
+
     if not team:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Équipe non trouvée",
         )
-    
+
     # Vérifier que l'utilisateur est le propriétaire de l'équipe
     if team.owner_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Seul le propriétaire peut modifier cette équipe",
         )
-    
+
     # Mettre à jour les champs fournis
     update_data = team_in.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(team, field, value)
-    
+
     await db.commit()
     await db.refresh(team)
-    
+
     return team
 
 
@@ -157,23 +150,23 @@ async def delete_team(
     stmt = select(Team).where(Team.id == team_id)
     result = await db.execute(stmt)
     team = result.scalar_one_or_none()
-    
+
     if not team:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Équipe non trouvée",
         )
-    
+
     # Vérifier que l'utilisateur est le propriétaire de l'équipe ou un superutilisateur
     if team.owner_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Seul le propriétaire peut supprimer cette équipe",
         )
-    
+
     await db.delete(team)
     await db.commit()
-    
+
     return {"msg": "Équipe supprimée avec succès"}
 
 
@@ -188,20 +181,17 @@ async def get_public_compositions(
     Récupère les compositions publiques d'une équipe.
     """
     from app.models import Composition
-    
+
     stmt = (
         select(Composition)
-        .where(
-            (Composition.team_id == team_id) &
-            (Composition.is_public == True)  # noqa: E712
-        )
+        .where((Composition.team_id == team_id) & (Composition.is_public == True))  # noqa: E712
         .offset(skip)
         .limit(limit)
     )
-    
+
     result = await db.execute(stmt)
     compositions = result.scalars().all()
-    
+
     return compositions
 
 
@@ -215,30 +205,26 @@ async def get_team_members(
     Récupère les membres d'une équipe.
     """
     # Vérifier que l'utilisateur a accès à l'équipe
-    stmt = (
-        select(Team)
-        .where(
-            (Team.id == team_id) &
-            ((Team.owner_id == current_user.id) | (Team.members.any(id=current_user.id)))
-        )
+    stmt = select(Team).where(
+        (Team.id == team_id) & ((Team.owner_id == current_user.id) | (Team.members.any(id=current_user.id)))
     )
     result = await db.execute(stmt)
     team = result.scalar_one_or_none()
-    
+
     if not team:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Équipe non trouvée ou accès refusé",
         )
-    
+
     # Charger les membres avec leurs rôles dans l'équipe
     stmt = (
         select(models.User)
         .join(models.team_members, models.User.id == models.team_members.c.user_id)
         .where(models.team_members.c.team_id == team_id)
     )
-    
+
     result = await db.execute(stmt)
     members = result.scalars().all()
-    
+
     return members

@@ -14,8 +14,8 @@ from app.models import (
     Composition,
     Profession,
     EliteSpecialization,
-    composition_members,
 )
+from app.models.association_tables import composition_members
 
 
 class TestUserModel:
@@ -43,25 +43,17 @@ class TestUserModel:
         self.user = self.create_test_user("main")
         self.role = Role(name="test_role", description="Test Role", permission_level=1)
         self.profession = Profession(name="Test Profession")
-        self.elite_spec = EliteSpecialization(
-            name="Test Elite Spec", profession=self.profession
-        )
+        self.elite_spec = EliteSpecialization(name="Test Elite Spec", profession=self.profession)
 
         # Add and commit user first to get an ID
         self.session.add(self.user)
         self.session.commit()
 
         # Now create build with the user's ID
-        self.build = Build(
-            name="Test Build", created_by_id=self.user.id, config={"test": "config"}
-        )
-        self.composition = Composition(
-            name="Test Composition", created_by=self.user.id, build=self.build
-        )
+        self.build = Build(name="Test Build", created_by_id=self.user.id, config={"test": "config"})
+        self.composition = Composition(name="Test Composition", created_by=self.user.id, build=self.build)
 
-        self.session.add_all(
-            [self.role, self.profession, self.elite_spec, self.build, self.composition]
-        )
+        self.session.add_all([self.role, self.profession, self.elite_spec, self.build, self.composition])
         self.session.commit()
 
         # Add user to composition_members
@@ -113,9 +105,7 @@ class TestUserModel:
         assert self.user.builds[0].name == "Test Build"
 
         # Create a new build for the user
-        new_build = Build(
-            name="User's Build", created_by_id=self.user.id, config={"test": "config"}
-        )
+        new_build = Build(name="User's Build", created_by_id=self.user.id, config={"test": "config"})
         self.session.add(new_build)
         self.session.commit()
 
@@ -125,9 +115,7 @@ class TestUserModel:
         assert any(build.name == "User's Build" for build in self.user.builds)
 
         # Test composition relationship through association table
-        stmt = composition_members.select().where(
-            composition_members.c.user_id == self.user.id
-        )
+        stmt = composition_members.select().where(composition_members.c.user_id == self.user.id)
         result = self.session.execute(stmt).fetchone()
         assert result is not None
         assert result.composition_id == self.composition.id

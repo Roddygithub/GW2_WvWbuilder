@@ -16,6 +16,7 @@ from .crud_team import team as team_crud, CRUDTeam
 from .crud_team_member import team_member as team_member_crud, CRUDTeamMember
 from .crud_tag import tag as tag_crud, CRUDTag
 from .crud_composition import composition as composition_crud, CRUDComposition
+from .crud_webhook import webhook as webhook_crud, CRUDWebhook
 
 # For backward compatibility
 auth = user_crud  # Alias for auth operations
@@ -25,17 +26,14 @@ __all__ = [
     # Base
     "CRUDBase",
     "CRUDBaseAsync",
-    
     # User & Auth
     "CRUDUser",
     "user_crud",
     "auth",
-    
     # Roles & Permissions
     "CRUDRole",
     "role_crud",
     "permission_crud",
-    
     # Game Data - Builds & Professions
     "CRUDBuild",
     "build_crud",
@@ -43,16 +41,17 @@ __all__ = [
     "profession_crud",
     "CRUDEliteSpecialization",
     "elite_spec_crud",
-    
     # Teams & Team Members
     "CRUDTeam",
     "team_crud",
     "CRUDTeamMember",
     "team_member_crud",
-    
     # Compositions & Tags
     "CRUDComposition",
     "composition_crud",
     "CRUDTag",
     "tag_crud",
+    # Webhooks
+    "CRUDWebhook",
+    "webhook_crud",
 ]

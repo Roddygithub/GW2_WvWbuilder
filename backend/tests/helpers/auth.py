@@ -9,9 +9,7 @@ from app.core.security import create_access_token
 from app.models import User
 
 
-def get_auth_headers(
-    client: TestClient, user_id: int, scopes: Optional[list] = None
-) -> Dict[str, str]:
+def get_auth_headers(client: TestClient, user_id: int, scopes: Optional[list] = None) -> Dict[str, str]:
     """Get authentication headers for a test user.
 
     Args:

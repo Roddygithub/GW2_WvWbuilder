@@ -99,9 +99,7 @@ class TestSecurityEnhanced:
             ("P@ssw0rd", 60, False),  # Mixed case with special chars and numbers
         ],
     )
-    def test_get_password_hash_variations(
-        self, password, expected_length, skip_verification
-    ):
+    def test_get_password_hash_variations(self, password, expected_length, skip_verification):
         """Test password hashing with various inputs."""
         # Test hashing the same password multiple times produces different hashes
         hashed1 = security.get_password_hash(password)
@@ -145,9 +143,7 @@ class TestSecurityEnhanced:
             ),  # Default expiration
         ],
     )
-    def test_create_access_token_with_expiration(
-        self, subject, expires_delta, expected_exp_seconds
-    ):
+    def test_create_access_token_with_expiration(self, subject, expires_delta, expected_exp_seconds):
         """Test creating token with various subjects and expiration times."""
         # Create token with the given parameters
         token = security.create_access_token(subject, expires_delta=expires_delta)
@@ -156,7 +152,7 @@ class TestSecurityEnhanced:
         payload = jwt.decode(
             token,
             settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
+            algorithms=[settings.JWT_ALGORITHM],
             options={"verify_exp": False},  # Don't verify expiration for this test
         )
 
@@ -174,9 +170,7 @@ class TestSecurityEnhanced:
 
             # Allow for small timing differences (up to 1 second)
             time_diff = abs((actual_exp - expected_exp).total_seconds())
-            assert (
-                time_diff <= 1.0
-            ), f"Expected expiration within 1 second, got {time_diff} seconds difference"
+            assert time_diff <= 1.0, f"Expected expiration within 1 second, got {time_diff} seconds difference"
 
         # Verify the token can be used to get the current user
         # This tests the integration between token creation and user retrieval
@@ -195,14 +189,10 @@ class TestSecurityEnhanced:
 
     @pytest.mark.asyncio
     @patch("app.crud.user.user.get_by_email")
-    async def test_get_current_user_invalid_token(
-        self, mock_get_by_email, db_session: Session
-    ):
+    async def test_get_current_user_invalid_token(self, mock_get_by_email, db_session: Session):
         """Test getting current user with invalid token."""
         # Test with invalid token (no subject)
-        invalid_token = jwt.encode(
-            {"no_sub": "test"}, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-        )
+        invalid_token = jwt.encode({"no_sub": "test"}, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
         with pytest.raises(HTTPException) as exc_info:
             await security.get_current_user(db_session, invalid_token)
@@ -212,9 +202,7 @@ class TestSecurityEnhanced:
 
     @pytest.mark.asyncio
     @patch("app.crud.user.user.get_by_email")
-    async def test_get_current_user_not_found(
-        self, mock_get_by_email, db_session: Session
-    ):
+    async def test_get_current_user_not_found(self, mock_get_by_email, db_session: Session):
         """Test getting current user when no user is found in database."""
         # Setup - no user found by email or ID
         mock_get_by_email.return_value = None
@@ -251,9 +239,7 @@ class TestSecurityEnhanced:
             # Assertions
             assert user is not None
             assert user.id == TEST_USER_ID
-            mock_get_by_email.assert_called_once_with(
-                db_session, email=str(TEST_USER_ID)
-            )
+            mock_get_by_email.assert_called_once_with(db_session, email=str(TEST_USER_ID))
             mock_query.return_value.filter.assert_called_once()
 
     def test_get_current_user_invalid_subject(self, db_session: Session):
@@ -262,7 +248,7 @@ class TestSecurityEnhanced:
         token = jwt.encode(
             {"sub": {}},  # Invalid subject type (should be str)
             settings.SECRET_KEY,
-            algorithm=settings.ALGORITHM,
+            algorithm=settings.JWT_ALGORITHM,
         )
 
         with pytest.raises(HTTPException) as exc_info:
@@ -309,9 +295,7 @@ class TestSecurityEnhanced:
             with pytest.raises(HTTPException) as exc_info:
                 security.get_current_active_superuser(current_user=test_user)
             assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
-            assert (
-                str(exc_info.value.detail) == "The user doesn't have enough privileges"
-            )
+            assert str(exc_info.value.detail) == "The user doesn't have enough privileges"
         elif not is_superuser:
             # Active user but not superuser
             # First verify active user check passes
@@ -322,9 +306,7 @@ class TestSecurityEnhanced:
             with pytest.raises(HTTPException) as exc_info:
                 security.get_current_active_superuser(current_user=test_user)
             assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
-            assert "The user doesn't have enough privileges" == str(
-                exc_info.value.detail
-            )
+            assert "The user doesn't have enough privileges" == str(exc_info.value.detail)
         else:
             # Should not raise an exception for active superuser
             active_user = security.get_current_active_user(current_user=test_user)

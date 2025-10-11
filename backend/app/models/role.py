@@ -3,23 +3,23 @@ Modèle de rôle pour l'application GW2 WvW Builder.
 
 Ce module définit le modèle Role avec ses relations et méthodes associées.
 """
-from datetime import datetime
+
 from typing import List, Optional, TYPE_CHECKING
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql import func
 
-from .base import Base
+from .base_model import Base, TimeStampedMixin
 
-from .association_tables import user_roles, role_permissions
+from .association_tables import role_permissions
+from .user_role import UserRole
 
 if TYPE_CHECKING:
     from .permission import Permission
     from .user import User
 
 
-class Role(Base):
+class Role(Base, TimeStampedMixin):
     """Modèle de rôle pour les autorisations des utilisateurs."""
 
     __tablename__ = "roles"
@@ -29,18 +29,18 @@ class Role(Base):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     permission_level: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
-    updated_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now(), nullable=True
+    # Les champs created_at et updated_at sont fournis par TimeStampedMixin
+
+    # Relations many-to-many avec les utilisateurs via le modèle UserRole
+    user_associations: Mapped[List["UserRole"]] = relationship(back_populates="role")
+    users: Mapped[List["User"]] = relationship(
+        "User",
+        secondary="user_roles",
+        back_populates="roles",
+        viewonly=True,
+        overlaps="user_associations,role_associations",
     )
 
-    # Relations
-    users: Mapped[List["User"]] = relationship(
-        "User", secondary=user_roles, back_populates="roles", viewonly=True
-    )
-    
     permissions: Mapped[List["Permission"]] = relationship(
         "Permission", secondary=role_permissions, back_populates="roles", viewonly=True
     )

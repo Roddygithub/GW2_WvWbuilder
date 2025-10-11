@@ -1,10 +1,10 @@
 """
 Tests for the Professions API endpoints.
 """
+
 import pytest
 from fastapi import status
 from httpx import AsyncClient
-from app.models import Profession
 
 
 from app.core.config import settings
@@ -98,7 +98,9 @@ class TestProfessionsAPI:
         profession = await profession_factory()
         admin_headers = await auth_headers(username="admin", is_superuser=True)
 
-        response = await async_client.delete(f"{settings.API_V1_STR}/professions/{profession.id}", headers=admin_headers)
+        response = await async_client.delete(
+            f"{settings.API_V1_STR}/professions/{profession.id}", headers=admin_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
 
@@ -126,6 +128,7 @@ class TestProfessionsAPI:
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
 
 @pytest.mark.asyncio
 class TestEliteSpecializationsAPI:

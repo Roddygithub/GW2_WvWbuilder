@@ -27,9 +27,7 @@ async def test_simple_user():
         await conn.run_sync(Base.metadata.drop_all)
 
         # Vérifier que les tables ont été supprimées
-        result = await conn.execute(
-            text("SELECT name FROM sqlite_master WHERE type='table'")
-        )
+        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
         tables = [row[0] for row in result.fetchall()]
         logger.info(f"Tables après suppression: {tables}")
 
@@ -37,9 +35,7 @@ async def test_simple_user():
         await conn.run_sync(Base.metadata.create_all)
 
         # Vérifier les tables créées
-        result = await conn.execute(
-            text("SELECT name, sql FROM sqlite_master WHERE type='table'")
-        )
+        result = await conn.execute(text("SELECT name, sql FROM sqlite_master WHERE type='table'"))
         created_tables = {row[0]: row[1] for row in result.fetchall()}
         logger.info(f"Tables créées: {list(created_tables.keys())}")
 
@@ -65,9 +61,7 @@ async def test_simple_user():
             await session.flush()
 
             # Vérifier que l'utilisateur a un ID
-            assert (
-                user.id is not None
-            ), "L'utilisateur devrait avoir un ID après l'insertion"
+            assert user.id is not None, "L'utilisateur devrait avoir un ID après l'insertion"
             logger.info("Utilisateur créé avec succès, ID: %s", user.id)
 
             # Annuler la transaction pour ne pas affecter la base de données

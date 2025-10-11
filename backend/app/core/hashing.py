@@ -1,51 +1,105 @@
 """
 Password hashing utilities.
 
-This module provides functions for hashing and verifying passwords.
+This module provides secure password hashing and verification using bcrypt.
 """
+
+import logging
 from typing import Optional
 
 from passlib.context import CryptContext
+from passlib.exc import UnknownHashError
 
-# Configuration du contexte de hachage
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Configure password hashing context
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    # Additional security parameters
+    bcrypt__rounds=12,  # Number of hashing rounds (increased for better security)
+    bcrypt__ident="2b",  # Use the latest bcrypt version
+)
+
 
 def verify_password(plain_password: Optional[str], hashed_password: Optional[str]) -> bool:
-    """Vérifie si le mot de passe en clair correspond au hash.
+    """Verify if the provided plain password matches the hashed password.
 
     Args:
-        plain_password: Mot de passe en clair (peut être None)
-        hashed_password: Mot de passe hashé (peut être None)
+        plain_password: The plain text password to verify
+        hashed_password: The hashed password to compare against
 
     Returns:
-        bool: True si la vérification réussit, False sinon
+        bool: True if the password matches, False otherwise
+
+    Examples:
+        >>> verify_password("my_password", "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW")
+        True
     """
     if not plain_password or not hashed_password:
+        logger.warning("Missing password or hash for verification")
         return False
-    return pwd_context.verify(plain_password, hashed_password)
+
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except (ValueError, TypeError, UnknownHashError) as e:
+        logger.warning(f"Password verification failed: {str(e)}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error during password verification: {str(e)}", exc_info=True)
+        return False
+
 
 def get_password_hash(password: str) -> str:
-    """Hash un mot de passe.
+    """Generate a secure hash of the password.
 
     Args:
-        password: Mot de passe en clair
+        password: The plain text password to hash
 
     Returns:
-        str: Le mot de passe hashé
+        str: The hashed password
+
+    Raises:
+        ValueError: If the password is empty or invalid
+
+    Examples:
+        >>> hashed = get_password_hash("my_secure_password")
     """
-    return pwd_context.hash(password)
+    if not password:
+        raise ValueError("Password cannot be empty")
 
+    try:
+        return pwd_context.hash(password)
+    except (ValueError, TypeError) as e:
+        logger.error(f"Failed to hash password: {str(e)}")
+        raise ValueError("Invalid password format") from e
+    except Exception as e:
+        logger.error(f"Unexpected error hashing password: {str(e)}", exc_info=True)
+        raise
+
+
+# Keep for backward compatibility
 def get_password_hash_sha256(password: str) -> str:
-    """Hash un mot de passe avec SHA-256 (pour rétrocompatibilité).
-    
-    Note: Cette fonction est maintenue pour la rétrocompatibilité.
-    La fonction get_password_hash avec bcrypt est recommandée pour les nouveaux développements.
-    
+    """Generate a SHA-256 hash of the password (for backward compatibility).
+
+    WARNING: This method is less secure than bcrypt and is only maintained
+    for backward compatibility. Prefer get_password_hash() for new code.
+
     Args:
-        password: Mot de passe en clair
-        
+        password: The plain text password to hash
+
     Returns:
-        str: Le mot de passe hashé avec SHA-256
+        str: The hex-encoded SHA-256 hash of the password
     """
     import hashlib
+
+    if not password:
+        raise ValueError("Password cannot be empty")
+
+    try:
+        return hashlib.sha256(password.encode("utf-8")).hexdigest()
+    except Exception as e:
+        logger.error(f"Failed to generate SHA-256 hash: {str(e)}")
+        raise
     return hashlib.sha256(password.encode()).hexdigest()

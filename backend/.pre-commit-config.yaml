@@ -1,0 +1,127 @@
+# Configuration pour pre-commit
+# Documentation : https://pre-commit.com/
+
+repos:
+  # Formattage du code avec Black
+  - repo: https://github.com/psf/black
+    rev: 24.1.0
+    hooks:
+      - id: black
+        language_version: python3.11
+        args: [--line-length=88, --target-version=py311]
+
+  # Tri des imports avec isort
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: isort (python)
+        args: [--profile=black, --line-length=88]
+
+  # Vérification des types avec mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests, types-python-dateutil, types-pyyaml]
+        args: [--config-file=mypy.ini]
+        exclude: ^tests/|^migrations/
+
+  # Vérification du style avec flake8
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        additional_dependencies: [flake8-bugbear, flake8-docstrings, flake8-import-order]
+        args: [--config=.flake8]
+
+  # Vérification des erreurs de sécurité avec bandit
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        args: [--configfile=pyproject.toml]
+        exclude: ^tests/|^migrations/
+
+  # Vérification des dépendances vulnérables avec safety
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-safety
+    rev: v1.3.0
+    hooks:
+      - id: python-safety-dependencies-check
+
+  # Vérification des fichiers YAML
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.33.0
+    hooks:
+      - id: yamllint
+        args: [--strict, --format=colored, --config-file=.yamllint.yaml]
+
+  # Vérification des fichiers JSON
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        types: [json, yaml, markdown]
+        args: [--write, --prose-wrap=always, --print-width=88]
+
+  # Vérification des fichiers de configuration
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.39.0
+    hooks:
+      - id: markdownlint
+        args: [--config=.markdownlint.yaml]
+        exclude: ^CHANGELOG\.md$
+
+  # Vérification des fichiers de traduction
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.6.0
+    hooks:
+      - id: eslint
+        additional_dependencies: [eslint, eslint-config-prettier, eslint-plugin-prettier]
+        args: [--fix, --max-warnings=0]
+        files: \.(js|jsx|ts|tsx)$
+
+  # Vérification des fichiers SQL
+  - repo: https://github.com/pre-commit/mirrors-sqlfluff
+    rev: 3.0.9
+    hooks:
+      - id: sqlfluff-fix
+        additional_dependencies: ['sqlfluff-templater-dbt==2.3.5']
+        args: [--dialect=postgres]
+        files: \.sql$
+
+  # Vérification des fichiers de configuration
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: check-ast
+      - id: check-byte-order-marker
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-vcs-permalinks
+      - id: check-yaml
+      - id: debug-statements
+      - id: detect-aws-credentials
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: name-tests-test
+      - id: no-commit-to-branch
+        args: [--branch=main, --branch=master, --branch=develop]
+      - id: requirements-txt-fixer
+      - id: trailing-whitespace
+      - id: pretty-format-json
+        args: [--autofix, --indent=2, --no-sort-keys]
+
+# Configuration pour les hooks personnalisés
+default_stages: [commit, push]
+fail_fast: false
+reuse_venv: true

@@ -59,9 +59,7 @@ class TestBuildBase:
         with pytest.raises(ValidationError) as exc_info:
             BuildBase(**{**TEST_BUILD_DATA, "game_mode": "invalid_mode"})
 
-        assert "Input should be 'wvw', 'pvp', 'pve', 'raids' or 'fractals'" in str(
-            exc_info.value
-        )
+        assert "Input should be 'wvw', 'pvp', 'pve', 'raids' or 'fractals'" in str(exc_info.value)
 
     def test_team_size_validation(self):
         """Test team size validation."""
@@ -120,32 +118,24 @@ class TestBuildCreate:
         # Missing game_mode
         with pytest.raises(ValidationError) as exc_info:
             BuildCreate(**{**TEST_BUILD_DATA, "game_mode": None})
-        assert "Input should be 'wvw', 'pvp', 'pve', 'raids' or 'fractals'" in str(
-            exc_info.value
-        )
+        assert "Input should be 'wvw', 'pvp', 'pve', 'raids' or 'fractals'" in str(exc_info.value)
 
         # Missing profession_ids
         with pytest.raises(ValidationError) as exc_info:
             BuildCreate(**{**TEST_BUILD_DATA, "profession_ids": []})
-        assert "List should have at least 1 item after validation, not 0" in str(
-            exc_info.value
-        )
+        assert "List should have at least 1 item after validation, not 0" in str(exc_info.value)
 
     def test_profession_ids_validation(self):
         """Test profession_ids validation."""
         # Test minimum length
         with pytest.raises(ValidationError) as exc_info:
             BuildCreate(**{**TEST_BUILD_DATA, "profession_ids": []})
-        assert "List should have at least 1 item after validation, not 0" in str(
-            exc_info.value
-        )
+        assert "List should have at least 1 item after validation, not 0" in str(exc_info.value)
 
         # Test maximum length
         with pytest.raises(ValidationError) as exc_info:
             BuildCreate(**{**TEST_BUILD_DATA, "profession_ids": [1, 2, 3, 4]})
-        assert "List should have at most 3 items after validation, not 4" in str(
-            exc_info.value
-        )
+        assert "List should have at most 3 items after validation, not 4" in str(exc_info.value)
 
     def test_optional_fields(self):
         """Test that optional fields work as expected."""
@@ -161,9 +151,7 @@ class TestBuildCreate:
         BuildCreate(**build_data)
         with pytest.raises(ValidationError) as exc_info:
             BuildCreate(**{**TEST_BUILD_DATA, "profession_ids": [1, 2, 3, 4]})
-        assert "List should have at most 3 items after validation, not 4" in str(
-            exc_info.value
-        )
+        assert "List should have at most 3 items after validation, not 4" in str(exc_info.value)
 
         # Test invalid profession ID type (string instead of integer)
         with pytest.raises(ValidationError) as exc_info:

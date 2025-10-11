@@ -26,10 +26,8 @@ from app.models import (
     Composition,
     CompositionTag,
     Build,
-    composition_members,
-    user_roles,
-    build_profession,
 )
+from app.models.association_tables import composition_members, build_profession
 
 # Make sure all models are imported and registered with SQLAlchemy
 __all__ = [
@@ -61,6 +59,7 @@ TABLES_ORDER = [
     "elite_specializations",
     "builds",
     "build_profession",
+    "tags",
     "compositions",
     "composition_tags",
     "composition_members",
@@ -102,7 +101,7 @@ async def engine() -> AsyncEngine:
         await conn.run_sync(Base.metadata.drop_all)
 
         # Log all available tables in metadata
-        logger.info(f"\n=== DEBUG: All tables in Base.metadata ===")
+        logger.info("\n=== DEBUG: All tables in Base.metadata ===")
         for name, table in Base.metadata.tables.items():
             logger.info(f"- {name} (columns: {[c.name for c in table.columns]})")
 
@@ -113,9 +112,7 @@ async def engine() -> AsyncEngine:
 
     # Verify tables were created
     async with engine.connect() as conn:
-        result = await conn.execute(
-            text("SELECT name FROM sqlite_master WHERE type='table'")
-        )
+        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
         tables = [row[0] for row in result.fetchall()]
         logger.info(f"Created tables: {tables}")
 

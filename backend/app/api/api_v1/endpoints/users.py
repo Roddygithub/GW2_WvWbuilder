@@ -81,14 +81,14 @@ async def read_user_by_id(
     # Vérifier si l'utilisateur demandé est l'utilisateur actuel
     if current_user.id == user_id:
         return current_user
-    
+
     # Vérifier si l'utilisateur actuel est un superutilisateur
     if not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to access this user",
         )
-    
+
     # Récupérer l'utilisateur demandé
     user = await crud.user.get_async(db, id=user_id)
     if not user:
@@ -96,7 +96,7 @@ async def read_user_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    
+
     return user
 
 

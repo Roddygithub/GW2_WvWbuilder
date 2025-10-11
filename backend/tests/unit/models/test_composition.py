@@ -24,9 +24,7 @@ class TestCompositionModel:
         await db.flush()
 
         # Create a build
-        build = Build(
-            name="Test Build", game_mode="wvw", created_by_id=user.id, config={}
-        )
+        build = Build(name="Test Build", game_mode="wvw", created_by_id=user.id, config={})
         db.add(build)
         await db.flush()
 
@@ -67,9 +65,7 @@ class TestCompositionModel:
         await db.flush()
 
         # Create a build
-        build = Build(
-            name="Test Build", game_mode="wvw", created_by_id=user.id, config={}
-        )
+        build = Build(name="Test Build", game_mode="wvw", created_by_id=user.id, config={})
         db.add(build)
         await db.flush()
 
@@ -127,15 +123,11 @@ class TestCompositionModel:
         await db.rollback()
 
         # Test squad_size validation
-        user = User(
-            username="test", email="test@example.com", hashed_password="hashed_password"
-        )
+        user = User(username="test", email="test@example.com", hashed_password="hashed_password")
         db.add(user)
         await db.flush()
 
-        build = Build(
-            name="Test Build", game_mode="wvw", created_by_id=user.id, config={}
-        )
+        build = Build(name="Test Build", game_mode="wvw", created_by_id=user.id, config={})
         db.add(build)
         await db.flush()
 
@@ -152,21 +144,15 @@ class TestCompositionModel:
 
     async def test_composition_default_values(self, db):
         """Test that default values are set correctly."""
-        user = User(
-            username="test", email="test@example.com", hashed_password="hashed_password"
-        )
+        user = User(username="test", email="test@example.com", hashed_password="hashed_password")
         db.add(user)
         await db.flush()
 
-        build = Build(
-            name="Test Build", game_mode="wvw", created_by_id=user.id, config={}
-        )
+        build = Build(name="Test Build", game_mode="wvw", created_by_id=user.id, config={})
         db.add(build)
         await db.flush()
 
-        composition = Composition(
-            name="Default Values Test", created_by=user.id, build_id=build.id
-        )
+        composition = Composition(name="Default Values Test", created_by=user.id, build_id=build.id)
         db.add(composition)
         await db.commit()
         await db.refresh(composition)
@@ -180,21 +166,15 @@ class TestCompositionModel:
 
     async def test_composition_update_timestamps(self, db):
         """Test that updated_at is updated on changes."""
-        user = User(
-            username="test", email="test@example.com", hashed_password="hashed_password"
-        )
+        user = User(username="test", email="test@example.com", hashed_password="hashed_password")
         db.add(user)
         await db.flush()
 
-        build = Build(
-            name="Test Build", game_mode="wvw", created_by_id=user.id, config={}
-        )
+        build = Build(name="Test Build", game_mode="wvw", created_by_id=user.id, config={})
         db.add(build)
         await db.flush()
 
-        composition = Composition(
-            name="Timestamp Test", created_by=user.id, build_id=build.id
-        )
+        composition = Composition(name="Timestamp Test", created_by=user.id, build_id=build.id)
         db.add(composition)
         await db.commit()
 

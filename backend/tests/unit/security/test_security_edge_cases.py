@@ -83,9 +83,7 @@ class TestSecurityEdgeCases:
     def test_get_current_user_with_expired_token(self, db_session):
         """Test getting user with an expired token."""
         # Create an expired token (1 second in the past)
-        expired_token = security.create_access_token(
-            TEST_EMAIL, expires_delta=timedelta(seconds=-1)
-        )
+        expired_token = security.create_access_token(TEST_EMAIL, expires_delta=timedelta(seconds=-1))
 
         with pytest.raises(HTTPException) as exc_info:
             security.get_current_user(db_session, expired_token)
@@ -143,7 +141,5 @@ class TestSecurityEdgeCases:
         assert isinstance(security.oauth2_scheme, OAuth2PasswordBearer)
 
         # The tokenUrl is a property that returns the URL
-        token_url = security.oauth2_scheme.model.model_dump()["flows"]["password"][
-            "tokenUrl"
-        ]
+        token_url = security.oauth2_scheme.model.model_dump()["flows"]["password"]["tokenUrl"]
         assert token_url.endswith("/auth/login")

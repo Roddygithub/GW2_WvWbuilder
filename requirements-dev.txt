@@ -1,0 +1,146 @@
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.1
+pytest-xdist>=3.3.1
+pytest-env>=0.8.1
+pytest-sugar>=0.9.7
+pytest-dependency>=0.5.1
+pytest-factoryboy>=2.5.1
+pytest-freezer>=0.4.8
+pytest-httpx>=0.24.0
+pytest-mock-resources>=2.10.1
+pytest-postgresql>=4.0.1
+pytest-redis>=2.2.0
+pytest-socket>=0.6.0
+pytest-testmon>=2.1.0
+pytest-timeout>=2.1.0
+pytest-trio>=0.8.0
+
+# Linting & Formatting
+black>=23.7.0
+ruff>=0.0.280
+mypy>=1.4.1
+isort>=5.12.0
+flake8>=6.0.0
+flake8-bugbear>=23.5.9
+flake8-docstrings>=1.7.0
+flake8-import-order>=0.18.2
+flake8-quotes>=3.3.2
+
+# Type checking
+types-requests>=2.31.0
+types-python-dateutil>=2.8.19
+types-pytz>=2023.3.1
+types-six>=1.16.0
+typing-extensions>=4.7.1
+
+# Documentation
+sphinx>=7.0.1
+sphinx-rtd-theme>=1.2.1
+sphinx-autodoc-typehints>=1.23.0
+sphinx-copybutton>=0.5.2
+sphinx-autobuild>=2021.3.14
+
+# Development tools
+pre-commit>=3.3.3
+ipython>=8.14.0
+ipdb>=0.13.13
+jedi>=0.19.0
+
+# Database
+alembic>=1.11.3
+sqlalchemy[asyncio]>=2.0.0
+asyncpg>=0.27.0
+aiosqlite>=0.19.0
+
+# API testing
+httpx>=0.24.0
+fastapi>=0.95.2
+uvicorn[standard]>=0.22.0
+
+# Monitoring and debugging
+sentry-sdk[fastapi]>=1.28.1
+structlog>=23.1.0
+
+# Security
+safety>=2.3.5
+bandit>=1.7.5
+trivy>=0.38.2
+
+# Code coverage
+coverage[toml]>=7.2.7
+codecov>=2.1.13
+
+# Build and packaging
+build>=0.10.0
+twine>=4.0.2
+wheel>=0.41.0
+
+# Other
+python-dotenv>=1.0.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+email-validator>=2.0.0.post2
+python-slugify>=8.0.1
+python-dateutil>=2.8.2
+pytz>=2023.3
+pydantic[email]>=1.10.7,<2.0.0
+pydantic-settings>=2.0.3
+python-json-logger>=2.0.7
+structlog>=23.1.0
+structlog-sentry>=2.0.0
+structlog-sentry-breadcrumbs>=0.1.0
+structlog-json>=1.0.0
+structlog-contextvars>=2.0.0
+structlog-typing>=1.0.0
+structlog-thread-context>=1.0.0
+structlog-processor-json>=1.0.0
+structlog-processor-pretty-json>=1.0.0
+structlog-processor-stackdriver>=1.0.0
+structlog-processor-time-format>=1.0.0
+structlog-processor-utils>=1.0.0
+structlog-sentry-logger>=1.0.0
+structlog-sentry-integration>=1.0.0
+
+# Performance testing
+locust>=2.15.1
+pytest-benchmark>=4.0.0
+
+# Testing tools
+factory-boy>=3.2.1
+Faker>=18.13.0
+freezegun>=1.2.2
+responses>=0.23.1
+vcrpy>=4.3.1
+
+# Debugging
+py-spy>=0.3.14
+objgraph>=3.6.0
+memory-profiler>=0.61.0
+
+# Code quality
+radon>=6.0.1
+mccabe>=0.7.0
+xenon>=0.9.0
+vulture>=2.7
+
+# Documentation generation
+mkdocs>=1.4.3
+mkdocs-material>=9.1.18
+mkdocstrings[python]>=0.21.2
+mkdocs-markdownextradata-plugin>=0.2.7
+mkdocs-minify-plugin>=0.6.4
+mkdocs-pdf-export-plugin>=0.5.9
+mkdocs-redirects>=1.2.1
+mkdocs-rtd-dropdown>=2.0.4
+mkdocs-same-dir>=0.1.1
+mkdocs-section-index>=0.3.6
+mkdocs-simple-hooks>=0.2.1
+mkdocs-static-i18n>=1.0.0
+mkdocs-video>=1.4.1
+mkdocs-watch>=1.0.2
+mkdocs-with-pdf>=0.9.3
+mkdocstrings-python-legacy>=0.2.3

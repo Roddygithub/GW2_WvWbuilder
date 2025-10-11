@@ -3,6 +3,7 @@ Dépendances de base de données pour FastAPI.
 
 Ce module contient les fonctions de dépendance pour les sessions de base de données.
 """
+
 from typing import Generator
 
 from sqlalchemy.orm import Session

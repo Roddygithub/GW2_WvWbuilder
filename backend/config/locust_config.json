@@ -1,0 +1,43 @@
+{
+  "host": "http://localhost:8000",
+  "users": 100,
+  "spawn_rate": 10,
+  "run_time": "1m",
+  "headless": true,
+  "web_host": "0.0.0.0",
+  "web_port": 8089,
+  "log_level": "INFO",
+  "csv_prefix": "reports/locust",
+  "html": "reports/locust_report.html",
+  "only_summary": true,
+  "loglevel": "INFO",
+  "logfile": "reports/locust.log",
+  "expect_workers": 0,
+  "master": false,
+  "worker": false,
+  "master_host": "127.0.0.1",
+  "master_port": 5557,
+  "tags": [],
+  "exclude_tags": [],
+  "thresholds": {
+    "http_req_failed": ["rate<0.01"],
+    "http_req_duration": ["p95<500"]
+  },
+  "stages": [
+    {"duration": "30s", "users": 50, "spawn_rate": 5},
+    {"duration": "1m", "users": 100, "spawn_rate": 10},
+    {"duration": "30s", "users": 0, "spawn_rate": 5}
+  ],
+  "percentiles": [0.5, 0.9, 0.95, 0.99, 0.999],
+  "reset_stats": false,
+  "stop_timeout": 300,
+  "skip_log_setup": false,
+  "exit_code_on_error": 1,
+  "enable_rebalance": false,
+  "rebalance_on_worker_join": false,
+  "max_rss": 0,
+  "max_rps": 0,
+  "max_fail_percent": 0.0,
+  "max_avg_response_time": 0,
+  "max_response_time": 0
+}

@@ -1,6 +1,6 @@
 from typing import Any, List, Optional, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, insert, delete, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,9 +10,7 @@ from app import models, schemas
 router = APIRouter()
 
 
-async def _composition_to_schema(
-    db: AsyncSession, comp: models.Composition
-) -> schemas.Composition:
+async def _composition_to_schema(db: AsyncSession, comp: models.Composition) -> schemas.Composition:
     # Build members from association table
     members_stmt = select(
         models.models.composition_members.c.user_id,
@@ -21,10 +19,10 @@ async def _composition_to_schema(
         models.models.composition_members.c.elite_specialization_id,
         models.models.composition_members.c.notes,
     ).where(models.models.composition_members.c.composition_id == comp.id)
-    
+
     members_rows = await db.execute(members_stmt)
     members: List[Dict[str, Any]] = []
-    
+
     for r in members_rows:
         members.append(
             {
@@ -35,13 +33,17 @@ async def _composition_to_schema(
                 "notes": r.notes,
             }
         )
-    
+
     members_list = []
     for m in members:
         role = await db.get(models.Role, m["role_id"]) if m["role_id"] else None
         profession = await db.get(models.Profession, m["profession_id"]) if m["profession_id"] else None
         user = await db.get(models.User, m["user_id"]) if m["user_id"] else None
-        elite_specialization = await db.get(models.EliteSpecialization, m["elite_specialization_id"]) if m["elite_specialization_id"] else None
+        elite_specialization = (
+            await db.get(models.EliteSpecialization, m["elite_specialization_id"])
+            if m["elite_specialization_id"]
+            else None
+        )
         members_list.append(
             {
                 "user_id": m["user_id"],
@@ -76,35 +78,29 @@ async def _validate_member_refs(db: AsyncSession, m: schemas.CompositionMemberBa
     Validate that all foreign key references in a member exist.
     Returns a dict of the validated member data.
     """
-    member_data = m.dict() if hasattr(m, 'dict') else m
-    
+    member_data = m.dict() if hasattr(m, "dict") else m
+
     # Check role exists if specified
-    if 'role_id' in member_data and member_data['role_id'] is not None:
-        role = await db.get(models.Role, member_data['role_id'])
+    if "role_id" in member_data and member_data["role_id"] is not None:
+        role = await db.get(models.Role, member_data["role_id"])
         if not role:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Role with id {member_data['role_id']} not found"
-            )
-    
+            raise HTTPException(status_code=400, detail=f"Role with id {member_data['role_id']} not found")
+
     # Check profession exists if specified
-    if 'profession_id' in member_data and member_data['profession_id'] is not None:
-        profession = await db.get(models.Profession, member_data['profession_id'])
+    if "profession_id" in member_data and member_data["profession_id"] is not None:
+        profession = await db.get(models.Profession, member_data["profession_id"])
         if not profession:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Profession with id {member_data['profession_id']} not found"
-            )
-    
+            raise HTTPException(status_code=400, detail=f"Profession with id {member_data['profession_id']} not found")
+
     # Check elite spec exists if specified
-    if 'elite_specialization_id' in member_data and member_data['elite_specialization_id'] is not None:
-        elite_spec = await db.get(models.EliteSpecialization, member_data['elite_specialization_id'])
+    if "elite_specialization_id" in member_data and member_data["elite_specialization_id"] is not None:
+        elite_spec = await db.get(models.EliteSpecialization, member_data["elite_specialization_id"])
         if not elite_spec:
             raise HTTPException(
                 status_code=400,
-                detail=f"Elite specialization with id {member_data['elite_specialization_id']} not found"
+                detail=f"Elite specialization with id {member_data['elite_specialization_id']} not found",
             )
-    
+
     return member_data
 
 
@@ -119,18 +115,16 @@ async def _upsert_members(
             models.models.composition_members.c.composition_id == composition_id
         )
     )
-    
+
     if not members:
         await db.commit()
         return
-    
+
     # Insert new members
     for m in members:
-        member_data = m.dict() if hasattr(m, 'dict') else m
-        member_data['composition_id'] = composition_id
-        await db.execute(
-            insert(models.models.composition_members).values(**member_data)
-        )
+        member_data = m.dict() if hasattr(m, "dict") else m
+        member_data["composition_id"] = composition_id
+        await db.execute(insert(models.models.composition_members).values(**member_data))
 
 
 @router.post("/", response_model=schemas.Composition, status_code=201)
@@ -147,18 +141,18 @@ async def create_composition(
     if composition_in.members:
         for m in composition_in.members:
             await _validate_member_refs(db, m)
-    
+
     # Create the composition
     composition_data = composition_in.dict(exclude={"members"})
     composition = models.Composition(**composition_data, created_by_id=current_user.id)
     db.add(composition)
     await db.commit()
     await db.refresh(composition)
-    
+
     # Add members
     if composition_in.members:
         await _upsert_members(db, composition.id, composition_in.members)
-    
+
     return await _composition_to_schema(db, composition)
 
 
@@ -175,20 +169,17 @@ async def read_compositions(
     Retrieve compositions with optional filtering by visibility.
     """
     query = select(models.Composition)
-    
+
     # Filter by visibility if specified
     if is_public is not None:
         query = query.where(models.Composition.is_public == is_public)
-    
+
     # Only show private compositions to their owners or admins
     if not current_user.is_superuser:
         query = query.where(
-            or_(
-                models.Composition.is_public == True,
-                models.Composition.created_by_id == current_user.id
-            )
+            or_(models.Composition.is_public, models.Composition.created_by_id == current_user.id)
         )
-    
+
     result = await db.execute(query.offset(skip).limit(limit))
     compositions = result.scalars().all()
     return [await _composition_to_schema(db, c) for c in compositions]
@@ -206,11 +197,11 @@ async def read_composition(
     composition = await db.get(models.Composition, composition_id)
     if not composition:
         raise HTTPException(status_code=404, detail="Composition not found")
-    
+
     # Check permissions
     if not composition.is_public and composition.created_by_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    
+
     return await _composition_to_schema(db, composition)
 
 
@@ -228,26 +219,26 @@ async def update_composition(
     composition = await db.get(models.Composition, composition_id)
     if not composition:
         raise HTTPException(status_code=404, detail="Composition not found")
-    
+
     # Check permissions
     if composition.created_by_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    
+
     # Update composition data
     update_data = composition_in.dict(exclude_unset=True, exclude={"members"})
     for field, value in update_data.items():
         setattr(composition, field, value)
-    
+
     # Update members if provided
     if composition_in.members is not None:
         for m in composition_in.members:
             await _validate_member_refs(db, m)
         await _upsert_members(db, composition_id, composition_in.members)
-    
+
     db.add(composition)
     await db.commit()
     await db.refresh(composition)
-    
+
     return await _composition_to_schema(db, composition)
 
 
@@ -263,20 +254,20 @@ async def delete_composition(
     composition = await db.get(models.Composition, composition_id)
     if not composition:
         raise HTTPException(status_code=404, detail="Composition not found")
-    
+
     # Check permissions
     if composition.created_by_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Not enough permissions")
-    
+
     # Delete members first
     await db.execute(
         delete(models.models.composition_members).where(
             models.models.composition_members.c.composition_id == composition_id
         )
     )
-    
+
     # Delete the composition
     await db.delete(composition)
     await db.commit()
-    
+
     return {"detail": "Composition deleted successfully"}

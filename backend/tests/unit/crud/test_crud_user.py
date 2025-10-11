@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.crud.user import CRUDUser
 from app.models import User as UserModel
 from app.schemas.user import UserCreate, UserUpdate
 

@@ -2,8 +2,9 @@
 Package principal de l'application GW2 WvW Builder.
 Ce package expose les composants principaux de l'application.
 """
-from typing import Any, Dict, List, Optional, Union
-from fastapi import FastAPI
+ # ruff: noqa: F401
+from typing import Any, Dict, List, Optional, Union, Callable
+from fastapi import FastAPI, Depends
 
 # Import des modèles depuis leurs modules individuels
 from .models.base import Base
@@ -17,6 +18,9 @@ from .models.profession import Profession
 from .models.elite_specialization import EliteSpecialization
 from .models.team import Team
 from .models.tag import Tag
+
+# Import des fonctions de limitation de débit
+from .core.limiter import init_rate_limiter, close_rate_limiter, get_rate_limiter
 
 # Import des opérations CRUD
 from .crud import (
@@ -77,46 +81,42 @@ TokenPayload = Dict[str, Any]
 # Variables exportées
 __all__ = [
     # Models
-    'Base',
-    'User',
-    'Role',
-    'Permission',
-    'Build',
-    'Composition',
-    'Profession',
-    'EliteSpecialization',
-    'Team',
-    'Tag',
-    'CompositionTag',
-    'UserRole',
-    
+    "Base",
+    "User",
+    "Role",
+    "Permission",
+    "Build",
+    "Composition",
+    "Profession",
+    "EliteSpecialization",
+    "Team",
+    "Tag",
+    "CompositionTag",
+    "UserRole",
     # Schemas
-    'user_schemas',
-    'role_schemas',
-    'build_schemas',
-    'composition_schemas',
-    'profession_schemas',
-    'elite_spec_schemas',
-    'team_schemas',
-    'token_schemas',
-    
+    "user_schemas",
+    "role_schemas",
+    "build_schemas",
+    "composition_schemas",
+    "profession_schemas",
+    "elite_spec_schemas",
+    "team_schemas",
+    "token_schemas",
     # Core
-    'Settings',
-    'get_settings',
-    'get_password_hash',
-    'verify_password',
-    'create_access_token',
-    'create_refresh_token',
-    'verify_refresh_token',
-    'get_current_user',
-    'get_current_active_user',
-    'get_current_active_superuser',
-    
+    "Settings",
+    "get_settings",
+    "get_password_hash",
+    "verify_password",
+    "create_access_token",
+    "create_refresh_token",
+    "verify_refresh_token",
+    "get_current_user",
+    "get_current_active_user",
+    "get_current_active_superuser",
     # API
-    'get_async_db',
-    'get_current_user_dep',
-    'app',
-    
+    "get_async_db",
+    "get_current_user_dep",
+    "app",
     # Types
-    'TokenPayload',
+    "TokenPayload",
 ]

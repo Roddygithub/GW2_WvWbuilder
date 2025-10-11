@@ -12,9 +12,7 @@ TestBase = declarative_base()
 T = TypeVar("T", bound=TestBase)
 
 
-def create_test_model_class(
-    table_name: str, **columns: Dict[str, Any]
-) -> Type[TestBase]:
+def create_test_model_class(table_name: str, **columns: Dict[str, Any]) -> Type[TestBase]:
     """Dynamically create a test model class.
 
     Args:
@@ -32,11 +30,7 @@ def create_test_model_class(
 
     # Add columns
     for name, col_def in columns.items():
-        if (
-            isinstance(col_def, tuple)
-            and len(col_def) == 2
-            and isinstance(col_def[1], dict)
-        ):
+        if isinstance(col_def, tuple) and len(col_def) == 2 and isinstance(col_def[1], dict):
             col_type, col_kwargs = col_def
             attrs[name] = Column(col_type, **col_kwargs)
         else:

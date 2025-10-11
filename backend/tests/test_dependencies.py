@@ -146,17 +146,13 @@ client = TestClient(app)
 async def test_dependency_integration(test_token: str, test_user: User):
     """Test that dependencies work correctly in a FastAPI app."""
     # Test with valid token
-    response = client.get(
-        "/test/current-user", headers={"Authorization": f"Bearer {test_token}"}
-    )
+    response = client.get("/test/current-user", headers={"Authorization": f"Bearer {test_token}"})
 
     assert response.status_code == 200
     assert response.json()["id"] == test_user.id
 
     # Test with invalid token
-    response = client.get(
-        "/test/current-user", headers={"Authorization": "Bearer invalid_token"}
-    )
+    response = client.get("/test/current-user", headers={"Authorization": "Bearer invalid_token"})
 
     assert response.status_code == 401
     assert "Could not validate credentials" in response.text
