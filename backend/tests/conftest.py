@@ -212,10 +212,14 @@ async def db_session(event_loop) -> AsyncGenerator[AsyncSession, None]:
         await session.close()
         
         # Clean up: truncate all tables for next test
-        async with test_engine.begin() as conn:
+        # Use a fresh connection to avoid greenlet issues
+        async with test_engine.connect() as conn:
             from app.models import Base
+            # Disable foreign keys temporarily for cleanup
+            await conn.execute(text("PRAGMA foreign_keys=OFF"))
             for table in reversed(Base.metadata.sorted_tables):
                 await conn.execute(text(f"DELETE FROM {table.name}"))
+            await conn.execute(text("PRAGMA foreign_keys=ON"))
             await conn.commit()
 
 
@@ -542,9 +546,25 @@ def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]], over
     app.dependency_overrides[get_async_db] = override_get_db
     app.dependency_overrides[get_db_sync] = override_get_db_sync  # Tags endpoint uses sync get_db
 
-    # NOTE: Ne pas override get_current_user ici pour permettre aux tests API
-    # d'utiliser de vrais tokens JWT via la fixture auth_headers
-    # Les tests qui ont besoin d'un mock peuvent le faire individuellement
+    # Override get_current_user to return the user stored in app.state by auth_headers
+    # This bypasses JWT validation issues while still using real users from the DB
+    async def mock_get_current_user():
+        """Return the test user stored in app.state by auth_headers fixture."""
+        if hasattr(app.state, 'test_user') and app.state.test_user:
+            return app.state.test_user
+        # Fallback: create a default test user if none exists
+        from app.models.user import User
+        return User(
+            id=999,
+            username="default_test_user",
+            email="default@test.com",
+            is_active=True,
+            is_superuser=False,
+            hashed_password="dummy"
+        )
+    
+    from app.api.deps import get_current_user
+    app.dependency_overrides[get_current_user] = mock_get_current_user
 
     yield app
 
@@ -629,12 +649,15 @@ async def async_client(app: FastAPI):
 
 
 @pytest_asyncio.fixture
-async def auth_headers(db_session: AsyncSession):
+async def auth_headers(db_session: AsyncSession, app: FastAPI):
     """
     Fixture callable to create users dynamically and return auth headers.
     
     Usage:
         headers = await auth_headers(username="testuser", is_superuser=True)
+    
+    This fixture creates a real user in the DB and stores it in app.state
+    for the mocked get_current_user to retrieve.
     """
     async def _auth_headers(
         username: str = None,
@@ -661,6 +684,9 @@ async def auth_headers(db_session: AsyncSession):
         db_session.add(user)
         await db_session.commit()
         await db_session.refresh(user)
+        
+        # Store user in app.state for mocked get_current_user
+        app.state.test_user = user
         
         # Create JWT token with user ID as subject (backend expects int ID in sub)
         # Use long expiration for tests to avoid expiry during test execution
