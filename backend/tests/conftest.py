@@ -213,14 +213,18 @@ async def db_session(event_loop) -> AsyncGenerator[AsyncSession, None]:
         
         # Clean up: truncate all tables for next test
         # Use a fresh connection to avoid greenlet issues
-        async with test_engine.connect() as conn:
-            from app.models import Base
-            # Disable foreign keys temporarily for cleanup
-            await conn.execute(text("PRAGMA foreign_keys=OFF"))
-            for table in reversed(Base.metadata.sorted_tables):
-                await conn.execute(text(f"DELETE FROM {table.name}"))
-            await conn.execute(text("PRAGMA foreign_keys=ON"))
-            await conn.commit()
+        try:
+            async with test_engine.connect() as conn:
+                from app.models import Base
+                # Disable foreign keys temporarily for cleanup
+                await conn.execute(text("PRAGMA foreign_keys=OFF"))
+                for table in reversed(Base.metadata.sorted_tables):
+                    await conn.execute(text(f"DELETE FROM {table.name}"))
+                await conn.execute(text("PRAGMA foreign_keys=ON"))
+                await conn.commit()
+        except Exception as e:
+            # If cleanup fails (e.g., greenlet issues), log but don't fail the test
+            logger.warning(f"DB cleanup failed: {e}")
 
 
 @pytest.fixture
