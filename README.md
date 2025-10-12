@@ -1,9 +1,10 @@
 # 🏰 GW2 WvW Builder
 
-[![Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
-[![codecov](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/main/graph/badge.svg?token=YOUR-TOKEN-HERE)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
-[![Python Version](https://img.shields.io/badge/python-3.13-blue.svg)](https://www.python.org/downloads/)
+[![Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/tests.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
+[![codecov](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/main/graph/badge.svg)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
+[![Python Version](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/badge/linter-ruff-blue.svg)](https://github.com/astral-sh/ruff)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **GW2 WvW Builder** est une application dédiée à la création et à l'optimisation de compositions pour le mode de jeu Monde contre Monde (WvW) de Guild Wars 2. Cette application aide les commandants et les joueurs à organiser des groupes efficaces pour affronter leurs adversaires.
@@ -20,11 +21,12 @@
 ## 🏗️ Stack technique
 
 ### Backend
-- **Framework** : FastAPI (Python 3.13+)
-- **Base de données** : PostgreSQL avec SQLAlchemy ORM
-- **Authentification** : JWT
+- **Framework** : FastAPI (Python 3.11+)
+- **Base de données** : PostgreSQL avec SQLAlchemy ORM (async)
+- **Authentification** : JWT avec bcrypt
 - **API** : RESTful avec documentation OpenAPI (Swagger/ReDoc)
-- **Tests** : pytest avec couverture de code (90%+)
+- **Tests** : pytest avec couverture de code (27%+ et en amélioration)
+- **Qualité** : Black, Ruff, Bandit, pre-commit hooks
 
 ### Frontend
 - **Framework** : React 18 avec TypeScript
@@ -40,12 +42,12 @@
 ## 🚀 Démarrage rapide
 
 ### Prérequis
-- Python 3.13+
+- Python 3.11+
 - Node.js 18+
 - PostgreSQL 14+
-- Poetry (gestion des dépendances Python)
+- Poetry 2.2+ (gestion des dépendances Python)
 - Yarn (gestion des dépendances JavaScript)
-- Docker et Docker Compose (pour les tests en conteneur)
+- Docker et Docker Compose (optionnel, pour les tests en conteneur)
 
 ## 🛠️ Validation locale
 
