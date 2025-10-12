@@ -1,27 +1,35 @@
 import { Routes, Route } from 'react-router-dom'
-import { Toaster } from '@/components/ui/toaster'
-import { ThemeProvider } from '@/components/theme-provider'
-import Layout from '@/components/layout/layout'
-import HomePage from '@/pages/home'
-import BuilderPage from '@/pages/builder'
-import CompositionsPage from '@/pages/compositions'
-import AboutPage from '@/pages/about'
-import NotFoundPage from '@/pages/not-found'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Dashboard from './pages/Dashboard'
+import TagsManager from './pages/TagsManager'
+
+// Create QueryClient instance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+})
 
 function App() {
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="gw2-wvwbuilder-theme">
-      <Layout>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/builder" element={<BuilderPage />} />
-          <Route path="/compositions" element={<CompositionsPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-        <Toaster />
-      </Layout>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <Routes>
+        {/* Auth Routes */}
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        
+        {/* Protected Routes */}
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/tags" element={<TagsManager />} />
+      </Routes>
+    </QueryClientProvider>
   )
 }
 
