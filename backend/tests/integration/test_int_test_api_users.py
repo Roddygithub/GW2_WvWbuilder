@@ -1,6 +1,7 @@
 """Tests for users API endpoints."""
 
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import get_password_hash
@@ -45,7 +46,7 @@ import asyncio
 asyncio.get_event_loop().run_until_complete(init_test_db())
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user() -> User:
     """Create a test user."""
     email = random_email()
@@ -67,7 +68,7 @@ async def test_user() -> User:
         return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_superuser() -> User:
     """Create a test superuser."""
     email = "superuser@example.com"

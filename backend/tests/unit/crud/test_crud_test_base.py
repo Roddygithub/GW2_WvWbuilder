@@ -2,6 +2,7 @@
 
 import asyncio
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from sqlalchemy import Column, Integer, String, select, delete
@@ -41,7 +42,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def engine() -> AsyncGenerator:
     """Fixture to initialize the database engine."""
     global _engine
@@ -70,7 +71,7 @@ def async_session_maker(engine):
     return sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_session(engine, async_session_maker) -> AsyncGenerator[AsyncSession, None]:
     """Fixture to create a new database session for each test."""
     # Create a new session
@@ -85,7 +86,7 @@ async def db_session(engine, async_session_maker) -> AsyncGenerator[AsyncSession
             await session.rollback()
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def clean_db(db_session):
     """Clean the database before each test."""
     # Delete all data from all tables

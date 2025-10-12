@@ -3,6 +3,7 @@ Unit tests for base models in the application.
 """
 
 import pytest
+import pytest_asyncio
 from datetime import datetime
 from uuid import uuid4
 
@@ -75,7 +76,7 @@ class TestSQLUUIDTimeStampedModel(TestBase):
 
 
 # Pytest fixtures
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 async def engine():
     """Create a new engine for testing."""
     engine = create_async_engine(TEST_DATABASE_URL, echo=False)
@@ -92,7 +93,7 @@ async def engine():
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db(engine):
     """Create a new database session for testing with automatic rollback."""
     connection = await engine.connect()

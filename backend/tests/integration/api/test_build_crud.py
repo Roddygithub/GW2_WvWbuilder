@@ -3,6 +3,7 @@
 import logging
 import sys
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session, sessionmaker
 

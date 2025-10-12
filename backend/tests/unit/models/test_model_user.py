@@ -1,8 +1,9 @@
 """Tests for the User model."""
 
 import pytest
+import pytest_asyncio
 from datetime import datetime, timezone, timedelta
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 
 from sqlalchemy.exc import IntegrityError
 

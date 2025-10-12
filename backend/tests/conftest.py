@@ -279,7 +279,7 @@ def test_password() -> str:
     return "securepassword"
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(db_session: AsyncSession, test_password: str) -> User:
     """Create a test user."""
 
@@ -298,7 +298,7 @@ async def test_user(db_session: AsyncSession, test_password: str) -> User:
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_role(db_session: AsyncSession) -> Role:
     """Create a test role."""
     role = Role(
@@ -315,7 +315,7 @@ async def test_role(db_session: AsyncSession) -> Role:
     return role
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_profession(db_session: AsyncSession) -> Profession:
     """Create a test profession."""
     profession = Profession(
@@ -332,7 +332,7 @@ async def test_profession(db_session: AsyncSession) -> Profession:
     return profession
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_build(db_session: AsyncSession, test_user: User, test_profession: Profession) -> Build:
     """Create a single test build."""
     build = Build(
@@ -353,7 +353,7 @@ async def test_build(db_session: AsyncSession, test_user: User, test_profession:
     return build
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_builds(db_session: AsyncSession, test_user: User, test_profession: Profession) -> List[Build]:
     """Create multiple test builds."""
     builds = []
@@ -551,7 +551,7 @@ def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]]) -> F
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """Create a test client for making HTTP requests with rate limiting disabled."""
     from app.core.limiter import get_rate_limiter
@@ -620,7 +620,7 @@ def performance_limits() -> dict[str, Any]:
 # Suppression des sections en double - Nettoyage effectué
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_client(app: FastAPI):
     """Create an async test client for making HTTP requests."""
     async with AsyncClient(app=app, base_url="http://test") as client:

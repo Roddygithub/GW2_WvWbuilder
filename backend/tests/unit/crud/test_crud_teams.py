@@ -1,6 +1,7 @@
 """Tests for team CRUD operations."""
 
 import pytest
+import pytest_asyncio
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -55,7 +56,7 @@ def mock_team():
     )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(async_db_session: AsyncSession):
     """Create a test user with a unique username and email."""
     from app.core.security import get_password_hash

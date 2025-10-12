@@ -2,7 +2,7 @@
 
 import pytest
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from jose import JWTError
 from fastapi import HTTPException, status
 
@@ -13,7 +13,7 @@ from app.core.security import (
     get_current_user,
     get_current_active_user,
     get_current_active_superuser,
-)
+
 from app.models import User
 
 # Test data

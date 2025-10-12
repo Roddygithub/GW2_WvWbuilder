@@ -5,6 +5,7 @@ Tests pour le module de surveillance de la base de données.
 import asyncio
 from datetime import datetime
 import pytest
+import pytest_asyncio
 from unittest.mock import patch
 
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -13,7 +14,7 @@ from app.core.db_monitor import DatabaseMonitor, DatabaseMetrics
 from app.core.config import settings
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_engine():
     """Crée un moteur de base de données de test."""
     engine = create_async_engine(settings.TEST_SQLALCHEMY_DATABASE_URI)

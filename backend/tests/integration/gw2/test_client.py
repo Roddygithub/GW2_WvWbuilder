@@ -8,6 +8,7 @@ including request handling, error management, and response parsing.
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 
 from app.core.gw2.client import GW2Client

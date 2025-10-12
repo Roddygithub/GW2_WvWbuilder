@@ -4,7 +4,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.dependencies import get_db
+from app.db.dependencies import get_async_db as get_db
 
 
 @pytest.mark.asyncio
@@ -23,7 +23,7 @@ async def test_get_db_dependency_success():
         gen = get_db()
         session = await gen.__anext__()
         assert session is mock_session
-        
+
         # Close the generator
         try:
             await gen.__anext__()
@@ -41,7 +41,7 @@ async def test_get_db_dependency_with_exception():
     mock_session_local = MagicMock()
     mock_session_local.return_value.__aenter__.return_value = mock_session
     mock_session_local.return_value.__aexit__.return_value = None
-    
+
     with patch("app.db.dependencies.AsyncSessionLocal", mock_session_local):
         with pytest.raises(RuntimeError):
             gen = get_db()

@@ -6,8 +6,9 @@ y compris la récupération des données de métiers, compétences et caractéri
 """
 
 import pytest
+import pytest_asyncio
 import httpx
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 
 from app.core.config import settings
 from app.services.gw2_api import GW2APIService
@@ -69,7 +70,7 @@ class TestGW2APIIntegration:
     """Tests d'intégration avec l'API Guild Wars 2."""
 
     @pytest.fixture
-    def mock_httpx_client(self):
+    def mock_httpx_client(self, AsyncMock):
         """Crée un client HTTPX mock pour les tests."""
         with patch("httpx.AsyncClient") as mock_client:
             yield mock_client

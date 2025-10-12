@@ -1,6 +1,7 @@
 """Integration tests for Teams API endpoints."""
 
 import pytest
+import pytest_asyncio
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,7 +34,7 @@ def update_team_data() -> Dict[str, Any]:
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_team(async_db_session: AsyncSession, test_user: User) -> Team:
     """Create a test team."""
     team = Team(
@@ -64,7 +65,7 @@ async def test_team(async_db_session: AsyncSession, test_user: User) -> Team:
     return team
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_team_member(async_db_session: AsyncSession, test_team: Team, test_user: User) -> TeamMember:
     """Create a test team member."""
     team_member = TeamMember(

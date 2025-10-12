@@ -2,6 +2,7 @@
 
 import os
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
@@ -57,7 +58,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def async_db_engine():
     """Create engine and databases."""
     # Créer toutes les tables
@@ -73,7 +74,7 @@ async def async_db_engine():
     await engine.dispose()
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def app() -> FastAPI:
     """Create a test application with overridden dependencies."""
     # Créer l'application de test
@@ -113,7 +114,7 @@ async def app() -> FastAPI:
     yield app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
     """Create a new database session for testing."""
     async with TestingSessionLocal() as session:

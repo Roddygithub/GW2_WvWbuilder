@@ -4,6 +4,7 @@ import builtins
 import os
 import sys
 import pytest
+import pytest_asyncio
 from datetime import timedelta
 
 from fastapi import status

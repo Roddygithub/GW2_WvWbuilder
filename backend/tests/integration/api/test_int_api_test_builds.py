@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 import uuid
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -184,7 +185,7 @@ async def test_generate_build(client: TestClient, db_session: AsyncSession, user
     assert "id" in data["build"], "Build ID is missing from the response"
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def setup_test_professions(db_session: AsyncSession) -> None:
     """Ensure the test database has the required professions."""
     from sqlalchemy import select
@@ -248,8 +249,8 @@ async def test_generate_build_unauthorized(db_session: AsyncSession) -> None:
 class TestGenerateBuild:
     """Test suite for the /builds/generate/ endpoint."""
 
-    @pytest.fixture(autouse=True)
-    async def setup(self, db_session: AsyncSession):
+    @pytest_asyncio.fixture(autouse=True)
+async def setup(self, db_session: AsyncSession):
         """Setup test data for build generation tests."""
         # Clear any existing professions to avoid conflicts
         await db_session.execute("DELETE FROM profession")
