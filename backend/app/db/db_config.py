@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from app.core.config import settings
 
 # Configuration de la base de données de test
-if os.getenv("TESTING"):
+if os.getenv("TESTING", "").lower() == "true":
     # Configuration pour les tests - Utilisation d'une base de données SQLite en mémoire standard
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     ASYNC_SQLALCHEMY_DATABASE_URI = "sqlite+aiosqlite:///:memory:"

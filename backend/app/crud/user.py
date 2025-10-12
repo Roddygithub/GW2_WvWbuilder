@@ -26,6 +26,12 @@ class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
         result = await db.execute(stmt)
         return result.scalars().first()
 
+    async def get_by_username_async(self, db: AsyncSession, *, username: str) -> Optional[UserModel]:
+        """Get a user by username (asynchronous)."""
+        stmt = select(self.model).where(self.model.username == username)
+        result = await db.execute(stmt)
+        return result.scalars().first()
+
     def get_with_roles(self, db: Session, *, id: int) -> Optional[UserModel]:
         """Get a user with roles loaded (synchronous)."""
         stmt = select(self.model).where(self.model.id == id).options(selectinload(self.model.roles))

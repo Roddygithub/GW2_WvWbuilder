@@ -35,11 +35,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Initialisation du cache Redis...
     logger.info("initialisation du cache Redis...")
     try:
-        await redis_cache.init_redis()
-        logger.info("Cache Redis initialisé avec succès")
+        # Test connection to Redis if cache is enabled
+        if settings.CACHE_ENABLED and settings.REDIS_URL:
+            await redis_cache.ping()
+            logger.info("Cache Redis initialisé avec succès")
+        else:
+            logger.info("Cache Redis désactivé")
     except Exception as e:
-        logger.error(f"Échec de l'initialisation du cache Redis : {e}")
-        if settings.ENVIRONMENT != "test":  # Ne pas échouer en environnement de test
+        logger.warning(f"Cache Redis non disponible : {e}")
+        # Don't fail if Redis is not available in development
+        if settings.ENVIRONMENT == "production":
             raise
 
     # Initialisation du rate limiter (sautée en environnement de test)
@@ -195,6 +200,43 @@ def create_application() -> FastAPI:
 
     @application.exception_handler(500)
     async def internal_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        # Log the error
+        logger.error(f"Internal server error: {exc}", exc_info=True)
+        
+        # In debug mode, return the actual error
+        if settings.DEBUG:
+            import traceback
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "detail": str(exc),
+                    "type": type(exc).__name__,
+                    "traceback": traceback.format_exc()
+                },
+            )
+        
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"},
+        )
+    
+    @application.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        # Log the error
+        logger.error(f"Unhandled exception: {exc}", exc_info=True)
+        
+        # In debug mode, return the actual error
+        if settings.DEBUG:
+            import traceback
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "detail": str(exc),
+                    "type": type(exc).__name__,
+                    "traceback": traceback.format_exc()
+                },
+            )
+        
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error"},

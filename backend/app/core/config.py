@@ -23,9 +23,11 @@ class Settings(BaseSettings):
     SERVER_HOST: str = os.getenv("SERVER_HOST", "http://localhost:8000")
 
     # CORS Configuration
-    BACKEND_CORS_ORIGINS: list[str] = os.getenv(
-        "BACKEND_CORS_ORIGINS", "http://localhost:3000,http://localhost:8000"
-    ).split(",")
+    @property
+    def BACKEND_CORS_ORIGINS(self) -> list[str]:
+        """Parse CORS origins from environment variable."""
+        cors_str = os.getenv("BACKEND_CORS_ORIGINS", "http://localhost:5173,http://localhost:3000,http://localhost:8000")
+        return [origin.strip() for origin in cors_str.split(",") if origin.strip()]
 
     # JWT Configuration
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "supersecretjwtkey")
@@ -43,6 +45,8 @@ class Settings(BaseSettings):
 
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "supersecretkeyfordevelopmentonly")
+    SECRET_KEY_ROTATION_INTERVAL_DAYS: int = int(os.getenv("SECRET_KEY_ROTATION_INTERVAL_DAYS", "90"))
+    MAX_OLD_KEYS: int = int(os.getenv("MAX_OLD_KEYS", "3"))
 
     # Database
     DATABASE_TYPE: str = "sqlite"

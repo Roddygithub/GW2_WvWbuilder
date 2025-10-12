@@ -53,8 +53,8 @@ async def get_remote_id(request: Request) -> str:
 async def init_rate_limiter() -> None:
     """Initialize the rate limiter with Redis."""
     try:
-        if not settings.REDIS_URL:
-            logger.warning("REDIS_URL not set, rate limiting will be disabled")
+        if not settings.REDIS_URL or not settings.CACHE_ENABLED:
+            logger.warning("REDIS_URL not set or cache disabled, rate limiting will be disabled")
             return
 
         # Vérifier si le client Redis est disponible
@@ -66,9 +66,11 @@ async def init_rate_limiter() -> None:
         await FastAPILimiter.init(settings.redis_client)
         logger.info("Rate limiter initialized successfully")
     except Exception as e:
-        logger.error(f"Error initializing rate limiter: {e}")
-        if settings.ENVIRONMENT != "test":  # Ne pas échouer en environnement de test
+        logger.warning(f"Error initializing rate limiter: {e}")
+        # Don't fail in development or test environments
+        if settings.ENVIRONMENT == "production":
             raise
+        logger.info("Continuing without rate limiting")
 
 
 async def close_rate_limiter() -> None:

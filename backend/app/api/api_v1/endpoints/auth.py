@@ -10,7 +10,7 @@ from app.api.deps import get_async_db
 from app.core import security
 from app.core.config import settings
 from app.core.limiter import get_rate_limiter
-from app.schemas.user import Token
+from app.schemas.user import Token, UserCreate, User
 
 router = APIRouter()
 
@@ -98,3 +98,39 @@ async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_async
     new_refresh_token = security.create_refresh_token(subject=user.id, expires_delta=refresh_token_expires)
 
     return {"access_token": new_access_token, "token_type": "bearer", "refresh_token": new_refresh_token}
+
+
+@router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED, dependencies=deps)
+async def register(user_in: UserCreate, db: AsyncSession = Depends(get_async_db)) -> Any:
+    """
+    Register a new user.
+    
+    Args:
+        user_in: User registration data (username, email, password)
+        db: Database session
+    
+    Returns:
+        Created user object
+    
+    Raises:
+        HTTPException: If username or email already exists
+    """
+    # Check if user with this email already exists
+    user = await user_crud.get_by_email_async(db, email=user_in.email)
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A user with this email already exists",
+        )
+    
+    # Check if user with this username already exists
+    user = await user_crud.get_by_username_async(db, username=user_in.username)
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A user with this username already exists",
+        )
+    
+    # Create new user
+    user = await user_crud.create_async(db, obj_in=user_in)
+    return user

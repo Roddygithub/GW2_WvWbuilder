@@ -14,38 +14,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # Import des moteurs depuis le module de configuration
-try:
-    from .db_config import engine, async_engine
-except ImportError:
-    # Fallback pour les cas où db_config n'est pas encore disponible
-    from sqlalchemy import create_engine
-    from sqlalchemy.ext.asyncio import create_async_engine
-    from app.core.config import settings
-
-    # Configuration minimale pour les moteurs
-    sync_url = settings.get_database_url()
-    async_url = settings.get_async_database_url()
-
-    # Configuration spécifique pour SQLite
-    connect_args = {}
-    if "sqlite" in sync_url:
-        connect_args = {"check_same_thread": False}
-        if "memory" in sync_url:
-            connect_args["uri"] = True
-
-    engine = create_engine(sync_url, connect_args=connect_args)
-
-    # Configuration pour le moteur asynchrone
-    if "sqlite" in async_url and "aiosqlite" in async_url:
-        # Utilisation d'une URL simplifiée pour SQLite en mémoire
-        async_engine = create_async_engine(
-            "sqlite+aiosqlite:///:memory:",
-            connect_args={"check_same_thread": False},
-            echo=settings.DEBUG,
-            poolclass=None,  # Désactive le pool pour SQLite en mémoire
-        )
-    else:
-        async_engine = create_async_engine(async_url, echo=settings.DEBUG)
+from .db_config import engine, async_engine
 
 # Import de la classe de base des modèles
 from app.models.base import Base
