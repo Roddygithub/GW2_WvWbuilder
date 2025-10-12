@@ -205,23 +205,34 @@ async def db_session(event_loop) -> AsyncGenerator[AsyncSession, None]:
         yield session
         # Commit changes to make them visible to endpoints
         await session.commit()
-    except Exception:
+    except Exception as e:
+        # If test fails, rollback the session
         await session.rollback()
+        logger.debug(f"Test failed, rolled back session: {e}")
         raise
     finally:
-        await session.close()
+        # Always close the session
+        try:
+            await session.close()
+        except Exception as e:
+            logger.warning(f"Error closing session: {e}")
         
         # Clean up: truncate all tables for next test
         # Use a fresh connection to avoid greenlet issues
         try:
             async with test_engine.connect() as conn:
                 from app.models import Base
-                # Disable foreign keys temporarily for cleanup
-                await conn.execute(text("PRAGMA foreign_keys=OFF"))
-                for table in reversed(Base.metadata.sorted_tables):
-                    await conn.execute(text(f"DELETE FROM {table.name}"))
-                await conn.execute(text("PRAGMA foreign_keys=ON"))
-                await conn.commit()
+                # Start a transaction for cleanup
+                async with conn.begin():
+                    # Disable foreign keys temporarily for cleanup
+                    await conn.execute(text("PRAGMA foreign_keys=OFF"))
+                    # Delete in reverse order to respect dependencies
+                    for table in reversed(Base.metadata.sorted_tables):
+                        try:
+                            await conn.execute(text(f"DELETE FROM {table.name}"))
+                        except Exception as table_error:
+                            logger.warning(f"Failed to clean table {table.name}: {table_error}")
+                    await conn.execute(text("PRAGMA foreign_keys=ON"))
         except Exception as e:
             # If cleanup fails (e.g., greenlet issues), log but don't fail the test
             logger.warning(f"DB cleanup failed: {e}")
@@ -677,23 +688,31 @@ async def auth_headers(db_session: AsyncSession, app: FastAPI):
         is_active: bool = True,
     ):
         from datetime import timedelta
+        from sqlalchemy import select
         
         # Generate unique username/email if not provided
         unique_id = uuid.uuid4().hex[:8]
         username = username or f"user_{unique_id}"
         email = email or f"{username}@example.com"
         
-        # Create user in DB
-        user = User(
-            username=username,
-            email=email,
-            hashed_password=get_password_hash(password),
-            is_active=is_active,
-            is_superuser=is_superuser,
+        # Check if user already exists (for cleanup robustness)
+        result = await db_session.execute(
+            select(User).where(User.username == username)
         )
-        db_session.add(user)
-        await db_session.commit()
-        await db_session.refresh(user)
+        user = result.scalar_one_or_none()
+        
+        if user is None:
+            # Create user in DB
+            user = User(
+                username=username,
+                email=email,
+                hashed_password=get_password_hash(password),
+                is_active=is_active,
+                is_superuser=is_superuser,
+            )
+            db_session.add(user)
+            await db_session.commit()
+            await db_session.refresh(user)
         
         # Store user in app.state for mocked get_current_user
         app.state.test_user = user
