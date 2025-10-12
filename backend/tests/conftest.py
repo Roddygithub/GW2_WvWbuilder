@@ -12,6 +12,14 @@ import logging
 from typing import Any, AsyncGenerator, Callable, List
 from unittest.mock import patch, PropertyMock
 
+# IMPORTANT: Configure environment BEFORE any app imports
+# This ensures settings are loaded with test values
+os.environ["TESTING"] = "True"
+os.environ["ENVIRONMENT"] = "testing"
+# Ensure JWT keys are consistent for tests (must match for token creation/validation)
+os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-jwt"
+os.environ["SECRET_KEY"] = "test-secret-key-for-jwt"
+
 # Configuration du logging pour le débogage des tests
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,20 +38,16 @@ from sqlalchemy.pool import StaticPool
 # Configuration des chemins
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-# Import des dépendances de l'application
+# Import des dépendances de l'application (AFTER env vars are set)
 from app.main import create_application
 from app.db.session import get_async_db
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, create_access_token
 
 # Import des modèles nécessaires pour les tests
 from app.models.user import User
 from app.models.role import Role
 from app.models.profession import Profession
 from app.models.build import Build  # Ajout de l'import manquant
-
-# Configuration de l'environnement de test
-os.environ["TESTING"] = "True"
-os.environ["ENVIRONMENT"] = "testing"
 
 # Configuration de la base de données de test
 test_db_dir = os.path.join(os.path.dirname(__file__), "test_db")
@@ -238,15 +242,10 @@ def override_get_db(db_session: AsyncSession) -> Callable[..., AsyncGenerator[As
     """
 
     async def _override_get_db() -> AsyncGenerator[AsyncSession, None]:
-        # Start a new transaction for each request
-        await db_session.begin_nested()
-
+        # Yield the same session used by fixtures to ensure data visibility
+        # Don't start a new nested transaction here to avoid isolation issues
         try:
             yield db_session
-
-            # After the request, rollback to undo any changes
-            await db_session.rollback()
-
         except Exception:
             # If an error occurs, rollback the transaction
             if db_session.in_transaction():
@@ -254,6 +253,25 @@ def override_get_db(db_session: AsyncSession) -> Callable[..., AsyncGenerator[As
             raise
 
     return _override_get_db
+
+
+@pytest.fixture
+def override_get_db_sync(db_session: AsyncSession) -> Callable[..., AsyncGenerator[AsyncSession, None]]:
+    """
+    Override the sync get_db dependency for testing (returns async session).
+    
+    Note: Even though the original get_db is sync, we return an async generator
+    because FastAPI can handle both sync and async dependencies.
+    """
+    async def _override_get_db_sync() -> AsyncGenerator[AsyncSession, None]:
+        try:
+            yield db_session
+        except Exception:
+            if db_session.in_transaction():
+                await db_session.rollback()
+            raise
+    
+    return _override_get_db_sync
 
 
 # Test data fixtures
@@ -488,7 +506,7 @@ def mock_fastapi_limiter(monkeypatch):
 
 
 @pytest.fixture
-def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]]) -> FastAPI:
+def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]], override_get_db_sync: Callable[..., AsyncGenerator[AsyncSession, None]]) -> FastAPI:
     """Create a test FastAPI application with rate limiting and Redis disabled."""
     # Désactiver le chargement des variables d'environnement pour les tests
     os.environ["ENVIRONMENT"] = "test"
@@ -506,6 +524,10 @@ def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]]) -> F
     settings.CACHE_ENABLED = False
     settings.REDIS_URL = ""
     settings.DEBUG = True
+    
+    # CRITICAL: Ensure JWT keys match for token creation/validation
+    settings.JWT_SECRET_KEY = "test-secret-key-for-jwt"
+    settings.SECRET_KEY = "test-secret-key-for-jwt"
 
     # Créer le répertoire static s'il n'existe pas
     static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../app/static"))
@@ -519,17 +541,14 @@ def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]]) -> F
     app = create_application()
 
     # Surcharger la dépendance de la base de données pour utiliser notre session de test
+    # Override both sync and async DB dependencies
+    from app.db.session import get_db as get_db_sync
     app.dependency_overrides[get_async_db] = override_get_db
+    app.dependency_overrides[get_db_sync] = override_get_db_sync  # Tags endpoint uses sync get_db
 
-    # Désactiver la vérification du token pour les tests
-    async def mock_verify_token():
-        return {"sub": "test_user_id", "email": "test@example.com"}
-
-    async def mock_get_current_user():
-        return User(id=1, email="test@example.com", username="testuser", is_superuser=False, is_active=True)
-
-    # Appliquer les surcharges
-    app.dependency_overrides[get_current_user] = mock_get_current_user
+    # NOTE: Ne pas override get_current_user ici pour permettre aux tests API
+    # d'utiliser de vrais tokens JWT via la fixture auth_headers
+    # Les tests qui ont besoin d'un mock peuvent le faire individuellement
 
     yield app
 
@@ -611,3 +630,62 @@ async def async_client(app: FastAPI):
     """Create an async test client for making HTTP requests."""
     async with AsyncClient(app=app, base_url="http://test") as client:
         yield client
+
+
+@pytest_asyncio.fixture
+async def auth_headers(db_session: AsyncSession):
+    """
+    Fixture callable to create users dynamically and return auth headers.
+    
+    Usage:
+        headers = await auth_headers(username="testuser", is_superuser=True)
+    """
+    async def _auth_headers(
+        username: str = None,
+        email: str = None,
+        password: str = "testpassword",
+        is_superuser: bool = False,
+        is_active: bool = True,
+    ):
+        # Generate unique username/email if not provided
+        unique_id = uuid.uuid4().hex[:8]
+        username = username or f"user_{unique_id}"
+        email = email or f"{username}@example.com"
+        
+        # Create user in DB
+        user = User(
+            username=username,
+            email=email,
+            hashed_password=get_password_hash(password),
+            is_active=is_active,
+            is_superuser=is_superuser,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+        
+        # Create JWT token with user ID as subject (backend expects int ID in sub)
+        access_token = create_access_token(subject=str(user.id))
+        return {"Authorization": f"Bearer {access_token}"}
+    
+    return _auth_headers
+
+
+@pytest_asyncio.fixture
+async def tag_factory(db_session: AsyncSession):
+    """Factory fixture to create tags for testing."""
+    from app.models.tag import Tag
+    
+    async def _create_tag(name: str = None, description: str = None, category: str = None):
+        unique_id = uuid.uuid4().hex[:6]
+        tag = Tag(
+            name=name or f"Tag_{unique_id}",
+            description=description or f"Description for {name or 'tag'}",
+            category=category or "test",
+        )
+        db_session.add(tag)
+        await db_session.commit()
+        await db_session.refresh(tag)
+        return tag
+    
+    return _create_tag
