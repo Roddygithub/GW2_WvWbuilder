@@ -16,7 +16,7 @@ class TestUserApi:
     """Test suite for user management API endpoints."""
 
     @pytest_asyncio.fixture
-async def normal_user_headers( client: TestClient, auth_headers: Callable, test_data: dict) -> dict:
+async def normal_user_headers(client: TestClient, auth_headers: Callable, test_data: dict) -> dict:
         """Fixture for a regular user's authentication headers."""
         user = test_data["users"]["test"]
         return await auth_headers(username=user.username, password="testpassword")
