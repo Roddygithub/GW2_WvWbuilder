@@ -82,36 +82,22 @@ test_engine = create_async_engine(
 
 @pytest.fixture(scope="session")
 def event_loop():
-    """
-    Create an instance of the default event loop for each test case.
+    """Provide a clean session-scoped asyncio event loop for tests.
 
-    This fixture ensures that each test gets a fresh event loop and properly closes it
-    when the test is done.
+    This avoids prematurely closing or reassigning the global loop between tests,
+    which can lead to 'Event loop is closed' errors.
     """
-    # Détruire toute boucle d'événements existante
-    try:
-        loop = asyncio.get_event_loop()
-        if not loop.is_closed():
-            loop.close()
-    except RuntimeError:
-        pass
-
-    # Créer une nouvelle boucle d'événements pour la session de test
-    policy = asyncio.get_event_loop_policy()
-    loop = policy.new_event_loop()
+    loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-
-    # Configurer le fuseau horaire pour la session de test
     os.environ["TZ"] = "UTC"
-
     try:
         yield loop
     finally:
-        # Nettoyer la boucle d'événements
-        if not loop.is_closed():
+        try:
             loop.run_until_complete(loop.shutdown_asyncgens())
-            loop.close()
-        asyncio.set_event_loop(None)
+        except Exception:
+            pass
+        loop.close()
 
     # Configurer le niveau de log pour asyncio
     logging.getLogger("asyncio").setLevel(logging.WARNING)

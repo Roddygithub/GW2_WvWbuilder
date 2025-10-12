@@ -246,64 +246,71 @@ async def test_generate_build_unauthorized(db_session: AsyncSession) -> None:
         assert "Not authenticated" in response.text
 
 
+@pytest_asyncio.fixture(autouse=True)
+async def _autouse_setup_generate_build(request, db_session: AsyncSession):
+    """Setup test data for build generation tests and attach to test class."""
+    # Clear any existing professions to avoid conflicts
+    await db_session.execute("DELETE FROM profession")
+    await db_session.commit()
+
+    # Create test professions with unique names
+    profession_names = [
+        "Guardian",
+        "Warrior",
+        "Revenant",
+        "Ranger",
+        "Thief",
+        "Engineer",
+        "Elementalist",
+        "Mesmer",
+        "Necromancer",
+    ]
+
+    professions = []
+    for name in profession_names:
+        # Add a unique suffix to ensure no conflicts with other tests
+        unique_name = f"{name}_{uuid.uuid4().hex[:6]}"
+        prof = ProfessionFactory(name=unique_name)
+        professions.append(prof)
+        db_session.add(prof)
+
+    await db_session.commit()
+
+    # Refresh professions to ensure they have IDs
+    for prof in professions:
+        await db_session.refresh(prof)
+
+    # Default valid request data
+    valid_request = {
+        "team_size": 5,
+        "required_roles": ["healer", "dps", "support"],
+        "preferred_professions": [p.id for p in professions],
+        "max_duplicates": 2,
+        "min_healers": 1,
+        "min_dps": 2,
+        "min_support": 1,
+        "constraints": {
+            "require_cc": True,
+            "require_cleanses": True,
+            "require_stability": True,
+            "require_projectile_mitigation": True,
+        },
+    }
+
+    # Attach to class-based tests if available
+    if getattr(request, "cls", None) is not None:
+        setattr(request.cls, "professions", professions)
+        setattr(request.cls, "valid_request", valid_request)
+
+    try:
+        yield
+    finally:
+        # Cleanup
+        await db_session.rollback()
+
+
 class TestGenerateBuild:
     """Test suite for the /builds/generate/ endpoint."""
-
-    @pytest_asyncio.fixture(autouse=True)
-async def setup(self, db_session: AsyncSession):
-        """Setup test data for build generation tests."""
-        # Clear any existing professions to avoid conflicts
-        await db_session.execute("DELETE FROM profession")
-        await db_session.commit()
-
-        # Create test professions with unique names
-        profession_names = [
-            "Guardian",
-            "Warrior",
-            "Revenant",
-            "Ranger",
-            "Thief",
-            "Engineer",
-            "Elementalist",
-            "Mesmer",
-            "Necromancer",
-        ]
-
-        self.professions = []
-        for name in profession_names:
-            # Add a unique suffix to ensure no conflicts with other tests
-            unique_name = f"{name}_{uuid.uuid4().hex[:6]}"
-            prof = ProfessionFactory(name=unique_name)
-            self.professions.append(prof)
-            db_session.add(prof)
-
-        await db_session.commit()
-
-        # Refresh professions to ensure they have IDs
-        for prof in self.professions:
-            await db_session.refresh(prof)
-
-        # Default valid request data
-        self.valid_request = {
-            "team_size": 5,
-            "required_roles": ["healer", "dps", "support"],
-            "preferred_professions": [p.id for p in self.professions],
-            "max_duplicates": 2,
-            "min_healers": 1,
-            "min_dps": 2,
-            "min_support": 1,
-            "constraints": {
-                "require_cc": True,
-                "require_cleanses": True,
-                "require_stability": True,
-                "require_projectile_mitigation": True,
-            },
-        }
-
-        yield  # Test runs here
-
-        # Cleanup
-        db.rollback()
 
     def _make_request(self, client: TestClient, data: dict = None):
         """Helper to make a generate build request."""

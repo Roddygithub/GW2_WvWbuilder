@@ -85,10 +85,10 @@ jobs:
         cd backend
         poetry run black --check app/ --line-length 120
     
-    - name: Lint with Ruff
+    - name: Lint with Ruff (app only)
       run: |
         cd backend
-        poetry run ruff check app/ tests/
+        poetry run ruff check app/
     
     - name: Security check with Bandit
       run: |

@@ -230,7 +230,7 @@ async def test_get_current_user():
     from app.core.security.jwt import (
         get_current_user,
         TOKEN_TYPE_ACCESS,
-    
+    )
     # Create a test payload for the token
     test_payload = {
         "sub": str(TEST_USER_ID),
@@ -301,7 +301,7 @@ async def test_get_current_user_invalid_token():
     from app.core.security.jwt import get_current_user
 
     # Create mock credentials
-    mock_credentials = MagicMock(spec=HTTPAuthorizationCredentials
+    mock_credentials = MagicMock(spec=HTTPAuthorizationCredentials)
     mock_credentials.scheme = "bearer"
     mock_credentials.credentials = "invalid.token.here"
 
@@ -353,7 +353,7 @@ async def test_get_current_user_not_found():
     from app.core.security.jwt import get_current_user
 
     # Create mock credentials with a valid token
-    mock_credentials = MagicMock(spec=HTTPAuthorizationCredentials
+    mock_credentials = MagicMock(spec=HTTPAuthorizationCredentials)
     mock_credentials.scheme = "bearer"
     mock_credentials.credentials = "valid.token.here"
 

@@ -1,9 +1,8 @@
 """Enhanced test coverage for security module."""
 
 import pytest
-import pytest_asyncio
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import patch, MagicMock
 from jose import jwt
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -21,7 +20,7 @@ TEST_PASSWORD = "testpassword123"
 TEST_HASHED_PASSWORD = None
 
 
-@pytest.fixture(scope="module"
+@pytest.fixture(scope="module")
 def test_hashed_password():
     """Generate test hash lazily."""
     return security.get_password_hash(TEST_PASSWORD)
@@ -241,7 +240,7 @@ class TestSecurityEnhanced:
         # Mock the database query for ID lookup
         with patch.object(db_session, "query") as mock_query:
             mock_filter = MagicMock()
-            mock_filter.first.return_value = TEST_USER
+            mock_filter.first.return_value = MagicMock()
             mock_query.return_value.filter.return_value = mock_filter
 
             # Test

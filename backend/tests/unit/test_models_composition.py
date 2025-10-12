@@ -14,10 +14,8 @@ import uuid
 import logging
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-
-# Configuration du logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+from sqlalchemy import text
+from fastapi import HTTPException, status
 
 # Modèles
 from app.models.user import User
@@ -26,6 +24,11 @@ from app.models.composition import Composition
 from app.models.role import Role
 from app.models.profession import Profession
 from app.models.tag import Tag
+from app.models.composition_tag import CompositionTag
+
+# Configuration du logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Configuration pour les tests
 pytestmark = pytest.mark.asyncio
@@ -677,10 +680,6 @@ class TestCompositionModel:
         except Exception as e:
             # Rollback on error
             print(f"\n[ERROR] Test failed: {str(e)}")
-            import traceback
-
-            print("\n[TRACEBACK]")
-            traceback.print_exc()
             await db.rollback()
             raise
 
@@ -957,18 +956,18 @@ class TestCompositionModel:
         await db_session.rollback()
 
         # Test valid status values
-        for status in ["draft", "published", "archived"]:
+        for comp_status in ["draft", "published", "archived"]:
             async with db_session.begin():
                 composition = Composition(
-                    name=f"Test Status {status} {uuid.uuid4().hex[:8]}",
+                    name=f"Test Status {comp_status} {uuid.uuid4().hex[:8]}",
                     squad_size=5,
-                    status=status,
+                    status=comp_status,
                     created_by=sample_user.id,
                     build_id=sample_build.id,
                 )
                 db_session.add(composition)
                 await db_session.flush()
-                assert composition.status == status
+                assert composition.status == comp_status
                 await db_session.delete(composition)
 
         # Test valid game modes
@@ -1170,7 +1169,7 @@ class TestCompositionModel:
         ), "updated_at should not change if no actual changes were made"
 
     @pytest.mark.asyncio
-    async def test_composition_relationships(self, db, sample_composition, sample_user, sample_build):
+    async def test_composition_relationships_details(self, db, sample_composition, sample_user, sample_build):
         """Test relationships with related models."""
         # Test creator relationship
         assert sample_composition.creator.id == sample_user.id
