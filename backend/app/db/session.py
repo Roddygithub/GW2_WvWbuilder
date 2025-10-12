@@ -7,6 +7,7 @@ et l'initialisation de la base de données avec SQLAlchemy 2.0.
 
 from __future__ import annotations
 
+import logging
 from typing import Generator, AsyncGenerator
 
 from sqlalchemy.orm import sessionmaker, Session
@@ -48,6 +49,9 @@ except ImportError:
 
 # Import de la classe de base des modèles
 from app.models.base import Base
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 def init_db() -> None:

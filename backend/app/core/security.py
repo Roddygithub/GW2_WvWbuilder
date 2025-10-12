@@ -156,30 +156,19 @@ def get_token_from_request(request: Request) -> Optional[str]:
     Returns:
         Optional[str]: The extracted token or None if not found
     """
-    # Debug: Afficher les en-têtes, cookies et paramètres de requête
-    print(f"DEBUG - Headers: {dict(request.headers)}")
-    print(f"DEBUG - Cookies: {dict(request.cookies) if hasattr(request.cookies, '__iter__') else request.cookies}")
-    print(
-        f"DEBUG - Query params: {dict(request.query_params) if hasattr(request.query_params, '__iter__') else request.query_params}"
-    )
-
     # Check Authorization header (case insensitive)
     auth_header = next((v for k, v in request.headers.items() if k.lower() == "authorization"), None)
-    print(f"DEBUG - Auth header: {auth_header}")
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.split(" ")[1]
-        print(f"DEBUG - Token from auth header: {token}")
         return token
 
     # Check cookie
     token = request.cookies.get("access_token")
-    print(f"DEBUG - Token from cookie: {token}")
     if token:
         return token
 
     # Check query parameter
     token = request.query_params.get("token")
-    print(f"DEBUG - Token from query params: {token}")
     return token
 
 

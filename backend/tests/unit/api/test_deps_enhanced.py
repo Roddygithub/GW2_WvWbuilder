@@ -42,6 +42,7 @@ from app.core.exceptions import (
     NotSuperUserException,
     ForbiddenException,
 )
+from app.models.team import Team as TeamModel
 
 # Test data
 TEST_USER_ID = 1

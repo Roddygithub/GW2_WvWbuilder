@@ -22,12 +22,23 @@ from app.models.role import Role
 
 # Test data
 TEST_PASSWORD = "testpassword123"
-TEST_HASH = pwd_context.hash(TEST_PASSWORD)
+# Defer hash generation to avoid bcrypt 72-byte limit at import time
+TEST_HASH = None  # Will be generated in fixtures
 TEST_EMAIL = "test@example.com"
 TEST_USER_ID = 1
 TEST_REFRESH_TOKEN = "test_refresh_token"
 TEST_ACCESS_TOKEN = "test_access_token"
 TEST_ROLE_ID = 1
+
+
+@pytest.fixture(scope="module")
+def test_hash():
+    """Generate test hash lazily to avoid import-time bcrypt issues."""
+    from app.core.security import get_password_hash
+
+    return get_password_hash(TEST_PASSWORD)
+
+
 TEST_ROLE_NAME = "test_role"
 TEST_PERMISSION_LEVEL = 1
 

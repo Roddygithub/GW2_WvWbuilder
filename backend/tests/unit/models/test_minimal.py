@@ -20,7 +20,7 @@ async def test_database_tables_exist(db: AsyncSession):
         "professions",
         "elite_specializations",
         "builds",
-        "build_profession",
+        "build_professions",  # Note: plural form matches the actual table name
         "compositions",
         "composition_tags",
         "composition_members",
@@ -55,11 +55,13 @@ async def test_create_user(db: AsyncSession):
 
     # Verify the user was created
     assert user is not None
-    assert user["username"] == "testuser"
-    assert user["email"] == "test@example.com"
-    assert user["is_active"] is True
-    assert user["is_superuser"] is False
+    # Access tuple elements by index: (id, username, email, is_active, is_superuser)
+    user_id, username, email, is_active, is_superuser = user
+    assert username == "testuser"
+    assert email == "test@example.com"
+    assert is_active == 1  # SQLite returns 1 for True
+    assert is_superuser == 0  # SQLite returns 0 for False
 
     # Clean up
-    await db.execute(text("DELETE FROM users WHERE id = :id"), {"id": user["id"]})
+    await db.execute(text("DELETE FROM users WHERE id = :id"), {"id": user_id})
     await db.commit()

@@ -42,7 +42,7 @@ class GW2Cache:
         if params:
             # Sort params to ensure consistent key generation
             sorted_params = json.dumps(params, sort_keys=True)
-            key_parts.append(hashlib.md5(sorted_params.encode()).hexdigest())
+            key_parts.append(hashlib.sha256(sorted_params.encode()).hexdigest())
         return ":".join(key_parts)
 
     async def get(self, key: str, model: Type[T]) -> Optional[T]:

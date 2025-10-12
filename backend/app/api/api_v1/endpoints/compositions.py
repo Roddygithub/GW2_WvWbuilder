@@ -176,9 +176,7 @@ async def read_compositions(
 
     # Only show private compositions to their owners or admins
     if not current_user.is_superuser:
-        query = query.where(
-            or_(models.Composition.is_public, models.Composition.created_by_id == current_user.id)
-        )
+        query = query.where(or_(models.Composition.is_public, models.Composition.created_by_id == current_user.id))
 
     result = await db.execute(query.offset(skip).limit(limit))
     compositions = result.scalars().all()

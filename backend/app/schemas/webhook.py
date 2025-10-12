@@ -1,11 +1,18 @@
-from pydantic import BaseModel, HttpUrl, Field
+from pydantic import BaseModel, HttpUrl, Field, AliasChoices
 from typing import List, Optional
 from datetime import datetime
 
 
 class WebhookBase(BaseModel):
     url: HttpUrl = Field(..., example="https://example.com/webhook")
-    event_types: List[str] = Field(..., min_length=1, example=["build.create", "build.update"])
+    # Accept both 'events' and 'event_types' for input to be compatible with tests
+    event_types: List[str] = Field(
+        ...,
+        min_length=1,
+        validation_alias=AliasChoices("events", "event_types"),
+        example=["build.create", "build.update"],
+    )
+    description: Optional[str] = None
     is_active: Optional[bool] = True
 
 

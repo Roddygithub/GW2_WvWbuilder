@@ -75,8 +75,8 @@ def _set_sqlite_pragma(dbapi_connection, connection_record):
 
 logger.info("Moteur de test configuré avec succès")
 
-# Configuration pour les tests asynchrones
-pytest_plugins = ["pytest_asyncio", "pytest_mock", "pytest_cov"]
+# Note: pytest_plugins a été déplacé vers tests/conftest.py (top-level)
+# pour éviter les warnings pytest
 
 
 # Configuration des marqueurs pytest
@@ -244,39 +244,33 @@ def event_loop():
                             logger.error(f"La tâche {task} a généré une exception : {e}")
         finally:
             # Fermer la boucle
-            loop.run_until_complete(loop.shutdown_asyncgens())
-            loop.close()
+            if not loop.is_closed():
+                loop.run_until_complete(loop.shutdown_asyncgens())
+                loop.close()
             asyncio.set_event_loop(None)
 
-    try:
-        yield loop
-    finally:
-        # Nettoyer la boucle d'événements
-        if not loop.is_closed():
-            # Annuler toutes les tâches en cours
-            pending = asyncio.all_tasks(loop=loop)
-            for task in pending:
-                task.cancel()
-            loop.run_until_complete(loop.shutdown_asyncgens())
-            loop.close()
-        asyncio.set_event_loop(None)
 
-
-@pytest_asyncio.fixture(scope="function", autouse=True)
-async def init_test_db(db_session: AsyncSession) -> None:
+@pytest_asyncio.fixture(scope="function")
+async def init_test_db(request) -> AsyncGenerator[None, None]:
     """
     Initialize the test database with all tables and clean up after tests.
 
     This fixture is automatically used for each test function and ensures
     a clean database state before and after each test.
+
+    Note: Not autouse to avoid conflicts with tests that have their own DB setup.
     """
+    # Skip for tests in models directory that have their own engine fixture
+    if "models" in str(request.fspath):
+        yield
+        return
     # Create all tables
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     # Create default roles and permissions
-    async with db_session as session:
+    async with TestingSessionLocal() as session:
         # Create test permissions
         permissions = [
             Permission(name="read", description="Read access"),
@@ -316,7 +310,7 @@ async def init_test_db(db_session: AsyncSession) -> None:
     async with test_engine.connect() as conn:
         # Afficher toutes les tables
         result = await conn.execute(text("SELECT name, sql FROM sqlite_master WHERE type='table'"))
-        tables = await result.fetchall()
+        tables = result.fetchall()
         print("\n[DEBUG] ==== Tables dans la base de données ====")
         for name, sql in tables:
             print(f"\nTable: {name}")
@@ -326,7 +320,7 @@ async def init_test_db(db_session: AsyncSession) -> None:
             index_result = await conn.execute(
                 text("SELECT name, sql FROM sqlite_master WHERE type='index' AND tbl_name=:name"), {"name": name}
             )
-            indexes = await index_result.fetchall()
+            indexes = index_result.fetchall()
             if indexes:
                 print("  Index:")
                 for idx_name, idx_sql in indexes:
@@ -334,7 +328,7 @@ async def init_test_db(db_session: AsyncSession) -> None:
 
         print("\n[DEBUG] ==== Contenu des tables ====")
         result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
-        table_names = [row[0] for row in await result.fetchall()]
+        table_names = [row[0] for row in result.fetchall()]
 
         for table_name in table_names:
             if table_name.startswith("sqlite_"):
@@ -342,7 +336,7 @@ async def init_test_db(db_session: AsyncSession) -> None:
 
             try:
                 result = await conn.execute(text(f"SELECT * FROM {table_name} LIMIT 5"))
-                rows = await result.fetchall()
+                rows = result.fetchall()
                 print(f"\nContenu de la table '{table_name}' (max 5 lignes):")
                 if rows:
                     # Afficher les noms des colonnes

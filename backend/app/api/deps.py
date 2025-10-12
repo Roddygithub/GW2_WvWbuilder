@@ -13,6 +13,7 @@ from app.core.config import settings
 from app.db.session import get_async_db as get_db_session
 from app import crud, models
 from app.models.team import Team
+from app.models.team_member import TeamMember
 from app.services.webhook_service import WebhookService
 from app.core.exceptions import (
     CredentialsException,
@@ -172,10 +173,10 @@ async def get_team_and_check_access(
     # Vérifier si l'utilisateur est administrateur de l'équipe
     is_admin = False
     if not is_owner:
-        stmt = select(team_members).where(
-            (team_members.c.team_id == team_id)
-            & (team_members.c.user_id == current_user.id)
-            & (team_members.c.is_admin == True)  # noqa: E712
+        stmt = select(TeamMember).where(
+            (TeamMember.team_id == team_id)
+            & (TeamMember.user_id == current_user.id)
+            & (TeamMember.is_admin == True)  # noqa: E712
         )
         result = await db.execute(stmt)
         is_admin = bool(result.first())
@@ -198,7 +199,7 @@ async def get_webhook_service(
     """
     Dependency that returns a WebhookService instance with the database session.
     """
-    return webhook_service
+    return WebhookService(db=db)
 
 
 async def get_gw2_client(

@@ -28,6 +28,8 @@ fastapi-limiter = "^0.1.5"
 asyncpg = "^0.28.0"  # Pour le support asynchrone de PostgreSQL
 prometheus-client = "^0.20.0"  # Pour la surveillance des métriques
 pyjwt = "^2.10.1"
+aiohttp = "^3.13.0"
+backoff = "^2.2.1"
 
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.0"

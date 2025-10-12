@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Union
 
 from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy import text
 
 from app.core.config import settings
 

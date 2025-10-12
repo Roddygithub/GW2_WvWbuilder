@@ -1,10 +1,11 @@
 """Tests for exception handlers."""
 
 import pytest
-from fastapi import HTTPException, status, Request
+from fastapi import HTTPException, status
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
+from unittest.mock import MagicMock
 
 from app.api.exception_handlers import (
     http_exception_handler,
@@ -20,7 +21,7 @@ from app.core.exceptions import CustomException
 @pytest.mark.asyncio
 async def test_http_exception_handler():
     """Test HTTP exception handler."""
-    request = Request(scope={"type": "http"})
+    request = MagicMock()
     exc = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
     response = await http_exception_handler(request, exc)
@@ -32,7 +33,7 @@ async def test_http_exception_handler():
 @pytest.mark.asyncio
 async def test_validation_exception_handler():
     """Test validation exception handler."""
-    request = Request(scope={"type": "http"})
+    request = MagicMock()
     exc = RequestValidationError(
         errors=[{"loc": ("body", "field"), "msg": "field required", "type": "value_error.missing"}]
     )
@@ -47,7 +48,7 @@ async def test_validation_exception_handler():
 @pytest.mark.asyncio
 async def test_integrity_error_handler_duplicate():
     """Test integrity error handler for duplicate key."""
-    request = Request(scope={"type": "http"})
+    request = MagicMock()
     # Créer une exception avec un message d'erreur qui contient 'duplicate key'
     exc = IntegrityError("duplicate key value violates unique constraint", None, None)
 
@@ -61,7 +62,7 @@ async def test_integrity_error_handler_duplicate():
 @pytest.mark.asyncio
 async def test_integrity_error_handler_generic():
     """Test generic integrity error handler."""
-    request = Request(scope={"type": "http"})
+    request = MagicMock()
     exc = IntegrityError("some other error", None, None)
 
     response = await integrity_error_handler(request, exc)
@@ -73,7 +74,7 @@ async def test_integrity_error_handler_generic():
 @pytest.mark.asyncio
 async def test_not_found_exception_handler():
     """Test not found exception handler."""
-    request = Request(scope={"type": "http"})
+    request = MagicMock()
     exc = NoResultFound()
 
     response = await not_found_exception_handler(request, exc)
@@ -85,7 +86,7 @@ async def test_not_found_exception_handler():
 @pytest.mark.asyncio
 async def test_custom_exception_handler():
     """Test custom exception handler."""
-    request = Request(scope={"type": "http"})
+    request = MagicMock()
     exc = CustomException(status_code=403, detail="Forbidden")
 
     response = await custom_exception_handler(request, exc)
@@ -97,7 +98,7 @@ async def test_custom_exception_handler():
 @pytest.mark.asyncio
 async def test_generic_exception_handler():
     """Test generic exception handler."""
-    request = Request(scope={"type": "http"})
+    request = MagicMock()
     exc = Exception("Something went wrong")
 
     response = await generic_exception_handler(request, exc)

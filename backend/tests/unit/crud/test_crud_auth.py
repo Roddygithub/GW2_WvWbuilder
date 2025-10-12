@@ -55,11 +55,12 @@ auth_crud = CRUDAuth()
 # Fixtures
 @pytest.fixture
 def mock_user():
+    # Defer password hashing to avoid bcrypt 72-byte limit at import time
     return User(
         id=1,
         username="testuser",
         email="test@example.com",
-        hashed_password=get_password_hash("password123"),
+        hashed_password=get_password_hash("password123"[:72]),  # Truncate to avoid bcrypt limit
         is_active=True,
         role_id=1,
     )

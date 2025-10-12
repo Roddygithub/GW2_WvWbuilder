@@ -2,7 +2,8 @@
 Package principal de l'application GW2 WvW Builder.
 Ce package expose les composants principaux de l'application.
 """
- # ruff: noqa: F401
+
+# ruff: noqa: F401
 from typing import Any, Dict, List, Optional, Union, Callable
 from fastapi import FastAPI, Depends
 

@@ -8,15 +8,6 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union, TYPE_CHECKING
 
-# Debug: Afficher les types de base
-print("\n=== Début du chargement du module jwt.py ===")
-print(f"str: {str}")
-print(f"int: {int}")
-print(f"tuple: {tuple}")
-print(f"type(str): {type(str)}")
-print(f"type(int): {type(int)}")
-print(f"type(tuple): {type(tuple)}")
-
 # Définir les types de base pour éviter les problèmes d'importation circulaire
 if TYPE_CHECKING:
 
@@ -41,7 +32,7 @@ try:
     from pydantic import BaseModel
     from app.core.config import settings
 
-    print("=== Importations réussies ===")
+    # Importations réussies
 except Exception as e:
     print(f"ERREUR lors de l'importation: {e}")
     raise
@@ -63,13 +54,7 @@ JWT_TOKEN_PREFIX = "Bearer"
 # Use settings directly instead of creating module-level variables
 # This ensures we always get the latest values from settings
 
-# Debug: Afficher les types des constantes
-print("\n=== Types des constantes JWT ===")
-print(f"TOKEN_TYPE_ACCESS: {TOKEN_TYPE_ACCESS} (type: {type(TOKEN_TYPE_ACCESS).__name__})")
-print(f"TOKEN_TYPE_REFRESH: {TOKEN_TYPE_REFRESH} (type: {type(TOKEN_TYPE_REFRESH).__name__})")
-print(f"TOKEN_TYPE_RESET: {TOKEN_TYPE_RESET} (type: {type(TOKEN_TYPE_RESET).__name__})")
-print(f"JWT_TOKEN_PREFIX: {JWT_TOKEN_PREFIX} (type: {type(JWT_TOKEN_PREFIX).__name__})")
-print("==============================\n")
+# Types des constantes JWT
 
 
 # Debug: Afficher les valeurs des variables d'environnement et de configuration
@@ -87,8 +72,7 @@ def log_jwt_config():
     print("=== Fin de la configuration JWT ===\n")
 
 
-# Appeler la fonction de log après la définition de toutes les variables
-log_jwt_config()
+# Appeler la fonction de log après la définition de toutes les variables (désactivé pour les tests)
 
 
 class JWTError(Exception):
@@ -485,6 +469,27 @@ def get_current_active_superuser(current_user: Dict[str, Any] = Depends(get_curr
     if not current_user.get("is_superuser", False):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="The user doesn't have enough privileges")
     return current_user
+
+
+def verify_token(token: str) -> Optional[Dict[str, Any]]:
+    """
+    Verify and decode an access token.
+
+    Args:
+        token: The access token to verify
+
+    Returns:
+        Optional[Dict[str, Any]]: The decoded token payload, or None if invalid
+    """
+    try:
+        if not token:
+            return None
+        payload = decode_token(token, token_type=TOKEN_TYPE_ACCESS)
+        return payload
+    except (JWTExpiredSignatureError, JWTInvalidTokenError):
+        return None
+    except Exception:
+        return None
 
 
 def verify_refresh_token(token: str) -> Dict[str, Any]:

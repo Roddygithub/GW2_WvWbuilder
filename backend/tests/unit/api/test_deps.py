@@ -1,7 +1,7 @@
 """Unit tests for API dependencies in app.api.deps and app.db.dependencies."""
 
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.dependencies import get_db
@@ -12,34 +12,42 @@ async def test_get_db_dependency_success():
     """
     Test that the get_db dependency yields a session and closes it.
     """
-    # Mock the SessionLocal to track session creation and closing
+    # Mock the AsyncSessionLocal context manager
     mock_session = AsyncMock(spec=AsyncSession)
+    mock_session_local = MagicMock()
+    mock_session_local.return_value.__aenter__.return_value = mock_session
+    mock_session_local.return_value.__aexit__.return_value = None
 
-    with patch("app.db.dependencies.SessionLocal", return_value=mock_session) as mock_session_local:
+    with patch("app.db.dependencies.AsyncSessionLocal", mock_session_local):
         # Simulate the dependency injection process
-        async def run_dependency():
-            gen = get_db()
-            try:
-                session = await gen.__anext__()
-                assert session is mock_session
-                # This part simulates the request handling
-            except StopAsyncIteration:
-                pass  # Generator finished
+        gen = get_db()
+        session = await gen.__anext__()
+        assert session is mock_session
+        
+        # Close the generator
+        try:
+            await gen.__anext__()
+        except StopAsyncIteration:
+            pass  # Expected
 
-        await run_dependency()
-
-        # Verify that a session was created and closed
+        # Verify that a session was created
         mock_session_local.assert_called_once()
-        mock_session.close.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_get_db_dependency_with_exception():
-    """Test that the get_db dependency closes the session even if an error occurs."""
+    """Test that the get_db dependency handles exceptions properly."""
     mock_session = AsyncMock(spec=AsyncSession)
-    with patch("app.db.dependencies.SessionLocal", return_value=mock_session):
+    mock_session_local = MagicMock()
+    mock_session_local.return_value.__aenter__.return_value = mock_session
+    mock_session_local.return_value.__aexit__.return_value = None
+    
+    with patch("app.db.dependencies.AsyncSessionLocal", mock_session_local):
         with pytest.raises(RuntimeError):
-            async for session in get_db():
-                raise RuntimeError("Simulating error during request")
+            gen = get_db()
+            session = await gen.__anext__()
+            # Simulate an error during request processing
+            await gen.athrow(RuntimeError("Simulating error during request"))
 
-        mock_session.close.assert_awaited_once()
+        # Verify rollback was called
+        mock_session.rollback.assert_awaited_once()

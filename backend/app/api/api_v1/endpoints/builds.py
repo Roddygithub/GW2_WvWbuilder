@@ -450,6 +450,9 @@ async def update_build(
             detail="Not enough permissions",
         )
 
+    # Prepare update data
+    update_data = build_in
+
     # Invalidate cache for this build
     cache_key = f"cache:{router.prefix}{router.tags[0]}/{build_id}:"
     if settings.CACHE_ENABLED:

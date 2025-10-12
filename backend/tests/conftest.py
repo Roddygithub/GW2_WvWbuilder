@@ -18,6 +18,9 @@ logger = logging.getLogger(__name__)
 
 import pytest
 import pytest_asyncio
+
+# Configuration des plugins pytest (doit être dans le conftest top-level)
+pytest_plugins = ["pytest_asyncio", "pytest_mock", "pytest_cov"]
 from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy import text, event
@@ -112,39 +115,6 @@ def event_loop():
 
     # Configurer le niveau de log pour asyncio
     logging.getLogger("asyncio").setLevel(logging.WARNING)
-
-    try:
-        yield loop
-    finally:
-        # Nettoyage après les tests
-        if not loop.is_closed():
-            # Annuler toutes les tâches en cours
-            pending = asyncio.all_tasks(loop=loop)
-            for task in pending:
-                task.cancel()
-
-            # Exécuter les tâches annulées
-            if pending:
-                loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
-
-            # Fermer la boucle d'événements
-            loop.run_until_complete(loop.shutdown_asyncgens())
-
-            # Fermer les connexions de la base de données
-            if "test_engine" in globals():
-                loop.run_until_complete(test_engine.dispose())
-
-            loop.close()
-
-        # Réinitialiser la boucle d'événements par défaut
-        asyncio.set_event_loop(None)
-
-        # Nettoyer les fichiers temporaires
-        if os.path.exists(db_path):
-            try:
-                os.remove(db_path)
-            except Exception as e:
-                print(f"Erreur lors du nettoyage du fichier de base de données: {e}")
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)

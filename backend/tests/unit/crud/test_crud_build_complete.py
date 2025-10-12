@@ -23,6 +23,7 @@ def db(db_session: Session) -> Session:
     """
     return db_session
 
+
 @pytest.fixture
 def test_user(db: Session):
     """Create a test user."""

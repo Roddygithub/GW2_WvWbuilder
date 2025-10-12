@@ -16,17 +16,27 @@ TEST_USER_ID = 1
 TEST_EMAIL = "test@example.com"
 TEST_USERNAME = "testuser"
 TEST_PASSWORD = "testpassword123"
-TEST_HASHED_PASSWORD = security.get_password_hash(TEST_PASSWORD)
+# Defer hash generation to avoid import-time bcrypt issues
+TEST_HASHED_PASSWORD = None
 
-# Mock user data
-TEST_USER = User(
-    id=TEST_USER_ID,
-    username=TEST_USERNAME,
-    email=TEST_EMAIL,
-    hashed_password=TEST_HASHED_PASSWORD,
-    is_active=True,
-    is_superuser=False,
-)
+
+@pytest.fixture(scope="module")
+def test_hashed_password():
+    """Generate test hash lazily."""
+    return security.get_password_hash(TEST_PASSWORD)
+
+
+@pytest.fixture
+def test_user(test_hashed_password):
+    """Create test user with lazy hash."""
+    return User(
+        id=TEST_USER_ID,
+        username=TEST_USERNAME,
+        email=TEST_EMAIL,
+        hashed_password=test_hashed_password,
+        is_active=True,
+        is_superuser=False,
+    )
 
 
 class TestSecurityEnhanced:
@@ -47,10 +57,10 @@ class TestSecurityEnhanced:
             (TEST_PASSWORD.replace("e", "3"), False),  # Similar but different password
         ],
     )
-    def test_verify_password_edge_cases(self, password, expected):
+    def test_verify_password_edge_cases(self, password, expected, test_hashed_password):
         """Test password verification with edge cases."""
         # Test with the pre-hashed password
-        assert security.verify_password(password, TEST_HASHED_PASSWORD) == expected
+        assert security.verify_password(password, test_hashed_password) == expected
 
         # Test with None as hashed password
         if password is not None:
@@ -270,14 +280,15 @@ class TestSecurityEnhanced:
         is_active: bool,
         is_superuser: bool,
         expected_error: str,
+        test_hashed_password,
     ):
         """Test validation in get_current_active_superuser."""
         # Create a test user with the specified permissions
-        test_user = User(
+        test_user_obj = User(
             id=2,
             email="test2@example.com",
             username="testuser2",
-            hashed_password=TEST_HASHED_PASSWORD,
+            hashed_password=test_hashed_password,
             is_active=is_active,
             is_superuser=is_superuser,
         )
@@ -286,34 +297,34 @@ class TestSecurityEnhanced:
         if not is_active:
             # For inactive users, both functions should raise an error
             with pytest.raises(HTTPException) as exc_info:
-                security.get_current_active_user(current_user=test_user)
+                security.get_current_active_user(current_user=test_user_obj)
             assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
             assert str(exc_info.value.detail) == "Inactive user"
 
             # Check superuser validation (should fail with inactive user)
             # The actual error message is "The user doesn't have enough privileges"
             with pytest.raises(HTTPException) as exc_info:
-                security.get_current_active_superuser(current_user=test_user)
+                security.get_current_active_superuser(current_user=test_user_obj)
             assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
             assert str(exc_info.value.detail) == "The user doesn't have enough privileges"
         elif not is_superuser:
             # Active user but not superuser
             # First verify active user check passes
-            active_user = security.get_current_active_user(current_user=test_user)
-            assert active_user == test_user
+            active_user = security.get_current_active_user(current_user=test_user_obj)
+            assert active_user == test_user_obj
 
             # Then verify superuser check fails
             with pytest.raises(HTTPException) as exc_info:
-                security.get_current_active_superuser(current_user=test_user)
+                security.get_current_active_superuser(current_user=test_user_obj)
             assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
             assert "The user doesn't have enough privileges" == str(exc_info.value.detail)
         else:
             # Should not raise an exception for active superuser
-            active_user = security.get_current_active_user(current_user=test_user)
-            assert active_user == test_user
+            active_user = security.get_current_active_user(current_user=test_user_obj)
+            assert active_user == test_user_obj
 
-            result = security.get_current_active_superuser(current_user=test_user)
-            assert result == test_user
+            result = security.get_current_active_superuser(current_user=test_user_obj)
+            assert result == test_user_obj
 
     def test_password_hashing_performance(self):
         """Test that password hashing takes a reasonable amount of time."""

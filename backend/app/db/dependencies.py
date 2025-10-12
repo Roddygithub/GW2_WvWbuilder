@@ -4,29 +4,14 @@ Dépendances de base de données pour FastAPI.
 Ce module contient les fonctions de dépendance pour les sessions de base de données.
 """
 
-from typing import Generator
+from typing import AsyncGenerator
 
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .factories import SessionLocal, AsyncSessionLocal
+from .factories import AsyncSessionLocal
 
 
-def get_db() -> Generator[Session, None, None]:
-    """
-    Obtient une session de base de données synchrone pour les dépendances FastAPI.
-
-    Yields:
-        Session: Une instance de session SQLAlchemy synchrone
-    """
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-async def get_async_db() -> Generator[AsyncSession, None, None]:
+async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Obtient une session de base de données asynchrone pour les dépendances FastAPI.
 
@@ -42,3 +27,7 @@ async def get_async_db() -> Generator[AsyncSession, None, None]:
             raise
         finally:
             await session.close()
+
+
+# Alias pour compatibilité
+get_db = get_async_db
