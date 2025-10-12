@@ -1,6 +1,7 @@
 """Integration tests for Tags API endpoints."""
 
 import pytest
+import pytest_asyncio
 from fastapi import status
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +31,7 @@ def update_tag_data() -> Dict[str, Any]:
     return {"name": TEST_TAG_UPDATE_NAME, "description": TEST_TAG_UPDATE_DESCRIPTION, "color": "#00FF00"}
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_tag(async_db_session: AsyncSession, test_user: User) -> Tag:
     """Create a test tag."""
     tag = Tag(
@@ -47,7 +48,7 @@ async def test_tag(async_db_session: AsyncSession, test_user: User) -> Tag:
     return tag
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_team(async_db_session: AsyncSession, test_user: User) -> Team:
     """Create a test team."""
     team = Team(
@@ -65,7 +66,7 @@ async def test_team(async_db_session: AsyncSession, test_user: User) -> Team:
     return team
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_composition(async_db_session: AsyncSession, test_user: User, test_team: Team) -> Composition:
     """Create a test composition."""
     composition = Composition(
@@ -84,7 +85,7 @@ async def test_composition(async_db_session: AsyncSession, test_user: User, test
     return composition
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_composition_tag(
     async_db_session: AsyncSession, test_tag: Tag, test_composition: Composition
 ) -> CompositionTag:

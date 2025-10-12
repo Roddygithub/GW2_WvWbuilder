@@ -6,6 +6,7 @@ import logging
 from typing import AsyncGenerator
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -72,7 +73,7 @@ TABLES_ORDER = [
 ## Note: Use top-level tests/conftest.py event_loop fixture (session-scoped)
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def engine() -> AsyncEngine:
     """Create a test database engine and set up tables."""
     # Create engine with echo=True for debugging
@@ -149,7 +150,7 @@ def session_factory(engine):
     )
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def db(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
     """Create a new database session for testing."""
     # Create a new session
@@ -169,7 +170,7 @@ async def db(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def clean_db(db):
     """Clean all data from the database before and after each test."""
     # Get all table names that exist in the database

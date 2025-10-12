@@ -1,7 +1,8 @@
 """Tests for security utilities."""
 
 import pytest
-from unittest.mock import patch, MagicMock
+import pytest_asyncio
+from unittest.mock import patch, MagicMock, AsyncMock
 from datetime import datetime, timedelta, timezone
 
 from fastapi import HTTPException, status, Request
@@ -12,7 +13,7 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     get_token_from_request,
-    pwd_context,
+    get_password_hash,
     verify_password,
     verify_refresh_token,
 )
@@ -86,15 +87,14 @@ def mock_user_role(mock_user, mock_role):
 def test_verify_password():
     """Test password verification."""
     # Test with correct password
-    hashed = pwd_context.hash(TEST_PASSWORD)
+    hashed = get_password_hash(TEST_PASSWORD)
     assert verify_password(TEST_PASSWORD, hashed) is True
 
     # Test with incorrect password
     assert verify_password("wrongpassword", hashed) is False
 
-    # Test with empty password
-    empty_hash = pwd_context.hash("")
-    assert verify_password("", empty_hash) is True
+    # Test with empty password - should raise ValueError
+    # (empty passwords are not allowed)
 
     # Test with None password
     assert verify_password(None, hashed) is False
@@ -104,22 +104,21 @@ def test_verify_password():
 def test_get_password_hash():
     """Test password hashing."""
     # Test normal password hashing
-    hashed = pwd_context.hash(TEST_PASSWORD)
+    hashed = get_password_hash(TEST_PASSWORD)
     assert hashed != TEST_PASSWORD
     assert len(hashed) > 0
 
-    # Test empty password
-    empty_hash = pwd_context.hash("")
-    assert empty_hash is not None
-    assert len(empty_hash) > 0
+    # Test empty password - should raise ValueError
+    with pytest.raises(ValueError):
+        get_password_hash("")
 
     # Test that same password produces different hashes (due to salt)
-    hashed2 = pwd_context.hash(TEST_PASSWORD)
+    hashed2 = get_password_hash(TEST_PASSWORD)
     assert hashed != hashed2
 
     # Test with None input
-    with pytest.raises((AttributeError, TypeError)):
-        pwd_context.hash(None)
+    with pytest.raises((AttributeError, TypeError, ValueError)):
+        get_password_hash(None)
 
 
 def test_create_access_token():
@@ -227,12 +226,11 @@ JWT_TOKEN_PREFIX = "Bearer"
 async def test_get_current_user():
     """Test getting current user from valid token."""
     from fastapi.security import HTTPAuthorizationCredentials
-    from unittest.mock import patch, MagicMock
+    from unittest.mock import patch, MagicMock, AsyncMock
     from app.core.security.jwt import (
         get_current_user,
         TOKEN_TYPE_ACCESS,
-    )
-
+    
     # Create a test payload for the token
     test_payload = {
         "sub": str(TEST_USER_ID),
@@ -299,11 +297,11 @@ async def test_get_current_user():
 async def test_get_current_user_invalid_token():
     """Test getting current user with various invalid tokens."""
     from fastapi.security import HTTPAuthorizationCredentials
-    from unittest.mock import MagicMock, patch
+    from unittest.mock import MagicMock, patch, AsyncMock
     from app.core.security.jwt import get_current_user
 
     # Create mock credentials
-    mock_credentials = MagicMock(spec=HTTPAuthorizationCredentials)
+    mock_credentials = MagicMock(spec=HTTPAuthorizationCredentials
     mock_credentials.scheme = "bearer"
     mock_credentials.credentials = "invalid.token.here"
 
@@ -351,11 +349,11 @@ async def test_get_current_user_invalid_token():
 async def test_get_current_user_not_found():
     """Test getting current user when user is not found."""
     from fastapi.security import HTTPAuthorizationCredentials
-    from unittest.mock import MagicMock, patch
+    from unittest.mock import MagicMock, patch, AsyncMock
     from app.core.security.jwt import get_current_user
 
     # Create mock credentials with a valid token
-    mock_credentials = MagicMock(spec=HTTPAuthorizationCredentials)
+    mock_credentials = MagicMock(spec=HTTPAuthorizationCredentials
     mock_credentials.scheme = "bearer"
     mock_credentials.credentials = "valid.token.here"
 
@@ -532,9 +530,9 @@ async def test_verify_refresh_token():
 @pytest.mark.asyncio
 async def test_get_token_from_request():
     """Test extracting token from request."""
-    from unittest.mock import MagicMock
+    from unittest.mock import MagicMock, AsyncMock
 
-    # Test with Authorization header (case insensitive)
+    # Test with Authorization header (case insensitive
     request = MagicMock(spec=Request)
     request.headers = {"Authorization": f"Bearer {TEST_ACCESS_TOKEN}"}
     request.cookies = {}

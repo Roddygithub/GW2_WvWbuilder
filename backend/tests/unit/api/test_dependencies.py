@@ -1,6 +1,7 @@
 """Unit tests for API dependencies."""
 
 import pytest
+import pytest_asyncio
 from unittest.mock import AsyncMock, patch
 from typing_extensions import AsyncGenerator
 from fastapi import FastAPI, HTTPException, status
@@ -26,7 +27,7 @@ async def redis_client():
     await client.close()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_test_database():
     """
     Crée la base de données de test une fois par session et la supprime à la fin.
@@ -45,7 +46,7 @@ async def setup_test_database():
     await engine.dispose()
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def async_session(setup_test_database) -> AsyncGenerator[AsyncSession, None]:
     """
     Fournit une session de base de données transactionnelle pour chaque test.
@@ -72,7 +73,7 @@ async def async_session(setup_test_database) -> AsyncGenerator[AsyncSession, Non
 
 
 # Fixture pour le client de test HTTP
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def app() -> FastAPI:
     """Create a FastAPI app for testing with overridden dependencies."""
     from app.main import create_application
@@ -83,7 +84,7 @@ async def app() -> FastAPI:
     yield _app
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def async_client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """Create an async test client for making HTTP requests."""
     async with AsyncClient(app=app, base_url="http://test") as client:

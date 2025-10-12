@@ -4,6 +4,7 @@ Tests for app/core/gw2/client.py to achieve 80%+ coverage.
 """
 
 import pytest
+import pytest_asyncio
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 import aiohttp

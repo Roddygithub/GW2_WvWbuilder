@@ -6,6 +6,7 @@ including both synchronous and asynchronous methods, error handling, and edge ca
 """
 
 import pytest
+import pytest_asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timezone
 from typing import List, Dict, Any

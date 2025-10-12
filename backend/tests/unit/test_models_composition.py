@@ -8,6 +8,7 @@ This module contains unit tests for the Composition model, including:
 """
 
 import pytest
+import pytest_asyncio
 import traceback
 import uuid
 import logging
@@ -45,7 +46,7 @@ TEST_COMPOSITION_DATA = {
 # Fixtures
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_user(db: AsyncSession):
     """Create a sample user for testing."""
     user = User(
@@ -62,7 +63,7 @@ async def sample_user(db: AsyncSession):
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_build(db: AsyncSession, sample_user: User):
     """Create a sample build for testing."""
     build = Build(
@@ -81,7 +82,7 @@ async def sample_build(db: AsyncSession, sample_user: User):
     return build
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_role(db: AsyncSession):
     """Create a sample role for testing."""
     role = Role(
@@ -96,7 +97,7 @@ async def sample_role(db: AsyncSession):
     return role
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_profession(db: AsyncSession):
     """Create a sample profession for testing."""
     prof = Profession(
@@ -112,7 +113,7 @@ async def sample_profession(db: AsyncSession):
     return prof
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_composition(db: AsyncSession, sample_user: User, sample_build: Build):
     """Create a sample composition for testing."""
     # Generate a unique name for the composition
@@ -134,7 +135,7 @@ async def sample_composition(db: AsyncSession, sample_user: User, sample_build: 
     return composition
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_composition_async(db: AsyncSession, sample_user: User, sample_build: Build):
     """Create a sample composition for async testing."""
     # Generate a unique name for the composition

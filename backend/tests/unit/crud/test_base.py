@@ -1,6 +1,7 @@
 """Tests for base CRUD operations."""
 
 import pytest
+import pytest_asyncio
 from typing import Optional
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, Boolean, select, delete
@@ -50,7 +51,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 async def db_engine():
     """Create database engine and tables."""
     # Create a fresh engine for testing with a unique in-memory database
@@ -79,7 +80,7 @@ def async_session_maker(db_engine):
     )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_session(async_session_maker):
     """Create a database session with automatic cleanup."""
     async with async_session_maker() as session:

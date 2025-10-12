@@ -3,6 +3,7 @@ Test database setup and table creation.
 """
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
@@ -36,7 +37,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 async def engine():
     """Create a test database engine and set up tables."""
     # Create engine with echo=True for debugging
@@ -64,7 +65,7 @@ async def engine():
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db(engine):
     """Create a new database session for testing."""
     # Create a new session for testing

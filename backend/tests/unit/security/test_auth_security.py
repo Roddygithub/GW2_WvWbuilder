@@ -1,6 +1,7 @@
 """Unit tests for authentication and security utilities."""
 
 import pytest
+import pytest_asyncio
 from datetime import datetime, timedelta
 from jose import jwt
 from fastapi import HTTPException, status

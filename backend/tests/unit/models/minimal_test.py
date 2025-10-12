@@ -5,6 +5,7 @@ Minimal test file to verify database setup.
 import asyncio
 import logging
 import pytest
+import pytest_asyncio
 from sqlalchemy import text, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
@@ -43,7 +44,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 async def setup_db():
     """Set up the database with all tables."""
     logger.info("Setting up test database...")

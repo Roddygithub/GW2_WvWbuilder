@@ -1,6 +1,7 @@
 """Tests for build CRUD operations."""
 
 import pytest
+import pytest_asyncio
 from datetime import datetime, timezone
 from unittest.mock import patch, MagicMock, AsyncMock
 from sqlalchemy.ext.asyncio import AsyncSession

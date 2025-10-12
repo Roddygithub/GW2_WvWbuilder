@@ -1,6 +1,7 @@
 """Integration tests for Team Members API endpoints."""
 
 import pytest
+import pytest_asyncio
 from fastapi import status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +18,7 @@ TEST_MEMBER_FULL_NAME = "Test Member"
 # Use the async_client fixture from conftest.py instead of redefining it
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_member_user(db: AsyncSession) -> User:
     """Create a test member user in the database."""
     from app.models import User
@@ -42,7 +43,7 @@ async def test_member_user(db: AsyncSession) -> User:
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_team(db: AsyncSession, test_user) -> Team:
     """Create a test team in the database."""
     from app.models import Team

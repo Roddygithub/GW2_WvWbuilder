@@ -1,6 +1,7 @@
 """Integration tests for EliteSpecialization and related models."""
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import status
@@ -16,7 +17,7 @@ from app.core.security import get_password_hash
 # Fixtures
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_profession(async_session: AsyncSession):
     """Create a test profession."""
     profession = Profession(
@@ -31,7 +32,7 @@ async def test_profession(async_session: AsyncSession):
     return profession
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_elite_specs(async_session: AsyncSession, test_profession):
     """Create test elite specializations."""
     specs = [
@@ -64,7 +65,7 @@ async def test_elite_specs(async_session: AsyncSession, test_profession):
     return specs
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(async_session: AsyncSession):
     """Create a test user."""
     # Create roles if they don't exist

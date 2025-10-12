@@ -1,6 +1,7 @@
 """Unit tests for the WebhookService."""
 
 import pytest
+import pytest_asyncio
 import hmac
 import hashlib
 import json

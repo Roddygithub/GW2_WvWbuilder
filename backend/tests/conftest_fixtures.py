@@ -10,6 +10,7 @@ import sys
 from typing import AsyncGenerator, Generator, Callable, Any
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import (
@@ -56,7 +57,7 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     loop.close()
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def init_test_db() -> None:
     """Initialize the test database with all tables."""
     # Création des tables
@@ -91,14 +92,14 @@ def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]]) -> F
     return app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """Create a test client for making HTTP requests."""
     async with AsyncClient(app=app, base_url="http://test") as client:
         yield client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_session(init_test_db) -> AsyncGenerator[AsyncSession, None]:
     """Create a clean database session for testing."""
     async with TestingSessionLocal() as session:
@@ -118,7 +119,7 @@ def test_password() -> str:
     return "securepassword"
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(db_session: AsyncSession, test_password: str) -> dict[str, Any]:
     """Create a test user."""
     from app.models.user import User

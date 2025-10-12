@@ -6,6 +6,7 @@ that are not covered in the main test file.
 """
 
 import pytest
+import pytest_asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession

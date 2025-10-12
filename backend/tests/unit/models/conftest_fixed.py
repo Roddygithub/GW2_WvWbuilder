@@ -9,6 +9,7 @@ import logging
 from typing import AsyncGenerator, Generator
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -37,7 +38,7 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     loop.close()
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def engine() -> AsyncEngine:
     """Create a test database engine."""
     # Create engine
@@ -76,7 +77,7 @@ def session_factory(engine):
     return async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
     """Create a new database session for testing."""
     # Create a new session
@@ -100,7 +101,7 @@ async def db(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def clean_db(db):
     """Clean all data from the database before each test."""
     # Clean up all data before each test

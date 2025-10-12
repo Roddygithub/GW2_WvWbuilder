@@ -3,6 +3,7 @@
 import os
 import sys
 import pytest
+import pytest_asyncio
 
 # Configure test environment before importing app
 os.environ["ENVIRONMENT"] = "test"

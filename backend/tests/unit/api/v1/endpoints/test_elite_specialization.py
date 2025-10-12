@@ -1,6 +1,7 @@
 """Tests for elite specialization endpoints."""
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Profession
@@ -12,7 +13,7 @@ def admin_token_headers(async_client: AsyncClient):
     return {"Authorization": "Bearer test_token:1"}  # admin user ID is 1
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_profession(async_session: AsyncSession):
     """Create a test profession for elite specialization tests."""
     profession = Profession(

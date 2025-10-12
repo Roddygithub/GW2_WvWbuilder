@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, AsyncMock
 
 from app.api.exception_handlers import (
     http_exception_handler,

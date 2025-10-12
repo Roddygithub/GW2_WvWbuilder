@@ -4,6 +4,7 @@ Tests for app/services/webhook_service.py to achieve 85%+ coverage.
 """
 
 import pytest
+import pytest_asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 

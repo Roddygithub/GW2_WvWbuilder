@@ -379,7 +379,7 @@ def override_get_db(init_test_db) -> Callable[..., AsyncGenerator[AsyncSession, 
     return _override_get_db
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_session(init_test_db) -> AsyncGenerator[AsyncSession, None]:
     """Create a clean database session for testing."""
     async with TestingSessionLocal() as session:
@@ -572,7 +572,7 @@ def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]]) -> F
     return app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """Create a test client for making HTTP requests."""
     async with AsyncClient(app=app, base_url="http://test") as client:
