@@ -721,3 +721,131 @@ async def tag_factory(db_session: AsyncSession):
         return tag
     
     return _create_tag
+
+
+@pytest_asyncio.fixture
+async def user_factory(db_session: AsyncSession):
+    """Factory fixture to create users for testing."""
+    async def _create_user(
+        username: str = None,
+        email: str = None,
+        password: str = "testpassword",
+        is_active: bool = True,
+        is_superuser: bool = False,
+    ):
+        unique_id = uuid.uuid4().hex[:8]
+        username = username or f"user_{unique_id}"
+        email = email or f"{username}@example.com"
+        
+        user = User(
+            username=username,
+            email=email,
+            hashed_password=get_password_hash(password),
+            is_active=is_active,
+            is_superuser=is_superuser,
+        )
+        db_session.add(user)
+        await db_session.commit()
+        await db_session.refresh(user)
+        return user
+    
+    return _create_user
+
+
+@pytest_asyncio.fixture
+async def role_factory(db_session: AsyncSession):
+    """Factory fixture to create roles for testing."""
+    from app.models.role import Role
+    
+    async def _create_role(name: str = None, description: str = None):
+        unique_id = uuid.uuid4().hex[:6]
+        role = Role(
+            name=name or f"Role_{unique_id}",
+            description=description or f"Description for {name or 'role'}",
+        )
+        db_session.add(role)
+        await db_session.commit()
+        await db_session.refresh(role)
+        return role
+    
+    return _create_role
+
+
+@pytest_asyncio.fixture
+async def profession_factory(db_session: AsyncSession):
+    """Factory fixture to create professions for testing."""
+    from app.models.profession import Profession
+    
+    async def _create_profession(name: str = None):
+        unique_id = uuid.uuid4().hex[:6]
+        profession = Profession(
+            name=name or f"Profession_{unique_id}",
+        )
+        db_session.add(profession)
+        await db_session.commit()
+        await db_session.refresh(profession)
+        return profession
+    
+    return _create_profession
+
+
+@pytest_asyncio.fixture
+async def build_factory(db_session: AsyncSession, user_factory):
+    """Factory fixture to create builds for testing."""
+    from app.models.build import Build
+    
+    async def _create_build(
+        name: str = None,
+        description: str = None,
+        creator_id: int = None,
+        is_public: bool = True,
+    ):
+        unique_id = uuid.uuid4().hex[:6]
+        
+        # Create a creator if not provided
+        if creator_id is None:
+            creator = await user_factory(username=f"creator_{unique_id}")
+            creator_id = creator.id
+        
+        build = Build(
+            name=name or f"Build_{unique_id}",
+            description=description or f"Description for {name or 'build'}",
+            creator_id=creator_id,
+            is_public=is_public,
+        )
+        db_session.add(build)
+        await db_session.commit()
+        await db_session.refresh(build)
+        return build
+    
+    return _create_build
+
+
+@pytest_asyncio.fixture
+async def webhook_factory(db_session: AsyncSession, user_factory):
+    """Factory fixture to create webhooks for testing."""
+    from app.models.webhook import Webhook
+    
+    async def _create_webhook(
+        url: str = None,
+        user_id: int = None,
+        is_active: bool = True,
+    ):
+        unique_id = uuid.uuid4().hex[:6]
+        
+        # Create a user if not provided
+        if user_id is None:
+            user = await user_factory(username=f"webhook_user_{unique_id}")
+            user_id = user.id
+        
+        webhook = Webhook(
+            url=url or f"https://example.com/webhook_{unique_id}",
+            user_id=user_id,
+            is_active=is_active,
+        )
+        db_session.add(webhook)
+        await db_session.commit()
+        await db_session.refresh(webhook)
+        return webhook
+    
+    return _create_webhook

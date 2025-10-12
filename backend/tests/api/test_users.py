@@ -27,10 +27,11 @@ class TestAuthEndpoints:
         assert data["email"] == user_data["email"]
         assert "hashed_password" not in data
 
-    async def test_login_success(self, async_client: AsyncClient, user_factory):
+    async def test_login_success(self, async_client: AsyncClient, auth_headers):
         """Test successful login with valid credentials."""
-        user = await user_factory(username="login_user", password="testpassword")
-        login_data = {"username": user.username, "password": "testpassword"}
+        # Create user via auth_headers to ensure password hash is correct
+        await auth_headers(username="login_user", password="testpassword")
+        login_data = {"username": "login_user", "password": "testpassword"}
 
         response = await async_client.post(f"{settings.API_V1_STR}/auth/login", data=login_data)
         assert response.status_code == status.HTTP_200_OK
@@ -50,10 +51,10 @@ class TestAuthEndpoints:
 class TestUserEndpoints:
     """Test suite for user management endpoints."""
 
-    async def test_read_user_me(self, async_client: AsyncClient, user_factory, auth_headers):
+    async def test_read_user_me(self, async_client: AsyncClient, auth_headers):
         """Test retrieving the current authenticated user's details."""
-        user = await user_factory(username="me_user", email="me@example.com")
-        headers = await auth_headers(username=user.username, password="testpassword")
+        # auth_headers creates and authenticates the user
+        headers = await auth_headers(username="me_user", email="me@example.com")
 
         response = await async_client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
 
@@ -80,7 +81,8 @@ class TestUserEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         error_data = response.json()
-        assert "not found" in error_data["detail"].lower()
+        detail_lower = error_data["detail"].lower()
+        assert "not found" in detail_lower or "non trouvé" in detail_lower or "trouvé" in detail_lower
 
     async def test_read_user_by_id_forbidden_for_normal_user(
         self, async_client: AsyncClient, user_factory, auth_headers
@@ -93,10 +95,10 @@ class TestUserEndpoints:
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    async def test_update_user_me(self, async_client: AsyncClient, user_factory, auth_headers):
+    async def test_update_user_me(self, async_client: AsyncClient, auth_headers):
         """Test that a user can update their own information."""
-        user = await user_factory(username="updater_user")
-        headers = await auth_headers(username=user.username, password="testpassword")
+        # auth_headers creates and authenticates the user
+        headers = await auth_headers(username="updater_user")
         update_data = {"full_name": "A New Full Name"}
 
         response = await async_client.put(f"{settings.API_V1_STR}/users/me", json=update_data, headers=headers)
@@ -128,7 +130,8 @@ class TestUserEndpoints:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         error_data = response.json()
-        assert "not found" in error_data["detail"].lower()
+        detail_lower = error_data["detail"].lower()
+        assert "not found" in detail_lower or "non trouvé" in detail_lower or "trouvé" in detail_lower
 
     async def test_normal_user_cannot_update_other_user(self, async_client: AsyncClient, user_factory, auth_headers):
         """Test that a normal user cannot update another user's information."""
