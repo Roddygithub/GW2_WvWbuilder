@@ -6,19 +6,10 @@ This module provides password hashing and verification functionality.
 
 import logging
 import hashlib
-
-from passlib.context import CryptContext
-from passlib.exc import UnknownHashError
+import bcrypt
 
 # Configure logging
 logger = logging.getLogger(__name__)
-
-# Create a password hashing context
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__rounds=12,  # Number of hashing rounds
-)
 
 
 def get_password_hash(password: str) -> str:
@@ -34,26 +25,18 @@ def get_password_hash(password: str) -> str:
     Returns:
         str: The hashed password
     """
-    try:
-        # Bcrypt has a 72-byte limit, so we pre-hash long passwords with SHA-256
+    # Bcrypt has a 72-byte limit, so we pre-hash long passwords with SHA-256
+    password_bytes = password.encode("utf-8")
+    if len(password_bytes) > 72:
+        logger.debug(f"Password exceeds 72 bytes ({len(password_bytes)} bytes), pre-hashing with SHA-256")
+        # Use SHA-256 to create a fixed-length hash that's always <72 bytes (64 hex chars)
+        password = hashlib.sha256(password_bytes).hexdigest()
         password_bytes = password.encode("utf-8")
-        if len(password_bytes) > 72:
-            logger.debug(f"Password exceeds 72 bytes ({len(password_bytes)} bytes), pre-hashing with SHA-256")
-            # Use SHA-256 to create a fixed-length hash that's always <72 bytes
-            password = hashlib.sha256(password_bytes).hexdigest()
-        return pwd_context.hash(password)
-    except ValueError as e:
-        # Handle bcrypt-specific errors
-        if "72 bytes" in str(e):
-            logger.warning(f"Bcrypt 72-byte limit hit, using SHA-256 pre-hash: {e}")
-            # Fallback: hash with SHA-256 first
-            password_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
-            return pwd_context.hash(password_hash)
-        logger.error(f"Error hashing password: {str(e)}")
-        raise ValueError("Failed to hash password")
-    except Exception as e:
-        logger.error(f"Unexpected error hashing password: {str(e)}")
-        raise ValueError("Failed to hash password")
+    
+    # Hash with bcrypt (12 rounds)
+    salt = bcrypt.gensalt(rounds=12)
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -70,20 +53,16 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         bool: True if the password matches, False otherwise
     """
     try:
-        # First try direct verification
-        if pwd_context.verify(plain_password, hashed_password):
-            return True
-
-        # If password is >72 bytes, try with SHA-256 pre-hash
-        if len(plain_password.encode("utf-8")) > 72:
-            logger.debug("Password exceeds 72 bytes, trying SHA-256 pre-hash")
-            prehashed = hashlib.sha256(plain_password.encode("utf-8")).hexdigest()
-            return pwd_context.verify(prehashed, hashed_password)
-
-        return False
-    except UnknownHashError:
-        logger.warning("Attempted to verify password with unknown hash")
-        return False
+        # If password is >72 bytes, use SHA-256 pre-hash (same as in get_password_hash)
+        password_bytes = plain_password.encode("utf-8")
+        if len(password_bytes) > 72:
+            logger.debug("Password exceeds 72 bytes, using SHA-256 pre-hash")
+            plain_password = hashlib.sha256(password_bytes).hexdigest()
+            password_bytes = plain_password.encode("utf-8")
+        
+        # Verify the password
+        hashed_bytes = hashed_password.encode("utf-8")
+        return bcrypt.checkpw(password_bytes, hashed_bytes)
     except Exception as e:
         logger.error(f"Error verifying password: {str(e)}")
         return False

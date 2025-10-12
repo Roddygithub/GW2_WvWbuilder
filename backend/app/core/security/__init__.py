@@ -28,7 +28,6 @@ from .jwt import (
     TOKEN_TYPE_RESET,
 )
 from .password_utils import (
-    pwd_context,
     get_password_hash,
     get_password_hash_sha256,
     verify_password,

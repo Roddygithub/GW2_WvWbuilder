@@ -5,22 +5,12 @@ This module provides secure password hashing and verification using bcrypt.
 """
 
 import logging
+import hashlib
 from typing import Optional
-
-from passlib.context import CryptContext
-from passlib.exc import UnknownHashError
+import bcrypt
 
 # Configure logging
 logger = logging.getLogger(__name__)
-
-# Configure password hashing context
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    # Additional security parameters
-    bcrypt__rounds=12,  # Number of hashing rounds (increased for better security)
-    bcrypt__ident="2b",  # Use the latest bcrypt version
-)
 
 
 def verify_password(plain_password: Optional[str], hashed_password: Optional[str]) -> bool:
@@ -42,12 +32,17 @@ def verify_password(plain_password: Optional[str], hashed_password: Optional[str
         return False
 
     try:
-        return pwd_context.verify(plain_password, hashed_password)
-    except (ValueError, TypeError, UnknownHashError) as e:
-        logger.warning(f"Password verification failed: {str(e)}")
-        return False
+        # Handle long passwords (>72 bytes) with SHA-256 pre-hash
+        password_bytes = plain_password.encode("utf-8")
+        if len(password_bytes) > 72:
+            logger.debug("Password exceeds 72 bytes, using SHA-256 pre-hash")
+            plain_password = hashlib.sha256(password_bytes).hexdigest()
+            password_bytes = plain_password.encode("utf-8")
+        
+        hashed_bytes = hashed_password.encode("utf-8")
+        return bcrypt.checkpw(password_bytes, hashed_bytes)
     except Exception as e:
-        logger.error(f"Unexpected error during password verification: {str(e)}", exc_info=True)
+        logger.error(f"Error verifying password: {str(e)}")
         return False
 
 
@@ -70,13 +65,20 @@ def get_password_hash(password: str) -> str:
         raise ValueError("Password cannot be empty")
 
     try:
-        return pwd_context.hash(password)
-    except (ValueError, TypeError) as e:
-        logger.error(f"Failed to hash password: {str(e)}")
-        raise ValueError("Invalid password format") from e
+        # Handle long passwords (>72 bytes) with SHA-256 pre-hash
+        password_bytes = password.encode("utf-8")
+        if len(password_bytes) > 72:
+            logger.debug(f"Password exceeds 72 bytes ({len(password_bytes)} bytes), pre-hashing with SHA-256")
+            password = hashlib.sha256(password_bytes).hexdigest()
+            password_bytes = password.encode("utf-8")
+        
+        # Hash with bcrypt (12 rounds)
+        salt = bcrypt.gensalt(rounds=12)
+        hashed = bcrypt.hashpw(password_bytes, salt)
+        return hashed.decode("utf-8")
     except Exception as e:
         logger.error(f"Unexpected error hashing password: {str(e)}", exc_info=True)
-        raise
+        raise ValueError("Failed to hash password") from e
 
 
 # Keep for backward compatibility
