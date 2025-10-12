@@ -227,6 +227,12 @@ async def db_session(event_loop) -> AsyncGenerator[AsyncSession, None]:
             logger.warning(f"DB cleanup failed: {e}")
 
 
+@pytest_asyncio.fixture
+async def db(db_session: AsyncSession) -> AsyncGenerator[AsyncSession, None]:
+    """Alias for db_session to support tests using 'db' parameter name."""
+    yield db_session
+
+
 @pytest.fixture
 def override_get_db(db_session: AsyncSession) -> Callable[..., AsyncGenerator[AsyncSession, None]]:
     """
