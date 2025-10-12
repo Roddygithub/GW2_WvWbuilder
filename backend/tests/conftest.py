@@ -50,37 +50,36 @@ from app.models.profession import Profession
 from app.models.build import Build  # Ajout de l'import manquant
 
 # Configuration de la base de données de test
+# Use a file-based SQLite DB to ensure all endpoints and fixtures see the same data
 test_db_dir = os.path.join(os.path.dirname(__file__), "test_db")
 os.makedirs(test_db_dir, exist_ok=True)
 db_path = os.path.join(test_db_dir, "test.db")
 
-# Nettoyage du fichier de base de données s'il existe
+# Clean up the test database file if it exists
 if os.path.exists(db_path):
     try:
         os.remove(db_path)
+        logger.info(f"Removed existing test database: {db_path}")
     except Exception as e:
-        print(f"Erreur lors de la suppression du fichier de base de données: {e}")
+        logger.warning(f"Could not remove test database: {e}")
 
-# Configuration du moteur de base de données de test
-from tests.test_config import test_settings
+# Use file-based SQLite for tests to ensure session sharing
+TEST_DATABASE_URL = f"sqlite+aiosqlite:///{db_path}?check_same_thread=False"
+os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+os.environ["ASYNC_SQLALCHEMY_DATABASE_URI"] = TEST_DATABASE_URL
 
-# Configuration de la base de données en mémoire pour les tests
-TEST_DATABASE_URL = test_settings.ASYNC_SQLALCHEMY_DATABASE_URI
+# Configuration du moteur de test avec file-based SQLite
+# Using NullPool to avoid connection pooling issues with file-based SQLite
+from sqlalchemy.pool import NullPool
 
-# Configuration du moteur de test avec StaticPool pour SQLite en mémoire
-# Note: StaticPool n'utilise pas de pool de connexions, donc les paramètres de pool ne sont pas nécessaires
 test_engine = create_async_engine(
     TEST_DATABASE_URL,
-    echo=test_settings.SQL_ECHO,
+    echo=False,
     future=True,
     connect_args={
         "check_same_thread": False,
-        "timeout": test_settings.POOL_TIMEOUT,
-        "uri": True,
-        "isolation_level": "IMMEDIATE",
     },
-    poolclass=StaticPool,
-    pool_pre_ping=True,
+    poolclass=NullPool,  # No connection pooling for file-based SQLite
 )
 
 
@@ -189,47 +188,35 @@ async def init_test_db() -> AsyncGenerator[None, None]:
 @pytest_asyncio.fixture(scope="function")
 async def db_session(event_loop) -> AsyncGenerator[AsyncSession, None]:
     """
-    Create a clean database session for testing with automatic rollback.
-
-    This fixture provides a new database session for each test function and ensures
-    that all changes are rolled back after the test completes.
+    Create a clean database session for testing.
+    
+    Uses file-based SQLite with commits (no rollback) to ensure data visibility
+    across fixtures and endpoints. Tables are truncated between tests.
     """
-    # Créer une nouvelle connexion
-    connection = await test_engine.connect()
-
-    # Démarrer une nouvelle transaction
-    transaction = await connection.begin()
-
     # Configurer la fabrique de sessions
     async_session_factory = async_sessionmaker(
-        bind=connection, expire_on_commit=False, autoflush=False, class_=AsyncSession
+        bind=test_engine, expire_on_commit=False, autoflush=False, class_=AsyncSession
     )
 
     # Créer une nouvelle session
     session = async_session_factory()
 
-    # Démarrer un point de sauvegarde imbriqué
-    await session.begin_nested()
-
-    # Configurer le point de sauvegarde pour les commits
-    @event.listens_for(session.sync_session, "after_transaction_end")
-    def restart_savepoint(session, transaction):
-        if transaction.nested and not transaction._parent.nested:
-            session.expire_all()
-            session.begin_nested()
-
     try:
         yield session
-
-        # Toujours effectuer un rollback à la fin du test
+        # Commit changes to make them visible to endpoints
+        await session.commit()
+    except Exception:
         await session.rollback()
+        raise
     finally:
-        # Fermer la session et la connexion
-        # Close the session and connection
         await session.close()
-        if transaction.is_active:
-            await transaction.rollback()
-        await connection.close()
+        
+        # Clean up: truncate all tables for next test
+        async with test_engine.begin() as conn:
+            from app.models import Base
+            for table in reversed(Base.metadata.sorted_tables):
+                await conn.execute(text(f"DELETE FROM {table.name}"))
+            await conn.commit()
 
 
 @pytest.fixture
@@ -244,6 +231,7 @@ def override_get_db(db_session: AsyncSession) -> Callable[..., AsyncGenerator[As
     async def _override_get_db() -> AsyncGenerator[AsyncSession, None]:
         # Yield the same session used by fixtures to ensure data visibility
         # Don't start a new nested transaction here to avoid isolation issues
+        print(f"[DEBUG] override_get_db called, yielding session: {db_session}")
         try:
             yield db_session
         except Exception:
@@ -528,6 +516,14 @@ def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]], over
     # CRITICAL: Ensure JWT keys match for token creation/validation
     settings.JWT_SECRET_KEY = "test-secret-key-for-jwt"
     settings.SECRET_KEY = "test-secret-key-for-jwt"
+    
+    # CRITICAL: Long-lived tokens for tests (1 hour instead of default)
+    settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 60
+    settings.ACCESS_TOKEN_EXPIRE_MINUTES = 60
+    
+    # CRITICAL: Force app to use the same test database file
+    settings.DATABASE_URL = TEST_DATABASE_URL
+    settings.ASYNC_SQLALCHEMY_DATABASE_URI = TEST_DATABASE_URL
 
     # Créer le répertoire static s'il n'existe pas
     static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../app/static"))
@@ -647,6 +643,8 @@ async def auth_headers(db_session: AsyncSession):
         is_superuser: bool = False,
         is_active: bool = True,
     ):
+        from datetime import timedelta
+        
         # Generate unique username/email if not provided
         unique_id = uuid.uuid4().hex[:8]
         username = username or f"user_{unique_id}"
@@ -665,7 +663,11 @@ async def auth_headers(db_session: AsyncSession):
         await db_session.refresh(user)
         
         # Create JWT token with user ID as subject (backend expects int ID in sub)
-        access_token = create_access_token(subject=str(user.id))
+        # Use long expiration for tests to avoid expiry during test execution
+        access_token = create_access_token(
+            subject=str(user.id),
+            expires_delta=timedelta(hours=1)  # 1 hour for tests
+        )
         return {"Authorization": f"Bearer {access_token}"}
     
     return _auth_headers
