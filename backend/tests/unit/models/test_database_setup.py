@@ -26,7 +26,7 @@ TABLES_ORDER = [
 ]
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def event_loop():
     """Create an instance of the default event loop for the test session."""
     import asyncio
@@ -78,16 +78,12 @@ async def test_tables_created(engine):
     """Test that all required tables were created."""
     async with engine.connect() as conn:
         # Get list of tables
-        result = await conn.execute(
-            text("SELECT name FROM sqlite_master WHERE type='table'")
-        )
+        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
         tables = {row[0] for row in result.fetchall()}
 
         # Check for required tables
         required_tables = set(TABLES_ORDER)
-        assert required_tables.issubset(
-            tables
-        ), f"Missing tables: {required_tables - tables}"
+        assert required_tables.issubset(tables), f"Missing tables: {required_tables - tables}"
 
 
 @pytest.mark.asyncio

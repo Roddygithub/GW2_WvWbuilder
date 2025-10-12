@@ -26,16 +26,12 @@ def mock_role():
 
 @pytest.fixture
 def mock_role_create():
-    return RoleCreate(
-        name="New Role", description="New Role Description", permission_level=1
-    )
+    return RoleCreate(name="New Role", description="New Role Description", permission_level=1)
 
 
 @pytest.fixture
 def mock_role_update():
-    return RoleUpdate(
-        name="Updated Role", description="Updated Description", permission_level=2
-    )
+    return RoleUpdate(name="Updated Role", description="Updated Description", permission_level=2)
 
 
 # Tests
@@ -81,9 +77,7 @@ class TestCRUDRole:
         db.execute.assert_called_once()
         args, _ = db.execute.call_args
         assert isinstance(
-            args[0].whereclause.compare(
-                select(RoleModel).where(RoleModel.name == "Test Role").whereclause
-            ),
+            args[0].whereclause.compare(select(RoleModel).where(RoleModel.name == "Test Role").whereclause),
             bool,
         )
 
@@ -91,9 +85,7 @@ class TestCRUDRole:
     async def test_get_roles_by_permission_level(self, mock_role):
         """Test retrieving roles by permission level"""
         db = AsyncMock(spec=AsyncSession)
-        mock_role2 = RoleModel(
-            id=2, name="Admin", permission_level=10, is_default=False
-        )
+        mock_role2 = RoleModel(id=2, name="Admin", permission_level=10, is_default=False)
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = [mock_role, mock_role2]
         db.execute.return_value = mock_result
@@ -113,9 +105,7 @@ class TestCRUDRole:
         mock_result.scalars.return_value.all.return_value = [mock_role]
         db.execute.return_value = mock_result
 
-        result = await role_crud.get_multi_by_permission_range_async(
-            db, min_level=0, max_level=5, skip=0, limit=10
-        )
+        result = await role_crud.get_multi_by_permission_range_async(db, min_level=0, max_level=5, skip=0, limit=10)
 
         assert len(result) == 1
         assert result[0].name == "Test Role"
@@ -126,9 +116,7 @@ class TestCRUDRole:
         """Test retrieving a role with its associated users"""
         db = AsyncMock(spec=AsyncSession)
         mock_result = MagicMock()
-        mock_result.unique.return_value.scalars.return_value.first.return_value = (
-            mock_role
-        )
+        mock_result.unique.return_value.scalars.return_value.first.return_value = mock_role
         db.execute.return_value = mock_result
 
         result = await role_crud.get_with_users_async(db, id=1)
@@ -137,9 +125,7 @@ class TestCRUDRole:
         db.execute.assert_called_once()
         args, _ = db.execute.call_args
         assert isinstance(
-            args[0].whereclause.compare(
-                select(RoleModel).where(RoleModel.id == 1).whereclause
-            ),
+            args[0].whereclause.compare(select(RoleModel).where(RoleModel.id == 1).whereclause),
             bool,
         )
         assert selectinload(RoleModel.users) in [opt for opt in args[0]._with_options]
@@ -192,9 +178,7 @@ class TestCRUDRole:
         db = AsyncMock(spec=AsyncSession)
         db.get.return_value = mock_role
 
-        result = await role_crud.update_async(
-            db, db_obj=mock_role, obj_in=mock_role_update
-        )
+        result = await role_crud.update_async(db, db_obj=mock_role, obj_in=mock_role_update)
 
         assert result.name == "Updated Role"
         assert result.description == "Updated Description"

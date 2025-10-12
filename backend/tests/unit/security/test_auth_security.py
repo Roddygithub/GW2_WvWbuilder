@@ -17,16 +17,23 @@ from app.core.config import settings
 
 # Test data
 TEST_PASSWORD = "testpassword123"
-TEST_HASH = get_password_hash(TEST_PASSWORD)
+# Defer hash generation to test time to avoid bcrypt issues at import
+TEST_HASH = None
 
 
-def test_verify_password():
+@pytest.fixture(scope="module")
+def test_hash():
+    """Generate test hash lazily."""
+    return get_password_hash(TEST_PASSWORD)
+
+
+def test_verify_password(test_hash):
     """Test password verification."""
     # Test correct password
-    assert verify_password(TEST_PASSWORD, TEST_HASH) is True
+    assert verify_password(TEST_PASSWORD, test_hash) is True
 
     # Test incorrect password
-    assert verify_password("wrongpassword", TEST_HASH) is False
+    assert verify_password("wrongpassword", test_hash) is False
 
 
 def test_password_hashing():
@@ -52,7 +59,7 @@ def test_create_access_token():
     token = create_access_token(data={"sub": str(user_id)}, expires_delta=expires_delta)
 
     # Verify token
-    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
 
     # Check claims
     assert payload["sub"] == str(user_id)

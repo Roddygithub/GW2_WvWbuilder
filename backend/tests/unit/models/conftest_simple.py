@@ -48,9 +48,7 @@ async def engine():
 
     # Log all tables for debugging
     async with engine.connect() as conn:
-        result = await conn.execute(
-            text("SELECT name FROM sqlite_master WHERE type='table'")
-        )
+        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
         tables = [row[0] for row in result.fetchall()]
         logger.info(f"Created tables: {tables}")
 
@@ -64,9 +62,7 @@ async def engine():
 async def db(engine) -> AsyncGenerator[AsyncSession, None]:
     """Create a new database session for testing."""
     # Create a new session
-    async_session = async_sessionmaker(
-        engine, expire_on_commit=False, class_=AsyncSession
-    )
+    async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
     # Create a new session for testing
     async with async_session() as session:

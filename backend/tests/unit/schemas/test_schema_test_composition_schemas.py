@@ -59,15 +59,11 @@ class TestCompositionMemberBase:
         """Test priority validation."""
         # Test priority below minimum
         with pytest.raises(ValidationError):
-            CompositionMemberBase(
-                user_id=1, role_id=1, profession_id=1, role_type="healer", priority=0
-            )
+            CompositionMemberBase(user_id=1, role_id=1, profession_id=1, role_type="healer", priority=0)
 
         # Test priority above maximum
         with pytest.raises(ValidationError):
-            CompositionMemberBase(
-                user_id=1, role_id=1, profession_id=1, role_type="healer", priority=4
-            )
+            CompositionMemberBase(user_id=1, role_id=1, profession_id=1, role_type="healer", priority=4)
 
 
 class TestCompositionBase:
@@ -103,9 +99,7 @@ class TestCompositionBase:
 
     def test_max_players_gte_min_players(self):
         """Test that max_players cannot be less than min_players."""
-        with pytest.raises(
-            ValueError, match="max_players must be greater than or equal to min_players"
-        ):
+        with pytest.raises(ValueError, match="max_players must be greater than or equal to min_players"):
             CompositionBase(
                 name="Test",
                 squad_size=10,
@@ -124,9 +118,7 @@ class TestCompositionCreate:
             "name": "Test Comp",
             "squad_size": 5,
             "game_mode": "wvw",
-            "members": [
-                {"user_id": 1, "role_id": 1, "profession_id": 1, "role_type": "healer"}
-            ],
+            "members": [{"user_id": 1, "role_id": 1, "profession_id": 1, "role_type": "healer"}],
             "created_by": 1,
         }
         comp = CompositionCreate(**data)
@@ -148,9 +140,7 @@ class TestCompositionUpdate:
         """Test updating composition members."""
         update = CompositionUpdate(
             name="Updated",
-            members=[
-                {"user_id": 2, "role_id": 2, "profession_id": 2, "role_type": "dps"}
-            ],
+            members=[{"user_id": 2, "role_id": 2, "profession_id": 2, "role_type": "dps"}],
         )
         assert update.name == "Updated"
         assert len(update.members) == 1
@@ -208,9 +198,7 @@ class TestCompositionOptimizationRequest:
             min_damage=0.7,
             min_cc=0.6,
             min_cleanses=5,
-            preferred_weapons=[
-                {"profession_id": 1, "weapon": "staff", "role_type": "healer"}
-            ],
+            preferred_weapons=[{"profession_id": 1, "weapon": "staff", "role_type": "healer"}],
             excluded_elite_specializations=[10, 15],
             optimization_goals=["boon_uptime", "healing", "damage"],
         )
@@ -226,9 +214,7 @@ class TestCompositionTagBase:
 
     def test_tag_creation(self):
         """Test tag creation."""
-        tag = CompositionTagBase(
-            name="zerg", description="Ideal for large scale battles"
-        )
+        tag = CompositionTagBase(name="zerg", description="Ideal for large scale battles")
         assert tag.name == "zerg"
         assert tag.description == "Ideal for large scale battles"
 

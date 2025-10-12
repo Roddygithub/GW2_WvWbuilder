@@ -25,8 +25,7 @@ def assert_response(
     """
     # Check status code
     assert response.status_code == status_code, (
-        f"Expected status code {status_code}, got {response.status_code}. "
-        f"Response: {response.text}"
+        f"Expected status code {status_code}, got {response.status_code}. " f"Response: {response.text}"
     )
 
     # Parse response JSON
@@ -47,9 +46,7 @@ def assert_response(
                 _assert_dict_contains(response_data["data"], data)
             elif isinstance(data, list):
                 assert "data" in response_data, "Response missing 'data' field"
-                assert isinstance(
-                    response_data["data"], list
-                ), "Expected data to be a list"
+                assert isinstance(response_data["data"], list), "Expected data to be a list"
                 assert len(response_data["data"]) == len(data), "Data length mismatch"
                 for i, item in enumerate(data):
                     if isinstance(item, dict):
@@ -82,9 +79,7 @@ def _assert_dict_contains(actual: Dict, expected: Dict) -> None:
             assert actual[key] == value, f"Value mismatch for {key}"
 
 
-def assert_pagination(
-    response_data: Dict, total: int, page: int, size: int, total_pages: int
-) -> None:
+def assert_pagination(response_data: Dict, total: int, page: int, size: int, total_pages: int) -> None:
     """Assert that pagination metadata is correct.
 
     Args:
@@ -129,11 +124,7 @@ def assert_validation_error(
     errors = response_data["detail"]
     assert isinstance(errors, list), "Expected 'detail' to be a list"
 
-    field_errors = [
-        e
-        for e in errors
-        if isinstance(e, dict) and e.get("loc") and e["loc"][-1] == field
-    ]
+    field_errors = [e for e in errors if isinstance(e, dict) and e.get("loc") and e["loc"][-1] == field]
 
     assert len(field_errors) > 0, f"No validation error found for field '{field}'"
 

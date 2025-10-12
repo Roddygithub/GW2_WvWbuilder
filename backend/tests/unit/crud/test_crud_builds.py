@@ -65,9 +65,7 @@ class TestCRUDBuild:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_create_with_owner_success(
-        self, db_session: Session, build_data, mock_professions
-    ):
+    async def test_create_with_owner_success(self, db_session: Session, build_data, mock_professions):
         """Test creating a build with owner and profession associations (synchronous)."""
         # Mock the database session and query
         mock_db = MagicMock(spec=Session)
@@ -94,9 +92,7 @@ class TestCRUDBuild:
         # Mock the build creation to return our mock build
         with patch("app.crud.build.Build", return_value=mock_build) as mock_build_cls:
             # Create the build
-            result = build.create_with_owner(
-                db=mock_db, obj_in=BuildCreate(**build_data), owner_id=TEST_USER_ID
-            )
+            result = build.create_with_owner(db=mock_db, obj_in=BuildCreate(**build_data), owner_id=TEST_USER_ID)
 
         # Verify the result
         assert result is not None
@@ -121,9 +117,7 @@ class TestCRUDBuild:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_create_with_owner_invalid_profession(
-        self, db_session: Session, build_data
-    ):
+    async def test_create_with_owner_invalid_profession(self, db_session: Session, build_data):
         """Test creating a build with invalid profession IDs."""
         # Mock the database to return no professions
         mock_db = MagicMock(spec=Session)
@@ -135,12 +129,10 @@ class TestCRUDBuild:
         build_data["profession_ids"] = [999, 1000]  # Non-existent profession IDs
 
         # Mock the build creation to return a mock build
-        with patch("app.crud.build.Build", return_value=MagicMock()) as mock_build_cls:
+        with patch("app.crud.build.Build", return_value=MagicMock()):
             # The error should be raised during the create_with_owner call
             with pytest.raises(ValueError) as exc_info:
-                build.create_with_owner(
-                    db=mock_db, obj_in=BuildCreate(**build_data), owner_id=TEST_USER_ID
-                )
+                build.create_with_owner(db=mock_db, obj_in=BuildCreate(**build_data), owner_id=TEST_USER_ID)
 
             # Verify the error message
             assert "The following profession IDs do not exist" in str(exc_info.value)
@@ -153,9 +145,7 @@ class TestCRUDBuild:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_create_with_owner_db_error(
-        self, db_session: Session, build_data, mock_professions
-    ):
+    async def test_create_with_owner_db_error(self, db_session: Session, build_data, mock_professions):
         """Test handling of database errors during build creation."""
         # Mock the database to return test professions but raise an exception on commit
         mock_db = MagicMock(spec=Session)
@@ -174,9 +164,7 @@ class TestCRUDBuild:
 
             # Test that the exception is propagated
             with pytest.raises(ValueError) as exc_info:
-                build.create_with_owner(
-                    db=mock_db, obj_in=BuildCreate(**build_data), owner_id=TEST_USER_ID
-                )
+                build.create_with_owner(db=mock_db, obj_in=BuildCreate(**build_data), owner_id=TEST_USER_ID)
 
             # Verify the error message
             assert "Failed to create build" in str(exc_info.value)
@@ -196,9 +184,7 @@ class TestCRUDBuild:
         mock_db.scalars.return_value.all.return_value = [mock_build]
 
         # Get builds by owner
-        result = build.get_multi_by_owner(
-            db=mock_db, owner_id=TEST_USER_ID, skip=0, limit=10
-        )
+        result = build.get_multi_by_owner(db=mock_db, owner_id=TEST_USER_ID, skip=0, limit=10)
 
         # Verify the result
         assert len(result) == 1
@@ -214,9 +200,7 @@ class TestCRUDBuild:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_update_with_professions_success(
-        self, db_session: Session, mock_build, mock_professions
-    ):
+    async def test_update_with_professions_success(self, db_session: Session, mock_build, mock_professions):
         """Test updating a build with new professions."""
         # Create a mock async session
         mock_async_db = AsyncMock(spec=AsyncSession)
@@ -240,9 +224,7 @@ class TestCRUDBuild:
             elif "select professions" in stmt_str:
                 # Mock select of professions
                 mock_scalars = MagicMock()
-                mock_scalars.all.return_value = [
-                    p for p in mock_professions if p.id in update_data["profession_ids"]
-                ]
+                mock_scalars.all.return_value = [p for p in mock_professions if p.id in update_data["profession_ids"]]
                 mock_result.scalars.return_value = mock_scalars
                 return mock_result
             elif "insert into build_professions" in stmt_str:
@@ -264,9 +246,7 @@ class TestCRUDBuild:
         async def base_update_mock(self, db, db_obj, obj_in):
             # Update the build with the input data
             for field, value in obj_in.items():
-                if (
-                    field != "profession_ids"
-                ):  # Skip profession_ids as it's handled separately
+                if field != "profession_ids":  # Skip profession_ids as it's handled separately
                     setattr(db_obj, field, value)
             return db_obj
 

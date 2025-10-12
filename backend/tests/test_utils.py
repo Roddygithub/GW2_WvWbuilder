@@ -7,7 +7,9 @@ from app.core.security import (
     get_password_hash,
     verify_password,
     create_access_token,
-    verify_token,
+    decode_token,
+    JWTExpiredSignatureError,
+    JWTInvalidTokenError,
 )
 
 pytestmark = pytest.mark.asyncio
@@ -40,9 +42,10 @@ async def test_jwt_token_creation():
     assert isinstance(token, str)
 
     # Verify the token
-    payload = verify_token(token)
+    payload = decode_token(token)
     assert payload is not None
     assert payload["sub"] == str(user_id)
+    assert payload["type"] == "access"
 
     # Check expiration is set correctly
     assert "exp" in payload
@@ -57,9 +60,9 @@ async def test_jwt_token_expiration():
 
     token = create_access_token(token_data, expires_delta=expires_delta)
 
-    # Should not verify as it's expired
-    payload = verify_token(token)
-    assert payload is None
+    # Should raise JWTExpiredSignatureError as it's expired
+    with pytest.raises(JWTExpiredSignatureError):
+        decode_token(token)
 
 
 def test_password_strength():
@@ -79,26 +82,25 @@ def test_password_strength():
     assert verify_password(strong_password, hashed) is True
 
 
-def test_token_invalid_signature():
+async def test_token_invalid_signature():
     """Test that tokens with invalid signatures are rejected."""
     # Create a valid token
     token = create_access_token({"sub": "1"})
 
-    # Tamper with the token
+    # Tamper with the token (change a character in the signature)
     parts = token.split(".")
-    if len(parts) == 3:  # Header.Payload.Signature
-        tampered = f"{parts[0]}.{parts[1]}.tampered_signature"
+    tampered_token = f"{parts[0]}.{parts[1]}.X{parts[2][1:]}"
 
-        # Should be rejected
-        assert verify_token(tampered) is None
+    # Should raise JWTInvalidTokenError with invalid signature
+    with pytest.raises(JWTInvalidTokenError):
+        decode_token(tampered_token)
 
 
-def test_token_missing_subject():
+async def test_token_missing_subject():
     """Test that tokens without a subject are rejected."""
-    # Create token without 'sub' claim
-    token = create_access_token({})
-    assert verify_token(token) is None
+    # Create a token without a subject
+    token = create_access_token({})  # No 'sub' claim
 
-    # Create token with empty subject
-    token = create_access_token({"sub": ""})
-    assert verify_token(token) is None
+    # Should raise JWTInvalidTokenError without subject
+    with pytest.raises(JWTInvalidTokenError):
+        decode_token(token)

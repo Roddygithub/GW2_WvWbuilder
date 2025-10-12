@@ -50,9 +50,13 @@ class TestBuildsPerformance:
         )
         duration = time.time() - start_time
 
-        assert response.status_code == status.HTTP_201_CREATED, f"Expected 201, got {response.status_code}: {response.text}"
+        assert (
+            response.status_code == status.HTTP_201_CREATED
+        ), f"Expected 201, got {response.status_code}: {response.text}"
         # S'assurer que la création est rapide
-        assert duration < performance_limits["create_build"], f"La création du build a pris trop de temps : {duration:.4f}s (limite: {performance_limits['create_build']:.4f}s)"
+        assert (
+            duration < performance_limits["create_build"]
+        ), f"La création du build a pris trop de temps : {duration:.4f}s (limite: {performance_limits['create_build']:.4f}s)"
         print(f"\nTemps de création du build : {duration:.4f}s")
 
     async def test_get_build_performance(
@@ -63,13 +67,13 @@ class TestBuildsPerformance:
         build = await build_factory(is_public=True)
 
         start_time = time.time()
-        response = await async_client.get(
-            f"{settings.API_V1_STR}/builds/{build.id}", headers=headers
-        )
+        response = await async_client.get(f"{settings.API_V1_STR}/builds/{build.id}", headers=headers)
         duration = time.time() - start_time
 
         assert response.status_code == status.HTTP_200_OK, f"Expected 200, got {response.status_code}: {response.text}"
-        assert duration < performance_limits["get_build"], f"La récupération du build a pris trop de temps : {duration:.4f}s (limite: {performance_limits['get_build']:.4f}s)"
+        assert (
+            duration < performance_limits["get_build"]
+        ), f"La récupération du build a pris trop de temps : {duration:.4f}s (limite: {performance_limits['get_build']:.4f}s)"
         print(f"\nTemps de récupération du build : {duration:.4f}s")
 
     async def test_update_build_performance(
@@ -96,7 +100,9 @@ class TestBuildsPerformance:
         duration = time.time() - start_time
 
         assert response.status_code == status.HTTP_200_OK, f"Expected 200, got {response.status_code}: {response.text}"
-        assert duration < performance_limits["update_build"], f"La mise à jour du build a pris trop de temps : {duration:.4f}s (limite: {performance_limits['update_build']:.4f}s)"
+        assert (
+            duration < performance_limits["update_build"]
+        ), f"La mise à jour du build a pris trop de temps : {duration:.4f}s (limite: {performance_limits['update_build']:.4f}s)"
         print(f"\nTemps de mise à jour du build : {duration:.4f}s")
 
     async def test_multiple_builds_creation_performance(
@@ -112,9 +118,7 @@ class TestBuildsPerformance:
                 "game_mode": "wvw",
                 "profession_ids": [profession.id],
             }
-            return await async_client.post(
-                f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers
-            )
+            return await async_client.post(f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers)
 
         # Création de 10 builds en parallèle
         start_time = time.time()
@@ -122,9 +126,13 @@ class TestBuildsPerformance:
         responses = await asyncio.gather(*tasks)
         duration = time.time() - start_time
 
-        assert all(r.status_code == status.HTTP_201_CREATED for r in responses), f"Not all builds created successfully. Responses: {[r.status_code for r in responses]}"
+        assert all(
+            r.status_code == status.HTTP_201_CREATED for r in responses
+        ), f"Not all builds created successfully. Responses: {[r.status_code for r in responses]}"
         # Vérifier le seuil de performance
-        assert duration < performance_limits["create_10_builds"], f"La création de 10 builds a pris trop de temps : {duration:.4f}s (limite: {performance_limits['create_10_builds']:.4f}s)"
+        assert (
+            duration < performance_limits["create_10_builds"]
+        ), f"La création de 10 builds a pris trop de temps : {duration:.4f}s (limite: {performance_limits['create_10_builds']:.4f}s)"
         print(f"\nTemps de création de 10 builds en parallèle : {duration:.4f}s")
 
     async def test_large_payload_build_creation(
@@ -143,13 +151,15 @@ class TestBuildsPerformance:
         }
 
         start_time = time.time()
-        response = await async_client.post(
-            f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers
-        )
+        response = await async_client.post(f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers)
         duration = time.time() - start_time
 
-        assert response.status_code == status.HTTP_201_CREATED, f"Expected 201, got {response.status_code}: {response.text}"
-        assert duration < performance_limits["large_payload"], f"La création d'un build avec payload volumineux a pris trop de temps : {duration:.4f}s (limite: {performance_limits['large_payload']:.4f}s)"
+        assert (
+            response.status_code == status.HTTP_201_CREATED
+        ), f"Expected 201, got {response.status_code}: {response.text}"
+        assert (
+            duration < performance_limits["large_payload"]
+        ), f"La création d'un build avec payload volumineux a pris trop de temps : {duration:.4f}s (limite: {performance_limits['large_payload']:.4f}s)"
         print(f"\nTemps de création (payload volumineux) : {duration:.4f}s")
 
     async def test_memory_usage_on_listing(
@@ -161,7 +171,7 @@ class TestBuildsPerformance:
         headers = await auth_headers(username=user.username)
 
         # Créer 100 builds pour cet utilisateur
-        builds = [await build_factory(user=user, is_public=False) for _ in range(100)]
+        [await build_factory(user=user, is_public=False) for _ in range(100)]
 
         start_time = time.time()
         initial_memory = process.memory_info().rss / 1024 / 1024  # en Mo
@@ -170,35 +180,38 @@ class TestBuildsPerformance:
         duration = time.time() - start_time
 
         assert response.status_code == status.HTTP_200_OK, f"Expected 200, got {response.status_code}: {response.text}"
-        
+
         memory_increase = final_memory - initial_memory
-        assert memory_increase < performance_limits["memory_increase_mb"], f"L'augmentation de la mémoire est trop élevée : {memory_increase:.2f} Mo (limite: {performance_limits['memory_increase_mb']:.2f} Mo)"
-        assert duration < performance_limits["list_builds"], f"La récupération de la liste de builds a pris trop de temps : {duration:.4f}s (limite: {performance_limits['list_builds']:.4f}s)"
-        
+        assert (
+            memory_increase < performance_limits["memory_increase_mb"]
+        ), f"L'augmentation de la mémoire est trop élevée : {memory_increase:.2f} Mo (limite: {performance_limits['memory_increase_mb']:.2f} Mo)"
+        assert (
+            duration < performance_limits["list_builds"]
+        ), f"La récupération de la liste de builds a pris trop de temps : {duration:.4f}s (limite: {performance_limits['list_builds']:.4f}s)"
+
         print(f"\nAugmentation mémoire pour lister 100 builds : {memory_increase:.2f} Mo")
         print(f"Temps de récupération de 100 builds : {duration:.4f}s")
 
     def _analyze_failures(self, responses):
         """Analyse les échecs et retourne un message détaillé."""
-        failures = [r for r in responses if not (hasattr(r, 'status_code') and r.status_code == status.HTTP_201_CREATED)]
+        failures = [
+            r for r in responses if not (hasattr(r, "status_code") and r.status_code == status.HTTP_201_CREATED)
+        ]
         if not failures:
             return "Aucun échec"
-        
+
         error_counts = {}
         for r in failures:
             error_msg = str(r) if isinstance(r, Exception) else r.json().get("detail", str(r.status_code))
-            error_msg_str = str(error_msg) # Assurer que la clé est une chaîne
+            error_msg_str = str(error_msg)  # Assurer que la clé est une chaîne
             error_counts[error_msg_str] = error_counts.get(error_msg_str, 0) + 1
-        
+
         return "\n".join(f"- {count}x: {error}" for error, count in error_counts.items())
 
     def _monitor_resources(self):
         """Surveille l'utilisation des ressources CPU et mémoire."""
         process = psutil.Process(os.getpid())
-        return {
-            "cpu_percent": process.cpu_percent(interval=0.1),
-            "memory_mb": process.memory_info().rss / 1024 / 1024
-        }
+        return {"cpu_percent": process.cpu_percent(interval=0.1), "memory_mb": process.memory_info().rss / 1024 / 1024}
 
     def _check_resource_usage(self, start_metrics, end_metrics, limits):
         """Vérifie l'utilisation des ressources par rapport aux limites."""
@@ -206,8 +219,10 @@ class TestBuildsPerformance:
         cpu_usage = end_metrics["cpu_percent"]
 
         if memory_increase > limits["max_memory_increase_mb"]:
-            raise AssertionError(f"Trop de mémoire utilisée : {memory_increase:.2f} Mo (limite: {limits['max_memory_increase_mb']:.2f} Mo)")
-        
+            raise AssertionError(
+                f"Trop de mémoire utilisée : {memory_increase:.2f} Mo (limite: {limits['max_memory_increase_mb']:.2f} Mo)"
+            )
+
         if cpu_usage > limits["max_cpu_percent"]:
             raise AssertionError(f"CPU trop sollicité : {cpu_usage:.1f}% (limite: {limits['max_cpu_percent']:.1f}%)")
 
@@ -218,59 +233,65 @@ class TestBuildsPerformance:
         """Teste la création de builds sous charge (100 requêtes en parallèle)."""
         headers = await auth_headers()
         prof = await profession_factory(name="LoadTestProf")
-        
+
         async def create_build_task(i):
-            data = {
-                "name": f"Load Test Build {i}",
-                "game_mode": "pve",
-                "profession_ids": [prof.id]
-            }
+            data = {"name": f"Load Test Build {i}", "game_mode": "pve", "profession_ids": [prof.id]}
             try:
                 timeout = performance_limits["timeouts"]["medium"]
-                response = await async_client.post(f"{settings.API_V1_STR}/builds/", json=data, headers=headers, timeout=timeout)
+                response = await async_client.post(
+                    f"{settings.API_V1_STR}/builds/", json=data, headers=headers, timeout=timeout
+                )
                 return response
             except Exception as e:
-                return e # Retourner l'exception pour l'analyse
-        
+                return e  # Retourner l'exception pour l'analyse
+
         # Exécuter 100 requêtes en parallèle
         num_requests = 100
-        
+
         start_resources = self._monitor_resources()
         start = time.time()
         tasks = [create_build_task(i) for i in range(num_requests)]
         responses = await asyncio.gather(*tasks, return_exceptions=True)
         duration = time.time() - start
-        
-        success_count = sum(1 for r in responses if hasattr(r, 'status_code') and r.status_code == status.HTTP_201_CREATED)
+
+        success_count = sum(
+            1 for r in responses if hasattr(r, "status_code") and r.status_code == status.HTTP_201_CREATED
+        )
         success_rate = success_count / num_requests
-        
+
         end_resources = self._monitor_resources()
         failures_analysis = self._analyze_failures(responses)
-        
-        print(f"\n--- Test de Montée en Charge (Création de Builds) ---")
+
+        print("\n--- Test de Montée en Charge (Création de Builds) ---")
         print(f"Taux de réussite : {success_count}/{num_requests} ({success_rate:.2%}) en {duration:.4f}s")
         print(f"Utilisation CPU (approximative) : {end_resources['cpu_percent']:.1f}%")
-        mem_increase = end_resources['memory_mb'] - start_resources['memory_mb']
+        mem_increase = end_resources["memory_mb"] - start_resources["memory_mb"]
         print(f"Augmentation mémoire : {mem_increase:.2f} Mo")
 
         print(f"Analyse des échecs :\n{failures_analysis}")
-        
-        response_times = [r.elapsed.total_seconds() for r in responses if hasattr(r, 'elapsed')]
+
+        response_times = [r.elapsed.total_seconds() for r in responses if hasattr(r, "elapsed")]
         if response_times:
             print(f"Temps de réponse (moyenne) : {mean(response_times):.4f}s")
             print(f"Temps de réponse (max) : {max(response_times):.4f}s")
             print(f"Écart-type : {stdev(response_times):.4f}s" if len(response_times) > 1 else "Écart-type : N/A")
-        
+
         # Vérifier les seuils de ressources
         self._check_resource_usage(start_resources, end_resources, performance_limits)
 
-        assert success_rate >= performance_limits["load_test_success_rate"], f"Taux de réussite trop faible: {success_rate:.2%} (attendu: {performance_limits['load_test_success_rate']:.2%})"
-        assert duration < performance_limits["load_test_duration"], f"Le test de charge a pris trop de temps : {duration:.4f}s (limite: {performance_limits['load_test_duration']:.4f}s)"
+        assert (
+            success_rate >= performance_limits["load_test_success_rate"]
+        ), f"Taux de réussite trop faible: {success_rate:.2%} (attendu: {performance_limits['load_test_success_rate']:.2%})"
+        assert (
+            duration < performance_limits["load_test_duration"]
+        ), f"Le test de charge a pris trop de temps : {duration:.4f}s (limite: {performance_limits['load_test_duration']:.4f}s)"
 
     @pytest.mark.load_test
-    async def test_user_journey_under_load(self, async_client: AsyncClient, auth_headers, profession_factory, performance_limits):
+    async def test_user_journey_under_load(
+        self, async_client: AsyncClient, auth_headers, profession_factory, performance_limits
+    ):
         """Teste un parcours utilisateur complet (CRUD) sous une charge modérée."""
-        
+
         async def user_journey_task(i: int):
             try:
                 # Chaque tâche utilise un utilisateur différent pour simuler des sessions parallèles
@@ -279,7 +300,9 @@ class TestBuildsPerformance:
 
                 # 1. Création
                 create_data = {"name": f"Journey Build {i}", "game_mode": "wvw", "profession_ids": [profession.id]}
-                create_res = await async_client.post(f"{settings.API_V1_STR}/builds/", json=create_data, headers=headers)
+                create_res = await async_client.post(
+                    f"{settings.API_V1_STR}/builds/", json=create_data, headers=headers
+                )
                 if create_res.status_code != status.HTTP_201_CREATED:
                     return create_res
 
@@ -292,7 +315,9 @@ class TestBuildsPerformance:
 
                 # 3. Mise à jour
                 update_data = {"description": "Updated during journey test"}
-                update_res = await async_client.put(f"{settings.API_V1_STR}/builds/{build_id}", json=update_data, headers=headers)
+                update_res = await async_client.put(
+                    f"{settings.API_V1_STR}/builds/{build_id}", json=update_data, headers=headers
+                )
                 if update_res.status_code != status.HTTP_200_OK:
                     return update_res
 
@@ -308,10 +333,10 @@ class TestBuildsPerformance:
         responses = await asyncio.gather(*tasks, return_exceptions=True)
         duration = time.time() - start_time
 
-        success_count = sum(1 for r in responses if hasattr(r, 'status_code') and r.status_code == status.HTTP_200_OK)
-        response_times = [r.elapsed.total_seconds() for r in responses if hasattr(r, 'elapsed')]
-        
-        print(f"\n--- Test de Parcours Utilisateur ---")
+        success_count = sum(1 for r in responses if hasattr(r, "status_code") and r.status_code == status.HTTP_200_OK)
+        response_times = [r.elapsed.total_seconds() for r in responses if hasattr(r, "elapsed")]
+
+        print("\n--- Test de Parcours Utilisateur ---")
         print(f"Taux de réussite : {success_count}/{len(tasks)} en {duration:.2f}s")
         if response_times:
             avg_response_time = mean(response_times)
@@ -319,7 +344,9 @@ class TestBuildsPerformance:
             # Add an assertion for average response time
             assert avg_response_time < 1.0, f"Le temps de réponse moyen ({avg_response_time:.4f}s) est trop élevé."
 
-        assert (success_count / len(tasks)) >= 0.9, f"Le taux de réussite du parcours utilisateur est trop faible: {success_count}/{len(tasks)}"
+        assert (
+            success_count / len(tasks)
+        ) >= 0.9, f"Le taux de réussite du parcours utilisateur est trop faible: {success_count}/{len(tasks)}"
 
     @pytest.mark.security
     async def test_rate_limiting_on_build_creation(self, async_client: AsyncClient, auth_headers, profession_factory):

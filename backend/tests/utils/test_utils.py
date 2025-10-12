@@ -9,9 +9,7 @@ from sqlalchemy.future import select
 T = TypeVar("T")
 
 
-def create_mock_result(
-    return_value: Any, is_list: bool = False, scalar: bool = False
-) -> MagicMock:
+def create_mock_result(return_value: Any, is_list: bool = False, scalar: bool = False) -> MagicMock:
     """Create a mock SQLAlchemy result object.
 
     Args:
@@ -52,9 +50,7 @@ async def create_test_instance(session: AsyncSession, model: Type[T], **data: An
     return instance
 
 
-async def get_test_instance(
-    session: AsyncSession, model: Type[T], **filters: Any
-) -> Optional[T]:
+async def get_test_instance(session: AsyncSession, model: Type[T], **filters: Any) -> Optional[T]:
     """Get a test instance by filters.
 
     Args:
@@ -70,9 +66,7 @@ async def get_test_instance(
     return result.scalars().first()
 
 
-def assert_dict_contains_subset(
-    actual: Dict[str, Any], expected: Dict[str, Any], path: str = ""
-) -> None:
+def assert_dict_contains_subset(actual: Dict[str, Any], expected: Dict[str, Any], path: str = "") -> None:
     """Assert that a dictionary contains a subset of key-value pairs.
 
     Args:
@@ -96,8 +90,7 @@ def assert_dict_contains_subset(
             assert_dict_contains_subset(actual_value, expected_value, full_path)
         else:
             assert actual_value == expected_value, (
-                f"Value mismatch for '{full_path}': "
-                f"expected {expected_value!r}, got {actual_value!r}"
+                f"Value mismatch for '{full_path}': " f"expected {expected_value!r}, got {actual_value!r}"
             )
 
 

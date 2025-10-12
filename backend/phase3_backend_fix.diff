@@ -1,0 +1,166 @@
+diff --git a/app/api/deps.py b/app/api/deps.py
+index 647a03f..8e9c5f2 100644
+--- a/app/api/deps.py
++++ b/app/api/deps.py
+@@ -13,7 +13,7 @@ from app.core.config import settings
+ from app.db.session import get_async_db as get_db_session
+ from app import crud, models
+ from app.models.team import Team
+-from app.models.association_tables import team_members
++from app.models.team_member import TeamMember
+ from app.services.webhook_service import WebhookService
+ from app.core.exceptions import (
+     CredentialsException,
+@@ -173,10 +173,10 @@ async def get_team_and_check_access(
+     # Vérifier si l'utilisateur est administrateur de l'équipe
+     is_admin = False
+     if not is_owner:
+-        stmt = select(team_members).where(
+-            (team_members.c.team_id == team_id)
+-            & (team_members.c.user_id == current_user.id)
+-            & (team_members.c.is_admin == True)  # noqa: E712
++        stmt = select(TeamMember).where(
++            (TeamMember.team_id == team_id)
++            & (TeamMember.user_id == current_user.id)
++            & (TeamMember.is_admin == True)  # noqa: E712
+         )
+         result = await db.execute(stmt)
+         is_admin = bool(result.first())
+
+diff --git a/app/db/session.py b/app/db/session.py
+index 3f5e1a2..8e9c5f2 100644
+--- a/app/db/session.py
++++ b/app/db/session.py
+@@ -7,6 +7,7 @@ et l'initialisation de la base de données avec SQLAlchemy 2.0.
+ 
+ from __future__ import annotations
+ 
++import logging
+ from typing import Generator, AsyncGenerator
+ 
+ from sqlalchemy.orm import sessionmaker, Session
+@@ -49,6 +50,9 @@ except ImportError:
+ # Import de la classe de base des modèles
+ from app.models.base import Base
+ 
++# Configure logging
++logger = logging.getLogger(__name__)
++
+ 
+ def init_db() -> None:
+     """
+
+diff --git a/app/core/db_monitor.py b/app/core/db_monitor.py
+index 3f5e1a2..8e9c5f2 100644
+--- a/app/core/db_monitor.py
++++ b/app/core/db_monitor.py
+@@ -8,6 +8,7 @@ from typing import Dict, Any, List
+ from datetime import datetime, timedelta
+ 
+ from sqlalchemy.ext.asyncio import AsyncEngine
++from sqlalchemy import text
+ 
+ from app.core.config import settings
+ 
+
+diff --git a/app/api/api_v1/endpoints/builds.py b/app/api/api_v1/endpoints/builds.py
+index 3f5e1a2..8e9c5f2 100644
+--- a/app/api/api_v1/endpoints/builds.py
++++ b/app/api/api_v1/endpoints/builds.py
+@@ -440,6 +440,9 @@ async def update_build(
+         status_code=status.HTTP_404_NOT_FOUND,
+         detail="Build not found",
+     )
++    
++    # Prepare update data
++    update_data = build_in
+ 
+     # Vérifier que l'utilisateur est propriétaire ou admin
+     if build.user_id != current_user.id and not current_user.is_superuser:
+
+diff --git a/app/core/security.py b/app/core/security.py
+index 3f5e1a2..8e9c5f2 100644
+--- a/app/core/security.py
++++ b/app/core/security.py
+@@ -156,26 +156,10 @@ def get_token_from_request(request: Request) -> Optional[str]:
+     Returns:
+         Optional[str]: The extracted token or None if not found
+     """
+-    # Debug: Afficher les en-têtes, cookies et paramètres de requête
+-    print(f"DEBUG - Headers: {dict(request.headers)}")
+-    print(f"DEBUG - Cookies: {dict(request.cookies) if hasattr(request.cookies, '__iter__') else request.cookies}")
+-    print(
+-        f"DEBUG - Query params: {dict(request.query_params) if hasattr(request.query_params, '__iter__') else request.query_params}"
+-    )
+-
+     # Check Authorization header (case insensitive)
+     auth_header = next((v for k, v in request.headers.items() if k.lower() == "authorization"), None)
+-    print(f"DEBUG - Auth header: {auth_header}")
+     if auth_header and auth_header.startswith("Bearer "):
+         token = auth_header.split(" ")[1]
+-        print(f"DEBUG - Token from auth header: {token}")
+         return token
+ 
+     # Check cookie
+     token = request.cookies.get("access_token")
+-    print(f"DEBUG - Token from cookie: {token}")
+     if token:
+         return token
+ 
+     # Check query parameter
+     token = request.query_params.get("token")
+-    print(f"DEBUG - Token from query params: {token}")
+     return token
+
+diff --git a/app/db/dependencies.py b/app/db/dependencies.py
+index 3a760c7..c8f9e3a 100644
+--- a/app/db/dependencies.py
++++ b/app/db/dependencies.py
+@@ -4,31 +4,15 @@ Dépendances de base de données pour FastAPI.
+ Ce module contient les fonctions de dépendance pour les sessions de base de données.
+ """
+ 
+-from typing import Generator
++from typing import AsyncGenerator
+ 
+-from sqlalchemy.orm import Session
+ from sqlalchemy.ext.asyncio import AsyncSession
+ 
+ from .factories import SessionLocal, AsyncSessionLocal
+ 
+ 
+-def get_db() -> Generator[Session, None, None]:
+-    """
+-    Obtient une session de base de données synchrone pour les dépendances FastAPI.
+-
+-    Yields:
+-        Session: Une instance de session SQLAlchemy synchrone
+-    """
+-    db = SessionLocal()
+-    try:
+-        yield db
+-    finally:
+-        db.close()
+-
+-
+-async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
++async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
+     """
+     Obtient une session de base de données asynchrone pour les dépendances FastAPI.
+ 
+     Yields:
+         AsyncSession: Une instance de session SQLAlchemy asynchrone
+     """
+     async with AsyncSessionLocal() as session:
+         try:
+             yield session
+             await session.commit()
+         except Exception:
+             await session.rollback()
+             raise
+         finally:
+             await session.close()
++
++
++# Alias pour compatibilité
++get_db = get_async_db

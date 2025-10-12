@@ -1,20 +1,16 @@
 """
 Tests for the Roles API endpoints.
 """
+
 import pytest
 from fastapi import status
 from httpx import AsyncClient
 
-from app.models import Role
 from app.core.config import settings
-from app.models import Role, User
 
 # Constantes pour les données de test
-TEST_ROLE_DATA = {
-    "name": "New Role",
-    "description": "A test role",
-    "permission_level": 5
-}
+TEST_ROLE_DATA = {"name": "New Role", "description": "A test role", "permission_level": 5}
+
 
 @pytest.mark.asyncio
 class TestRolesAPI:
@@ -96,9 +92,7 @@ class TestRolesAPI:
         admin_headers = await auth_headers(username="admin_updater", is_superuser=True)
         update_data = {"description": "Updated description"}
 
-        response = await async_client.put(
-            f"{settings.API_V1_STR}/roles/99999", json=update_data, headers=admin_headers
-        )
+        response = await async_client.put(f"{settings.API_V1_STR}/roles/99999", json=update_data, headers=admin_headers)
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -150,7 +144,7 @@ class TestUserRolesAPI:
         # Re-fetch user to check roles
         updated_user_response = await async_client.get(f"{settings.API_V1_STR}/users/{user.id}", headers=admin_headers)
         updated_user_data = updated_user_response.json()
-        assert any(r['id'] == role.id for r in updated_user_data.get('roles', []))
+        assert any(r["id"] == role.id for r in updated_user_data.get("roles", []))
 
     async def test_remove_role_from_user(self, async_client: AsyncClient, user_factory, role_factory, auth_headers):
         """Test removing a role from a user."""
@@ -168,4 +162,4 @@ class TestUserRolesAPI:
         # Re-fetch user to check roles
         updated_user_response = await async_client.get(f"{settings.API_V1_STR}/users/{user.id}", headers=admin_headers)
         updated_user_data = updated_user_response.json()
-        assert not any(r['id'] == role.id for r in updated_user_data.get('roles', []))
+        assert not any(r["id"] == role.id for r in updated_user_data.get("roles", []))

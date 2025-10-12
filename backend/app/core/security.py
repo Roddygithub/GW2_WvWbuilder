@@ -9,14 +9,11 @@ from sqlalchemy.orm import Session
 
 from app import models
 from app.core.config import settings
-from app.core.hashing import verify_password, pwd_context, get_password_hash
 from app.db.dependencies import get_db
 from app.schemas.token import TokenPayload
 
 
-def create_access_token(
-    subject: Union[str, int], expires_delta: timedelta = None, **kwargs
-) -> str:
+def create_access_token(subject: Union[str, int], expires_delta: timedelta = None, **kwargs) -> str:
     """
     Crée un token JWT d'accès.
 
@@ -27,7 +24,7 @@ def create_access_token(
 
     Returns:
         str: Le token JWT encodé
-        
+
     Raises:
         ValueError: Si le subject est None ou vide
     """
@@ -35,24 +32,16 @@ def create_access_token(
         raise ValueError("Subject cannot be None")
     if not str(subject).strip():
         raise ValueError("Subject cannot be empty")
-        
+
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     # Utiliser l'ID de l'utilisateur comme sujet et inclure les données supplémentaires
     # Convertir l'expiration en timestamp pour la compatibilité avec TokenPayload
-    to_encode = {
-        "exp": int(expire.timestamp()),
-        "sub": str(subject),
-        **kwargs
-    }
-    encoded_jwt = jwt.encode(
-        to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
-    )
+    to_encode = {"exp": int(expire.timestamp()), "sub": str(subject), **kwargs}
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return encoded_jwt
 
 
@@ -67,7 +56,7 @@ def create_refresh_token(subject: Union[str, int], expires_delta: timedelta = No
 
     Returns:
         str: Le token JWT encodé
-        
+
     Raises:
         ValueError: Si le subject est None ou vide
     """
@@ -75,7 +64,7 @@ def create_refresh_token(subject: Union[str, int], expires_delta: timedelta = No
         raise ValueError("Subject cannot be None")
     if not str(subject).strip():
         raise ValueError("Subject cannot be empty")
-        
+
     if expires_delta is None:
         expires_delta = timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     return create_access_token(subject, expires_delta, **kwargs)
@@ -124,12 +113,10 @@ def verify_refresh_token(token: str) -> Dict[str, Any]:
         HTTPException: Si le token est invalide ou expiré
     """
     try:
-        payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         # Convertir le timestamp en datetime pour la validation
         exp_datetime = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
-        
+
         # Vérifier si le token est expiré
         if exp_datetime < datetime.now(timezone.utc):
             raise HTTPException(
@@ -137,15 +124,10 @@ def verify_refresh_token(token: str) -> Dict[str, Any]:
                 detail="Token expiré",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        
+
         # Créer le TokenPayload avec les données décodées
-        token_data = TokenPayload(
-            sub=payload["sub"],
-            exp=exp_datetime,
-            iat=payload.get("iat"),
-            jti=payload.get("jti")
-        )
-            
+        token_data = TokenPayload(sub=payload["sub"], exp=exp_datetime, iat=payload.get("iat"), jti=payload.get("jti"))
+
         return token_data.dict()
     except (JWTError, ValidationError) as e:
         raise HTTPException(
@@ -162,40 +144,31 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login
 def get_token_from_request(request: Request) -> Optional[str]:
     """
     Extract the JWT token from the request.
-    
+
     The token can be provided in:
     - The Authorization header (Bearer token) - case insensitive
     - A cookie named 'access_token'
     - The query parameter 'token'
-    
+
     Args:
         request: The incoming request
-        
+
     Returns:
         Optional[str]: The extracted token or None if not found
     """
-    # Debug: Afficher les en-têtes, cookies et paramètres de requête
-    print(f"DEBUG - Headers: {dict(request.headers)}")
-    print(f"DEBUG - Cookies: {dict(request.cookies) if hasattr(request.cookies, '__iter__') else request.cookies}")
-    print(f"DEBUG - Query params: {dict(request.query_params) if hasattr(request.query_params, '__iter__') else request.query_params}")
-    
     # Check Authorization header (case insensitive)
-    auth_header = next((v for k, v in request.headers.items() if k.lower() == 'authorization'), None)
-    print(f"DEBUG - Auth header: {auth_header}")
+    auth_header = next((v for k, v in request.headers.items() if k.lower() == "authorization"), None)
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.split(" ")[1]
-        print(f"DEBUG - Token from auth header: {token}")
         return token
-    
+
     # Check cookie
     token = request.cookies.get("access_token")
-    print(f"DEBUG - Token from cookie: {token}")
     if token:
         return token
-    
+
     # Check query parameter
     token = request.query_params.get("token")
-    print(f"DEBUG - Token from query params: {token}")
     return token
 
 
@@ -206,14 +179,14 @@ def get_current_user(
     """
     Get the current authenticated user from the JWT token.
     The token subject should be the user's ID.
-    
+
     Args:
         db: Session de base de données
         token: Token JWT
-        
+
     Returns:
         models.User: L'utilisateur authentifié
-        
+
     Raises:
         HTTPException: Si les informations d'identification sont invalides
     """
@@ -222,32 +195,32 @@ def get_current_user(
         detail="Impossible de valider les informations d'identification",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    
+
     try:
         payload = jwt.decode(
-            token, 
-            settings.SECRET_KEY, 
+            token,
+            settings.SECRET_KEY,
             algorithms=[settings.ALGORITHM],
             options={"verify_aud": False},
         )
         token_data = TokenPayload(**payload)
         user_id = token_data.sub
-        
+
         if user_id is None:
             raise credentials_exception
-            
+
     except (JWTError, ValidationError) as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Impossible de valider les informations d'identification",
         ) from e
-    
+
     # Récupérer l'utilisateur directement depuis la base de données
     user = db.query(models.User).filter(models.User.id == int(user_id)).first()
-    
+
     if user is None:
         raise credentials_exception
-        
+
     return user
 
 
@@ -269,7 +242,5 @@ def get_current_active_superuser(
     Get the current active superuser.
     """
     if not current_user.is_superuser:
-        raise HTTPException(
-            status_code=400, detail="The user doesn't have enough privileges"
-        )
+        raise HTTPException(status_code=400, detail="The user doesn't have enough privileges")
     return current_user

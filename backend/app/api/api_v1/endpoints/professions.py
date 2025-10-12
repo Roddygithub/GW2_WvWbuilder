@@ -104,7 +104,7 @@ async def read_elite_specializations(
 ) -> Any:
     """
     Retrieve elite specializations, optionally filtered by profession and active status.
-    
+
     Parameters:
     - skip: Number of records to skip (for pagination)
     - limit: Maximum number of records to return (for pagination)
@@ -116,10 +116,8 @@ async def read_elite_specializations(
         filters["profession_id"] = profession_id
     if is_active is not None:
         filters["is_active"] = is_active
-        
-    elite_specializations = await crud.elite_specialization.get_multi(
-        db, skip=skip, limit=limit, **filters
-    )
+
+    elite_specializations = await crud.elite_specialization.get_multi(db, skip=skip, limit=limit, **filters)
     return elite_specializations
 
 
@@ -132,12 +130,12 @@ async def create_elite_specialization(
 ) -> Any:
     """
     Create new elite specialization.
-    
+
     Required fields:
     - name: Name of the elite specialization (2-50 characters)
     - profession_id: ID of the parent profession
     - weapon_type: Type of weapon added by this specialization
-    
+
     Optional fields:
     - description: Detailed description
     - icon_url: URL of the specialization icon
@@ -151,25 +149,22 @@ async def create_elite_specialization(
 
     # Check if elite specialization with this name already exists for this profession
     elite_spec = await crud.elite_specialization.get_by_name_and_profession_async(
-        db, 
-        name=elite_specialization_in.name,
-        profession_id=elite_specialization_in.profession_id
+        db, name=elite_specialization_in.name, profession_id=elite_specialization_in.profession_id
     )
-    
+
     if elite_spec:
         raise HTTPException(
             status_code=400,
             detail="An elite specialization with this name already exists for this profession.",
         )
-        
+
     # Create the new elite specialization
     elite_spec = await crud.elite_specialization.create(db, obj_in=elite_specialization_in)
     await db.refresh(elite_spec)
     return elite_spec
 
-@router.get(
-    "/elite-specializations/{elite_spec_id}", response_model=schemas.EliteSpecialization
-)
+
+@router.get("/elite-specializations/{elite_spec_id}", response_model=schemas.EliteSpecialization)
 async def read_elite_specialization(
     elite_spec_id: int,
     db: AsyncSession = Depends(deps.get_async_db),
@@ -183,9 +178,7 @@ async def read_elite_specialization(
     return elite_spec
 
 
-@router.put(
-    "/elite-specializations/{elite_spec_id}", response_model=schemas.EliteSpecialization
-)
+@router.put("/elite-specializations/{elite_spec_id}", response_model=schemas.EliteSpecialization)
 async def update_elite_specialization(
     *,
     db: AsyncSession = Depends(deps.get_async_db),
@@ -195,7 +188,7 @@ async def update_elite_specialization(
 ) -> Any:
     """
     Update an elite specialization.
-    
+
     All fields are optional. Only provided fields will be updated.
     """
     # Get the existing elite specialization
@@ -212,9 +205,7 @@ async def update_elite_specialization(
     # Check if name is being updated and if it already exists for this profession
     if elite_spec_in.name is not None and elite_spec_in.name != elite_spec.name:
         existing_spec = await crud.elite_specialization.get_by_name_and_profession_async(
-            db,
-            name=elite_spec_in.name,
-            profession_id=elite_spec_in.profession_id or elite_spec.profession_id
+            db, name=elite_spec_in.name, profession_id=elite_spec_in.profession_id or elite_spec.profession_id
         )
         if existing_spec and existing_spec.id != elite_spec_id:
             raise HTTPException(
@@ -223,16 +214,12 @@ async def update_elite_specialization(
             )
 
     # Update the elite specialization
-    elite_spec = await crud.elite_specialization.update(
-        db, db_obj=elite_spec, obj_in=elite_spec_in
-    )
+    elite_spec = await crud.elite_specialization.update(db, db_obj=elite_spec, obj_in=elite_spec_in)
     await db.refresh(elite_spec)
     return elite_spec
 
 
-@router.delete(
-    "/elite-specializations/{elite_spec_id}", response_model=schemas.EliteSpecialization
-)
+@router.delete("/elite-specializations/{elite_spec_id}", response_model=schemas.EliteSpecialization)
 async def delete_elite_specialization(
     *,
     db: AsyncSession = Depends(deps.get_async_db),
@@ -241,21 +228,19 @@ async def delete_elite_specialization(
 ) -> Any:
     """
     Delete an elite specialization.
-    
+
     This is a soft delete that sets is_active to False.
     The record remains in the database for historical purposes.
     """
     elite_spec = await crud.elite_specialization.get(db, id=elite_spec_id)
     if not elite_spec:
         raise NotFoundException(detail="Elite specialization not found")
-        
+
     # Soft delete by setting is_active to False
     if elite_spec.is_active:
         elite_spec = await crud.elite_specialization.update(
-            db, 
-            db_obj=elite_spec, 
-            obj_in=schemas.EliteSpecializationUpdate(is_active=False)
+            db, db_obj=elite_spec, obj_in=schemas.EliteSpecializationUpdate(is_active=False)
         )
         await db.refresh(elite_spec)
-    
+
     return elite_spec

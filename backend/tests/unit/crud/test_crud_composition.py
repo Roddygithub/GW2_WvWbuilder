@@ -19,7 +19,9 @@ def mock_user() -> User:
 @pytest.fixture
 def mock_composition() -> Composition:
     """Fixture for a mock composition."""
-    return Composition(id=1, name="Test Comp", created_by=1, tags=[])
+    comp = Composition(id=1, name="Test Comp", created_by=1)
+    comp.composition_tags = []  # Initialiser la relation avec une liste vide
+    return comp
 
 
 @pytest.fixture
@@ -35,7 +37,7 @@ def create_mock_sql_result(return_value):
     return mock_result
 
 
-@patch('app.crud.crud_composition.composition.invalidate_composition_cache', new_callable=AsyncMock)
+@patch("app.crud.crud_composition.composition.invalidate_composition_cache", new_callable=AsyncMock)
 class TestCRUDComposition:
     """Test suite for composition CRUD operations."""
 
@@ -60,7 +62,7 @@ class TestCRUDComposition:
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = create_mock_sql_result(mock_composition)
 
-        with patch('app.crud.crud_composition.settings.CACHE_ENABLED', False):
+        with patch("app.crud.crud_composition.settings.CACHE_ENABLED", False):
             result = await composition_crud.get_with_all_details(db, comp_id=1)
 
         assert result is not None
@@ -68,49 +70,71 @@ class TestCRUDComposition:
         db.execute.assert_awaited_once()
 
     @pytest.mark.asyncio
-    async def test_add_tag_to_composition(self, mock_invalidate_cache, mock_composition, mock_tag):
+    async def test_add_tag(self, mock_invalidate_cache, mock_composition, mock_tag):
         """Test adding a tag to a composition."""
         db = AsyncMock(spec=AsyncSession)
-        mock_composition.tags = []
+        composition_id = 1
+        tag_id = 1
 
-        result = await composition_crud.add_tag_to_composition(db, composition=mock_composition, tag=mock_tag)
+        # Configurer le mock pour la requête de vérification
+        mock_result = MagicMock()
+        mock_result.first.return_value = None  # Aucune association existante
+        db.execute.return_value = mock_result
 
-        assert result is not None
-        assert mock_tag in result.tags
-        db.add.assert_called_once_with(result)
+        # Appeler la méthode à tester
+        result = await composition_crud.add_tag(db, composition_id=composition_id, tag_id=tag_id)
+
+        # Vérifier les appels
+        assert result is True
+        db.execute.assert_called_once()
         db.commit.assert_awaited_once()
-        db.refresh.assert_awaited_once_with(result)
-        mock_invalidate_cache.assert_called_once_with(db, comp_id=mock_composition.id)
+        mock_invalidate_cache.assert_called_once_with(db, composition_id=composition_id)
 
     @pytest.mark.asyncio
-    async def test_add_existing_tag_to_composition(self, mock_invalidate_cache, mock_composition, mock_tag):
+    async def test_add_existing_tag(self, mock_invalidate_cache, mock_composition, mock_tag):
         """Test that adding an existing tag does not cause issues."""
         db = AsyncMock(spec=AsyncSession)
-        mock_composition.tags = [mock_tag]
+        composition_id = 1
+        tag_id = 1
 
-        result = await composition_crud.add_tag_to_composition(db, composition=mock_composition, tag=mock_tag)
+        # Configurer le mock pour la requête de vérification
+        mock_result = MagicMock()
+        mock_result.first.return_value = True  # Association existante
+        db.execute.return_value = mock_result
 
-        assert len(result.tags) == 1
-        db.add.assert_not_called()
+        # Appeler la méthode à tester
+        result = await composition_crud.add_tag(db, composition_id=composition_id, tag_id=tag_id)
+
+        # Vérifier les appels
+        assert result is False
+        db.execute.assert_called_once()
+        db.commit.assert_not_called()
+        mock_invalidate_cache.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_remove_tag_from_composition(self, mock_invalidate_cache, mock_composition, mock_tag):
+    async def test_remove_tag(self, mock_invalidate_cache, mock_composition, mock_tag):
         """Test removing a tag from a composition."""
         db = AsyncMock(spec=AsyncSession)
-        mock_composition.tags = [mock_tag]
+        composition_id = 1
+        tag_id = 1
 
-        result = await composition_crud.remove_tag_from_composition(db, composition=mock_composition, tag=mock_tag)
+        # Configurer le mock pour la requête de vérification
+        mock_result = MagicMock()
+        mock_result.first.return_value = True  # Association existante
+        db.execute.return_value = mock_result
 
-        assert result is not None
-        assert mock_tag not in result.tags
-        db.add.assert_called_once_with(result)
+        # Appeler la méthode à tester
+        result = await composition_crud.remove_tag(db, composition_id=composition_id, tag_id=tag_id)
+
+        # Vérifier les appels
+        assert result is True
+        db.execute.assert_called()  # Vérifie que execute a été appelé pour la suppression
         db.commit.assert_awaited_once()
-        db.refresh.assert_awaited_once_with(result)
-        mock_invalidate_cache.assert_called_once_with(db, comp_id=mock_composition.id)
+        mock_invalidate_cache.assert_called_once_with(db, composition_id=composition_id)
 
 
-@patch('app.crud.crud_composition.settings.CACHE_ENABLED', True)
-@patch('app.crud.crud_composition.cache', new_callable=AsyncMock)
+@patch("app.crud.crud_composition.settings.CACHE_ENABLED", True)
+@patch("app.crud.crud_composition.cache", new_callable=AsyncMock)
 class TestCRUDCompositionCache:
     """Test suite for composition CRUD caching logic."""
 

@@ -43,7 +43,7 @@ def test_jwt_token_creation():
     payload = jwt.decode(
         token,
         settings.SECRET_KEY,
-        algorithms=[settings.ALGORITHM],
+        algorithms=[settings.JWT_ALGORITHM],
         options={"verify_aud": False},
     )
 
@@ -67,7 +67,7 @@ def test_token_verification():
     payload = jwt.decode(
         token,
         settings.SECRET_KEY,
-        algorithms=[settings.ALGORITHM],
+        algorithms=[settings.JWT_ALGORITHM],
         options={"verify_aud": False},
     )
     assert payload["sub"] == str(user_id)
@@ -77,7 +77,7 @@ def test_token_verification():
         jwt.decode(
             "invalid.token.here",
             settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
+            algorithms=[settings.JWT_ALGORITHM],
             options={"verify_aud": False},
         )
 
@@ -86,12 +86,12 @@ def test_token_verification():
         expired_token = jwt.encode(
             {"sub": user_id, "exp": datetime.utcnow() - timedelta(seconds=1)},
             settings.SECRET_KEY,
-            algorithm=settings.ALGORITHM,
+            algorithm=settings.JWT_ALGORITHM,
         )
         jwt.decode(
             expired_token,
             settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
+            algorithms=[settings.JWT_ALGORITHM],
             options={"verify_aud": False},
         )
 

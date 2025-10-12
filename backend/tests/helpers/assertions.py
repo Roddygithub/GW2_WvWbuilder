@@ -7,9 +7,7 @@ from httpx import Response
 from pydantic import BaseModel
 
 
-def assert_status_code(
-    response: Response, expected_status: int, message: Optional[str] = None
-) -> None:
+def assert_status_code(response: Response, expected_status: int, message: Optional[str] = None) -> None:
     """Assert that the response has the expected status code.
 
     Args:
@@ -23,10 +21,7 @@ def assert_status_code(
     __tracebackhide__ = True  # Hide this function from tracebacks
 
     if response.status_code != expected_status:
-        msg = (
-            f"Expected status code {expected_status}, but got {response.status_code}. "
-            f"Response: {response.text}"
-        )
+        msg = f"Expected status code {expected_status}, but got {response.status_code}. " f"Response: {response.text}"
         if message:
             msg = f"{message}: {msg}"
         raise AssertionError(msg)
@@ -286,10 +281,7 @@ def assert_validation_errors(
                 raise AssertionError(msg)
 
             if error[key] != value:
-                msg = (
-                    f"Error {i} field '{key}' has value '{error[key]}', "
-                    f"expected '{value}'"
-                )
+                msg = f"Error {i} field '{key}' has value '{error[key]}', " f"expected '{value}'"
                 if message:
                     msg = f"{message}: {msg}"
                 raise AssertionError(msg)
@@ -297,9 +289,7 @@ def assert_validation_errors(
     return data
 
 
-def assert_unauthorized(
-    response: Response, message: Optional[str] = None
-) -> Dict[str, Any]:
+def assert_unauthorized(response: Response, message: Optional[str] = None) -> Dict[str, Any]:
     """Assert that the response indicates an unauthorized error.
 
     Args:
@@ -309,14 +299,10 @@ def assert_unauthorized(
     Returns:
         The parsed error response
     """
-    return assert_error_response(
-        response=response, status_code=401, detail="Not authenticated", message=message
-    )
+    return assert_error_response(response=response, status_code=401, detail="Not authenticated", message=message)
 
 
-def assert_forbidden(
-    response: Response, message: Optional[str] = None
-) -> Dict[str, Any]:
+def assert_forbidden(response: Response, message: Optional[str] = None) -> Dict[str, Any]:
     """Assert that the response indicates a forbidden error.
 
     Args:
@@ -334,9 +320,7 @@ def assert_forbidden(
     )
 
 
-def assert_not_found(
-    response: Response, resource: str = "Resource", message: Optional[str] = None
-) -> Dict[str, Any]:
+def assert_not_found(response: Response, resource: str = "Resource", message: Optional[str] = None) -> Dict[str, Any]:
     """Assert that the response indicates a not found error.
 
     Args:

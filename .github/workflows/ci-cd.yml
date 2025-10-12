@@ -2,35 +2,48 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, feature/* ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
   pull_request:
     branches: [ main, develop ]
-  workflow_dispatch:
 
-# Configuration des variables globales
 env:
-  PYTHON_VERSION: '3.11'
-  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-  REDIS_URL: redis://localhost:6379/0
+  PYTHON_VERSION: "3.12"
+  POETRY_VERSION: "1.8.0"
+  DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+  TEST_DATABASE_URL: "sqlite+aiosqlite:///test.db"
+  TESTING: "true"
+  ENVIRONMENT: "testing"
+  SECRET_KEY: "test-secret-key-$(openssl rand -hex 32)"
+  JWT_SECRET_KEY: "jwt-test-secret-$(openssl rand -hex 32)"
+  JWT_ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+  REFRESH_TOKEN_EXPIRE_DAYS: "30"
+  CACHE_ENABLED: "false"
+  REDIS_URL: "redis://localhost:6379/0"
+  PYTHONPATH: "${{ github.workspace }}/backend"
+  SECRET_KEY_ROTATION_DAYS: "30"
+  MAX_OLD_KEYS: "3"
 
 jobs:
   test:
-    name: Run Tests
-    runs-on: ubuntu-latest
+    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+        include:
+          - python-version: "3.12"
+            postgres-version: "15"
+            postgres-env: "POSTGRES_DB=test_db POSTGRES_USER=test_user POSTGRES_PASSWORD=test_password"
+    
     services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+      # Service Redis pour le cache et le rate limiting
       redis:
         image: redis:7-alpine
         ports:
@@ -40,148 +53,223 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      
+      # Service PostgreSQL pour les tests d'intégration
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user -d test_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        fetch-depth: 0
     
-    - name: Cache Python dependencies
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          build-essential \
+          libpq-dev \
+          python3-dev
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: ${{ env.POETRY_VERSION }}
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+    
+    - name: Set up cache for pip
       uses: actions/cache@v3
-      id: cache-pip
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
         restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
           ${{ runner.os }}-pip-
     
-    - name: Install dependencies
+    - name: Install Python dependencies
       run: |
-        python -m pip install --upgrade pip
         cd backend
-        pip install -e ".[test]" pytest pytest-cov pytest-asyncio factory-boy psutil aiosqlite bcrypt prometheus-fastapi-instrumentator
-      if: steps.cache-pip.outputs.cache-hit != 'true'
+        poetry install --no-interaction --no-root --with test,dev,ci
+        poetry run pip install --no-cache-dir \
+          pytest-cov \
+          pytest-asyncio \
+          pytest-postgresql \
+          pytest-xdist \
+          pytest-mock
     
-    - name: Run tests with coverage
+    - name: Run security checks
       run: |
         cd backend
-        # Exécuter uniquement les tests dans les dossiers spécifiques qui fonctionnent
-        pytest --cov=app --cov-report=xml --cov-report=term-missing \
-          tests/api/test_api_base.py \
-          tests/api/test_builds.py \
-          tests/test_utils.py
-      env:
-        DATABASE_URL: ${{ env.DATABASE_URL }}
-        REDIS_URL: ${{ env.REDIS_URL }}
-        JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-        JWT_REFRESH_SECRET_KEY: ${{ secrets.JWT_REFRESH_SECRET_KEY }}
-      timeout-minutes: 10
+        # Vérification des vulnérabilités connues dans les dépendances
+        poetry run safety check --full-report
+        # Analyse statique du code pour détecter les problèmes de sécurité
+        poetry run bandit -r app -c pyproject.toml
+    
+    - name: Lint with ruff
+      run: |
+        cd backend
+        poetry run ruff check .
+    
+    - name: Check code formatting with black
+      run: |
+        cd backend
+        poetry run black --check --diff .
+    
+    - name: Run type checking with mypy
+      run: |
+        cd backend
+        poetry run mypy --config-file=pyproject.toml .
+    
+    - name: Run unit tests with coverage
+      run: |
+        cd backend
+        set -e
+        # Exécution des tests unitaires avec couverture
+        poetry run python -m pytest -n auto \
+          --asyncio-mode=auto \
+          --cov=app \
+          --cov-config=.coveragerc \
+          --cov-report=xml \
+          --cov-report=term \
+          --cov-fail-under=90 \
+          --maxfail=3 \
+          --disable-warnings \
+          -m "not integration and not slow" \
+          tests/unit/
+    
+    - name: Run integration tests
+      run: |
+        cd backend
+        set -e
+        # Configuration de la base de données de test PostgreSQL
+        export DATABASE_URL="postgresql+asyncpg://test_user:test_password@localhost:5432/test_db"
+        # Attendre que PostgreSQL soit prêt
+        until pg_isready -h localhost -p 5432 -U test_user -d test_db; do
+          sleep 1
+        done
+        # Exécution des tests d'intégration
+        poetry run python -m pytest -v \
+          --asyncio-mode=auto \
+          -m "integration" \
+          --disable-warnings \
+          tests/integration/
     
     - name: Upload coverage to Codecov
+      if: success() && github.event_name == 'push'
       uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: backend/coverage.xml
+        file: ./backend/coverage.xml
         fail_ci_if_error: false
-
-  security:
-    name: Security Checks
-    needs: test
-    runs-on: ubuntu-latest
     
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
       with:
-        python-version: ${{ env.PYTHON_VERSION }}
+        name: test-results
+        path: |
+          backend/.coverage*
+          backend/test-results.xml
+          backend/coverage.xml
     
-    - name: Install security tools
+    - name: Check for dependency updates
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
       run: |
-        pip install safety bandit semgrep
-    
-    - name: Run safety check
-      run: safety check --full-report
-    
-    - name: Run bandit
-      run: bandit -r app/
-    
-    - name: Run semgrep
-      run: semgrep --config=p/security-audit .
+        cd backend
+        poetry update --dry-run
+        poetry run pip list --outdated
 
-  # Envoyer une notification en cas d'échec
-  notify-failure:
-    name: Notify on Failure
-    if: failure()
-    needs: [test, security]
+  security-scan:
+    name: Security Scan
     runs-on: ubuntu-latest
+    needs: test
+    
     steps:
-      - name: Send notification
-        if: failure()
-        run: |
-          echo "Workflow failed! Check the logs at: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'python:${{ env.PYTHON_VERSION }}'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+    
+    - name: Upload SARIF results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+    
+    - name: Run OWASP Dependency-Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'GW2_WvWbuilder'
+        path: '.'
+        format: 'SARIF'
+        scanpath: './backend'
+        fail_on_severity: 'high'
 
   deploy-staging:
     name: Deploy to Staging
-    needs: [test, security]
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    needs: [test, security-scan]
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
     environment: staging
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v2
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        python-version: ${{ env.PYTHON_VERSION }}
     
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/gw2-wvwbuilder:staging
-        build-args: |
-          ENVIRONMENT=staging
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
     
-    - name: Deploy to staging server
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.STAGING_HOST }}
-        username: ${{ secrets.STAGING_USER }}
-        key: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
-        script: |
-          cd /path/to/staging
-          docker-compose pull
-          docker-compose up -d --build
+    - name: Run database migrations
+      run: |
+        cd backend
+        alembic upgrade head
+    
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Ajoutez ici la logique de déploiement spécifique à votre environnement
 
   deploy-production:
     name: Deploy to Production
-    needs: deploy-staging
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     environment: production
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Deploy to production
-      uses: appleboy/ssh-action@master
-      if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-      with:
-        host: ${{ secrets.PRODUCTION_HOST }}
-        username: ${{ secrets.PRODUCTION_USER }}
-        key: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
-        script: |
-          cd /path/to/production
-          docker-compose pull
-          docker-compose up -d --build
+      run: |
+        echo "Deploying to production environment..."
+        # Ajoutez ici la logique de déploiement spécifique à votre environnement

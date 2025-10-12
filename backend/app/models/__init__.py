@@ -5,38 +5,56 @@ Ce package expose tous les modèles de données utilisés dans l'application.
 """
 
 import logging
-from typing import List
+from typing import List, Type, Any, Dict
 
 # Configuration du logger
 logger = logging.getLogger(__name__)
 logger.info("Chargement du package models...")
 
-# Import des classes de base
-from .base import Base, BaseModel, UUIDMixin, TimeStampedMixin, BaseUUIDModel, BaseTimeStampedModel, BaseUUIDTimeStampedModel
+# Import des classes de base depuis le module séparé
+from .base_model import (
+    Base,
+    BaseModel,
+    UUIDMixin,
+    TimeStampedMixin,
+    BaseUUIDModel,
+    BaseTimeStampedModel,
+    BaseUUIDTimeStampedModel,
+)
 
 # Import des énumérations
 from .enums import (
-    GameMode, RoleType, BuildStatus, CompositionStatus, ProfessionType, 
-    EliteSpecializationType, BuildType, CompositionRole, Visibility, 
-    PermissionLevel, TeamRole, TeamStatus
+    GameMode,
+    RoleType,
+    BuildStatus,
+    CompositionStatus,
+    ProfessionType,
+    EliteSpecializationType,
+    BuildType,
+    CompositionRole,
+    Visibility,
+    PermissionLevel,
+    TeamRole,
+    TeamStatus,
 )
 
-# Import des modèles
+# Import des modèles principaux
 from .user import User
 from .role import Role
 from .permission import Permission
-from .token_models import Token, TokenPayload
-from .build import Build
 from .profession import Profession
 from .elite_specialization import EliteSpecialization
-from .composition import Composition, composition_members
-from .composition_tag import CompositionTag
+from .build import Build
+from .composition import Composition
 from .team import Team
 from .team_member import TeamMember
+from .token_models import Token, TokenPayload
+from .composition_tag import CompositionTag
 from .tag import Tag
+from .user_role import UserRole
+from .association_tables import composition_members, build_profession
 
-# Tables d'association
-from .association_tables import user_roles, build_profession, role_permissions
+# Les autres modèles sont importés dynamiquement dans app.db.__init__ pour éviter les imports circulaires
 
 # Liste de tous les éléments à exporter
 __all__ = [
@@ -48,7 +66,23 @@ __all__ = [
     "BaseUUIDModel",
     "BaseTimeStampedModel",
     "BaseUUIDTimeStampedModel",
-    
+    # Modèles
+    "User",
+    "Role",
+    "Permission",
+    "Profession",
+    "EliteSpecialization",
+    "Build",
+    "Composition",
+    "Team",
+    "TeamMember",
+    "Token",
+    "TokenPayload",
+    "CompositionTag",
+    "Tag",
+    "UserRole",
+    "composition_members",
+    "build_profession",
     # Énumérations
     "GameMode",
     "RoleType",
@@ -62,25 +96,4 @@ __all__ = [
     "PermissionLevel",
     "TeamRole",
     "TeamStatus",
-    
-    # Modèles principaux
-    "User",
-    "Role",
-    "Permission",
-    "Token",
-    "TokenPayload",
-    "Build",
-    "Profession",
-    "EliteSpecialization",
-    "Composition",
-    "CompositionTag",
-    "Team",
-    "TeamMember",
-    "Tag",
-    
-    # Tables d'association
-    "user_roles",
-    "build_profession",
-    "role_permissions",
-    "composition_members"
 ]
