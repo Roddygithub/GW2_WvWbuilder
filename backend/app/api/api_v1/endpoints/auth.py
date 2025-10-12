@@ -25,7 +25,7 @@ if settings.ENVIRONMENT == "test" or not settings.CACHE_ENABLED:
 deps = [Depends(rate_limiter)] if rate_limiter else []
 
 
-@router.post("/login", response_model=Token, dependencies=deps)
+@router.post("/login", response_model=Token)
 async def login(db: AsyncSession = Depends(get_async_db), form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
     """
     OAuth2 compatible token login, get an access token for future requests
@@ -39,13 +39,16 @@ async def login(db: AsyncSession = Depends(get_async_db), form_data: OAuth2Passw
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
 
+    # Extract user_id before session closes
+    user_id = user.id
+
     # Créer le token d'accès
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = security.create_access_token(subject=user.id, expires_delta=access_token_expires)
+    access_token = security.create_access_token(subject=user_id, expires_delta=access_token_expires)
 
     # Créer le token de rafraîchissement
     refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
-    refresh_token = security.create_refresh_token(subject=user.id, expires_delta=refresh_token_expires)
+    refresh_token = security.create_refresh_token(subject=user_id, expires_delta=refresh_token_expires)
 
     return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
 
@@ -100,8 +103,14 @@ async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_async
     return {"access_token": new_access_token, "token_type": "bearer", "refresh_token": new_refresh_token}
 
 
-@router.post("/register", response_model=User, status_code=status.HTTP_201_CREATED, dependencies=deps)
-async def register(user_in: UserCreate, db: AsyncSession = Depends(get_async_db)) -> Any:
+@router.post("/test-simple")
+async def test_simple():
+    """Simple test endpoint without dependencies."""
+    return {"status": "ok", "message": "Auth endpoint working"}
+
+
+@router.post("/register", status_code=status.HTTP_201_CREATED)
+async def register(user_in: UserCreate, db: AsyncSession = Depends(get_async_db)) -> dict:
     """
     Register a new user.
     
@@ -110,7 +119,7 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_async_db)
         db: Database session
     
     Returns:
-        Created user object
+        Created user object as dict
     
     Raises:
         HTTPException: If username or email already exists
@@ -133,4 +142,13 @@ async def register(user_in: UserCreate, db: AsyncSession = Depends(get_async_db)
     
     # Create new user
     user = await user_crud.create_async(db, obj_in=user_in)
-    return user
+    # Convert to dict before session closes
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "full_name": user.full_name,
+        "is_active": user.is_active,
+        "is_superuser": user.is_superuser,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+    }
