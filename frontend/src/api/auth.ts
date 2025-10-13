@@ -43,30 +43,46 @@ export interface User {
 export async function login(credentials: LoginRequest): Promise<LoginResponse> {
   const url = `${API_BASE_URL}${API_V1_STR}/auth/login`;
   
+  console.log('[AUTH] Login attempt:', { username: credentials.username, url });
+  
   // Backend expects form-urlencoded
   const formData = new URLSearchParams();
   formData.append('username', credentials.username);
   formData.append('password', credentials.password);
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: formData.toString(),
-  });
+  try {
+    console.log('[AUTH] Sending login request...');
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+      signal: AbortSignal.timeout(5000), // 5 second timeout
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Login failed');
+    console.log('[AUTH] Response received:', response.status, response.statusText);
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('[AUTH] Login error:', error);
+      throw new Error(error.detail || 'Login failed');
+    }
+
+    const data: LoginResponse = await response.json();
+    console.log('[AUTH] Login successful, token received');
+    
+    // Store token
+    setAuthToken(data.access_token);
+    
+    return data;
+  } catch (error) {
+    console.error('[AUTH] Login exception:', error);
+    if (error instanceof Error && error.name === 'TimeoutError') {
+      throw new Error('Login request timed out. Please check your connection.');
+    }
+    throw error;
   }
-
-  const data: LoginResponse = await response.json();
-  
-  // Store token
-  setAuthToken(data.access_token);
-  
-  return data;
 }
 
 /**

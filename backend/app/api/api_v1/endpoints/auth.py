@@ -109,6 +109,53 @@ async def test_simple():
     return {"status": "ok", "message": "Auth endpoint working"}
 
 
+@router.post("/simple-login")
+async def simple_login(db: AsyncSession = Depends(get_async_db), form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
+    """
+    Simplified login endpoint that works without session issues
+    """
+    from sqlalchemy import select
+    from app.models.user import User as UserModel
+    from app.core import security as sec
+    
+    # Get user by email
+    stmt = select(UserModel).where(UserModel.email == form_data.username)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password",
+        )
+    
+    # Extract data before session closes
+    user_id = user.id
+    user_email = user.email
+    user_username = user.username
+    hashed_password = user.hashed_password
+    is_active = user.is_active
+    
+    # Verify password
+    if not sec.verify_password(form_data.password, hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password",
+        )
+    
+    if not is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
+    
+    # Create tokens
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = security.create_access_token(subject=user_id, expires_delta=access_token_expires)
+    
+    refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    refresh_token = security.create_refresh_token(subject=user_id, expires_delta=refresh_token_expires)
+    
+    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
+
+
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(user_in: UserCreate, db: AsyncSession = Depends(get_async_db)) -> dict:
     """
