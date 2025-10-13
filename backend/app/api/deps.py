@@ -33,15 +33,16 @@ get_async_db = get_db_session
 
 
 async def get_current_user(
-    request: Request, token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_async_db)
+    request: Request, token: str = Depends(oauth2_scheme)
 ) -> models.User:
     """
     Dependency to get the current user from the JWT token.
+    
+    Creates its own database session to avoid FastAPI dependency blocking issues.
 
     Args:
         request: The FastAPI request object
         token: The JWT token from the Authorization header
-        db: Async database session
 
     Returns:
         models.User: The authenticated user
@@ -49,13 +50,24 @@ async def get_current_user(
     Raises:
         CredentialsException: If token is invalid or user not found
     """
+    from app.db.session import AsyncSessionLocal
+    
     # Handle test environment with special token
     if token == "x":
-        user = await crud.user.get(db, id=1)
-        if not user:
-            # Create a test user if it doesn't exist
-            user_in = models.UserCreate(email="test@example.com", password="testpassword", full_name="Test User")
-            user = await crud.user.create(db, obj_in=user_in)
+        async with AsyncSessionLocal() as db:
+            user = await crud.user.get(db, id=1)
+            if not user:
+                # Create a test user if it doesn't exist
+                user_in = models.UserCreate(email="test@example.com", password="testpassword", full_name="Test User")
+                user = await crud.user.create(db, obj_in=user_in)
+            # Extract data before session closes
+            user_id = user.id
+            user_email = user.email
+            user_username = user.username
+            is_active = user.is_active
+            is_superuser = user.is_superuser
+        # Return a detached user object (this is a workaround)
+        # In production, consider using a proper user DTO
         return user
 
     if not token:
@@ -70,11 +82,25 @@ async def get_current_user(
         if not user_id:
             raise CredentialsException()
 
-        # Get user from database
-        user = await crud.user.get(db, id=int(user_id))
-        if not user:
-            raise UserNotFoundException()
+        # Create our own session to avoid blocking
+        async with AsyncSessionLocal() as db:
+            # Get user from database
+            user = await crud.user.get(db, id=int(user_id))
+            if not user:
+                raise UserNotFoundException()
+            
+            # Extract all needed data immediately before session closes
+            # This prevents DetachedInstanceError
+            _ = user.id
+            _ = user.email
+            _ = user.username
+            _ = user.is_active
+            _ = user.is_superuser
+            _ = user.full_name
+            _ = user.created_at
+            _ = user.updated_at
 
+        # Session is now closed, but user object attributes are loaded
         return user
 
     except (JWTError, ValidationError):
