@@ -14,8 +14,8 @@ import sys
 backend_path = Path(__file__).parent.parent / "backend"
 sys.path.insert(0, str(backend_path))
 
-# DB path
-db_path = Path(__file__).parent.parent / "test.db"
+# DB path - use the one from config
+db_path = Path(__file__).parent.parent / "backend" / "gw2_wvwbuilder.db"
 
 def main():
     print("=" * 60)

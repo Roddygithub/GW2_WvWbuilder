@@ -12,7 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base_model import Base, TimeStampedMixin
 
 from .association_tables import role_permissions
-from .user_role import UserRole
+from .user_role import UserRole, user_roles_table
 
 if TYPE_CHECKING:
     from .permission import Permission
@@ -35,7 +35,7 @@ class Role(Base, TimeStampedMixin):
     user_associations: Mapped[List["UserRole"]] = relationship(back_populates="role")
     users: Mapped[List["User"]] = relationship(
         "User",
-        secondary="user_roles",
+        secondary=user_roles_table,
         back_populates="roles",
         viewonly=True,
         overlaps="user_associations,role_associations",
