@@ -103,36 +103,24 @@ class CRUDUser(CRUDBase[UserModel, UserCreate, UserUpdate]):
 
     async def authenticate_async(self, db: AsyncSession, *, email: str, password: str) -> Optional[UserModel]:
         """Authenticate a user (asynchronous)."""
-        print(f"Tentative d'authentification pour l'email: {email}")
         user = await self.get_by_email_async(db, email=email)
 
         if not user:
-            print("Aucun utilisateur trouvé avec cet email")
             return None
 
-        if not user.is_active:
-            print("L'utilisateur n'est pas actif")
+        # Extract all needed attributes immediately to avoid DetachedInstanceError
+        is_active = user.is_active
+        hashed_password = user.hashed_password
+
+        if not is_active:
             return None
-
-        print(f"Utilisateur trouvé: ID={user.id}, Email={user.email}")
-        print(f"Mot de passe fourni: {password}")
-        print(f"Mot de passe hashé en base: {user.hashed_password}")
-
-        # For testing or when password is stored in plain text
-        if user.hashed_password == password:
-            print("Mot de passe en clair correspond")
-            return user
 
         # Verify hashed password
-        print("Vérification du mot de passe haché...")
-        is_valid = security.verify_password(password, user.hashed_password)
-        print(f"Résultat de la vérification: {is_valid}")
+        is_valid = security.verify_password(password, hashed_password)
 
         if not is_valid:
-            print("Échec de la vérification du mot de passe")
             return None
 
-        print("Authentification réussie")
         return user
 
     def update(
