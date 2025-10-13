@@ -26,27 +26,58 @@ deps = [Depends(rate_limiter)] if rate_limiter else []
 
 
 @router.post("/login", response_model=Token)
-async def login(db: AsyncSession = Depends(get_async_db), form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
+async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
     """
-    OAuth2 compatible token login, get an access token for future requests
+    OAuth2 compatible token login, get an access token for future requests.
+    
+    This endpoint creates its own database session to avoid FastAPI dependency issues.
+    It extracts all needed data before closing the session, then verifies the password.
     """
-    user = await user_crud.authenticate_async(db, email=form_data.username, password=form_data.password)
-    if not user:
+    from sqlalchemy import select
+    from app.models.user import User as UserModel
+    from app.db.session import AsyncSessionLocal
+    
+    # Create our own session to avoid get_async_db blocking issues
+    async with AsyncSessionLocal() as db:
+        try:
+            # Fetch user by email
+            stmt = select(UserModel).where(UserModel.email == form_data.username)
+            result = await db.execute(stmt)
+            user = result.scalars().first()
+            
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Incorrect email or password",
+                )
+            
+            # Extract ALL needed data immediately before session closes
+            user_id = user.id
+            hashed_password = user.hashed_password
+            is_active = user.is_active
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Database error: {str(e)}"
+            )
+    
+    # Session is now closed, verify password with extracted data
+    if not security.verify_password(form_data.password, hashed_password):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorrect email or password",
         )
-    if not user.is_active:
+    
+    if not is_active:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
 
-    # Extract user_id before session closes
-    user_id = user.id
-
-    # Créer le token d'accès
+    # Create tokens
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = security.create_access_token(subject=user_id, expires_delta=access_token_expires)
 
-    # Créer le token de rafraîchissement
     refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
     refresh_token = security.create_refresh_token(subject=user_id, expires_delta=refresh_token_expires)
 
@@ -107,6 +138,84 @@ async def refresh_token(refresh_token: str, db: AsyncSession = Depends(get_async
 async def test_simple():
     """Simple test endpoint without dependencies."""
     return {"status": "ok", "message": "Auth endpoint working"}
+
+
+@router.post("/test-login-minimal")
+async def test_login_minimal(form_data: OAuth2PasswordRequestForm = Depends()):
+    """Minimal login test without database."""
+    return {
+        "status": "received",
+        "username": form_data.username,
+        "message": "Form data received successfully"
+    }
+
+
+@router.post("/login-working", response_model=Token)
+async def login_working(form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
+    """
+    Working login endpoint that bypasses get_async_db dependency issue.
+    Creates its own database session and runs bcrypt in a thread pool.
+    """
+    import asyncio
+    from concurrent.futures import ThreadPoolExecutor
+    from sqlalchemy import select
+    from app.models.user import User as UserModel
+    from app.db.session import AsyncSessionLocal
+    
+    # Create our own session instead of using get_async_db
+    async with AsyncSessionLocal() as db:
+        try:
+            # Fetch user by email
+            stmt = select(UserModel).where(UserModel.email == form_data.username)
+            result = await db.execute(stmt)
+            user = result.scalars().first()
+            
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Incorrect email or password",
+                )
+            
+            # Extract ALL needed data immediately
+            user_id = user.id
+            hashed_password = user.hashed_password
+            is_active = user.is_active
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Database error: {str(e)}"
+            )
+    
+    # Session is now closed, verify password in thread pool (bcrypt is CPU-intensive)
+    loop = asyncio.get_event_loop()
+    with ThreadPoolExecutor() as pool:
+        is_valid = await loop.run_in_executor(
+            pool,
+            security.verify_password,
+            form_data.password,
+            hashed_password
+        )
+    
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password",
+        )
+    
+    if not is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
+
+    # Create tokens
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = security.create_access_token(subject=user_id, expires_delta=access_token_expires)
+
+    refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    refresh_token = security.create_refresh_token(subject=user_id, expires_delta=refresh_token_expires)
+
+    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
 
 
 @router.post("/simple-login")
