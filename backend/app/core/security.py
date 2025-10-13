@@ -41,7 +41,7 @@ def create_access_token(subject: Union[str, int], expires_delta: timedelta = Non
     # Utiliser l'ID de l'utilisateur comme sujet et inclure les données supplémentaires
     # Convertir l'expiration en timestamp pour la compatibilité avec TokenPayload
     to_encode = {"exp": int(expire.timestamp()), "sub": str(subject), **kwargs}
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
     return encoded_jwt
 
 
@@ -86,8 +86,8 @@ def verify_token(token: str) -> Dict[str, Any]:
     try:
         payload = jwt.decode(
             token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
             options={"verify_aud": False},
         )
         token_data = TokenPayload(**payload)
@@ -113,7 +113,7 @@ def verify_refresh_token(token: str) -> Dict[str, Any]:
         HTTPException: Si le token est invalide ou expiré
     """
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
         # Convertir le timestamp en datetime pour la validation
         exp_datetime = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
 
@@ -172,16 +172,16 @@ def get_token_from_request(request: Request) -> Optional[str]:
     return token
 
 
-def get_current_user(
-    db: Session = Depends(get_db),
+async def get_current_user(
     token: str = Depends(oauth2_scheme),
 ) -> models.User:
     """
     Get the current authenticated user from the JWT token.
     The token subject should be the user's ID.
+    
+    Creates its own database session to avoid FastAPI dependency blocking issues.
 
     Args:
-        db: Session de base de données
         token: Token JWT
 
     Returns:
@@ -190,17 +190,20 @@ def get_current_user(
     Raises:
         HTTPException: Si les informations d'identification sont invalides
     """
+    from app.db.session import AsyncSessionLocal
+    from sqlalchemy import select
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Impossible de valider les informations d'identification",
+        detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
     try:
         payload = jwt.decode(
             token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM],
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
             options={"verify_aud": False},
         )
         token_data = TokenPayload(**payload)
@@ -212,19 +215,35 @@ def get_current_user(
     except (JWTError, ValidationError) as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Impossible de valider les informations d'identification",
+            detail="Could not validate credentials",
         ) from e
 
-    # Récupérer l'utilisateur directement depuis la base de données
-    user = db.query(models.User).filter(models.User.id == int(user_id)).first()
+    # Create our own session to avoid blocking
+    async with AsyncSessionLocal() as db:
+        # Get user from database
+        stmt = select(models.User).where(models.User.id == int(user_id))
+        result = await db.execute(stmt)
+        user = result.scalars().first()
+        
+        if user is None:
+            raise credentials_exception
+        
+        # Extract all needed data immediately before session closes
+        # This prevents DetachedInstanceError
+        _ = user.id
+        _ = user.email
+        _ = user.username
+        _ = user.is_active
+        _ = user.is_superuser
+        _ = user.full_name
+        _ = user.created_at
+        _ = user.updated_at
 
-    if user is None:
-        raise credentials_exception
-
+    # Session is now closed, but user object attributes are loaded
     return user
 
 
-def get_current_active_user(
+async def get_current_active_user(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:
     """
@@ -235,7 +254,7 @@ def get_current_active_user(
     return current_user
 
 
-def get_current_active_superuser(
+async def get_current_active_superuser(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:
     """

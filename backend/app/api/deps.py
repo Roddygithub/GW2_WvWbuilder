@@ -55,17 +55,21 @@ async def get_current_user(
     # Handle test environment with special token
     if token == "x":
         async with AsyncSessionLocal() as db:
-            user = await crud.user.get(db, id=1)
+            user = await crud.user_crud.get_async(db, id=1, options=[selectinload(models.User.roles)])
             if not user:
                 # Create a test user if it doesn't exist
                 user_in = models.UserCreate(email="test@example.com", password="testpassword", full_name="Test User")
-                user = await crud.user.create(db, obj_in=user_in)
+                user = await crud.user_crud.create_async(db, obj_in=user_in)
+                # Re-fetch with roles loaded
+                user = await crud.user_crud.get_async(db, id=1, options=[selectinload(models.User.roles)])
             # Extract data before session closes
             user_id = user.id
             user_email = user.email
             user_username = user.username
             is_active = user.is_active
             is_superuser = user.is_superuser
+            # Ensure roles are loaded
+            _ = [r.id for r in user.roles]
         # Return a detached user object (this is a workaround)
         # In production, consider using a proper user DTO
         return user
@@ -74,18 +78,32 @@ async def get_current_user(
         raise CredentialsException()
 
     try:
-        # Decode JWT token
+        # Decode JWT token (do not verify audience: tokens from security.create_access_token have no 'aud')
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM], options={"verify_aud": False}
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+            options={"verify_aud": False},
         )
         user_id: str = payload.get("sub")
         if not user_id:
             raise CredentialsException()
 
+        # DEBUG: Log to confirm new code is loaded and what claims are present
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(
+            f"[NEW CODE] get_current_user: user_id={user_id}, aud={'aud' in payload}, using AsyncSessionLocal"
+        )
+
         # Create our own session to avoid blocking
         async with AsyncSessionLocal() as db:
-            # Get user from database
-            user = await crud.user.get(db, id=int(user_id))
+            # Get user from database with roles eagerly loaded
+            user = await crud.user_crud.get_async(
+                db,
+                id=int(user_id),
+                options=[selectinload(models.User.roles)],
+            )
             if not user:
                 raise UserNotFoundException()
             
@@ -99,6 +117,11 @@ async def get_current_user(
             _ = user.full_name
             _ = user.created_at
             _ = user.updated_at
+            # Ensure roles are loaded (detach-safe)
+            _ = [
+                (role.id, role.name, role.description, role.permission_level, role.is_default, role.icon_url)
+                for role in (user.roles or [])
+            ]
 
         # Session is now closed, but user object attributes are loaded
         return user

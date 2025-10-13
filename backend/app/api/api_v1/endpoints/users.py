@@ -2,6 +2,7 @@ from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app import crud, models, schemas
 from app.api import deps
@@ -66,7 +67,10 @@ async def read_user_me(
     """
     Get current user.
     """
-    return current_user
+    user = await crud.user_crud.get_async(
+        db, id=current_user.id, options=[selectinload(models.User.roles)]
+    )
+    return user
 
 
 @router.get("/{user_id}", response_model=schemas.User)
