@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import TagsManager from './pages/TagsManager'
+import ProtectedRoute from './components/ProtectedRoute'
 
 // Create QueryClient instance
 const queryClient = new QueryClient({
@@ -26,8 +27,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         
         {/* Protected Routes */}
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/tags" element={<TagsManager />} />
+        <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+        <Route path="/tags" element={<ProtectedRoute><TagsManager /></ProtectedRoute>} />
       </Routes>
     </QueryClientProvider>
   )

@@ -3,13 +3,41 @@
  * Main user dashboard after login
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../store/authStore';
+import { getDashboardStats, getRecentActivities } from '../api/dashboard';
+import StatCard from '../components/StatCard';
+import ActivityFeed, { Activity } from '../components/ActivityFeed';
+import { FileText, Users, Layers, TrendingUp } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout, loadUser } = useAuthStore();
+  const [activities, setActivities] = useState<Activity[]>([]);
+
+  // Fetch dashboard statistics
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: getDashboardStats,
+    enabled: isAuthenticated,
+    retry: 1,
+  });
+
+  // Fetch recent activities
+  const { data: recentActivities } = useQuery({
+    queryKey: ['recent-activities'],
+    queryFn: () => getRecentActivities(10),
+    enabled: isAuthenticated,
+    retry: 1,
+  });
+
+  useEffect(() => {
+    if (recentActivities) {
+      setActivities(recentActivities);
+    }
+  }, [recentActivities]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -58,6 +86,41 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Statistics Cards */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-white mb-4">Overview</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              title="Compositions"
+              value={statsLoading ? '...' : stats?.total_compositions || 0}
+              icon={Layers}
+              iconColor="bg-green-600"
+              subtitle="Total created"
+            />
+            <StatCard
+              title="Builds"
+              value={statsLoading ? '...' : stats?.total_builds || 0}
+              icon={FileText}
+              iconColor="bg-blue-600"
+              subtitle="Total created"
+            />
+            <StatCard
+              title="Teams"
+              value={statsLoading ? '...' : stats?.total_teams || 0}
+              icon={Users}
+              iconColor="bg-purple-600"
+              subtitle="Total managed"
+            />
+            <StatCard
+              title="Recent Activity"
+              value={statsLoading ? '...' : stats?.recent_activity_count || 0}
+              icon={TrendingUp}
+              iconColor="bg-yellow-600"
+              subtitle="Last 30 days"
+            />
+          </div>
+        </div>
+
         {/* User Info Card */}
         <div className="mb-8 rounded-lg bg-slate-800/50 p-6 shadow-xl backdrop-blur-sm">
           <h2 className="text-xl font-semibold text-white mb-4">Account Information</h2>
@@ -152,25 +215,35 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Status Info */}
-        <div className="rounded-lg bg-slate-800/50 p-6 shadow-xl backdrop-blur-sm">
-          <h2 className="text-xl font-semibold text-white mb-4">System Status</h2>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Backend API</span>
-              <span className="text-green-400">● Connected</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Authentication</span>
-              <span className="text-green-400">● Active</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Tags API</span>
-              <span className="text-green-400">● Available (78% tested)</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-400">Builds API</span>
-              <span className="text-yellow-400">● Limited (In Development)</span>
+        {/* Two Column Layout for Activity and Status */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Recent Activity */}
+          <ActivityFeed activities={activities} maxItems={5} />
+
+          {/* System Status */}
+          <div className="rounded-lg bg-slate-800/50 p-6 shadow-xl backdrop-blur-sm">
+            <h2 className="text-xl font-semibold text-white mb-4">System Status</h2>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Backend API</span>
+                <span className="text-green-400">● Connected</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Authentication</span>
+                <span className="text-green-400">● Active</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Dashboard API</span>
+                <span className="text-green-400">● Available</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Tags API</span>
+                <span className="text-green-400">● Available</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Builds API</span>
+                <span className="text-yellow-400">● Limited (In Development)</span>
+              </div>
             </div>
           </div>
         </div>
