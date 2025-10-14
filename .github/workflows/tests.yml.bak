@@ -1,0 +1,118 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: "3.12"
+  POETRY_VERSION: "1.8.0"
+  DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+  TESTING: "true"
+  SECRET_KEY: "test-secret-key-1234567890"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+  CACHE_ENABLED: "false"
+  REDIS_URL: ""
+  PYTHONPATH: "${{ github.workspace }}/backend"
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+    
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: ${{ env.POETRY_VERSION }}
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+    
+    - name: Set up cache for pip
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        poetry install --no-interaction --no-root --with test,dev
+        poetry run pip install pytest-cov pytest-asyncio
+    
+    - name: Lint with ruff
+      run: |
+        cd backend
+        poetry run ruff check .
+    
+    - name: Check formatting with black
+      run: |
+        cd backend
+        poetry run black --check .
+    
+    - name: Run type checking with mypy
+      run: |
+        cd backend
+        poetry run mypy .
+    
+    - name: Run tests with pytest
+      run: |
+        cd backend
+        poetry run pytest -v \
+          --asyncio-mode=auto \
+          --cov=app \
+          --cov-report=xml \
+          --cov-report=term \
+          --cov-fail-under=80 \
+          --maxfail=3 \
+          --disable-warnings \
+          tests/
+    
+    - name: Upload coverage to Codecov
+      if: matrix.python-version == '3.12'  # Upload only once
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        verbose: true
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ matrix.python-version }}
+        path: |
+          backend/.coverage*
+          backend/test-reports/
+          backend/htmlcov/

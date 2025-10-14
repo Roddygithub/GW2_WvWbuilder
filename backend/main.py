@@ -5,16 +5,14 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
-from fastapi_limiter import FastAPILimiter
-from fastapi_limiter.depends import RateLimiter
 from prometheus_fastapi_instrumentator import Instrumentator
-import redis.asyncio as redis
 
 import logging
 import time
 
 from app.api.api_v1.api import api_router
 from app.core.config import settings
+from app.core.limiter import init_rate_limiter, close_rate_limiter
 
 
 def create_application() -> FastAPI:
@@ -34,11 +32,14 @@ def create_application() -> FastAPI:
     # Add Prometheus instrumentation
     Instrumentator().instrument(app).expose(app)
 
-    # Initialize FastAPI Limiter on startup
+    # Initialize app rate limiter on startup and close on shutdown
     @app.on_event("startup")
     async def startup():
-        redis_conn = redis.from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
-        await FastAPILimiter.init(redis_conn)
+        await init_rate_limiter()
+
+    @app.on_event("shutdown")
+    async def shutdown():
+        await close_rate_limiter()
 
     # Set up CORS
     if settings.BACKEND_CORS_ORIGINS:

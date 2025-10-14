@@ -1,0 +1,102 @@
+# Configuration for markdownlint
+# Documentation: https://github.com/DavidAnson/markdownlint
+
+default: true
+
+# Règles à ignorer
+MD013: false  # Longueur de ligne
+MD033: false  # Balises HTML en ligne
+MD041: false  # Fichier commençant par un en-tête de premier niveau
+
+# Configuration des règles
+line_length: 120
+
+# Configuration du style des listes
+MD004: 
+  style: dash
+
+# Configuration des en-têtes
+MD001:  # Niveaux d'en-tête qui doivent augmenter de un à la fois
+  level: 1
+  start_atx_heading: true
+
+MD003:  # Style d'en-tête
+  style: atx
+
+MD025:  # Plusieurs en-têtes de premier niveau dans le même document
+  level: 1
+  front_matter_title: ^\s*title\s*:\s*
+
+# Configuration des listes
+MD005:  # Incohérence dans l'indentation des listes
+  indent: 2
+
+MD007:  # Indentation des listes non ordonnées
+  indent: 2
+  start_indented: false
+  start_indent: 2
+
+MD030:  # Espacement après les listes
+  ul_single: 1
+  ol_single: 1
+  ul_multi: 1
+  ol_multi: 1
+
+# Configuration des liens et des images
+MD011:  # Liens mal formatés
+  link_reference_definitions: true
+  link_reference_definitions_re: '^\s*\[([^\]]+)\]:\s*\S+\s*$'
+
+MD034:  # URL nues
+  allowed_url_schemes: [http, https, mailto, ftp, sftp, git, irc, ircs, news, nntp, gopher, xmpp, mumble, svn, git, git+ssh, git+http, git+https, git+git, git+file]
+
+# Configuration des tableaux
+MD012:  # Lignes vides multiples consécutives
+  maximum: 1
+
+MD032:  # Les listes doivent être entourées de lignes vides
+  strict: false
+
+# Configuration du code
+MD040:  # Blocs de code sans langage spécifié
+  allowed_languages: [bash, python, json, yaml, toml, sql, javascript, typescript, html, css, scss, markdown, dockerfile, makefile, nginx, apache, xml, diff, http, java, php, ruby, rust, swift, go, c, cpp, csharp, fsharp, vb, powershell, r, scala, kotlin, dart, elixir, erlang, haskell, lua, ocaml, perl, r, sql, swift, yaml]
+  code_blocks: true
+
+# Configuration des caractères spéciaux
+MD009:  # Espaces en fin de ligne
+  br_spaces: 2
+  list_item_empty_lines: false
+  strict: false
+
+MD010:  # Tabulations au lieu d'espaces
+  code_blocks: false
+
+MD014:  # Lignes commençant par un signe dollar (commande shell)
+  allow_dollar_sign: true
+
+MD026:  # Points d'exclamation dans les titres
+  punctuation: ".,;:!?。，；：！？"
+
+MD028:  # Séparateur de bloc de citation vide
+  require_blank: true
+
+MD031:  # Blocs de code entourés de listes
+  list_items: true
+
+MD035:  # Sépérateur horizontal
+  style: '---'
+
+MD036:  # Mise en évidence utilisée comme en-tête
+  punctuation: '.,;:!?'
+
+MD037:  # Espaces dans l'emphase
+  strict: false
+
+MD038:  # Espaces dans le code
+  strict: false
+
+MD039:  # Espaces dans les liens
+  strict: false
+
+MD047:  # Fichier se terminant par une nouvelle ligne
+  require_newline: true

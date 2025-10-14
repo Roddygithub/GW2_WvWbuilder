@@ -5,15 +5,16 @@ from unittest.mock import patch, AsyncMock
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 # Import the module/class to test
-from app.db.session import get_async_db, ASYNC_DATABASE_URL, AsyncSessionLocal
+from app.db.session import get_async_db, AsyncSessionLocal
+from app.core.config import settings
 
 
 # Test cases
 @pytest.mark.asyncio
 async def test_async_session_initialization():
     """Test that async session can be initialized."""
-    # Create a test async engine
-    test_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False)
+    # Create a test async engine using settings
+    create_async_engine(settings.get_async_database_url(), echo=False)
 
     # Test getting a session using the actual AsyncSessionLocal
     async with AsyncSessionLocal() as session:
@@ -32,9 +33,7 @@ async def test_get_async_db():
     mock_context.__aenter__.return_value = mock_session
 
     # Patch the AsyncSessionLocal to return our mock context
-    with patch(
-        "app.db.session.AsyncSessionLocal", return_value=mock_context
-    ) as mock_session_maker:
+    with patch("app.db.session.AsyncSessionLocal", return_value=mock_context):
         # Call the get_async_db generator
         gen = get_async_db()
         db = await gen.__anext__()

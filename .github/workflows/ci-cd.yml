@@ -1,0 +1,275 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+    paths-ignore:
+      - '**/*.md'
+      - '**/*.txt'
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: "3.12"
+  POETRY_VERSION: "1.8.0"
+  DATABASE_URL: "sqlite+aiosqlite:///:memory:"
+  TEST_DATABASE_URL: "sqlite+aiosqlite:///test.db"
+  TESTING: "true"
+  ENVIRONMENT: "testing"
+  SECRET_KEY: "test-secret-key-$(openssl rand -hex 32)"
+  JWT_SECRET_KEY: "jwt-test-secret-$(openssl rand -hex 32)"
+  JWT_ALGORITHM: "HS256"
+  ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+  REFRESH_TOKEN_EXPIRE_DAYS: "30"
+  CACHE_ENABLED: "false"
+  REDIS_URL: "redis://localhost:6379/0"
+  PYTHONPATH: "${{ github.workspace }}/backend"
+  SECRET_KEY_ROTATION_DAYS: "30"
+  MAX_OLD_KEYS: "3"
+
+jobs:
+  test:
+    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+        include:
+          - python-version: "3.12"
+            postgres-version: "15"
+            postgres-env: "POSTGRES_DB=test_db POSTGRES_USER=test_user POSTGRES_PASSWORD=test_password"
+    
+    services:
+      # Service Redis pour le cache et le rate limiting
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      # Service PostgreSQL pour les tests d'intégration
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test_user -d test_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          build-essential \
+          libpq-dev \
+          python3-dev
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: ${{ env.POETRY_VERSION }}
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+    
+    - name: Set up cache for pip
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python-version }}-
+          ${{ runner.os }}-pip-
+    
+    - name: Install Python dependencies
+      run: |
+        cd backend
+        poetry install --no-interaction --no-root --with test,dev,ci
+        poetry run pip install --no-cache-dir \
+          pytest-cov \
+          pytest-asyncio \
+          pytest-postgresql \
+          pytest-xdist \
+          pytest-mock
+    
+    - name: Run security checks
+      run: |
+        cd backend
+        # Vérification des vulnérabilités connues dans les dépendances
+        poetry run safety check --full-report
+        # Analyse statique du code pour détecter les problèmes de sécurité
+        poetry run bandit -r app -c pyproject.toml
+    
+    - name: Lint with ruff
+      run: |
+        cd backend
+        poetry run ruff check .
+    
+    - name: Check code formatting with black
+      run: |
+        cd backend
+        poetry run black --check --diff .
+    
+    - name: Run type checking with mypy
+      run: |
+        cd backend
+        poetry run mypy --config-file=pyproject.toml .
+    
+    - name: Run unit tests with coverage
+      run: |
+        cd backend
+        set -e
+        # Exécution des tests unitaires avec couverture
+        poetry run python -m pytest -n auto \
+          --asyncio-mode=auto \
+          --cov=app \
+          --cov-config=.coveragerc \
+          --cov-report=xml \
+          --cov-report=term \
+          --cov-fail-under=90 \
+          --maxfail=3 \
+          --disable-warnings \
+          -m "not integration and not slow" \
+          tests/unit/
+    
+    - name: Run integration tests
+      run: |
+        cd backend
+        set -e
+        # Configuration de la base de données de test PostgreSQL
+        export DATABASE_URL="postgresql+asyncpg://test_user:test_password@localhost:5432/test_db"
+        # Attendre que PostgreSQL soit prêt
+        until pg_isready -h localhost -p 5432 -U test_user -d test_db; do
+          sleep 1
+        done
+        # Exécution des tests d'intégration
+        poetry run python -m pytest -v \
+          --asyncio-mode=auto \
+          -m "integration" \
+          --disable-warnings \
+          tests/integration/
+    
+    - name: Upload coverage to Codecov
+      if: success() && github.event_name == 'push'
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./backend/coverage.xml
+        fail_ci_if_error: false
+    
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          backend/.coverage*
+          backend/test-results.xml
+          backend/coverage.xml
+    
+    - name: Check for dependency updates
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+      run: |
+        cd backend
+        poetry update --dry-run
+        poetry run pip list --outdated
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'python:${{ env.PYTHON_VERSION }}'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+    
+    - name: Upload SARIF results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+    
+    - name: Run OWASP Dependency-Check
+      uses: dependency-check/Dependency-Check_Action@main
+      with:
+        project: 'GW2_WvWbuilder'
+        path: '.'
+        format: 'SARIF'
+        scanpath: './backend'
+        fail_on_severity: 'high'
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [test, security-scan]
+    if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
+    environment: staging
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+    
+    - name: Run database migrations
+      run: |
+        cd backend
+        alembic upgrade head
+    
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Ajoutez ici la logique de déploiement spécifique à votre environnement
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment..."
+        # Ajoutez ici la logique de déploiement spécifique à votre environnement

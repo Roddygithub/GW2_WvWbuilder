@@ -1,0 +1,48 @@
+{
+  "webhooks": {
+    "host": "http://localhost:8000",
+    "users": {
+      "webhook_user": {
+        "count": 50,
+        "spawn_rate": 5,
+        "weight": 3
+      },
+      "authenticated_user": {
+        "count": 30,
+        "spawn_rate": 3,
+        "weight": 2
+      },
+      "high_load_user": {
+        "count": 20,
+        "spawn_rate": 2,
+        "weight": 1
+      }
+    },
+    "run_time": "5m",
+    "thresholds": {
+      "http_req_failed": ["rate<0.01"],
+      "http_req_duration": ["p95<500"],
+      "http_reqs_per_sec": ["count>100"]
+    },
+    "stages": [
+      {
+        "duration": "1m",
+        "users": 10,
+        "spawn_rate": 1
+      },
+      {
+        "duration": "3m",
+        "users": 100,
+        "spawn_rate": 10
+      },
+      {
+        "duration": "1m",
+        "users": 0,
+        "spawn_rate": 5
+      }
+    ],
+    "tags": ["webhook"],
+    "exclude_tags": ["slow"],
+    "log_level": "INFO"
+  }
+}

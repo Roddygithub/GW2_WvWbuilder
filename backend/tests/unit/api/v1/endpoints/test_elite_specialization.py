@@ -1,32 +1,34 @@
 """Tests for elite specialization endpoints."""
+
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import status
-from app.main import app
-from app.models import Profession, EliteSpecialization
-from app.schemas import EliteSpecializationCreate, EliteSpecializationUpdate
+from app.models import Profession
+
 
 @pytest.fixture
 def admin_token_headers(async_client: AsyncClient):
     """Get admin token headers for authentication."""
     return {"Authorization": "Bearer test_token:1"}  # admin user ID is 1
 
-@pytest.fixture
+
+@pytest_asyncio.fixture
 async def test_profession(async_session: AsyncSession):
     """Create a test profession for elite specialization tests."""
     profession = Profession(
-        name="Test Profession",
-        description="Test profession for elite specs",
-        icon_url="https://example.com/test.png"
+        name="Test Profession", description="Test profession for elite specs", icon_url="https://example.com/test.png"
     )
     async_session.add(profession)
     await async_session.commit()
     await async_session.refresh(profession)
     return profession
 
+
 @pytest.mark.asyncio
-async def test_create_elite_specialization(async_client: AsyncClient, async_session: AsyncSession, admin_token_headers, test_profession):
+async def test_create_elite_specialization(
+    async_client: AsyncClient, async_session: AsyncSession, admin_token_headers, test_profession
+):
     """Test creating a new elite specialization."""
     profession_id = test_profession.id
 
@@ -39,11 +41,7 @@ async def test_create_elite_specialization(async_client: AsyncClient, async_sess
         "background_url": "https://example.com/reaper_bg.png",
         "is_active": True,
     }
-    response = await async_client.post(
-        "/api/v1/elite-specializations/", 
-        json=payload,
-        headers=admin_token_headers
-    )
+    response = await async_client.post("/api/v1/elite-specializations/", json=payload, headers=admin_token_headers)
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == payload["name"]
@@ -55,7 +53,9 @@ async def test_create_elite_specialization(async_client: AsyncClient, async_sess
 
 
 @pytest.mark.asyncio
-async def test_update_elite_specialization(async_client: AsyncClient, async_session: AsyncSession, admin_token_headers, test_profession):
+async def test_update_elite_specialization(
+    async_client: AsyncClient, async_session: AsyncSession, admin_token_headers, test_profession
+):
     """Test updating an elite specialization."""
     profession_id = test_profession.id
 
@@ -68,21 +68,12 @@ async def test_update_elite_specialization(async_client: AsyncClient, async_sess
         "background_url": "https://example.com/druid_bg.png",
         "is_active": True,
     }
-    response = await async_client.post(
-        "/api/v1/elite-specializations/", 
-        json=payload,
-        headers=admin_token_headers
-    )
+    response = await async_client.post("/api/v1/elite-specializations/", json=payload, headers=admin_token_headers)
     elite_id = response.json()["id"]
 
-    update_payload = {
-        "is_active": False,
-        "weapon_type": "Staff, Astral Wrath"
-    }
+    update_payload = {"is_active": False, "weapon_type": "Staff, Astral Wrath"}
     response = await async_client.put(
-        f"/api/v1/elite-specializations/{elite_id}", 
-        json=update_payload,
-        headers=admin_token_headers
+        f"/api/v1/elite-specializations/{elite_id}", json=update_payload, headers=admin_token_headers
     )
     assert response.status_code == 200
     data = response.json()
@@ -93,7 +84,9 @@ async def test_update_elite_specialization(async_client: AsyncClient, async_sess
 
 
 @pytest.mark.asyncio
-async def test_read_elite_specialization(async_client: AsyncClient, async_session: AsyncSession, admin_token_headers, test_profession):
+async def test_read_elite_specialization(
+    async_client: AsyncClient, async_session: AsyncSession, admin_token_headers, test_profession
+):
     """Test reading an elite specialization."""
     profession_id = test_profession.id
 
@@ -106,11 +99,7 @@ async def test_read_elite_specialization(async_client: AsyncClient, async_sessio
         "background_url": "https://example.com/chrono_bg.png",
         "is_active": True,
     }
-    response = await async_client.post(
-        "/api/v1/elite-specializations/", 
-        json=payload,
-        headers=admin_token_headers
-    )
+    response = await async_client.post("/api/v1/elite-specializations/", json=payload, headers=admin_token_headers)
     elite_id = response.json()["id"]
 
     # Test read by ID
@@ -130,7 +119,9 @@ async def test_read_elite_specialization(async_client: AsyncClient, async_sessio
 
 
 @pytest.mark.asyncio
-async def test_delete_elite_specialization(async_client: AsyncClient, async_session: AsyncSession, admin_token_headers, test_profession):
+async def test_delete_elite_specialization(
+    async_client: AsyncClient, async_session: AsyncSession, admin_token_headers, test_profession
+):
     """Test deleting an elite specialization."""
     profession_id = test_profession.id
 
@@ -143,18 +134,11 @@ async def test_delete_elite_specialization(async_client: AsyncClient, async_sess
         "background_url": "https://example.com/holo_bg.png",
         "is_active": True,
     }
-    response = await async_client.post(
-        "/api/v1/elite-specializations/", 
-        json=payload,
-        headers=admin_token_headers
-    )
+    response = await async_client.post("/api/v1/elite-specializations/", json=payload, headers=admin_token_headers)
     elite_id = response.json()["id"]
 
     # Test delete
-    response = await async_client.delete(
-        f"/api/v1/elite-specializations/{elite_id}",
-        headers=admin_token_headers
-    )
+    response = await async_client.delete(f"/api/v1/elite-specializations/{elite_id}", headers=admin_token_headers)
     assert response.status_code == 204
 
     # Verify deletion
@@ -162,15 +146,14 @@ async def test_delete_elite_specialization(async_client: AsyncClient, async_sess
     assert response.status_code == 404
 
     # Test delete non-existent
-    response = await async_client.delete(
-        "/api/v1/elite-specializations/999999",
-        headers=admin_token_headers
-    )
+    response = await async_client.delete("/api/v1/elite-specializations/999999", headers=admin_token_headers)
     assert response.status_code == 404
 
 
 @pytest.mark.asyncio
-async def test_elite_specialization_validation(async_client: AsyncClient, async_session: AsyncSession, admin_token_headers, test_profession):
+async def test_elite_specialization_validation(
+    async_client: AsyncClient, async_session: AsyncSession, admin_token_headers, test_profession
+):
     """Test validation of elite specialization data."""
     profession_id = test_profession.id
 
@@ -178,28 +161,18 @@ async def test_elite_specialization_validation(async_client: AsyncClient, async_
     payload = {
         # Missing name and profession_id
         "description": "Test description",
-        "is_active": True
+        "is_active": True,
     }
-    response = await async_client.post(
-        "/api/v1/elite-specializations/", 
-        json=payload,
-        headers=admin_token_headers
-    )
+    response = await async_client.post("/api/v1/elite-specializations/", json=payload, headers=admin_token_headers)
     assert response.status_code == 422
-    
+
     # Test invalid profession_id
-    invalid_payload = {
-        "name": "Test Spec",
-        "profession_id": 999999,  # Non-existent profession
-        "is_active": True
-    }
+    invalid_payload = {"name": "Test Spec", "profession_id": 999999, "is_active": True}  # Non-existent profession
     response = await async_client.post(
-        "/api/v1/elite-specializations/", 
-        json=invalid_payload,
-        headers=admin_token_headers
+        "/api/v1/elite-specializations/", json=invalid_payload, headers=admin_token_headers
     )
     assert response.status_code == 400
-    
+
     # Test valid payload
     valid_payload = {
         "name": "Tempest",
@@ -207,11 +180,9 @@ async def test_elite_specialization_validation(async_client: AsyncClient, async_
         "description": "Spécialisation élite de l'élémentaire",
         "weapon_type": "Warhorn",
         "is_active": True,
-        "icon_url": "https://example.com/tempest_icon.png"
+        "icon_url": "https://example.com/tempest_icon.png",
     }
     response = await async_client.post(
-        "/api/v1/elite-specializations/", 
-        json=valid_payload,
-        headers=admin_token_headers
+        "/api/v1/elite-specializations/", json=valid_payload, headers=admin_token_headers
     )
     assert response.status_code == 201

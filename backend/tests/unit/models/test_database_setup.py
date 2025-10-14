@@ -3,6 +3,7 @@ Test database setup and table creation.
 """
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
@@ -26,7 +27,7 @@ TABLES_ORDER = [
 ]
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="session")
 def event_loop():
     """Create an instance of the default event loop for the test session."""
     import asyncio
@@ -36,7 +37,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 async def engine():
     """Create a test database engine and set up tables."""
     # Create engine with echo=True for debugging
@@ -64,7 +65,7 @@ async def engine():
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db(engine):
     """Create a new database session for testing."""
     # Create a new session for testing
@@ -78,16 +79,12 @@ async def test_tables_created(engine):
     """Test that all required tables were created."""
     async with engine.connect() as conn:
         # Get list of tables
-        result = await conn.execute(
-            text("SELECT name FROM sqlite_master WHERE type='table'")
-        )
+        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
         tables = {row[0] for row in result.fetchall()}
 
         # Check for required tables
         required_tables = set(TABLES_ORDER)
-        assert required_tables.issubset(
-            tables
-        ), f"Missing tables: {required_tables - tables}"
+        assert required_tables.issubset(tables), f"Missing tables: {required_tables - tables}"
 
 
 @pytest.mark.asyncio

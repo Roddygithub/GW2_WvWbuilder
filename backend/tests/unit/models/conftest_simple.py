@@ -7,6 +7,7 @@ import logging
 from typing import AsyncGenerator
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.pool import NullPool
@@ -30,7 +31,7 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def engine():
     """Create a test database engine."""
     # Create engine
@@ -48,9 +49,7 @@ async def engine():
 
     # Log all tables for debugging
     async with engine.connect() as conn:
-        result = await conn.execute(
-            text("SELECT name FROM sqlite_master WHERE type='table'")
-        )
+        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
         tables = [row[0] for row in result.fetchall()]
         logger.info(f"Created tables: {tables}")
 
@@ -60,13 +59,11 @@ async def engine():
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db(engine) -> AsyncGenerator[AsyncSession, None]:
     """Create a new database session for testing."""
     # Create a new session
-    async_session = async_sessionmaker(
-        engine, expire_on_commit=False, class_=AsyncSession
-    )
+    async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
     # Create a new session for testing
     async with async_session() as session:
@@ -77,7 +74,7 @@ async def db(engine) -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def clean_db(db):
     """Clean all data from the database before each test."""
     # Clean up all data before each test

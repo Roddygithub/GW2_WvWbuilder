@@ -2,8 +2,8 @@
 Unit tests for base models in the application.
 """
 
-import asyncio
 import pytest
+import pytest_asyncio
 from datetime import datetime
 from uuid import uuid4
 
@@ -76,19 +76,10 @@ class TestSQLUUIDTimeStampedModel(TestBase):
 
 
 # Pytest fixtures
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for the test session."""
-    policy = asyncio.get_event_loop_policy()
-    loop = policy.new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="module")
 async def engine():
     """Create a new engine for testing."""
-    engine = create_async_engine(TEST_DATABASE_URL, echo=True)
+    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
 
     # Create tables
     async with engine.begin() as conn:
@@ -97,21 +88,27 @@ async def engine():
     yield engine
 
     # Clean up
+    async with engine.begin() as conn:
+        await conn.run_sync(TestBase.metadata.drop_all)
     await engine.dispose()
 
 
-@pytest.fixture
-def session_factory(engine):
-    """Create a session factory for testing."""
-    return async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+@pytest_asyncio.fixture
+async def db(engine):
+    """Create a new database session for testing with automatic rollback."""
+    connection = await engine.connect()
+    transaction = await connection.begin()
 
+    session_factory = async_sessionmaker(bind=connection, expire_on_commit=False, class_=AsyncSession)
+    session = session_factory()
 
-@pytest.fixture
-async def db(session_factory):
-    """Create a new database session for testing."""
-    async with session_factory() as session:
+    try:
         yield session
-        await session.rollback()
+    finally:
+        await session.close()
+        if transaction.is_active:
+            await transaction.rollback()
+        await connection.close()
 
 
 # Test cases

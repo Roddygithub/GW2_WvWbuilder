@@ -64,9 +64,7 @@ def setup_logging() -> None:
             },
         },
         "root": {
-            "handlers": (
-                ["console", "file", "error_file"] if log_to_file else ["console"]
-            ),
+            "handlers": (["console", "file", "error_file"] if log_to_file else ["console"]),
             "level": "DEBUG" if settings.DEBUG else "INFO",
         },
         "loggers": {
@@ -82,9 +80,7 @@ def setup_logging() -> None:
                 "propagate": False,
             },
             "app": {
-                "handlers": (
-                    ["console", "file", "error_file"] if log_to_file else ["console"]
-                ),
+                "handlers": (["console", "file", "error_file"] if log_to_file else ["console"]),
                 "level": "DEBUG" if settings.DEBUG else "INFO",
                 "propagate": False,
             },
@@ -98,6 +94,8 @@ def setup_logging() -> None:
     logging.getLogger("asyncio").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("aiosqlite").setLevel(logging.INFO)
+    logging.getLogger("multipart").setLevel(logging.INFO)
 
     # Log the current configuration
     logger = logging.getLogger(__name__)
@@ -111,8 +109,6 @@ def setup_logging() -> None:
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
 
-        logger.critical(
-            "Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)
-        )
+        logger.critical("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
 
     sys.excepthook = handle_exception

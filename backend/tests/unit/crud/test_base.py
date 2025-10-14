@@ -1,6 +1,7 @@
 """Tests for base CRUD operations."""
 
 import pytest
+import pytest_asyncio
 from typing import Optional
 from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String, Boolean, select, delete
@@ -14,25 +15,25 @@ Base = orm_declarative_base()
 
 
 # Test Models
-class TestModel(Base):
+class TestCRUDModel(Base):
     """Test model for CRUD operations."""
 
-    __tablename__ = "test_models"
+    __tablename__ = "test_crud_models"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     is_active = Column(Boolean, default=True)
 
 
-class TestCreateSchema(BaseModel):
-    """Test create schema."""
+class TestCRUDCreateSchema(BaseModel):
+    """Test create schema for CRUD operations."""
 
     name: str
     is_active: bool = True
 
 
-class TestUpdateSchema(BaseModel):
-    """Test update schema."""
+class TestCRUDUpdateSchema(BaseModel):
+    """Test update schema for CRUD operations."""
 
     name: Optional[str] = None
     is_active: Optional[bool] = None
@@ -50,16 +51,15 @@ def event_loop():
     loop.close()
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 async def db_engine():
     """Create database engine and tables."""
     # Create a fresh engine for testing with a unique in-memory database
-    test_engine = create_async_engine(
-        "sqlite+aiosqlite:///:memory:", echo=True, future=True
-    )
+    test_engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=True, future=True)
 
     # Create tables
     async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     yield test_engine
@@ -80,12 +80,12 @@ def async_session_maker(db_engine):
     )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_session(async_session_maker):
     """Create a database session with automatic cleanup."""
     async with async_session_maker() as session:
         # Clear any existing data
-        await session.execute(delete(TestModel))
+        await session.execute(delete(TestCRUDModel))
         await session.commit()
 
         try:
@@ -98,26 +98,26 @@ async def db_session(async_session_maker):
 
 @pytest.fixture
 def crud():
-    """Create a CRUDBase instance for testing."""
-    return CRUDBase(TestModel)
+    """Create a CRUD instance for testing."""
+    return CRUDBase(TestCRUDModel, TestCRUDCreateSchema, TestCRUDUpdateSchema)
 
 
 @pytest.fixture
 def test_model():
     """Create a test model instance."""
-    return TestModel(name="test_model", is_active=True)
+    return TestCRUDModel(name="test_model", is_active=True)
 
 
 @pytest.fixture
 def test_create_schema():
     """Create a test create schema."""
-    return TestCreateSchema(name="test", is_active=True)
+    return TestCRUDCreateSchema(name="test", is_active=True)
 
 
 @pytest.fixture
 def test_update_schema():
     """Create a test update schema."""
-    return TestUpdateSchema(name="updated")
+    return TestCRUDUpdateSchema(name="updated")
 
 
 # Tests
@@ -132,7 +132,7 @@ def test_crud_init(crud):
 async def test_get_async(db_session, crud):
     """Test asynchronous get method."""
     # Create and add test model to the database
-    test_model = TestModel(name="test_get_async", is_active=True)
+    test_model = TestCRUDModel(name="test_get_async", is_active=True)
     db_session.add(test_model)
     await db_session.commit()
 
@@ -146,20 +146,20 @@ async def test_get_async(db_session, crud):
 
 @pytest.mark.asyncio
 async def test_get_multi_async(db_session, crud):
-    """Test asynchronous get_multi method."""
     # Clear any existing data
-    await db_session.execute(delete(TestModel))
+    await db_session.execute(delete(TestCRUDModel))
 
     # Add test models to the database with unique IDs
-    test_models = [
-        TestModel(name="test1", is_active=True),
-        TestModel(name="test2", is_active=True),
-        TestModel(name="test3", is_active=False),
-    ]
+    test_models = [TestCRUDModel(name=f"test_{i}", is_active=(i % 2 == 0)) for i in range(5)]
 
     for model in test_models:
         db_session.add(model)
+
     await db_session.commit()
+
+    # Refresh all models to get their IDs
+    for model in test_models:
+        await db_session.refresh(model)
 
     # Test get_multi with default parameters
     results = await crud.get_multi_async(db_session)
@@ -193,14 +193,12 @@ async def test_create_async(db_session, crud, test_create_schema):
 async def test_update_async(db_session, crud, test_update_schema):
     """Test asynchronous update method."""
     # Create and add a test model to the database
-    test_model = TestModel(name="test_update_async", is_active=True)
+    test_model = TestCRUDModel(name="test_update_async", is_active=True)
     db_session.add(test_model)
     await db_session.commit()
 
     # Test update_async
-    updated = await crud.update_async(
-        db_session, db_obj=test_model, obj_in=test_update_schema
-    )
+    updated = await crud.update_async(db_session, db_obj=test_model, obj_in=test_update_schema)
 
     # Verify the result
     assert updated is not None
@@ -217,7 +215,7 @@ async def test_update_async(db_session, crud, test_update_schema):
 async def test_remove_async(db_session, crud):
     """Test asynchronous remove method."""
     # Create and add a test model to the database
-    test_model = TestModel(name="test_remove", is_active=True)
+    test_model = TestCRUDModel(name="test_remove", is_active=True)
     db_session.add(test_model)
     await db_session.commit()
     await db_session.refresh(test_model)
@@ -246,9 +244,9 @@ async def test_count_async(db_session, crud):
 
     # Add test models to the database
     test_models = [
-        TestModel(name="test1", is_active=True),
-        TestModel(name="test2", is_active=True),
-        TestModel(name="test3", is_active=False),
+        TestCRUDModel(name="test1", is_active=True),
+        TestCRUDModel(name="test2", is_active=True),
+        TestCRUDModel(name="test3", is_active=False),
     ]
 
     db_session.add_all(test_models)
@@ -267,7 +265,7 @@ async def test_count_async(db_session, crud):
 async def test_exists_async(db_session, crud):
     """Test asynchronous exists method."""
     # Create and add a test model to the database
-    test_model = TestModel(name="test_exists", is_active=True)
+    test_model = TestCRUDModel(name="test_exists", is_active=True)
     db_session.add(test_model)
     await db_session.commit()
 
@@ -281,8 +279,8 @@ async def test_exists_async(db_session, crud):
 
 
 # Test the CRUDBase initialization
-def test_crud_init(crud):
-    """Test CRUDBase initialization."""
-    assert crud.model == TestModel
+def test_crud_init_duplicate(crud):
+    """Test CRUDBase initialization (duplicate test)."""
+    assert crud.model == TestCRUDModel
     assert hasattr(crud, "_select_stmt")
-    assert str(crud._select_stmt) == str(select(TestModel))
+    assert str(crud._select_stmt) == str(select(TestCRUDModel))

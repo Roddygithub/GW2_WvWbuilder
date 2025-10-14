@@ -1,4 +1,5 @@
 import pytest
+import pytest_asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,9 +38,7 @@ def mock_build_create():
 
 @pytest.fixture
 def mock_build_update():
-    return BuildUpdate(
-        name="Updated Build", description="Updated Description", is_public=False
-    )
+    return BuildUpdate(name="Updated Build", description="Updated Description", is_public=False)
 
 
 # Helper function to create a mock result
@@ -53,16 +52,14 @@ def create_mock_result(return_value, is_list=False):
 
 
 # Tests
-@patch('app.crud.crud_build.CRUDBuild.invalidate_cache', new_callable=AsyncMock)
+@patch("app.crud.crud_build.CRUDBuild.invalidate_cache", new_callable=AsyncMock)
 class TestCRUDBuild:
     @pytest.mark.asyncio
     async def test_create_build_success(self, mock_invalidate_cache, mock_build_create):
         """Test creating a build with valid data"""
         db = AsyncMock(spec=AsyncSession)
-        
-        result = await build_crud.create(
-            db, obj_in=mock_build_create, created_by=1
-        )
+
+        result = await build_crud.create(db, obj_in=mock_build_create, created_by=1)
 
         assert result.name == mock_build_create.name
         assert result.created_by == 1
@@ -77,7 +74,7 @@ class TestCRUDBuild:
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = create_mock_result(mock_build)
 
-        with patch('app.crud.crud_build.settings.CACHE_ENABLED', False):
+        with patch("app.crud.crud_build.settings.CACHE_ENABLED", False):
             result = await build_crud.get(db, 1)
 
         assert result.id == 1
@@ -87,10 +84,8 @@ class TestCRUDBuild:
     async def test_update_build(self, mock_invalidate_cache, mock_build, mock_build_update):
         """Test updating a build"""
         db = AsyncMock(spec=AsyncSession)
-        
-        result = await build_crud.update(
-            db, db_obj=mock_build, obj_in=mock_build_update
-        )
+
+        result = await build_crud.update(db, db_obj=mock_build, obj_in=mock_build_update)
 
         assert result.name == "Updated Build"
         db.add.assert_called_once()
@@ -102,8 +97,8 @@ class TestCRUDBuild:
     async def test_remove_build(self, mock_invalidate_cache, mock_build):
         """Test removing a build"""
         db = AsyncMock(spec=AsyncSession)
-        
-        with patch.object(build_crud, 'get', new_callable=AsyncMock, return_value=mock_build) as mock_get:
+
+        with patch.object(build_crud, "get", new_callable=AsyncMock, return_value=mock_build) as mock_get:
             result = await build_crud.remove(db, id=1)
 
             assert result.name == "Test Build"
@@ -146,8 +141,8 @@ class TestCRUDBuild:
         db.execute.assert_called_once()
 
 
-@patch('app.crud.crud_build.settings.CACHE_ENABLED', True)
-@patch('app.crud.crud_build.cache', new_callable=AsyncMock)
+@patch("app.crud.crud_build.settings.CACHE_ENABLED", True)
+@patch("app.crud.crud_build.cache", new_callable=AsyncMock)
 class TestCRUDBuildCache:
     @pytest.mark.asyncio
     async def test_get_build_by_id_cache_hit(self, mock_cache, mock_build):

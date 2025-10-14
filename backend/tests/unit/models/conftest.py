@@ -2,11 +2,11 @@
 Test configuration and fixtures for model tests.
 """
 
-import asyncio
 import logging
 from typing import AsyncGenerator
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     create_async_engine,
@@ -26,10 +26,8 @@ from app.models import (
     Composition,
     CompositionTag,
     Build,
-    composition_members,
-    user_roles,
-    build_profession,
 )
+from app.models.association_tables import composition_members, build_profession
 
 # Make sure all models are imported and registered with SQLAlchemy
 __all__ = [
@@ -49,8 +47,12 @@ __all__ = [
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Test database URL - use in-memory SQLite for tests
-TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+# Test database URL - use temporary file for tests to avoid in-memory isolation issues
+import tempfile
+import os
+
+_test_db_fd, _test_db_path = tempfile.mkstemp(suffix=".db")
+TEST_DATABASE_URL = f"sqlite+aiosqlite:///{_test_db_path}"
 
 # List of all tables in the correct order to avoid foreign key constraint issues
 TABLES_ORDER = [
@@ -60,30 +62,18 @@ TABLES_ORDER = [
     "professions",
     "elite_specializations",
     "builds",
-    "build_profession",
+    "build_professions",
+    "tags",
     "compositions",
     "composition_tags",
     "composition_members",
 ]
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
+## Note: Use top-level tests/conftest.py event_loop fixture (session-scoped)
 
 
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture(scope="session")
 async def engine() -> AsyncEngine:
     """Create a test database engine and set up tables."""
     # Create engine with echo=True for debugging
@@ -95,14 +85,16 @@ async def engine() -> AsyncEngine:
         connect_args={"check_same_thread": False},
     )
 
-    # Create all tables in the correct order
+    # Create all tables using begin() which auto-commits on exit
     async with engine.begin() as conn:
         # Drop all tables first to ensure a clean state
         logger.info("\n=== DEBUG: Dropping all tables ===")
         await conn.run_sync(Base.metadata.drop_all)
 
+    # Create tables in a separate transaction
+    async with engine.begin() as conn:
         # Log all available tables in metadata
-        logger.info(f"\n=== DEBUG: All tables in Base.metadata ===")
+        logger.info("\n=== DEBUG: All tables in Base.metadata ===")
         for name, table in Base.metadata.tables.items():
             logger.info(f"- {name} (columns: {[c.name for c in table.columns]})")
 
@@ -113,9 +105,7 @@ async def engine() -> AsyncEngine:
 
     # Verify tables were created
     async with engine.connect() as conn:
-        result = await conn.execute(
-            text("SELECT name FROM sqlite_master WHERE type='table'")
-        )
+        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
         tables = [row[0] for row in result.fetchall()]
         logger.info(f"Created tables: {tables}")
 
@@ -140,6 +130,13 @@ async def engine() -> AsyncEngine:
 
     await engine.dispose()
 
+    # Remove temporary database file
+    try:
+        os.close(_test_db_fd)
+        os.unlink(_test_db_path)
+    except Exception as e:
+        logger.warning(f"Error removing temp database: {e}")
+
 
 @pytest.fixture
 def session_factory(engine):
@@ -153,7 +150,7 @@ def session_factory(engine):
     )
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def db(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
     """Create a new database session for testing."""
     # Create a new session
@@ -173,7 +170,7 @@ async def db(engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
             await session.close()
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def clean_db(db):
     """Clean all data from the database before and after each test."""
     # Get all table names that exist in the database

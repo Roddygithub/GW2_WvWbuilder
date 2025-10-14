@@ -9,22 +9,25 @@ and various test helpers and fixtures.
 from . import conftest  # noqa: F401
 
 # Import test helpers
-from .helpers import (  # noqa: F401
-    create_test_model_class,
-    create_test_instance,
-)
+try:
+    from .helpers import (  # noqa: F401
+        random_string,
+        random_email,
+        random_password,
+    )
+except ImportError:
+    pass
 
 # Import test data factories
-from .factories import (  # noqa: F401
-    BaseFactory,
-    RoleFactory,
-    UserFactory,
-    ProfessionFactory,
-    EliteSpecializationFactory,
-    BuildFactory,
-    CompositionFactory,
-    CompositionTagFactory,
-    UserCreateFactory,
-    RoleCreateFactory,
-    BuildCreateFactory,
-)
+try:
+    from .helpers.factories import (  # noqa: F401
+        create_user,
+        create_role,
+        create_permission,
+        create_profession,
+        create_build,
+        create_composition,
+    )
+except ImportError:
+    # Si les factories ne sont pas disponibles, on continue sans elles
+    pass

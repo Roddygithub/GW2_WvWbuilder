@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.gzip import GZipMiddleware
@@ -6,22 +6,102 @@ from fastapi.exceptions import RequestValidationError, HTTPException
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+from contextlib import asynccontextmanager
 
 import os
 import logging
-from typing import Dict
+import asyncio
+from typing import Dict, AsyncIterator
 
 from app.core.config import settings
 from app.api.api_v1.api import api_router
 from app.core.logging_config import setup_logging
 from app.db.session import engine, Base
 from app.core.cache import cache as redis_cache
+from app.core.limiter import init_rate_limiter, close_rate_limiter
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# Configuration du logging
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    # Démarrage de l'application
+    logger.info("Démarrage de l'application...")
+
+    # Initialisation de la base de données
+    logger.info("Initialisation de la base de données...")
+
+    # Initialisation du cache Redis...
+    logger.info("initialisation du cache Redis...")
+    try:
+        # Test connection to Redis if cache is enabled
+        if settings.CACHE_ENABLED and settings.REDIS_URL:
+            await redis_cache.ping()
+            logger.info("Cache Redis initialisé avec succès")
+        else:
+            logger.info("Cache Redis désactivé")
+    except Exception as e:
+        logger.warning(f"Cache Redis non disponible : {e}")
+        # Don't fail if Redis is not available in development
+        if settings.ENVIRONMENT == "production":
+            raise
+
+    # Initialisation du rate limiter (sautée en environnement de test)
+    if settings.ENVIRONMENT != "test":
+        logger.info("Initialisation du rate limiter...")
+        try:
+            await init_rate_limiter()
+            logger.info("Rate limiter initialisé avec succès")
+            # Initialisation de la rotation des clés
+            logger.info("Initialisation de la rotation des clés...")
+            from app.core.tasks import schedule_key_rotation
+
+            schedule_key_rotation()
+            logger.info("Service de rotation des clés démarré avec succès")
+        except Exception as e:
+            logger.error(f"Échec de l'initialisation du rate limiter : {e}")
+            if settings.ENVIRONMENT != "test":
+                raise
+    else:
+        logger.info("Rate limiter désactivé pour les tests")
+    logger.info("Démarrage de la surveillance de la base de données...")
+    from app.core import db_monitor
+
+    monitor_task = asyncio.create_task(db_monitor.start_monitoring(interval=300))  # Toutes les 5 minutes
+
+    try:
+        yield  # L'application est en cours d'exécution
+    finally:
+        # Arrêt de l'application
+        logger.info("Arrêt de l'application...")
+
+        # Arrêter la surveillance de la base de données
+        if monitor_task and not monitor_task.done():
+            monitor_task.cancel()
+            try:
+                await monitor_task
+            except asyncio.CancelledError:
+                pass
+            logger.info("Surveillance de la base de données arrêtée")
+
+        # Fermer la connexion Redis et le rate limiter
+        logger.info("Fermeture des connexions...")
+        try:
+            await close_rate_limiter()
+            logger.info("Connexion du rate limiter fermée avec succès")
+        except Exception as e:
+            logger.error(f"Erreur lors de la fermeture du rate limiter : {e}")
+
+        try:
+            await redis_cache.close()
+            logger.info("Connexion Redis fermée avec succès")
+        except Exception as e:
+            logger.error(f"Erreur lors de la fermeture de la connexion Redis : {e}")
 
 
 def create_application() -> FastAPI:
+    """Crée et configure l'application FastAPI."""
     application = FastAPI(
         title=settings.PROJECT_NAME,
         description="GW2 WvW Builder API - Optimize your WvW compositions for Guild Wars 2",
@@ -29,31 +109,8 @@ def create_application() -> FastAPI:
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
         docs_url="/docs",
         redoc_url="/redoc",
+        lifespan=lifespan,
     )
-    
-    # Initialize Redis cache on startup
-    @application.on_event("startup")
-    async def startup_event():
-        """Initialize Redis cache on application startup."""
-        logger = logging.getLogger(__name__)
-        logger.info("Initializing Redis cache...")
-        try:
-            await redis_cache.init_redis()
-            logger.info("Redis cache initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize Redis cache: {e}")
-    
-    # Close Redis connection on shutdown
-    @application.on_event("shutdown")
-    async def shutdown_event():
-        """Close Redis connection on application shutdown."""
-        logger = logging.getLogger(__name__)
-        logger.info("Closing Redis connection...")
-        try:
-            await redis_cache.close()
-            logger.info("Redis connection closed successfully")
-        except Exception as e:
-            logger.error(f"Error closing Redis connection: {e}")
 
     # Set up CORS
     if settings.BACKEND_CORS_ORIGINS:
@@ -83,20 +140,41 @@ def create_application() -> FastAPI:
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        # La ligne ci-dessous est souvent utilisée, mais peut être redondante avec des CSP modernes.
-        # response.headers["X-XSS-Protection"] = "1; mode=block"
-        # Un Content-Security-Policy plus strict est généralement préférable.
-        # response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self'; object-src 'none';"
+        # Ajout de l'en-tête X-XSS-Protection pour la compatibilité avec les anciens navigateurs
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        # Politique de sécurité du contenu
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none';"
+        )
         return response
-
 
     # Include API routes
     application.include_router(api_router, prefix=settings.API_V1_STR)
 
     # Set up static files if present (skip in test envs without static dir)
-    static_dir = os.path.join(os.path.dirname(__file__), "static")
-    if os.path.isdir(static_dir) or os.path.isdir("static"):
-        application.mount("/static", StaticFiles(directory="static"), name="static")
+    print(f"Environment: {settings.ENVIRONMENT}")
+    static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "static"))
+
+    try:
+        # Always create the static directory if it doesn't exist
+        os.makedirs(static_dir, exist_ok=True)
+
+        # Create a .gitkeep file if the directory is empty
+        if not os.listdir(static_dir):
+            with open(os.path.join(static_dir, ".gitkeep"), "w") as f:
+                f.write("")
+
+        # Only mount static files if not in test environment
+        if settings.ENVIRONMENT != "test":
+            print(f"Mounting static directory at: {static_dir}")
+            application.mount("/static", StaticFiles(directory=static_dir), name="static")
+        else:
+            print("Skipping static files mount in test environment")
+
+    except Exception as e:
+        print(f"Warning: Could not set up static files: {e}")
+        if settings.ENVIRONMENT != "test":
+            raise
 
     # Set up logging
     setup_logging()
@@ -107,27 +185,58 @@ def create_application() -> FastAPI:
 
     # Add exception handlers
     @application.exception_handler(HTTPException)
-    async def http_exception_handler(
-        request: Request, exc: HTTPException
-    ) -> JSONResponse:
+    async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
         return JSONResponse(
             status_code=exc.status_code,
             content={"detail": exc.detail},
         )
 
     @application.exception_handler(RequestValidationError)
-    async def validation_exception_handler(
-        request: Request, exc: RequestValidationError
-    ) -> JSONResponse:
+    async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
         return JSONResponse(
             status_code=422,
             content={"detail": exc.errors(), "body": exc.body},
         )
 
     @application.exception_handler(500)
-    async def internal_exception_handler(
-        request: Request, exc: Exception
-    ) -> JSONResponse:
+    async def internal_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        # Log the error
+        logger.error(f"Internal server error: {exc}", exc_info=True)
+        
+        # In debug mode, return the actual error
+        if settings.DEBUG:
+            import traceback
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "detail": str(exc),
+                    "type": type(exc).__name__,
+                    "traceback": traceback.format_exc()
+                },
+            )
+        
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Internal server error"},
+        )
+    
+    @application.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        # Log the error
+        logger.error(f"Unhandled exception: {exc}", exc_info=True)
+        
+        # In debug mode, return the actual error
+        if settings.DEBUG:
+            import traceback
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "detail": str(exc),
+                    "type": type(exc).__name__,
+                    "traceback": traceback.format_exc()
+                },
+            )
+        
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error"},
@@ -136,28 +245,29 @@ def create_application() -> FastAPI:
     # Add health check endpoint
     @application.get("/health")
     async def health_check() -> Dict[str, str]:
-        return {"status": "ok"}
+        return {"status": "ok", "database": "ok", "version": settings.API_VERSION}
 
     # Add root endpoint
     @application.get("/")
     async def root() -> Dict[str, str]:
         return {
-            "message": "Welcome to the GW2 WvW Builder API",
+            "message": f"Welcome to the {settings.PROJECT_NAME} API",
             "docs": "/docs",
-            "version": "0.1.0",
         }
 
     return application
 
 
-app = create_application()
+# Create the application only when needed
+def get_application() -> FastAPI:
+    """Create and configure the FastAPI application."""
+    return create_application()
 
-@app.get("/", include_in_schema=False)
-async def root():
-    return {"message": "Hello World"}
+
+# For backward compatibility, create the app when imported directly
+app = get_application()
+
 
 # This allows the application to be run directly with: python -m app.main
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    pass

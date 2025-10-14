@@ -1,0 +1,65 @@
+# Configuration for yamllint
+# Documentation: https://yamllint.readthedocs.io/
+
+extends: default
+
+rules:
+  # Disable rules that conflict with pre-commit
+  document-start: disable
+  line-length: disable
+  trailing-spaces: disable
+  truthy: disable
+  comments: disable
+  document-end: disable
+  empty-lines: disable
+  indentation:
+    # 2 spaces for indentation
+    spaces: 2
+    indent-sequences: consistent
+    check-multi-line-strings: false
+  key-duplicates: enable
+  new-line-at-end-of-file: enable
+  new-lines:
+    type: unix
+  trailing-spaces: disable
+  truthy:
+    allowed-values: [true, false, null]
+    check-keys: false
+  empty-lines:
+    max: 1
+    max-start: 0
+    max-end: 1
+  comments:
+    min-spaces-from-content: 1
+    require-starting-space: true
+  document-start: disable
+  braces:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+    max-spaces-inside-empty: -1
+    min-spaces-inside-empty: -1
+  brackets:
+    max-spaces-inside: 1
+    min-spaces-inside: 0
+    max-spaces-inside-empty: -1
+    min-spaces-inside-empty: -1
+  colons:
+    max-spaces-before: 0
+    max-spaces-after: 1
+  commas:
+    max-spaces-before: 0
+    min-spaces-after: 1
+    max-spaces-after: 1
+  comments-indentation: disable
+  document-end: disable
+  empty-lines: disable
+  hyphens:
+    max-spaces-after: 1
+  indentation: disable
+  key-ordering: disable
+  line-length: disable
+  new-line-at-end-of-file: disable
+  new-lines:
+    type: unix
+  trailing-spaces: disable
+  truthy: disable

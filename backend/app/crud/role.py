@@ -11,6 +11,11 @@ from app.models import Role as RoleModel
 from app.schemas.role import RoleCreate, RoleUpdate
 
 
+def get_role_by_name_sync(db: Session, name: str) -> Optional[RoleModel]:
+    """Get a role by name synchronously."""
+    return db.query(RoleModel).filter(RoleModel.name == name).first()
+
+
 class CRUDRole(CRUDBase[RoleModel, RoleCreate, RoleUpdate]):
     """CRUD operations for Role model with both sync and async support."""
 
@@ -19,24 +24,18 @@ class CRUDRole(CRUDBase[RoleModel, RoleCreate, RoleUpdate]):
         stmt = select(self.model).where(self.model.name == name)
         return db.scalars(stmt).first()
 
-    async def get_by_name_async(
-        self, db: AsyncSession, *, name: str
-    ) -> Optional[RoleModel]:
+    async def get_by_name_async(self, db: AsyncSession, *, name: str) -> Optional[RoleModel]:
         """Get a role by name (asynchronous)."""
         stmt = select(self.model).where(self.model.name == name)
         result = await db.execute(stmt)
         return result.scalars().first()
 
-    def get_by_permission_level(
-        self, db: Session, *, permission_level: int
-    ) -> List[RoleModel]:
+    def get_by_permission_level(self, db: Session, *, permission_level: int) -> List[RoleModel]:
         """Get all roles with a specific permission level (synchronous)."""
         stmt = select(self.model).where(self.model.permission_level == permission_level)
         return list(db.scalars(stmt).all())
 
-    async def get_by_permission_level_async(
-        self, db: AsyncSession, *, permission_level: int
-    ) -> List[RoleModel]:
+    async def get_by_permission_level_async(self, db: AsyncSession, *, permission_level: int) -> List[RoleModel]:
         """Get all roles with a specific permission level (asynchronous)."""
         stmt = select(self.model).where(self.model.permission_level == permission_level)
         result = await db.execute(stmt)
@@ -91,22 +90,12 @@ class CRUDRole(CRUDBase[RoleModel, RoleCreate, RoleUpdate]):
 
     def get_with_users(self, db: Session, *, id: int) -> Optional[RoleModel]:
         """Get a role with its users (synchronous)."""
-        stmt = (
-            select(self.model)
-            .where(self.model.id == id)
-            .options(selectinload(self.model.users))
-        )
+        stmt = select(self.model).where(self.model.id == id).options(selectinload(self.model.users))
         return db.scalars(stmt).first()
 
-    async def get_with_users_async(
-        self, db: AsyncSession, *, id: int
-    ) -> Optional[RoleModel]:
+    async def get_with_users_async(self, db: AsyncSession, *, id: int) -> Optional[RoleModel]:
         """Get a role with its users (asynchronous)."""
-        stmt = (
-            select(self.model)
-            .where(self.model.id == id)
-            .options(selectinload(self.model.users))
-        )
+        stmt = select(self.model).where(self.model.id == id).options(selectinload(self.model.users))
         result = await db.execute(stmt)
         return result.unique().scalars().first()
 
@@ -126,9 +115,7 @@ class CRUDRole(CRUDBase[RoleModel, RoleCreate, RoleUpdate]):
         stmt = select(self.model.id).where(self.model.name == name)
         return db.scalars(stmt).first()
 
-    async def get_id_by_name_async(
-        self, db: AsyncSession, *, name: str
-    ) -> Optional[int]:
+    async def get_id_by_name_async(self, db: AsyncSession, *, name: str) -> Optional[int]:
         """Get role ID by name (asynchronous)."""
         stmt = select(self.model.id).where(self.model.name == name)
         result = await db.execute(stmt)

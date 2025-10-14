@@ -58,14 +58,10 @@ class BuildBase(BaseModel):
         default=None,
         max_length=1000,
         description="Detailed description of the build",
-        examples=[
-            "A support Firebrand build focused on providing quickness and stability in WvW zergs"
-        ],
+        examples=["A support Firebrand build focused on providing quickness and stability in WvW zergs"],
     )
 
-    game_mode: GameMode = Field(
-        ..., description="Game mode this build is designed for", examples=["wvw"]
-    )
+    game_mode: GameMode = Field(..., description="Game mode this build is designed for", examples=["wvw"])
 
     team_size: int = Field(
         default=5,
@@ -144,11 +140,13 @@ class BuildBase(BaseModel):
         # Exemple de combinaisons interdites (IDs de professions)
         logger = logging.getLogger(__name__)
         forbidden_combinations = settings.FORBIDDEN_PROFESSION_COMBINATIONS
-        
+
         profession_set = set(v)
         for combo in forbidden_combinations:
             if combo.issubset(profession_set):
-                logger.warning(f"Attempted to use forbidden profession combination: {combo} in build creation/update. Input professions: {v}")
+                logger.warning(
+                    f"Attempted to use forbidden profession combination: {combo} in build creation/update. Input professions: {v}"
+                )
                 raise ValueError(f"Professions with IDs {combo} cannot be used together in the same build.")
         return v
 
@@ -161,9 +159,7 @@ class BuildBase(BaseModel):
         if not isinstance(v, dict):
             raise ValueError("Config must be a dictionary")
 
-        if "weapons" in v and (
-            not isinstance(v["weapons"], list) or len(v["weapons"]) == 0
-        ):
+        if "weapons" in v and (not isinstance(v["weapons"], list) or len(v["weapons"]) == 0):
             raise ValueError("Weapons list cannot be empty")
 
         return v
@@ -200,9 +196,7 @@ class BuildCreate(BuildBase):
         }
     )
 
-    name: str = Field(
-        ..., min_length=3, max_length=100, examples=["WvW Zerg Firebrand"]
-    )
+    name: str = Field(..., min_length=3, max_length=100, examples=["WvW Zerg Firebrand"])
 
     @field_validator("name")
     @classmethod
@@ -283,14 +277,10 @@ class BuildUpdate(BaseModel):
 
     constraints: Optional[Dict[str, Any]] = Field(
         default=None,
-        examples=[
-            {"required_roles": ["quickness", "stability", "aegis"], "min_healers": 2}
-        ],
+        examples=[{"required_roles": ["quickness", "stability", "aegis"], "min_healers": 2}],
     )
 
-    profession_ids: Optional[List[int]] = Field(
-        default=None, min_length=1, max_length=3, examples=[[1, 2, 3]]
-    )
+    profession_ids: Optional[List[int]] = Field(default=None, min_length=1, max_length=3, examples=[[1, 2, 3]])
 
     @field_validator("name")
     @classmethod
@@ -322,9 +312,7 @@ class BuildProfessionBase(BaseModel):
 
     id: int = Field(..., description="Unique identifier for the profession")
     name: str = Field(..., description="Name of the profession")
-    description: Optional[str] = Field(
-        default=None, description="Brief description of the profession"
-    )
+    description: Optional[str] = Field(default=None, description="Brief description of the profession")
 
 
 # Move BuildProfessionBase before BuildInDBBase to avoid circular imports
@@ -364,12 +352,8 @@ class BuildInDBBase(BaseModel):
 
     id: int = Field(..., description="Unique identifier for the build")
     created_by_id: int = Field(..., description="ID of the user who created the build")
-    created_at: datetime = Field(
-        ..., description="Timestamp when the build was created"
-    )
-    updated_at: Optional[datetime] = Field(
-        None, description="Timestamp when the build was last updated"
-    )
+    created_at: datetime = Field(..., description="Timestamp when the build was created")
+    updated_at: Optional[datetime] = Field(None, description="Timestamp when the build was last updated")
     profession_ids: List[int] = Field(
         default_factory=list,
         description="List of profession IDs associated with this build",
@@ -393,8 +377,7 @@ class BuildInDBBase(BaseModel):
                     if hasattr(orm_obj, "professions"):
                         data = dict(data)
                         data["professions"] = [
-                            {"id": p.id, "name": p.name, "description": p.description}
-                            for p in orm_obj.professions
+                            {"id": p.id, "name": p.name, "description": p.description} for p in orm_obj.professions
                         ]
 
                         # Also ensure profession_ids is set
@@ -402,9 +385,7 @@ class BuildInDBBase(BaseModel):
                             data["profession_ids"] = [p.id for p in orm_obj.professions]
 
                 # Handle build_professions relationship if it exists
-                elif hasattr(data.get("_sa_instance_state", None), "attrs") and hasattr(
-                    data, "build_professions"
-                ):
+                elif hasattr(data.get("_sa_instance_state", None), "attrs") and hasattr(data, "build_professions"):
                     orm_obj = data
                     data = dict(data)
                     data["professions"] = [
@@ -422,15 +403,10 @@ class BuildInDBBase(BaseModel):
                         data["profession_ids"] = [p["id"] for p in data["professions"]]
 
             # Handle case where professions is a list of ORM objects
-            elif (
-                "professions" in data
-                and data["professions"]
-                and hasattr(data["professions"][0], "id")
-            ):
+            elif "professions" in data and data["professions"] and hasattr(data["professions"][0], "id"):
                 data = dict(data)
                 data["professions"] = [
-                    {"id": p.id, "name": p.name, "description": p.description}
-                    for p in data["professions"]
+                    {"id": p.id, "name": p.name, "description": p.description} for p in data["professions"]
                 ]
 
                 # Also ensure profession_ids is set
@@ -619,8 +595,7 @@ class BuildGenerationRequest(BaseModel):
 
         if invalid_roles:
             raise ValueError(
-                f"Invalid role(s): {', '.join(invalid_roles)}. "
-                f"Valid roles are: {', '.join(valid_roles)}"
+                f"Invalid role(s): {', '.join(invalid_roles)}. " f"Valid roles are: {', '.join(valid_roles)}"
             )
         return v
 
@@ -644,15 +619,9 @@ class TeamMember(BaseModel):
         }
     )
 
-    position: int = Field(
-        ..., description="Position in the team (1-based)", examples=[1]
-    )
-    profession: str = Field(
-        ..., description="Name of the profession", examples=["Guardian"]
-    )
-    role: str = Field(
-        ..., description="Primary role in the team", examples=["Healer/Support"]
-    )
+    position: int = Field(..., description="Position in the team (1-based)", examples=[1])
+    profession: str = Field(..., description="Name of the profession", examples=["Guardian"])
+    role: str = Field(..., description="Primary role in the team", examples=["Healer/Support"])
     build: str = Field(
         ...,
         description="Recommended build name",
@@ -680,9 +649,7 @@ class BuildGenerationResponse(BaseModel):
                     "success": True,
                     "message": "Build generated successfully",
                     "build": Build.model_config["json_schema_extra"]["examples"][0],
-                    "suggested_composition": [
-                        TeamMember.model_config["json_schema_extra"]["examples"][0]
-                    ],
+                    "suggested_composition": [TeamMember.model_config["json_schema_extra"]["examples"][0]],
                     "metrics": {
                         "boon_coverage": {
                             "quickness": 100.0,
@@ -708,17 +675,13 @@ class BuildGenerationResponse(BaseModel):
         }
     )
 
-    success: bool = Field(
-        ..., description="Whether the generation was successful", examples=[True]
-    )
+    success: bool = Field(..., description="Whether the generation was successful", examples=[True])
     message: str = Field(
         ...,
         description="Status message or error description",
         examples=["Build generated successfully"],
     )
-    build: Optional[Build] = Field(
-        default=None, description="Generated build details if successful"
-    )
+    build: Optional[Build] = Field(default=None, description="Generated build details if successful")
     suggested_composition: List[TeamMember] = Field(
         default_factory=list,
         description="List of team members in the suggested composition",

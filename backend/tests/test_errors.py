@@ -22,9 +22,7 @@ app = FastAPI()
 # Test routes that raise different types of exceptions
 @app.get("/test/http-exception")
 async def test_http_exception():
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST, detail="Test HTTP Exception"
-    )
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Test HTTP Exception")
 
 
 @app.get("/test/validation-error")
@@ -111,9 +109,7 @@ def test_custom_exception_handler():
     response = client.get("/test/custom-exception")
 
     assert response.status_code == 400
-    assert response.json() == {
-        "detail": {"code": 400, "error": "Test Custom Exception"}
-    }
+    assert response.json() == {"detail": {"code": 400, "error": "Test Custom Exception"}}
 
 
 def test_generic_exception_handler():
@@ -121,9 +117,7 @@ def test_generic_exception_handler():
     response = client.get("/test/generic-exception")
 
     assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
-    assert response.json() == {
-        "detail": {"code": 500, "error": "Internal Server Error"}
-    }
+    assert response.json() == {"detail": {"code": 500, "error": "Internal Server Error"}}
 
 
 def test_custom_exception():
@@ -135,9 +129,7 @@ def test_custom_exception():
     assert str(exc) == "Test Error"
 
     # Test with details
-    exc_with_details = CustomException(
-        code=400, error="Test Error", details={"field": "error details"}
-    )
+    exc_with_details = CustomException(code=400, error="Test Error", details={"field": "error details"})
     assert exc_with_details.details == {"field": "error details"}
 
 

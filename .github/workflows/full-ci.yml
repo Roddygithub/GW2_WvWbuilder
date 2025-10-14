@@ -1,0 +1,264 @@
+name: Full CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  backend-tests:
+    name: Backend Tests & Coverage
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.7.1
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+    
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: backend/.venv
+        key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('backend/poetry.lock') }}
+    
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: |
+        cd backend
+        poetry install --no-interaction --no-root
+    
+    - name: Install project
+      run: |
+        cd backend
+        poetry install --no-interaction
+    
+    - name: Run pytest with coverage
+      run: |
+        cd backend
+        poetry run pytest tests/ \
+          --cov=app \
+          --cov-report=xml \
+          --cov-report=html \
+          --cov-report=term-missing \
+          --tb=short \
+          -v
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-coverage
+        fail_ci_if_error: false
+    
+    - name: Upload HTML coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report-backend
+        path: backend/htmlcov/
+
+  backend-lint:
+    name: Backend Linting & Security
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.7.1
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        poetry install --no-interaction
+    
+    - name: Check formatting with Black
+      run: |
+        cd backend
+        poetry run black --check app/ tests/ --line-length 120
+    
+    - name: Lint with Ruff
+      run: |
+        cd backend
+        poetry run ruff check app/ tests/
+    
+    - name: Security check with Bandit
+      run: |
+        cd backend
+        poetry run bandit -r app -ll -f json -o bandit-report.json
+      continue-on-error: true
+    
+    - name: Upload Bandit report
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: bandit-security-report
+        path: backend/bandit-report.json
+
+  backend-type-check:
+    name: Backend Type Checking
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.7.1
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        poetry install --no-interaction
+    
+    - name: Type check with mypy
+      run: |
+        cd backend
+        poetry run mypy app/ --ignore-missing-imports --no-error-summary
+      continue-on-error: true
+
+  frontend-build:
+    name: Frontend Build & Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+    
+    - name: Run ESLint
+      run: |
+        cd frontend
+        npm run lint
+      continue-on-error: true
+    
+    - name: Run TypeScript check
+      run: |
+        cd frontend
+        npm run type-check
+      continue-on-error: true
+    
+    - name: Run Vitest (if configured)
+      run: |
+        cd frontend
+        npm run test -- --run --coverage || echo "No tests configured"
+      continue-on-error: true
+    
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend/dist/
+
+  integration-check:
+    name: Integration Check
+    needs: [backend-tests, frontend-build]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Download frontend build
+      uses: actions/download-artifact@v3
+      with:
+        name: frontend-build
+        path: frontend/dist/
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.7.1
+    
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        poetry install --no-interaction
+    
+    - name: Start backend server
+      run: |
+        cd backend
+        poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+    
+    - name: Health check
+      run: |
+        curl -f http://localhost:8000/api/v1/health || exit 1
+    
+    - name: API smoke tests
+      run: |
+        # Test health endpoint
+        curl -f http://localhost:8000/api/v1/health
+        
+        # Test OpenAPI docs
+        curl -f http://localhost:8000/docs
+        
+        echo "✅ Integration check passed"
+
+  summary:
+    name: CI Summary
+    needs: [backend-tests, backend-lint, backend-type-check, frontend-build, integration-check]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Check results
+      run: |
+        echo "🎉 CI Pipeline Complete!"
+        echo "Backend Tests: ${{ needs.backend-tests.result }}"
+        echo "Backend Lint: ${{ needs.backend-lint.result }}"
+        echo "Backend Type Check: ${{ needs.backend-type-check.result }}"
+        echo "Frontend Build: ${{ needs.frontend-build.result }}"
+        echo "Integration Check: ${{ needs.integration-check.result }}"

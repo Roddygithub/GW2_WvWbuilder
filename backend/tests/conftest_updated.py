@@ -5,6 +5,7 @@ This file provides a comprehensive test setup with improved organization and uti
 
 import asyncio
 import pytest
+import pytest_asyncio
 from typing import AsyncGenerator, Dict, Any, List, Optional, Callable
 
 from fastapi import FastAPI, status
@@ -35,9 +36,7 @@ async_engine = create_async_engine(
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-TestingSessionLocal = async_sessionmaker(
-    autocommit=False, autoflush=False, bind=async_engine, class_=AsyncSession
-)
+TestingSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=async_engine, class_=AsyncSession)
 
 # Create sync engine for migrations and setup
 sync_engine = create_engine(
@@ -45,9 +44,7 @@ sync_engine = create_engine(
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-SyncTestingSessionLocal = sessionmaker(
-    autocommit=False, autoflush=False, bind=sync_engine
-)
+SyncTestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
 
 # Create all tables
 Base.metadata.create_all(bind=sync_engine)
@@ -64,7 +61,7 @@ def event_loop():
 
 
 # Database setup and teardown
-@pytest.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="session", autouse=True)
 async def setup_database():
     """Set up the test database with all tables."""
     async with async_engine.begin() as conn:
@@ -80,7 +77,7 @@ async def setup_database():
 
 
 # Database session fixture
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def db() -> AsyncGenerator[AsyncSession, None]:
     """Create a new database session with automatic rollback after each test."""
     async with TestingSessionLocal() as session:
@@ -113,7 +110,7 @@ def client(app: FastAPI) -> TestClient:
     return TestClient(app)
 
 
-@pytest.fixture(scope="module")
+@pytest_asyncio.fixture(scope="module")
 async def async_client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     """Create an async test client for the FastAPI application."""
     async with AsyncClient(app=app, base_url="http://test") as client:
@@ -121,7 +118,7 @@ async def async_client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
 
 
 # Test data factories
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def role_factory(db: AsyncSession) -> Callable[..., Role]:
     """Factory for creating test roles."""
 
@@ -145,7 +142,7 @@ async def role_factory(db: AsyncSession) -> Callable[..., Role]:
     return _role_factory
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def user_factory(db: AsyncSession, role_factory) -> Callable[..., User]:
     """Factory for creating test users."""
 
@@ -180,7 +177,7 @@ async def user_factory(db: AsyncSession, role_factory) -> Callable[..., User]:
     return _user_factory
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def profession_factory(db: AsyncSession) -> Callable[..., Profession]:
     """Factory for creating test professions."""
 
@@ -202,10 +199,8 @@ async def profession_factory(db: AsyncSession) -> Callable[..., Profession]:
     return _profession_factory
 
 
-@pytest.fixture(scope="function")
-async def build_factory(
-    db: AsyncSession, user_factory, profession_factory
-) -> Callable[..., Build]:
+@pytest_asyncio.fixture(scope="function")
+async def build_factory(db: AsyncSession, user_factory, profession_factory) -> Callable[..., Build]:
     """Factory for creating test builds."""
 
     async def _build_factory(
@@ -240,7 +235,7 @@ async def build_factory(
 
 
 # Authentication helpers
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def auth_headers(
     client: TestClient,
     user_factory,
@@ -253,7 +248,7 @@ async def auth_headers(
         is_superuser: bool = False,
     ) -> Dict[str, str]:
         # Create a test user
-        user = await user_factory(
+        await user_factory(
             username=username,
             email=f"{username}@example.com",
             password=password,
@@ -276,7 +271,7 @@ async def auth_headers(
 
 
 # Test data setup
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture(scope="function")
 async def test_data(
     db: AsyncSession,
     user_factory,

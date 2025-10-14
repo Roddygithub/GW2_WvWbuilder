@@ -5,6 +5,20 @@ This module exports core components like configurations, security, and utilities
 """
 
 from .config import settings
+from .database import (
+    AsyncSessionLocal,
+    engine,
+    get_db,
+    transaction,
+    Transaction,
+    close_db,
+    init_db,
+    TestSessionLocal,
+    TestAsyncSessionLocal,
+    get_test_db,
+)
+from .database_utils import db_manager, test_db_manager, DatabaseManager
+from .db_monitor import db_monitor, DatabaseMonitor
 from .security import (
     create_access_token,
     get_current_user,

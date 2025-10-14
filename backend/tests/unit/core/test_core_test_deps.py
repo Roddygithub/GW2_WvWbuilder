@@ -3,10 +3,9 @@
 import pytest
 from unittest.mock import AsyncMock, patch
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
 
 from app.api.deps import (
-    get_db,
+    get_async_db,
     get_current_user,
     get_current_active_user,
     get_current_active_superuser,
@@ -27,21 +26,23 @@ class TestDependencies:
     """Test API dependency injection functions."""
 
     @pytest.mark.asyncio
-    async def test_get_db(self, db_session):
-        """Test the get_db dependency."""
-        # This is a generator function, so we need to get the first result
-        db_gen = get_db()
-        db = await anext(db_gen)
+    async def test_get_async_db(self, db_session):
+        """Test the get_async_db dependency."""
+        # Create a generator from the async function
+        db_gen = get_async_db()
 
-        # Should return a database session
-        assert db is not None
-        assert isinstance(db, Session)
+        # Get the session
+        session = await anext(db_gen)
 
-        # Cleanup
-        try:
-            await anext(db_gen)  # This should raise StopAsyncIteration
-        except StopAsyncIteration:
-            pass
+        # Verify it's the same session
+        assert session == db_session
+
+        # Verify the session is closed after the request
+        with pytest.raises(StopAsyncIteration):
+            await anext(db_gen)
+
+        # Verify the session was closed
+        db_session.close.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_get_current_user(self):
@@ -50,9 +51,7 @@ class TestDependencies:
         token = "valid.token.here"
 
         # Mock the security.get_current_user function
-        with patch(
-            "app.api.deps.security.get_current_user", new_callable=AsyncMock
-        ) as mock_get_user:
+        with patch("app.api.deps.security.get_current_user", new_callable=AsyncMock) as mock_get_user:
             mock_get_user.return_value = TEST_USER
 
             # Call the dependency
@@ -66,9 +65,7 @@ class TestDependencies:
     async def test_get_current_active_user(self):
         """Test getting the current active user."""
         # Mock the get_current_user dependency
-        with patch(
-            "app.api.deps.get_current_user", new_callable=AsyncMock
-        ) as mock_get_user:
+        with patch("app.api.deps.get_current_user", new_callable=AsyncMock) as mock_get_user:
             mock_get_user.return_value = TEST_USER
 
             # Call the dependency

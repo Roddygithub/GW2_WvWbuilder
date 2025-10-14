@@ -1,16 +1,17 @@
 """Custom exceptions for the application."""
+
 from fastapi import status
 from fastapi.exceptions import HTTPException
 
 
 class CustomException(Exception):
     """Base class for custom exceptions with status code and detail."""
-    
+
     def __init__(
-        self, 
+        self,
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail: str = "An unexpected error occurred",
-        **kwargs
+        **kwargs,
     ) -> None:
         self.status_code = status_code
         self.detail = detail
@@ -23,9 +24,7 @@ class BaseAPIException(HTTPException):
     status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
     detail: str = "An unexpected error occurred"
 
-    def __init__(
-        self, detail: str | None = None, status_code: int | None = None, **kwargs
-    ) -> None:
+    def __init__(self, detail: str | None = None, status_code: int | None = None, **kwargs) -> None:
         if status_code is not None:
             self.status_code = status_code
         if detail is not None:
@@ -100,23 +99,27 @@ class InactiveUserException(BaseAPIException):
 # Authentication specific exceptions
 class CredentialsException(UnauthorizedException):
     """Raised when authentication credentials are invalid or missing."""
+
     detail = "Could not validate credentials"
     headers = {"WWW-Authenticate": "Bearer"}
 
 
 class InvalidTokenException(UnauthorizedException):
     """Raised when the provided token is invalid or expired."""
+
     detail = "Invalid or expired token"
     headers = {"WWW-Authenticate": "Bearer"}
 
 
 class UserNotFoundException(NotFoundException):
     """Raised when a user is not found in the database."""
+
     detail = "User not found"
 
 
 class NotSuperUserException(ForbiddenException):
     """Raised when a superuser permission is required but not met."""
+
     detail = "The user doesn't have enough privileges"
 
 
