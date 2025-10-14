@@ -16,6 +16,9 @@
 // Import commands.js using ES2015 syntax:
 import './commands'
 
+// Enable cy.tab() helper for keyboard navigation tests
+import 'cypress-plugin-tab'
+
 // Alternatively you can use CommonJS syntax:
 // require('./commands')
 

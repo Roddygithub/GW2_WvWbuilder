@@ -12,6 +12,7 @@ import { useAuthStore } from '../store/authStore';
 import { getDashboardStats, getRecentActivities } from '../api/dashboard';
 import { Activity } from '../components/ActivityFeedRedesigned';
 import { useLiveRefresh } from '../hooks/useLiveRefresh';
+import { isAuthenticated as tokenAuthenticated } from '../api/auth';
 
 // Components
 import Sidebar from '../components/Sidebar';
@@ -30,12 +31,13 @@ export default function DashboardRedesigned() {
   const { user, isAuthenticated, loadUser } = useAuthStore();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [liveRefreshEnabled, setLiveRefreshEnabled] = useState(true);
+  const isAuthed = isAuthenticated || tokenAuthenticated();
 
   // Fetch dashboard statistics
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['dashboard-stats'],
     queryFn: getDashboardStats,
-    enabled: isAuthenticated,
+    enabled: isAuthed,
     retry: 1,
   });
 
@@ -43,7 +45,7 @@ export default function DashboardRedesigned() {
   const { data: recentActivities } = useQuery({
     queryKey: ['recent-activities'],
     queryFn: () => getRecentActivities(10),
-    enabled: isAuthenticated,
+    enabled: isAuthed,
     retry: 1,
   });
 
@@ -51,7 +53,7 @@ export default function DashboardRedesigned() {
   const { refresh, isRefreshing, lastRefresh } = useLiveRefresh({
     interval: 30000, // 30 seconds
     queryKeys: [['dashboard-stats'], ['recent-activities']],
-    enabled: liveRefreshEnabled && isAuthenticated,
+    enabled: liveRefreshEnabled && isAuthed,
     showToast: false,
     onRefresh: () => {
       console.log('Dashboard data refreshed');
@@ -59,7 +61,7 @@ export default function DashboardRedesigned() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isAuthed) {
       navigate('/login');
       return;
     }
@@ -67,7 +69,7 @@ export default function DashboardRedesigned() {
     if (!user) {
       loadUser();
     }
-  }, [isAuthenticated, user, navigate, loadUser]);
+  }, [isAuthed, user, navigate, loadUser]);
 
   useEffect(() => {
     if (recentActivities) {
@@ -108,7 +110,7 @@ export default function DashboardRedesigned() {
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="ml-[280px] transition-all duration-300">
+      <div className="ml-[280px] transition-all duration-300" data-testid="main-content">
         {/* Header with Live Refresh */}
         <div className="sticky top-0 z-10 bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-md border-b border-slate-700/50">
           <div className="flex items-center justify-between px-8 py-4">
@@ -133,7 +135,7 @@ export default function DashboardRedesigned() {
         </div>
 
         {/* Main Dashboard Content */}
-        <main className="p-8 space-y-8">
+        <main className="p-8 space-y-8" data-testid="dashboard-loaded">
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCardRedesigned

@@ -69,9 +69,9 @@ export default function Register() {
       <div className="w-full max-w-md space-y-8 rounded-lg bg-slate-800/50 p-8 shadow-2xl backdrop-blur-sm">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-white">Create Account</h1>
+          <h1 className="text-4xl font-bold text-white">Register</h1>
           <p className="mt-2 text-sm text-gray-400">
-            Join the GW2 WvW Builder community
+            Sign up to join the GW2 WvW Builder community
           </p>
         </div>
 

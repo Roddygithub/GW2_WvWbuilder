@@ -37,6 +37,7 @@ export default function Sidebar() {
 
   return (
     <motion.aside
+      data-testid="sidebar"
       initial={{ x: -300 }}
       animate={{ x: 0, width: isCollapsed ? '80px' : '280px' }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
@@ -68,6 +69,7 @@ export default function Sidebar() {
 
         {/* Collapse Button */}
         <motion.button
+          data-testid="mobile-menu-button"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -86,9 +88,15 @@ export default function Sidebar() {
         {navItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
+          const testId =
+            item.name === 'Dashboard' ? 'nav-dashboard' :
+            item.name === 'Compositions' ? 'nav-compositions' :
+            item.name === 'Builds' ? 'nav-builds' :
+            item.name === 'Teams' ? 'nav-teams' : undefined;
 
           return (
-            <Link key={item.path} to={item.path}>
+            <Link key={item.path} to={item.path} data-testid={testId}
+            >
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}

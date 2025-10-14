@@ -47,10 +47,14 @@ Cypress.Commands.add('login', (email: string, password: string) => {
   }).then((response) => {
     expect(response.status).to.eq(200)
     const { access_token, refresh_token } = response.body
-    
-    // Store tokens in localStorage
-    window.localStorage.setItem('access_token', access_token)
-    window.localStorage.setItem('refresh_token', refresh_token)
+
+    // Visit the app and inject tokens before it loads
+    cy.visit('/', {
+      onBeforeLoad(win) {
+        win.localStorage.setItem('access_token', access_token)
+        win.localStorage.setItem('refresh_token', refresh_token)
+      },
+    })
   })
 })
 

@@ -29,6 +29,12 @@ function App() {
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardRedesigned /></ProtectedRoute>} />
         <Route path="/tags" element={<ProtectedRoute><TagsManager /></ProtectedRoute>} />
+        <Route path="/compositions" element={<ProtectedRoute><div data-testid="page-compositions">Compositions Page (stub)</div></ProtectedRoute>} />
+        <Route path="/builder" element={<ProtectedRoute><div data-testid="page-builder">Builder Page (stub)</div></ProtectedRoute>} />
+        <Route path="/builds" element={<ProtectedRoute><div data-testid="page-builds">Builds Page (stub)</div></ProtectedRoute>} />
+        <Route path="/teams" element={<ProtectedRoute><div data-testid="page-teams">Teams Page (stub)</div></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><div data-testid="page-settings">Settings Page (stub)</div></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><div data-testid="page-profile">Profile Page (stub)</div></ProtectedRoute>} />
       </Routes>
     </QueryClientProvider>
   )
