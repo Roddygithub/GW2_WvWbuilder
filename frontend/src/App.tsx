@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import DashboardRedesigned from './pages/DashboardRedesigned'
 import TagsManager from './pages/TagsManager'
+import GW2Test from './pages/GW2Test'
 import ProtectedRoute from './components/ProtectedRoute'
 
 // Create QueryClient instance
@@ -25,6 +26,9 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        
+        {/* Test Routes */}
+        <Route path="/gw2-test" element={<GW2Test />} />
         
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardRedesigned /></ProtectedRoute>} />
