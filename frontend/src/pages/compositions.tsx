@@ -43,14 +43,12 @@ export default function CompositionsPage() {
         <Button>Create New</Button>
       </div>
 
-      <div className="relative
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search compositions..."
-            className="w-full pl-10 md:w-[300px]"
-          />
-        </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search compositions..."
+          className="w-full pl-10 md:w-[300px]"
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
