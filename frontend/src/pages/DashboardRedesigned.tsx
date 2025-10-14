@@ -77,17 +77,25 @@ export default function DashboardRedesigned() {
     }
   }, [recentActivities]);
 
-  if (!user) {
+  // Note: Do not block rendering while user profile loads; use fallbacks in UI.
+
+  // Show loading indicator while stats are loading or refreshing
+  if (statsLoading || isRefreshing) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-white text-center"
-        >
-          <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-300">Loading your command center...</p>
-        </motion.div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
+        <Sidebar />
+        <div className="ml-[280px] transition-all duration-300" data-testid="main-content">
+          <div className="flex items-center justify-center min-h-screen">
+            <div data-testid="loading" className="p-6 rounded-md text-center">
+              <div className="animate-pulse space-y-4">
+                <div className="h-8 w-48 bg-purple-500/30 rounded mx-auto" />
+                <div className="h-4 w-32 bg-purple-400/20 rounded mx-auto" />
+                <div className="h-4 w-40 bg-purple-400/20 rounded mx-auto" />
+              </div>
+              <p className="text-slate-300 mt-4 text-sm">Loading dashboard...</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
