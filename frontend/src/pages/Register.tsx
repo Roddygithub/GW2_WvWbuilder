@@ -19,12 +19,64 @@ export default function Register() {
     fullName: '',
   });
   const [localError, setLocalError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
+  const [touched, setTouched] = useState<{
+    email?: boolean;
+    password?: boolean;
+    confirmPassword?: boolean;
+  }>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[name as keyof typeof fieldErrors]) {
+      setFieldErrors({
+        ...fieldErrors,
+        [name]: undefined,
+      });
+    }
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTouched({
+      ...touched,
+      [name]: true,
+    });
+
+    // Validate on blur
+    if (name === 'email' && value) {
+      if (!validateEmail(value)) {
+        setFieldErrors({
+          ...fieldErrors,
+          email: 'Please enter a valid email address',
+        });
+      }
+    } else if (name === 'password' && value) {
+      const passwordError = validatePassword(value);
+      if (passwordError) {
+        setFieldErrors({
+          ...fieldErrors,
+          password: passwordError,
+        });
+      }
+    } else if (name === 'confirmPassword' && value) {
+      if (value !== formData.password) {
+        setFieldErrors({
+          ...fieldErrors,
+          confirmPassword: 'Passwords do not match',
+        });
+      }
+    }
   };
 
   const validateEmail = (email: string): boolean => {
@@ -34,7 +86,7 @@ export default function Register() {
 
   const validatePassword = (password: string): string | null => {
     if (password.length < 8) {
-      return 'Password must be at least 8 characters long';
+      return 'Password must be at least 8 characters (minimum 8 characters required)';
     }
     if (!/[A-Z]/.test(password)) {
       return 'Password must contain at least one uppercase letter';
@@ -57,8 +109,8 @@ export default function Register() {
     clearError();
 
     // Validation des champs requis
-    if (!formData.email || !formData.password) {
-      setLocalError('Please fill in all required fields (email and password)');
+    if (!formData.email || !formData.password || !formData.confirmPassword) {
+      setLocalError('All required fields must be filled');
       return;
     }
 
@@ -144,12 +196,19 @@ export default function Register() {
               name="email"
               type="email"
               autoComplete="email"
-              required
               value={formData.email}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-600 bg-slate-700 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              onBlur={handleBlur}
+              className={`mt-1 block w-full rounded-md border ${
+                touched.email && fieldErrors.email
+                  ? 'border-red-500'
+                  : 'border-gray-600'
+              } bg-slate-700 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500`}
               placeholder="your.email@example.com"
             />
+            {touched.email && fieldErrors.email && (
+              <p className="mt-1 text-sm text-red-400">{fieldErrors.email}</p>
+            )}
           </div>
 
           {/* Full Name Field (Optional) */}
@@ -179,12 +238,19 @@ export default function Register() {
               name="password"
               type="password"
               autoComplete="new-password"
-              required
               value={formData.password}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-600 bg-slate-700 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              onBlur={handleBlur}
+              className={`mt-1 block w-full rounded-md border ${
+                touched.password && fieldErrors.password
+                  ? 'border-red-500'
+                  : 'border-gray-600'
+              } bg-slate-700 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500`}
               placeholder="At least 8 characters"
             />
+            {touched.password && fieldErrors.password && (
+              <p className="mt-1 text-sm text-red-400">{fieldErrors.password}</p>
+            )}
           </div>
 
           {/* Confirm Password Field */}
@@ -197,12 +263,19 @@ export default function Register() {
               name="confirmPassword"
               type="password"
               autoComplete="new-password"
-              required
               value={formData.confirmPassword}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-md border border-gray-600 bg-slate-700 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              onBlur={handleBlur}
+              className={`mt-1 block w-full rounded-md border ${
+                touched.confirmPassword && fieldErrors.confirmPassword
+                  ? 'border-red-500'
+                  : 'border-gray-600'
+              } bg-slate-700 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500`}
               placeholder="Confirm your password"
             />
+            {touched.confirmPassword && fieldErrors.confirmPassword && (
+              <p className="mt-1 text-sm text-red-400">{fieldErrors.confirmPassword}</p>
+            )}
           </div>
 
           {/* Submit Button */}

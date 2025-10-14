@@ -31,7 +31,7 @@ export default function Login() {
     clearError();
 
     if (!email || !password) {
-      setLocalError('Please enter both email and password');
+      setLocalError('All fields are required');
       return;
     }
 
@@ -76,7 +76,6 @@ export default function Login() {
               name="email"
               type="email"
               autoComplete="email"
-              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-600 bg-slate-700 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -94,7 +93,6 @@ export default function Login() {
               name="password"
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
-              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1 block w-full rounded-md border border-gray-600 bg-slate-700 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"

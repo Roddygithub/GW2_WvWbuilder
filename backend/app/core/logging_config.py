@@ -94,6 +94,8 @@ def setup_logging() -> None:
     logging.getLogger("asyncio").setLevel(logging.WARNING)
     logging.getLogger("httpx").setLevel(logging.WARNING)
     logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("aiosqlite").setLevel(logging.INFO)
+    logging.getLogger("multipart").setLevel(logging.INFO)
 
     # Log the current configuration
     logger = logging.getLogger(__name__)

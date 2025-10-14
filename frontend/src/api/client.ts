@@ -78,6 +78,15 @@ async function handleResponse<T>(response: Response): Promise<T> {
       errorDetail = `HTTP ${response.status}: ${response.statusText}`;
     }
 
+    // Handle expired/invalid token (401 Unauthorized)
+    if (response.status === 401) {
+      removeAuthToken();
+      // Redirect to login if not already there
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+
     throw new ApiClientError(response.status, errorDetail);
   }
 
