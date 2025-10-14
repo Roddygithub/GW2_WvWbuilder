@@ -6,7 +6,6 @@
 import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { cardHover } from '@/lib/animations';
 
 interface GW2CardProps {
   children: ReactNode;
@@ -23,6 +22,11 @@ export const GW2Card = ({
   hoverable = true,
   glowing = false 
 }: GW2CardProps) => {
+  const hoverVariants = hoverable ? {
+    scale: 1.02,
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 0 20px rgba(255, 193, 7, 0.3)',
+  } : undefined;
+
   return (
     <motion.div
       className={cn(
@@ -33,10 +37,9 @@ export const GW2Card = ({
         onClick && 'cursor-pointer',
         className
       )}
-      variants={hoverable ? cardHover : undefined}
-      initial="rest"
-      whileHover="hover"
-      whileTap={onClick ? "tap" : undefined}
+      whileHover={hoverVariants}
+      whileTap={onClick ? { scale: 0.98 } : undefined}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
       onClick={onClick}
     >
       {/* Gold accent line */}

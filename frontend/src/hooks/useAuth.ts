@@ -11,11 +11,10 @@ import {
   getCurrentUser, 
   logout as apiLogout,
   type LoginRequest,
-  type LoginResponse,
   type RegisterRequest,
   type User
 } from '../api/auth';
-import { setAuthToken, removeAuthToken, getAuthToken } from '../api/client';
+import { removeAuthToken, getAuthToken } from '../api/client';
 import { toast } from 'sonner';
 
 // Re-export types for convenience
@@ -51,7 +50,7 @@ export const useAuth = () => {
       const response = await login(credentials);
       return response;
     },
-    onSuccess: (data: LoginResponse) => {
+    onSuccess: () => {
       // Token already set by login function
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
       toast.success('Connexion réussie!');
