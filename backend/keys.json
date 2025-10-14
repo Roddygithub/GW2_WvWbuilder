@@ -1,5 +1,5 @@
 {
-  "current_key_id": "key_7e7463c632c45a0c",
+  "current_key_id": "key_91c3eb03a5c69674",
   "keys": {
     "key_536a3ad55fcd753e": {
       "key": "1N~tF2Kj~bRQWZ6S0-ZJR4i5YKqdBp.C9zg5dOPrXfzs5Z6aLth7~63-lW-xB7uW",
@@ -430,64 +430,80 @@
       "created_at": "2025-10-12T20:44:51.030069",
       "expires_at": "2025-12-11T20:44:51.030069",
       "last_rotated": "2025-10-12T20:44:51.030069",
-      "is_active": true
+      "is_active": false,
+      "deactivated_at": "2025-10-14T21:44:47.426610"
     },
     "key_81f5c89336346d2f": {
       "key": "J~26GF~fKJ.5jlD21N84uG-yVA.-_FrLhG4aOYdri7kGRw~6ssevcjWtdBTBv5Jv",
       "created_at": "2025-10-12T20:46:12.332838",
       "expires_at": "2025-12-11T20:46:12.332838",
       "last_rotated": "2025-10-12T20:46:12.332838",
-      "is_active": true
+      "is_active": false,
+      "deactivated_at": "2025-10-14T21:44:47.426610"
     },
     "key_4046c37ef7957476": {
       "key": "5mLywhM7Yn8noRJaCiji.Ze~egFZqcWI~D0k95Hzjawdd6yXdsHmWXvADLid3_AN",
       "created_at": "2025-10-12T20:46:22.468787",
       "expires_at": "2025-12-11T20:46:22.468787",
       "last_rotated": "2025-10-12T20:46:22.468787",
-      "is_active": true
+      "is_active": false,
+      "deactivated_at": "2025-10-14T21:44:47.426610"
     },
     "key_5408f2ee35d69303": {
       "key": "uBaAqiCoZEFRj0eGGYRXgYj0o7PkgNV3prTDLEgX.i5aQ1sJ-ZqR.I1iuX~qtdqB",
       "created_at": "2025-10-12T20:46:22.472963",
       "expires_at": "2025-12-11T20:46:22.472963",
       "last_rotated": "2025-10-12T20:46:22.472963",
-      "is_active": true
+      "is_active": false,
+      "deactivated_at": "2025-10-14T21:44:47.426610"
     },
     "key_1a7bfbc054097f90": {
       "key": "_2952NwD9AYzPTswWKo_vI.L~2e_iueCXefz4C0PhfvcNLOWsGPqFVe.NdpDhF_Y",
       "created_at": "2025-10-12T20:46:23.596458",
       "expires_at": "2025-12-11T20:46:23.596458",
       "last_rotated": "2025-10-12T20:46:23.596458",
-      "is_active": true
+      "is_active": false,
+      "deactivated_at": "2025-10-14T21:44:47.426610"
     },
     "key_4a3f9a29a6e6bc25": {
       "key": "n2lr785X3PdoLqgWZub.b8.Bkmlq~ak_3yA~XxQs9AzP8kJ9SpNLCvS80J~NBX7V",
       "created_at": "2025-10-12T20:46:23.598750",
       "expires_at": "2025-12-11T20:46:23.598750",
       "last_rotated": "2025-10-12T20:46:23.598750",
-      "is_active": true
+      "is_active": false,
+      "deactivated_at": "2025-10-14T21:44:47.426610"
     },
     "key_77c262e03d0630ed": {
       "key": "CiEJakvfMVFzU-mF89H5P7k_wf1WY~RYaq0fjozIIAlKtvoMQ6ar7LG4q5sn_dmo",
       "created_at": "2025-10-12T20:46:23.600548",
       "expires_at": "2025-12-11T20:46:23.600548",
       "last_rotated": "2025-10-12T20:46:23.600548",
-      "is_active": true
+      "is_active": false,
+      "deactivated_at": "2025-10-14T21:44:47.426610"
     },
     "key_c9c42e14296a54c7": {
       "key": "lkpoWbyrb_9-J2blkbwi-fPw6zWG1l1hOthIO0KumOevFXFHdPbv5_YNKoRKHffR",
       "created_at": "2025-10-12T20:46:23.602334",
       "expires_at": "2025-12-11T20:46:23.602334",
       "last_rotated": "2025-10-12T20:46:23.602334",
-      "is_active": true
+      "is_active": false,
+      "deactivated_at": "2025-10-14T21:44:47.426610"
     },
     "key_7e7463c632c45a0c": {
       "key": "4c_tLg-oaYcXhaDNGhNko5X1yzl_j7-L050q~0kMzrcaYcSODRvnGGtG_4mmxuC6",
       "created_at": "2025-10-12T20:46:23.604651",
       "expires_at": "2025-12-11T20:46:23.604651",
       "last_rotated": "2025-10-12T20:46:23.604651",
+      "is_active": false,
+      "deactivated_at": "2025-10-14T21:44:47.426610"
+    },
+    "key_91c3eb03a5c69674": {
+      "key": "eW-Dt.7FZn6ENBKXO-q1hdU.Ux_tTqvkZ4FZTk1KREniuwN6rXcaKxYLEW93c~1L",
+      "created_at": "2025-10-14T21:44:47.424255",
+      "expires_at": "2025-12-13T21:44:47.424255",
+      "last_rotated": "2025-10-14T21:44:47.424255",
       "is_active": true
     }
   },
-  "updated_at": "2025-10-12T20:46:23.604907"
+  "updated_at": "2025-10-14T21:44:47.426895"
 }

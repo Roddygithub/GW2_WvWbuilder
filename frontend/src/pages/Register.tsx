@@ -27,24 +27,57 @@ export default function Register() {
     });
   };
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+    if (!/[A-Z]/.test(password)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!/[a-z]/.test(password)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!/[0-9]/.test(password)) {
+      return 'Password must contain at least one number';
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      return 'Password must contain at least one special character';
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError('');
     clearError();
 
-    // Validation
-    if (!formData.username || !formData.email || !formData.password) {
-      setLocalError('Please fill in all required fields');
+    // Validation des champs requis
+    if (!formData.email || !formData.password) {
+      setLocalError('Please fill in all required fields (email and password)');
       return;
     }
 
+    // Validation de l'email
+    if (!validateEmail(formData.email)) {
+      setLocalError('Please enter a valid email address');
+      return;
+    }
+
+    // Validation de la correspondance des mots de passe
     if (formData.password !== formData.confirmPassword) {
       setLocalError('Passwords do not match');
       return;
     }
 
-    if (formData.password.length < 8) {
-      setLocalError('Password must be at least 8 characters long');
+    // Validation de la force du mot de passe
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      setLocalError(passwordError);
       return;
     }
 
@@ -87,18 +120,17 @@ export default function Register() {
           {/* Username Field */}
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-300">
-              Username *
+              Username <span className="text-gray-500 text-xs">(optional)</span>
             </label>
             <input
               id="username"
               name="username"
               type="text"
               autoComplete="username"
-              required
               value={formData.username}
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border border-gray-600 bg-slate-700 px-3 py-2 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Choose a username"
+              placeholder="Choose a username (optional)"
             />
           </div>
 

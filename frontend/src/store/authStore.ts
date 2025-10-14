@@ -77,20 +77,38 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, error: null });
         
         try {
-          const user = await apiRegister(userData);
+          // Register user - backend returns tokens directly
+          const response = await apiRegister(userData);
           
-          // Auto-login after registration
-          await apiLogin({
-            username: userData.username,
-            password: userData.password,
-          });
-          
-          set({
-            user,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
+          // If registration returns tokens, use them directly
+          if (response && 'access_token' in response) {
+            // Store token and load user info
+            const token = (response as any).access_token as string;
+            localStorage.setItem('access_token', token);
+            
+            // Load user profile
+            const currentUser = await getCurrentUser();
+            
+            set({
+              user: currentUser,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+          } else {
+            // Fallback: Auto-login after registration using email
+            await apiLogin({
+              username: userData.email, // Use email instead of username
+              password: userData.password,
+            });
+            
+            set({
+              user: response,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+          }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Registration failed';
           set({

@@ -15,9 +15,18 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
-    """Schema for creating a new user"""
+    """Schema for creating a new user (admin/system use)"""
 
     password: str = Field(..., min_length=8, examples=["securepassword123"])
+    full_name: Optional[str] = Field(None, max_length=100, examples=["John Doe"])
+
+
+class UserRegister(BaseModel):
+    """Schema for user registration (public endpoint)"""
+    
+    email: EmailStr = Field(..., examples=["user@example.com"])
+    password: str = Field(..., min_length=8, examples=["securepassword123"])
+    username: Optional[str] = Field(None, min_length=3, max_length=50, examples=["john_doe"])
     full_name: Optional[str] = Field(None, max_length=100, examples=["John Doe"])
 
 

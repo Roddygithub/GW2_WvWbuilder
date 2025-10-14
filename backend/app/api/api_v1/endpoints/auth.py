@@ -10,7 +10,7 @@ from app.api.deps import get_async_db
 from app.core import security
 from app.core.config import settings
 from app.core.limiter import get_rate_limiter
-from app.schemas.user import Token, UserCreate, User
+from app.schemas.user import Token, UserCreate, User, UserRegister
 
 router = APIRouter()
 
@@ -81,6 +81,73 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
     refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
     refresh_token = security.create_refresh_token(subject=user_id, expires_delta=refresh_token_expires)
 
+    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
+
+
+@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
+async def register(user_in: UserRegister) -> Any:
+    """
+    Register a new user.
+    
+    Creates a new user account with hashed password and returns access/refresh tokens.
+    """
+    from sqlalchemy import select
+    from app.models.user import User as UserModel
+    from app.db.session import AsyncSessionLocal
+    
+    # Create our own session to avoid dependency issues
+    async with AsyncSessionLocal() as db:
+        try:
+            # Check if user with this email already exists
+            stmt = select(UserModel).where(UserModel.email == user_in.email)
+            result = await db.execute(stmt)
+            existing_user = result.scalars().first()
+            
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="A user with this email already exists in the system",
+                )
+            
+            # Create new user with hashed password
+            hashed_password = security.get_password_hash(user_in.password)
+            
+            # Generate username from email if not provided
+            username = user_in.username if user_in.username else user_in.email.split('@')[0]
+            
+            # Create user object
+            new_user = UserModel(
+                email=user_in.email,
+                username=username,
+                full_name=user_in.full_name,
+                hashed_password=hashed_password,
+                is_active=True,
+                is_superuser=False,
+            )
+            
+            db.add(new_user)
+            await db.commit()
+            await db.refresh(new_user)
+            
+            # Extract user ID before session closes
+            user_id = new_user.id
+            
+        except HTTPException:
+            raise
+        except Exception as e:
+            await db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error creating user: {str(e)}"
+            )
+    
+    # Session is now closed, create tokens
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = security.create_access_token(subject=user_id, expires_delta=access_token_expires)
+    
+    refresh_token_expires = timedelta(minutes=settings.REFRESH_TOKEN_EXPIRE_MINUTES)
+    refresh_token = security.create_refresh_token(subject=user_id, expires_delta=refresh_token_expires)
+    
     return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
 
 
