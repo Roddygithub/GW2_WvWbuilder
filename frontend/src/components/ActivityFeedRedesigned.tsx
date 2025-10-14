@@ -92,7 +92,7 @@ export default function ActivityFeedRedesigned({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-12"
+          className="empty-state text-center py-12"
         >
           <Clock className="mx-auto h-16 w-16 text-slate-600 mb-4" />
           <p className="text-slate-400">No recent activity</p>
