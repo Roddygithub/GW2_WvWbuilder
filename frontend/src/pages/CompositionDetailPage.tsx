@@ -163,7 +163,7 @@ export default function CompositionDetailPage() {
             <Pencil className="mr-2 h-4 w-4" /> Edit
           </Link>
           <AlertDialog>
-            <AlertDialogTrigger asChild>
+            <AlertDialogTrigger>
               <Button variant="destructive" disabled={deleteMutation.isPending}>
                 {deleteMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
                 Delete

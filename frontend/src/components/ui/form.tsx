@@ -36,7 +36,7 @@ const FormField = <T extends z.ZodType>({
     <div className="space-y-2">
       {render({
         field: {
-          ...control.register(name as string),
+          ...control.register(name as any),
         },
       })}
     </div>
