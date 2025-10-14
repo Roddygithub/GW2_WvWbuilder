@@ -216,9 +216,11 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: [build-and-tag]
-    environment:
-      name: production
-      url: https://gw2builder.example.com
+    # Environment configuration (requires GitHub repository environment setup)
+    # Uncomment when you create the 'production' environment in GitHub Settings
+    # environment:
+    #   name: production
+    #   url: https://gw2builder.example.com
     
     steps:
       - name: Checkout code
