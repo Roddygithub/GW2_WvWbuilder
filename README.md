@@ -1,10 +1,13 @@
 # 🏰 GW2 WvW Builder
 
+[![Full CI](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/full-ci.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
 [![Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/tests.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
 [![codecov](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/main/graph/badge.svg)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
 [![Python Version](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
+[![Node Version](https://img.shields.io/badge/node-20-green.svg)](https://nodejs.org/)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/badge/linter-ruff-blue.svg)](https://github.com/astral-sh/ruff)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **GW2 WvW Builder** est une application dédiée à la création et à l'optimisation de compositions pour le mode de jeu Monde contre Monde (WvW) de Guild Wars 2. Cette application aide les commandants et les joueurs à organiser des groupes efficaces pour affronter leurs adversaires.

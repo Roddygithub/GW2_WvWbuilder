@@ -7,9 +7,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
+import { toast, Toaster } from 'sonner';
 import { useAuthStore } from '../store/authStore';
 import { getDashboardStats, getRecentActivities } from '../api/dashboard';
 import { Activity } from '../components/ActivityFeedRedesigned';
+import { useLiveRefresh } from '../hooks/useLiveRefresh';
 
 // Components
 import Sidebar from '../components/Sidebar';
@@ -18,15 +20,16 @@ import StatCardRedesigned from '../components/StatCardRedesigned';
 import ActivityChart from '../components/ActivityChart';
 import ActivityFeedRedesigned from '../components/ActivityFeedRedesigned';
 import QuickActions from '../components/QuickActions';
+import LiveRefreshIndicator from '../components/LiveRefreshIndicator';
 
 // Icons
 import { Layers, FileText, Users, TrendingUp } from 'lucide-react';
-import { Toaster } from 'sonner';
 
 export default function DashboardRedesigned() {
   const navigate = useNavigate();
   const { user, isAuthenticated, loadUser } = useAuthStore();
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [liveRefreshEnabled, setLiveRefreshEnabled] = useState(true);
 
   // Fetch dashboard statistics
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -42,6 +45,17 @@ export default function DashboardRedesigned() {
     queryFn: () => getRecentActivities(10),
     enabled: isAuthenticated,
     retry: 1,
+  });
+
+  // Live refresh hook
+  const { refresh, isRefreshing, lastRefresh } = useLiveRefresh({
+    interval: 30000, // 30 seconds
+    queryKeys: [['dashboard-stats'], ['recent-activities']],
+    enabled: liveRefreshEnabled && isAuthenticated,
+    showToast: false,
+    onRefresh: () => {
+      console.log('Dashboard data refreshed');
+    },
   });
 
   useEffect(() => {
@@ -95,8 +109,28 @@ export default function DashboardRedesigned() {
 
       {/* Main Content Area */}
       <div className="ml-[280px] transition-all duration-300">
-        {/* Header */}
-        <Header />
+        {/* Header with Live Refresh */}
+        <div className="sticky top-0 z-10 bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-md border-b border-slate-700/50">
+          <div className="flex items-center justify-between px-8 py-4">
+            <Header />
+            <LiveRefreshIndicator
+              isRefreshing={isRefreshing}
+              lastRefresh={lastRefresh}
+              enabled={liveRefreshEnabled}
+              onToggle={() => {
+                setLiveRefreshEnabled(!liveRefreshEnabled);
+                toast.success(
+                  liveRefreshEnabled ? 'Live refresh disabled' : 'Live refresh enabled',
+                  { duration: 2000 }
+                );
+              }}
+              onManualRefresh={() => {
+                refresh();
+                toast.info('Refreshing dashboard...', { duration: 1000 });
+              }}
+            />
+          </div>
+        </div>
 
         {/* Main Dashboard Content */}
         <main className="p-8 space-y-8">

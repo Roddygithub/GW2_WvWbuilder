@@ -1,6 +1,7 @@
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -65,11 +66,22 @@ async def read_user_me(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
-    Get current user.
+    Get current user with roles eagerly loaded.
     """
-    user = await crud.user_crud.get_async(
-        db, id=current_user.id, options=[selectinload(models.User.roles)]
+    # Explicit query with selectinload to ensure roles are loaded
+    result = await db.execute(
+        select(models.User)
+        .options(selectinload(models.User.roles))
+        .filter(models.User.id == current_user.id)
     )
+    user = result.scalars().first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
     return user
 
 

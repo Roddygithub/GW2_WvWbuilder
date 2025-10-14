@@ -37,6 +37,7 @@ class Role(Base, TimeStampedMixin):
         "User",
         secondary=user_roles_table,
         back_populates="roles",
+        lazy="selectin",
         viewonly=True,
         overlaps="user_associations,role_associations",
     )

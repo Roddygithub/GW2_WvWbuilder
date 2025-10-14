@@ -55,7 +55,12 @@ class User(Base, TimeStampedMixin):
     # Relations many-to-many avec les rôles via le modèle UserRole
     role_associations: Mapped[List["UserRole"]] = relationship(back_populates="user")
     roles: Mapped[List["Role"]] = relationship(
-        "Role", secondary=user_roles_table, back_populates="users", viewonly=True, overlaps="role_associations"
+        "Role",
+        secondary=user_roles_table,
+        back_populates="users",
+        lazy="selectin",
+        viewonly=True,
+        overlaps="role_associations"
     )
 
     builds: Mapped[List["Build"]] = relationship("Build", back_populates="created_by")
