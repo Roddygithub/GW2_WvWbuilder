@@ -55,21 +55,19 @@ async def get_current_user(
     # Handle test environment with special token
     if token == "x":
         async with AsyncSessionLocal() as db:
-            user = await crud.user_crud.get_async(db, id=1, options=[selectinload(models.User.roles)])
+            user = await crud.user_crud.get_async(db, id=1)
             if not user:
                 # Create a test user if it doesn't exist
                 user_in = models.UserCreate(email="test@example.com", password="testpassword", full_name="Test User")
                 user = await crud.user_crud.create_async(db, obj_in=user_in)
-                # Re-fetch with roles loaded
-                user = await crud.user_crud.get_async(db, id=1, options=[selectinload(models.User.roles)])
+                # Re-fetch user
+                user = await crud.user_crud.get_async(db, id=1)
             # Extract data before session closes
             user_id = user.id
             user_email = user.email
             user_username = user.username
             is_active = user.is_active
             is_superuser = user.is_superuser
-            # Ensure roles are loaded
-            _ = [r.id for r in user.roles]
         # Return a detached user object (this is a workaround)
         # In production, consider using a proper user DTO
         return user
@@ -98,11 +96,10 @@ async def get_current_user(
 
         # Create our own session to avoid blocking
         async with AsyncSessionLocal() as db:
-            # Get user from database with roles eagerly loaded
+            # Get user from database WITHOUT roles to avoid selectinload blocking
             user = await crud.user_crud.get_async(
                 db,
                 id=int(user_id),
-                options=[selectinload(models.User.roles)],
             )
             if not user:
                 raise UserNotFoundException()
@@ -117,11 +114,6 @@ async def get_current_user(
             _ = user.full_name
             _ = user.created_at
             _ = user.updated_at
-            # Ensure roles are loaded (detach-safe)
-            _ = [
-                (role.id, role.name, role.description, role.permission_level, role.is_default, role.icon_url)
-                for role in (user.roles or [])
-            ]
 
         # Session is now closed, but user object attributes are loaded
         return user

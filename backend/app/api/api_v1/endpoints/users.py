@@ -66,23 +66,10 @@ async def read_user_me(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
-    Get current user with roles eagerly loaded.
+    Get current user.
     """
-    # Explicit query with selectinload to ensure roles are loaded
-    result = await db.execute(
-        select(models.User)
-        .options(selectinload(models.User.roles))
-        .filter(models.User.id == current_user.id)
-    )
-    user = result.scalars().first()
-    
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    return user
+    # Simply return the current user from the dependency
+    return current_user
 
 
 @router.get("/{user_id}", response_model=schemas.User)
