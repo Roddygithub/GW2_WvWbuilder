@@ -38,7 +38,10 @@ class TestWebhookService:
         webhook_in = WebhookCreate(**sample_webhook_data)
         user_id = 1
 
-        with patch("app.services.webhook_service.generate_secret_key", return_value=sample_webhook_data["secret"]):
+        with patch(
+            "app.services.webhook_service.generate_secret_key",
+            return_value=sample_webhook_data["secret"],
+        ):
             # Act
             result = WebhookService.create_webhook(mock_db, webhook_in, user_id)
 
@@ -54,8 +57,16 @@ class TestWebhookService:
     @pytest.mark.parametrize(
         "secret,payload,expected",
         [
-            ("secret", b'{"test": "data"}', "3dca279e801a85c6c3b3bcccbde6d5c9cbb8f7aef8b7f0c7a8b3f8e9d0a1b2c3"),
-            ("", b"{}", "5f70bf18a0880070e7368c8b1a9f2dcd6324cff400b9f9d3a769626e2ada9345"),
+            (
+                "secret",
+                b'{"test": "data"}',
+                "3dca279e801a85c6c3b3bcccbde6d5c9cbb8f7aef8b7f0c7a8b3f8e9d0a1b2c3",
+            ),
+            (
+                "",
+                b"{}",
+                "5f70bf18a0880070e7368c8b1a9f2dcd6324cff400b9f9d3a769626e2ada9345",
+            ),
         ],
     )
     def test_generate_signature(self, secret, payload, expected):
@@ -111,7 +122,9 @@ class TestWebhookService:
             ]
 
             # Act & Assert (should not raise)
-            await WebhookService.send_webhook(webhook, event_type, payload, max_retries=3, retry_delay=0.1)
+            await WebhookService.send_webhook(
+                webhook, event_type, payload, max_retries=3, retry_delay=0.1
+            )
 
             # Should have been called 3 times (initial + 2 retries)
             assert mock_post.await_count == 3
@@ -127,7 +140,9 @@ class TestWebhookService:
 
             # Act & Assert
             with pytest.raises(WebhookDeliveryError) as exc_info:
-                await WebhookService.send_webhook(webhook, "test.event", {}, max_retries=2, retry_delay=0.1)
+                await WebhookService.send_webhook(
+                    webhook, "test.event", {}, max_retries=2, retry_delay=0.1
+                )
 
             assert "Failed after 3 attempts" in str(exc_info.value)
             assert mock_post.await_count == 3
@@ -140,15 +155,29 @@ class TestWebhookService:
         signature = WebhookService.generate_signature(secret, payload)
 
         # Act & Assert
-        assert WebhookService.verify_webhook_signature(secret, payload, signature) is True
-        assert WebhookService.verify_webhook_signature("wrong_secret", payload, signature) is False
-        assert WebhookService.verify_webhook_signature(secret, b'{"different": "data"}', signature) is False
+        assert (
+            WebhookService.verify_webhook_signature(secret, payload, signature) is True
+        )
+        assert (
+            WebhookService.verify_webhook_signature("wrong_secret", payload, signature)
+            is False
+        )
+        assert (
+            WebhookService.verify_webhook_signature(
+                secret, b'{"different": "data"}', signature
+            )
+            is False
+        )
 
     def test_update_webhook(self, mock_db, sample_webhook_data):
         """Test updating a webhook."""
         # Arrange
         webhook = Webhook(**sample_webhook_data, id=1, user_id=1)
-        update_data = WebhookUpdate(url="https://new-url.com/webhook", event_types=["new.event"], is_active=False)
+        update_data = WebhookUpdate(
+            url="https://new-url.com/webhook",
+            event_types=["new.event"],
+            is_active=False,
+        )
 
         mock_db.query.return_value.filter.return_value.first.return_value = webhook
 
@@ -198,12 +227,18 @@ class TestWebhookService:
         )
 
         mock_db = MagicMock()
-        mock_db.query.return_value.filter.return_value.all.return_value = [webhook1, webhook2]
+        mock_db.query.return_value.filter.return_value.all.return_value = [
+            webhook1,
+            webhook2,
+        ]
 
         event_type = "build.created"
         payload = {"build_id": 123}
 
-        with patch("app.services.webhook_service.WebhookService.send_webhook", new_callable=AsyncMock) as mock_send:
+        with patch(
+            "app.services.webhook_service.WebhookService.send_webhook",
+            new_callable=AsyncMock,
+        ) as mock_send:
             # Act
             await WebhookService.process_webhook_event(mock_db, event_type, payload)
 

@@ -26,8 +26,13 @@ def rotate_keys() -> bool:
 
     # Vérifier si une rotation est nécessaire
     if not key_rotation_service.should_rotate():
-        next_rotation = key_rotation_service.last_rotation_date + key_rotation_service.key_rotation_interval
-        logger.info(f"Aucune rotation nécessaire. Prochaine rotation prévue le {next_rotation.isoformat()}")
+        next_rotation = (
+            key_rotation_service.last_rotation_date
+            + key_rotation_service.key_rotation_interval
+        )
+        logger.info(
+            f"Aucune rotation nécessaire. Prochaine rotation prévue le {next_rotation.isoformat()}"
+        )
         return False
 
     try:
@@ -45,7 +50,10 @@ def rotate_keys() -> bool:
             )
 
             # Planifier la prochaine rotation
-            next_rotation = key_rotation_service.last_rotation_date + key_rotation_service.key_rotation_interval
+            next_rotation = (
+                key_rotation_service.last_rotation_date
+                + key_rotation_service.key_rotation_interval
+            )
             logger.info(f"Prochaine rotation prévue le {next_rotation.isoformat()}")
 
             return True
@@ -82,7 +90,9 @@ def update_environment_keys():
                 key_updated = True
             # Mettre à jour les clés historiques
             elif (
-                line.startswith("SECRET_KEY_1=") or line.startswith("SECRET_KEY_2=") or line.startswith("SECRET_KEY_3=")
+                line.startswith("SECRET_KEY_1=")
+                or line.startswith("SECRET_KEY_2=")
+                or line.startswith("SECRET_KEY_3=")
             ):
                 # On ne met à jour pas les clés historiques ici, elles sont gérées par le service
                 updated_lines.append(line)
@@ -133,9 +143,13 @@ def schedule_key_rotation():
         logger.info("Planificateur de rotation des clés démarré")
 
     except ImportError:
-        logger.warning("Le module 'schedule' n'est pas installé. La rotation automatique des clés est désactivée.")
+        logger.warning(
+            "Le module 'schedule' n'est pas installé. La rotation automatique des clés est désactivée."
+        )
     except Exception as e:
-        logger.error(f"Erreur lors du démarrage du planificateur de rotation des clés: {str(e)}")
+        logger.error(
+            f"Erreur lors du démarrage du planificateur de rotation des clés: {str(e)}"
+        )
 
 
 # Démarrer automatiquement le planificateur au chargement du module

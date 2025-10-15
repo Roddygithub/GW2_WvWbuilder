@@ -25,7 +25,9 @@ T = TypeVar("T", bound=BaseModel)
 class GW2Cache:
     """GW2 API response cache with Redis backend."""
 
-    def __init__(self, redis_client: Optional[redis.Redis] = None, prefix: str = "gw2:"):
+    def __init__(
+        self, redis_client: Optional[redis.Redis] = None, prefix: str = "gw2:"
+    ):
         """Initialize the cache with an optional Redis client.
 
         Args:
@@ -113,7 +115,9 @@ async def get_gw2_cache() -> GW2Cache:
                 # Test the connection
                 await redis_client.ping()
             except Exception as e:
-                logger.warning(f"Failed to connect to Redis: {e}. Using in-memory cache.")
+                logger.warning(
+                    f"Failed to connect to Redis: {e}. Using in-memory cache."
+                )
                 redis_client = None
 
         gw2_cache = GW2Cache(redis_client=redis_client)

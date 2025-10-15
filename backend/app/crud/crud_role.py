@@ -20,7 +20,9 @@ class CRUDRole(CRUDBase[Role, RoleCreate, RoleUpdate]):
         """Get a role by name."""
         return db.query(Role).filter(Role.name == name).first()
 
-    def get_multi(self, db: Session, *, skip: int = 0, limit: int = 100, is_active: bool = None) -> List[Role]:
+    def get_multi(
+        self, db: Session, *, skip: int = 0, limit: int = 100, is_active: bool = None
+    ) -> List[Role]:
         """Get multiple roles with optional filtering."""
         query = db.query(Role)
 

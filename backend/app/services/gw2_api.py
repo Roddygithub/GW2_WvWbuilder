@@ -133,7 +133,9 @@ class GW2APIService:
 
         # Configuration des paramètres de requête
         request_params = params or {}
-        if "v" not in request_params and "ids" not in endpoint:  # Ne pas ajouter v=latest pour les requêtes par ID
+        if (
+            "v" not in request_params and "ids" not in endpoint
+        ):  # Ne pas ajouter v=latest pour les requêtes par ID
             request_params["v"] = settings.GW2_API_SCHEMA_VERSION
 
         # Gestion des réessais
@@ -143,7 +145,9 @@ class GW2APIService:
             try:
                 async with httpx.AsyncClient(timeout=self.timeout) as client:
                     # Envoi de la requête
-                    response = await client.get(url, params=request_params, headers=self.default_headers)
+                    response = await client.get(
+                        url, params=request_params, headers=self.default_headers
+                    )
 
                     # Gestion des erreurs HTTP
                     if response.status_code == 200:
@@ -162,7 +166,9 @@ class GW2APIService:
 
                     elif response.status_code == 429:  # Trop de requêtes
                         retry_after = int(response.headers.get("Retry-After", 5))
-                        logger.warning(f"Rate limit atteint, nouvel essai dans {retry_after} secondes...")
+                        logger.warning(
+                            f"Rate limit atteint, nouvel essai dans {retry_after} secondes..."
+                        )
                         await asyncio.sleep(retry_after)
                         continue
 
@@ -205,7 +211,9 @@ class GW2APIService:
         """Récupère la liste des identifiants des métiers."""
         return await self._make_request("/v2/professions")
 
-    async def fetch_profession_details(self, profession_id: str) -> Optional[GW2Profession]:
+    async def fetch_profession_details(
+        self, profession_id: str
+    ) -> Optional[GW2Profession]:
         """Récupère les détails d'un métier spécifique."""
         data = await self._make_request(f"/v2/professions/{profession_id}")
         return GW2Profession(**data) if data else None
@@ -223,7 +231,9 @@ class GW2APIService:
 
         for i in range(0, len(skill_ids), chunk_size):
             chunk = skill_ids[i : i + chunk_size]
-            data = await self._make_request("/v2/skills", params={"ids": ",".join(map(str, chunk))})
+            data = await self._make_request(
+                "/v2/skills", params={"ids": ",".join(map(str, chunk))}
+            )
             all_skills.extend([GW2Skill(**skill) for skill in data])
 
         return all_skills
@@ -245,7 +255,9 @@ class GW2APIService:
 
         for i in range(0, len(trait_ids), chunk_size):
             chunk = trait_ids[i : i + chunk_size]
-            data = await self._make_request("/v2/traits", params={"ids": ",".join(map(str, chunk))})
+            data = await self._make_request(
+                "/v2/traits", params={"ids": ",".join(map(str, chunk))}
+            )
             all_traits.extend([GW2Trait(**trait) for trait in data])
 
         return all_traits
@@ -257,7 +269,9 @@ class GW2APIService:
 
     # Méthodes pour les spécialisations
 
-    async def fetch_specializations(self, spec_ids: List[int] = None) -> List[GW2Specialization]:
+    async def fetch_specializations(
+        self, spec_ids: List[int] = None
+    ) -> List[GW2Specialization]:
         """Récupère les détails de plusieurs spécialisations."""
         if spec_ids is None:
             # Récupérer toutes les spécialisations
@@ -271,7 +285,9 @@ class GW2APIService:
 
         for i in range(0, len(spec_ids), chunk_size):
             chunk = spec_ids[i : i + chunk_size]
-            data = await self._make_request("/v2/specializations", params={"ids": ",".join(map(str, chunk))})
+            data = await self._make_request(
+                "/v2/specializations", params={"ids": ",".join(map(str, chunk))}
+            )
             all_specs.extend([GW2Specialization(**spec) for spec in data])
 
         return all_specs
@@ -307,7 +323,9 @@ class GW2APIService:
                 profession = GW2Profession(**profession_data.dict())
 
                 # Vérifier si le métier existe déjà
-                db_profession = await crud_profession.get_by_name(db, name=profession.name)
+                db_profession = await crud_profession.get_by_name(
+                    db, name=profession.name
+                )
 
                 # Préparer les données pour la création/mise à jour
                 profession_in = {
@@ -320,16 +338,23 @@ class GW2APIService:
 
                 if db_profession:
                     # Mettre à jour le métier existant
-                    updated_profession = await crud_profession.update(db, db_obj=db_profession, obj_in=profession_in)
+                    updated_profession = await crud_profession.update(
+                        db, db_obj=db_profession, obj_in=profession_in
+                    )
                     logger.info(f"Métier mis à jour: {updated_profession.name}")
                 else:
                     # Créer un nouveau métier
-                    updated_profession = await crud_profession.create(db, obj_in=profession_in)
+                    updated_profession = await crud_profession.create(
+                        db, obj_in=profession_in
+                    )
                     logger.info(f"Nouveau métier ajouté: {updated_profession.name}")
 
                 professions.append(updated_profession)
 
             except Exception as e:
-                logger.error(f"Erreur lors de la synchronisation du métier {profession_id}: {str(e)}", exc_info=True)
+                logger.error(
+                    f"Erreur lors de la synchronisation du métier {profession_id}: {str(e)}",
+                    exc_info=True,
+                )
 
         return professions

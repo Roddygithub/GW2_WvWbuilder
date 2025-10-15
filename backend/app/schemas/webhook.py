@@ -40,7 +40,10 @@ class Webhook(WebhookInDBBase):
     """Propriétés à retourner au client."""
 
     # Le secret ne doit être retourné qu'à la création.
-    secret: Optional[str] = Field(None, description="Le secret du webhook, retourné uniquement lors de la création.")
+    secret: Optional[str] = Field(
+        None,
+        description="Le secret du webhook, retourné uniquement lors de la création.",
+    )
 
 
 class WebhookInDB(WebhookInDBBase):
@@ -79,9 +82,13 @@ class WebhookDeliveryBase(BaseModel):
     event_id: int = Field(..., description="ID de l'événement associé")
     url: str = Field(..., description="URL de destination du webhook")
     status: str = Field(..., description="Statut de la livraison")
-    response_status: Optional[int] = Field(None, description="Code de statut HTTP de la réponse")
+    response_status: Optional[int] = Field(
+        None, description="Code de statut HTTP de la réponse"
+    )
     response_body: Optional[str] = Field(None, description="Corps de la réponse HTTP")
-    error_message: Optional[str] = Field(None, description="Message d'erreur en cas d'échec")
+    error_message: Optional[str] = Field(
+        None, description="Message d'erreur en cas d'échec"
+    )
     retry_count: int = Field(0, description="Nombre de tentatives de livraison")
 
 

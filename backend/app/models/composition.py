@@ -33,14 +33,18 @@ class Composition(Base, TimeStampedMixin):
         "sqlite_autoincrement": True,  # Active l'auto-incrémentation pour SQLite
     }
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True, index=True)
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True, index=True
+    )
     name: Mapped[str] = mapped_column(String(255), index=True, nullable=False)
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     squad_size: Mapped[int] = mapped_column(Integer, default=10, nullable=False)
     is_public: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="draft", nullable=False)
     game_mode: Mapped[str] = mapped_column(String(50), default="wvw", nullable=False)
-    created_by: Mapped[int] = mapped_column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    created_by: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
 
     # Les champs created_at et updated_at sont fournis par TimeStampedMixin
 
@@ -53,20 +57,34 @@ class Composition(Base, TimeStampedMixin):
 
     # Relations
     members: Mapped[List[User]] = relationship(
-        "User", secondary="composition_members", back_populates="compositions", viewonly=True, lazy="selectin"
+        "User",
+        secondary="composition_members",
+        back_populates="compositions",
+        viewonly=True,
+        lazy="selectin",
     )
 
     composition_tags: Mapped[List["CompositionTag"]] = relationship(
-        "CompositionTag", back_populates="composition", cascade="all, delete-orphan", lazy="selectin"
+        "CompositionTag",
+        back_populates="composition",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )
 
     creator: Mapped[User] = relationship(
-        "User", back_populates="created_compositions", foreign_keys=[created_by], lazy="selectin"
+        "User",
+        back_populates="created_compositions",
+        foreign_keys=[created_by],
+        lazy="selectin",
     )
 
-    build: Mapped[Optional[Build]] = relationship("Build", back_populates="compositions", lazy="selectin")
+    build: Mapped[Optional[Build]] = relationship(
+        "Build", back_populates="compositions", lazy="selectin"
+    )
 
-    team: Mapped[Optional[Team]] = relationship("Team", back_populates="compositions", lazy="selectin")
+    team: Mapped[Optional[Team]] = relationship(
+        "Team", back_populates="compositions", lazy="selectin"
+    )
 
     def __repr__(self) -> str:
         return f"<Composition {self.name}>"

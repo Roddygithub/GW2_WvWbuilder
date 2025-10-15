@@ -28,11 +28,15 @@ def get_engine_kwargs(is_async: bool = False):
     kwargs = {}
 
     # Configuration pour SQLite
-    if "sqlite" in (ASYNC_SQLALCHEMY_DATABASE_URI if is_async else SQLALCHEMY_DATABASE_URI):
+    if "sqlite" in (
+        ASYNC_SQLALCHEMY_DATABASE_URI if is_async else SQLALCHEMY_DATABASE_URI
+    ):
         connect_args = {"check_same_thread": False}
 
         # Désactiver le pool pour les bases de données en mémoire
-        if ":memory:" in (ASYNC_SQLALCHEMY_DATABASE_URI if is_async else SQLALCHEMY_DATABASE_URI):
+        if ":memory:" in (
+            ASYNC_SQLALCHEMY_DATABASE_URI if is_async else SQLALCHEMY_DATABASE_URI
+        ):
             kwargs["poolclass"] = None
 
         kwargs.update(
@@ -61,7 +65,9 @@ def get_engine_kwargs(is_async: bool = False):
 engine = create_engine(SQLALCHEMY_DATABASE_URI, **get_engine_kwargs(is_async=False))
 
 # Moteur de base de données asynchrone
-async_engine = create_async_engine(ASYNC_SQLALCHEMY_DATABASE_URI, **get_engine_kwargs(is_async=True))
+async_engine = create_async_engine(
+    ASYNC_SQLALCHEMY_DATABASE_URI, **get_engine_kwargs(is_async=True)
+)
 
 
 def init_db():

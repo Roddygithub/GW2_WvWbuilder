@@ -61,9 +61,15 @@ JWT_TOKEN_PREFIX = "Bearer"
 def log_jwt_config():
     print("=== Configuration JWT ===")
     print(f"JWT_ALGORITHM: {settings.JWT_ALGORITHM}")
-    print(f"JWT_ACCESS_TOKEN_EXPIRE_MINUTES: {settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES}")
-    print(f"JWT_REFRESH_TOKEN_EXPIRE_MINUTES: {settings.JWT_REFRESH_TOKEN_EXPIRE_MINUTES}")
-    print(f"JWT_SECRET_KEY: {'*' * 8} (longueur: {len(settings.JWT_SECRET_KEY) if settings.JWT_SECRET_KEY else 0})")
+    print(
+        f"JWT_ACCESS_TOKEN_EXPIRE_MINUTES: {settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES}"
+    )
+    print(
+        f"JWT_REFRESH_TOKEN_EXPIRE_MINUTES: {settings.JWT_REFRESH_TOKEN_EXPIRE_MINUTES}"
+    )
+    print(
+        f"JWT_SECRET_KEY: {'*' * 8} (longueur: {len(settings.JWT_SECRET_KEY) if settings.JWT_SECRET_KEY else 0})"
+    )
     print(
         f"JWT_REFRESH_SECRET_KEY: {'*' * 8} (longueur: {len(settings.JWT_REFRESH_SECRET_KEY) if settings.JWT_REFRESH_SECRET_KEY else 0})"
     )
@@ -125,26 +131,38 @@ def create_token(
     try:
         # Vérification des types de manière plus robuste
         if not isinstance(subject, (str, int)):
-            raise JWTError(f"Subject must be a string or integer, got {type(subject).__name__}")
+            raise JWTError(
+                f"Subject must be a string or integer, got {type(subject).__name__}"
+            )
 
         # Convertir le sujet en chaîne pour assurer la cohérence
         subject_str = str(subject)
 
         # Valider le type de token
         if not isinstance(token_type, str) and token_type is not None:
-            raise JWTError(f"Token type must be a string or None, got {type(token_type).__name__}")
+            raise JWTError(
+                f"Token type must be a string or None, got {type(token_type).__name__}"
+            )
 
         # Valider expires_delta si fourni
         if expires_delta is not None and not isinstance(expires_delta, timedelta):
-            raise JWTError(f"expires_delta must be a timedelta object or None, got {type(expires_delta).__name__}")
+            raise JWTError(
+                f"expires_delta must be a timedelta object or None, got {type(expires_delta).__name__}"
+            )
 
         # Valider le type de token
         valid_token_types = (TOKEN_TYPE_ACCESS, TOKEN_TYPE_REFRESH, TOKEN_TYPE_RESET)
         if token_type is not None and token_type not in valid_token_types:
-            raise JWTError(f"Invalid token type: {token_type}. Must be one of {valid_token_types}")
+            raise JWTError(
+                f"Invalid token type: {token_type}. Must be one of {valid_token_types}"
+            )
 
         # Sélectionner la clé secrète appropriée en fonction du type de token
-        secret_key = settings.JWT_REFRESH_SECRET_KEY if token_type == TOKEN_TYPE_REFRESH else settings.JWT_SECRET_KEY
+        secret_key = (
+            settings.JWT_REFRESH_SECRET_KEY
+            if token_type == TOKEN_TYPE_REFRESH
+            else settings.JWT_SECRET_KEY
+        )
 
         if not secret_key:
             raise JWTError(f"No secret key configured for token type: {token_type}")
@@ -239,7 +257,8 @@ def decode_token(
             "verify_signature": True,
             "verify_exp": True,
             "verify_iss": hasattr(settings, "JWT_ISSUER") and bool(settings.JWT_ISSUER),
-            "verify_aud": hasattr(settings, "JWT_AUDIENCE") and bool(settings.JWT_AUDIENCE),
+            "verify_aud": hasattr(settings, "JWT_AUDIENCE")
+            and bool(settings.JWT_AUDIENCE),
             "verify_iat": True,
             "verify_nbf": False,
             "leeway": leeway,
@@ -265,7 +284,9 @@ def decode_token(
 
         # Verify token type if specified
         if token_type and payload.get("type") != token_type:
-            raise JWTInvalidTokenError(f"Invalid token type: expected {token_type}, got {payload.get('type')}")
+            raise JWTInvalidTokenError(
+                f"Invalid token type: expected {token_type}, got {payload.get('type')}"
+            )
 
         return payload
 
@@ -283,7 +304,9 @@ def decode_token(
         raise JWTInvalidTokenError("Failed to decode token") from e
 
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict[str, Any]:
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> Dict[str, Any]:
     """
     Dependency to get the current user from a JWT token.
 
@@ -351,7 +374,9 @@ def create_access_token(
         str: The encoded JWT access token
     """
     logger.debug(f"Creating access token for subject: {subject}")
-    logger.debug(f"JWT_ACCESS_TOKEN_EXPIRE_MINUTES: {settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES}")
+    logger.debug(
+        f"JWT_ACCESS_TOKEN_EXPIRE_MINUTES: {settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES}"
+    )
     logger.debug(f"JWT_ALGORITHM: {settings.JWT_ALGORITHM}")
     logger.debug(f"JWT_SECRET_KEY: {settings.JWT_SECRET_KEY}")
 
@@ -391,7 +416,7 @@ def create_refresh_token(
         str: The encoded JWT refresh token
     """
     if not expires_delta:
-        expires_delta = timedelta(minutes=JWT_REFRESH_TOKEN_EXPIRE_MINUTES)
+        expires_delta = timedelta(minutes=settings.JWT_REFRESH_TOKEN_EXPIRE_MINUTES)
 
     return create_token(
         subject=subject,
@@ -435,7 +460,9 @@ def create_password_reset_token(
         raise JWTError(f"Error creating password reset token: {str(e)}")
 
 
-def get_current_active_user(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+def get_current_active_user(
+    current_user: Dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
     """
     Dependency to get the current active user.
 
@@ -449,11 +476,15 @@ def get_current_active_user(current_user: Dict[str, Any] = Depends(get_current_u
         HTTPException: If the user is not active
     """
     if not current_user.get("is_active", True):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
+        )
     return current_user
 
 
-def get_current_active_superuser(current_user: Dict[str, Any] = Depends(get_current_user)) -> Dict[str, Any]:
+def get_current_active_superuser(
+    current_user: Dict[str, Any] = Depends(get_current_user),
+) -> Dict[str, Any]:
     """
     Dependency to get the current active superuser.
 
@@ -467,7 +498,10 @@ def get_current_active_superuser(current_user: Dict[str, Any] = Depends(get_curr
         HTTPException: If the user is not a superuser
     """
     if not current_user.get("is_superuser", False):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="The user doesn't have enough privileges")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges",
+        )
     return current_user
 
 

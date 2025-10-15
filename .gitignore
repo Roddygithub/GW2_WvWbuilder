@@ -3,6 +3,9 @@
 .env.*.local
 !.env.example
 
+# Security - JWT rotation keys
+keys.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

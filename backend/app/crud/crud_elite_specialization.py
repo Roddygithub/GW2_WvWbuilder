@@ -10,17 +10,25 @@ from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models import EliteSpecialization, Profession
-from app.schemas.elite_specialization import EliteSpecializationCreate, EliteSpecializationUpdate, GameMode
+from app.schemas.elite_specialization import (
+    EliteSpecializationCreate,
+    EliteSpecializationUpdate,
+    GameMode,
+)
 from app.core.cache import cache
 from app.core.config import settings
 
 
-class CRUDEliteSpecialization(CRUDBase[EliteSpecialization, EliteSpecializationCreate, EliteSpecializationUpdate]):
+class CRUDEliteSpecialization(
+    CRUDBase[EliteSpecialization, EliteSpecializationCreate, EliteSpecializationUpdate]
+):
     """
     CRUD operations for EliteSpecialization model with optimized loading and caching.
     """
 
-    async def get(self, db: AsyncSession, id: Any, load_relations: bool = False) -> Optional[EliteSpecialization]:
+    async def get(
+        self, db: AsyncSession, id: Any, load_relations: bool = False
+    ) -> Optional[EliteSpecialization]:
         """
         Get an elite specialization by ID with optional relation loading.
 
@@ -46,7 +54,9 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecialization, EliteSpecializationC
         # Load relations if requested
         if load_relations:
             query = query.options(
-                selectinload(EliteSpecialization.profession).selectinload(Profession.elite_specializations),
+                selectinload(EliteSpecialization.profession).selectinload(
+                    Profession.elite_specializations
+                ),
                 selectinload(EliteSpecialization.builds),
             )
 
@@ -83,12 +93,16 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecialization, EliteSpecializationC
                 return cached_elite_spec
 
         # Build the base query
-        query = select(EliteSpecialization).where(func.lower(EliteSpecialization.name) == name.lower())
+        query = select(EliteSpecialization).where(
+            func.lower(EliteSpecialization.name) == name.lower()
+        )
 
         # Load relations if requested
         if load_relations:
             query = query.options(
-                selectinload(EliteSpecialization.profession).selectinload(Profession.elite_specializations),
+                selectinload(EliteSpecialization.profession).selectinload(
+                    Profession.elite_specializations
+                ),
                 selectinload(EliteSpecialization.builds),
             )
 
@@ -146,7 +160,11 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecialization, EliteSpecializationC
         return elite_specs
 
     async def get_viable_for_game_mode(
-        self, db: AsyncSession, game_mode: GameMode, profession_id: Optional[int] = None, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        game_mode: GameMode,
+        profession_id: Optional[int] = None,
+        load_relations: bool = False,
     ) -> List[EliteSpecialization]:
         """
         Get elite specs viable for a specific game mode with optional relation loading.
@@ -171,7 +189,9 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecialization, EliteSpecializationC
                 return cached_elite_specs
 
         # Build the base query
-        query = select(EliteSpecialization).where(EliteSpecialization.game_mode_affinity.contains([game_mode.value]))
+        query = select(EliteSpecialization).where(
+            EliteSpecialization.game_mode_affinity.contains([game_mode.value])
+        )
 
         # Filter by profession if specified
         if profession_id:
@@ -183,7 +203,8 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecialization, EliteSpecializationC
         # Load relations if requested
         if load_relations:
             query = query.options(
-                selectinload(EliteSpecialization.profession), selectinload(EliteSpecialization.builds)
+                selectinload(EliteSpecialization.profession),
+                selectinload(EliteSpecialization.builds),
             )
 
         # Execute query
@@ -197,7 +218,9 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecialization, EliteSpecializationC
         return elite_specs
         return result.scalars().all()
 
-    async def create(self, db: AsyncSession, *, obj_in: EliteSpecializationCreate) -> EliteSpecialization:
+    async def create(
+        self, db: AsyncSession, *, obj_in: EliteSpecializationCreate
+    ) -> EliteSpecialization:
         """
         Create a new elite specialization and invalidate related caches.
 
@@ -219,7 +242,11 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecialization, EliteSpecializationC
         return db_obj
 
     async def update(
-        self, db: AsyncSession, *, db_obj: EliteSpecialization, obj_in: Union[EliteSpecializationUpdate, Dict[str, Any]]
+        self,
+        db: AsyncSession,
+        *,
+        db_obj: EliteSpecialization,
+        obj_in: Union[EliteSpecializationUpdate, Dict[str, Any]],
     ) -> EliteSpecialization:
         """
         Update an elite specialization and invalidate related caches.
@@ -261,7 +288,9 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecialization, EliteSpecializationC
 
         return db_obj
 
-    async def remove(self, db: AsyncSession, *, id: int) -> Optional[EliteSpecialization]:
+    async def remove(
+        self, db: AsyncSession, *, id: int
+    ) -> Optional[EliteSpecialization]:
         """
         Remove an elite specialization and invalidate related caches.
 
@@ -330,7 +359,9 @@ class CRUDEliteSpecialization(CRUDBase[EliteSpecialization, EliteSpecializationC
                 for game_mode in elite_spec.game_mode_affinity:
                     await cache.delete(f"elite_specs:game_mode:{game_mode}")
                     if profession_id:
-                        await cache.delete(f"elite_specs:game_mode:{game_mode}:profession:{profession_id}")
+                        await cache.delete(
+                            f"elite_specs:game_mode:{game_mode}:profession:{profession_id}"
+                        )
 
         # Invalidate builds that use this elite spec
         if elite_spec_id:

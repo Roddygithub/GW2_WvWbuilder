@@ -8,10 +8,14 @@ from prometheus_client import Counter
 
 # Prometheus metrics for cache
 CACHE_HITS = Counter("cache_hits_total", "Total number of cache hits", ["endpoint"])
-CACHE_MISSES = Counter("cache_misses_total", "Total number of cache misses", ["endpoint"])
+CACHE_MISSES = Counter(
+    "cache_misses_total", "Total number of cache misses", ["endpoint"]
+)
 
 
-def cache_response(ttl: int = settings.CACHE_TTL) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def cache_response(
+    ttl: int = settings.CACHE_TTL,
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """
     Décorateur pour mettre en cache la réponse d'une route FastAPI dans Redis.
 
@@ -45,7 +49,11 @@ def cache_response(ttl: int = settings.CACHE_TTL) -> Callable[[Callable[..., Any
                 response_obj.headers["X-Cache"] = "MISS"
             # Pydantic models need to be converted to dicts before json.dumps
             await settings.redis_client.setex(
-                cache_key, ttl, json.dumps(result, default=lambda o: o.dict() if hasattr(o, "dict") else str(o))
+                cache_key,
+                ttl,
+                json.dumps(
+                    result, default=lambda o: o.dict() if hasattr(o, "dict") else str(o)
+                ),
             )
             return result
 

@@ -20,7 +20,9 @@ class CRUDBuild(CRUDBase[Build, BuildCreate, BuildUpdate]):
     CRUD operations for Build model with optimized loading and caching.
     """
 
-    async def get(self, db: AsyncSession, id: Any, load_relations: bool = False) -> Optional[Build]:
+    async def get(
+        self, db: AsyncSession, id: Any, load_relations: bool = False
+    ) -> Optional[Build]:
         """
         Get a build by ID with optional relation loading.
 
@@ -63,7 +65,13 @@ class CRUDBuild(CRUDBase[Build, BuildCreate, BuildUpdate]):
         return build
 
     async def get_multi_by_owner(
-        self, db: AsyncSession, *, owner_id: int, skip: int = 0, limit: int = 100, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        owner_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        load_relations: bool = False,
     ) -> List[Build]:
         """
         Get multiple builds by owner ID with optional relation loading.
@@ -114,7 +122,13 @@ class CRUDBuild(CRUDBase[Build, BuildCreate, BuildUpdate]):
         return builds
 
     async def get_multi_by_profession(
-        self, db: AsyncSession, *, profession_id: int, skip: int = 0, limit: int = 100, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        profession_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        load_relations: bool = False,
     ) -> List[Build]:
         """
         Get multiple builds by profession ID with optional relation loading.
@@ -165,7 +179,13 @@ class CRUDBuild(CRUDBase[Build, BuildCreate, BuildUpdate]):
         return builds
 
     async def get_multi_by_elite_spec(
-        self, db: AsyncSession, *, elite_spec_id: int, skip: int = 0, limit: int = 100, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        elite_spec_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        load_relations: bool = False,
     ) -> List[Build]:
         """
         Get multiple builds by elite specialization ID with optional relation loading.
@@ -215,7 +235,9 @@ class CRUDBuild(CRUDBase[Build, BuildCreate, BuildUpdate]):
 
         return builds
 
-    async def create(self, db: AsyncSession, *, obj_in: BuildCreate, created_by: int) -> Build:
+    async def create(
+        self, db: AsyncSession, *, obj_in: BuildCreate, created_by: int
+    ) -> Build:
         """
         Create a new build and invalidate related caches.
 
@@ -239,12 +261,22 @@ class CRUDBuild(CRUDBase[Build, BuildCreate, BuildUpdate]):
 
         # Invalidate related caches
         await self.invalidate_cache(
-            db, db_obj.id, db_obj.created_by, db_obj.profession_id, db_obj.elite_specialization_id
+            db,
+            db_obj.id,
+            db_obj.created_by,
+            db_obj.profession_id,
+            db_obj.elite_specialization_id,
         )
 
         return db_obj
 
-    async def update(self, db: AsyncSession, *, db_obj: Build, obj_in: Union[BuildUpdate, Dict[str, Any]]) -> Build:
+    async def update(
+        self,
+        db: AsyncSession,
+        *,
+        db_obj: Build,
+        obj_in: Union[BuildUpdate, Dict[str, Any]],
+    ) -> Build:
         """
         Update a build and invalidate related caches.
 
@@ -279,10 +311,14 @@ class CRUDBuild(CRUDBase[Build, BuildCreate, BuildUpdate]):
 
         if profession_id != old_profession_id or elite_spec_id != old_elite_spec_id:
             # Invalidate caches for old values
-            await self.invalidate_cache(db, db_obj.id, db_obj.created_by, old_profession_id, old_elite_spec_id)
+            await self.invalidate_cache(
+                db, db_obj.id, db_obj.created_by, old_profession_id, old_elite_spec_id
+            )
 
         # Invalidate caches for new values
-        await self.invalidate_cache(db, db_obj.id, db_obj.created_by, profession_id, elite_spec_id)
+        await self.invalidate_cache(
+            db, db_obj.id, db_obj.created_by, profession_id, elite_spec_id
+        )
 
         return db_obj
 
@@ -363,7 +399,9 @@ class CRUDBuild(CRUDBase[Build, BuildCreate, BuildUpdate]):
                 # Also invalidate the profession cache for this elite spec
                 if elite_spec.profession_id:
                     await cache.delete(f"profession:{elite_spec.profession_id}")
-                    await cache.delete(f"profession:{elite_spec.profession_id}:elite_specs")
+                    await cache.delete(
+                        f"profession:{elite_spec.profession_id}:elite_specs"
+                    )
 
 
 # Create an instance of CRUDBuild to be imported and used in other modules

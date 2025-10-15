@@ -1,6 +1,6 @@
-import { Link } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function SiteHeader() {
   return (
@@ -8,15 +8,17 @@ export function SiteHeader() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center space-x-6">
           <Link to="/" className="flex items-center space-x-2">
-            <span className="inline-block font-bold text-xl">GW2 WvW Builder</span>
+            <span className="inline-block font-bold text-xl">
+              GW2 WvW Builder
+            </span>
           </Link>
         </div>
         <div className="flex items-center space-x-2">
           <ThemeToggle />
           <Button variant="outline" size="sm" asChild>
-            <a 
-              href="https://github.com/yourusername/gw2-wvwbuilder" 
-              target="_blank" 
+            <a
+              href="https://github.com/yourusername/gw2-wvwbuilder"
+              target="_blank"
               rel="noopener noreferrer"
             >
               GitHub
@@ -25,5 +27,5 @@ export function SiteHeader() {
         </div>
       </div>
     </header>
-  )
+  );
 }

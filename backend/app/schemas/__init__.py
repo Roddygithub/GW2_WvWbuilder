@@ -30,7 +30,13 @@ from .build import (
 )
 from .msg import Msg, MsgWithCount
 from .team import TeamBase, TeamCreate, TeamUpdate, TeamInDBBase, Team, TeamResponse
-from .team_member import TeamMemberBase, TeamMemberCreate, TeamMemberUpdate, TeamMember, TeamMemberResponse
+from .team_member import (
+    TeamMemberBase,
+    TeamMemberCreate,
+    TeamMemberUpdate,
+    TeamMember,
+    TeamMemberResponse,
+)
 from .tag import TagBase, TagCreate, TagUpdate, TagInDBBase, Tag, TagStats, TagResponse
 from .composition import (
     CompositionMemberRole,

@@ -45,7 +45,11 @@ class TestCompositionCRUD:
         assert data["created_by"] == user.id
 
         # Vérifier en base
-        composition = db.query(Composition).filter(Composition.name == composition_data["name"]).first()
+        composition = (
+            db.query(Composition)
+            .filter(Composition.name == composition_data["name"])
+            .first()
+        )
         assert composition is not None
         assert composition.created_by == user.id
 
@@ -114,7 +118,9 @@ class TestCompositionCRUD:
         assert response.status_code == status.HTTP_200_OK
 
         # Vérifier la suppression en base
-        composition = db.query(Composition).filter(Composition.id == composition_id).first()
+        composition = (
+            db.query(Composition).filter(Composition.id == composition_id).first()
+        )
         assert composition is None
 
 

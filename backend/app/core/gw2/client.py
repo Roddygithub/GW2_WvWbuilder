@@ -162,13 +162,17 @@ class GW2Client:
     def _update_rate_limits(self, response: aiohttp.ClientResponse) -> None:
         """Update rate limit information from response headers."""
         if "X-Rate-Limit-Limit" in response.headers:
-            self._rate_limit_remaining = int(response.headers.get("X-Rate-Limit-Remaining", 300))
+            self._rate_limit_remaining = int(
+                response.headers.get("X-Rate-Limit-Remaining", 300)
+            )
             self._rate_limit_reset = int(response.headers.get("X-Rate-Limit-Reset", 0))
 
     async def _check_rate_limit(self) -> None:
         """Check if we're approaching the rate limit and wait if needed."""
         if self._rate_limit_remaining < 10:  # Leave some buffer
-            reset_time = self._rate_limit_reset - int(datetime.now(timezone.utc).timestamp())
+            reset_time = self._rate_limit_reset - int(
+                datetime.now(timezone.utc).timestamp()
+            )
             if reset_time > 0:
                 logger.warning(f"Approaching rate limit, waiting {reset_time} seconds")
                 await asyncio.sleep(reset_time + 1)  # Add a small buffer
@@ -184,7 +188,9 @@ class GW2Client:
         if response.status == 400:
             raise GW2APIValidationError(f"Bad request: {error_text}")
         elif response.status == 401:
-            raise GW2APIUnauthorizedError("Authentication failed: Invalid or missing API key")
+            raise GW2APIUnauthorizedError(
+                "Authentication failed: Invalid or missing API key"
+            )
         elif response.status == 403:
             raise GW2APIUnauthorizedError("Insufficient permissions for this endpoint")
         elif response.status == 404:
@@ -194,7 +200,9 @@ class GW2Client:
             logger.warning(f"Rate limited, waiting {retry_after} seconds")
             raise GW2APIRateLimitError("Rate limit exceeded")
         elif 500 <= response.status < 600:
-            raise GW2APIUnavailableError(f"Server error: {response.status} {error_text}")
+            raise GW2APIUnavailableError(
+                f"Server error: {response.status} {error_text}"
+            )
         else:
             raise GW2APIError(f"Unexpected error: {response.status} {error_text}")
 
@@ -235,7 +243,9 @@ class GW2Client:
 
     async def get_item_price(self, item_id: int) -> models.ItemPrice:
         """Get the current trading post prices for an item."""
-        return await self._request("GET", f"commerce/prices/{item_id}", model=models.ItemPrice)
+        return await self._request(
+            "GET", f"commerce/prices/{item_id}", model=models.ItemPrice
+        )
 
     # Game Data
     async def get_professions(self) -> List[str]:
@@ -244,7 +254,9 @@ class GW2Client:
 
     async def get_profession(self, profession_id: str) -> models.Profession:
         """Get detailed information about a profession."""
-        return await self._request("GET", f"professions/{profession_id}", model=models.Profession)
+        return await self._request(
+            "GET", f"professions/{profession_id}", model=models.Profession
+        )
 
     async def get_skills(self, skill_ids: List[int]) -> List[models.Skill]:
         """Get information about multiple skills by their IDs."""
@@ -266,7 +278,9 @@ class GW2Client:
     async def get_equipment_tabs(self) -> List[models.EquipmentTab]:
         """Get the equipment tabs for the authenticated account."""
         if not self.api_key:
-            raise GW2APIUnauthorizedError("API key is required for equipment tab endpoints")
+            raise GW2APIUnauthorizedError(
+                "API key is required for equipment tab endpoints"
+            )
         data = await self._request("GET", "account/bank")
         return [models.EquipmentTab.parse_obj(tab) for tab in data]
 

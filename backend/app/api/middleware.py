@@ -32,7 +32,9 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
     Cet ID est utilisé pour tracer les requêtes dans les logs et faciliter le débogage.
     """
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         # Générer un ID unique pour la requête
         request_id = str(uuid.uuid4())
 
@@ -58,10 +60,14 @@ class LoggingMiddleware(BaseHTTPMiddleware):
     Enregistre les détails de chaque requête et réponse pour le débogage et l'audit.
     """
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         # Enregistrer le début de la requête
         start_time = time.time()
-        request_id = request.state.request_id if hasattr(request.state, "request_id") else ""
+        request_id = (
+            request.state.request_id if hasattr(request.state, "request_id") else ""
+        )
 
         # Journaliser les détails de la requête
         logger.info(
@@ -131,7 +137,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
         }
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         # Appeler le prochain middleware ou le gestionnaire de route
         response = await call_next(request)
 
@@ -161,9 +169,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.window = window
         self.requests: Dict[str, list] = {}
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         # Ne pas appliquer la limitation pour les routes publiques
-        if any(request.url.path.startswith(path) for path in ["/docs", "/redoc", "/openapi.json", "/health"]):
+        if any(
+            request.url.path.startswith(path)
+            for path in ["/docs", "/redoc", "/openapi.json", "/health"]
+        ):
             return await call_next(request)
 
         # Récupérer l'adresse IP du client
@@ -171,7 +184,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         current_time = int(time.time())
 
         # Nettoyer les anciennes entrées
-        self.requests[client_ip] = [t for t in self.requests.get(client_ip, []) if t > current_time - self.window]
+        self.requests[client_ip] = [
+            t
+            for t in self.requests.get(client_ip, [])
+            if t > current_time - self.window
+        ]
 
         # Vérifier si le taux est dépassé
         if len(self.requests.get(client_ip, [])) >= self.limit:
@@ -229,4 +246,6 @@ def setup_middlewares(app: FastAPI) -> None:
 
     # Activer la limitation de débit uniquement en production
     if not settings.DEBUG and not settings.TESTING:
-        app.add_middleware(RateLimitMiddleware, limit=100, window=60)  # 100 requêtes/minute par IP
+        app.add_middleware(
+            RateLimitMiddleware, limit=100, window=60
+        )  # 100 requêtes/minute par IP

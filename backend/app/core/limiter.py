@@ -54,7 +54,9 @@ async def init_rate_limiter() -> None:
     """Initialize the rate limiter with Redis."""
     try:
         if not settings.REDIS_URL or not settings.CACHE_ENABLED:
-            logger.warning("REDIS_URL not set or cache disabled, rate limiting will be disabled")
+            logger.warning(
+                "REDIS_URL not set or cache disabled, rate limiting will be disabled"
+            )
             return
 
         # Vérifier si le client Redis est disponible
@@ -96,7 +98,11 @@ def get_rate_limiter(times: int = 100, seconds: int = 60) -> Callable:
         A dependency that can be used with FastAPI's Depends()
     """
     # Désactiver complètement le rate limiting en environnement de test
-    if settings.ENVIRONMENT == "test" or not settings.REDIS_URL or not settings.CACHE_ENABLED:
+    if (
+        settings.ENVIRONMENT == "test"
+        or not settings.REDIS_URL
+        or not settings.CACHE_ENABLED
+    ):
         # Retourner une fonction vide qui ne fait rien
         async def noop_rate_limiter():
             return None

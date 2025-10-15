@@ -28,14 +28,28 @@ class Build(Base, TimeStampedMixin):
     """
 
     __tablename__ = "builds"
-    __table_args__ = {"comment": "Stocke les configurations de builds pour le mode WvW de Guild Wars 2"}
+    __table_args__ = {
+        "comment": "Stocke les configurations de builds pour le mode WvW de Guild Wars 2"
+    }
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, comment="Identifiant unique du build")
-    name: Mapped[str] = mapped_column(String(100), index=True, nullable=False, comment="Nom du build")
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True, comment="Description détaillée du build")
-    game_mode: Mapped[str] = mapped_column(String(20), default="wvw", comment="Mode de jeu cible (wvw, pvp, pve, etc.)")
-    team_size: Mapped[int] = mapped_column(Integer, default=5, comment="Taille d'équipe recommandée")
-    is_public: Mapped[bool] = mapped_column(Boolean, default=False, comment="Si le build est public ou privé")
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, index=True, comment="Identifiant unique du build"
+    )
+    name: Mapped[str] = mapped_column(
+        String(100), index=True, nullable=False, comment="Nom du build"
+    )
+    description: Mapped[Optional[str]] = mapped_column(
+        Text, nullable=True, comment="Description détaillée du build"
+    )
+    game_mode: Mapped[str] = mapped_column(
+        String(20), default="wvw", comment="Mode de jeu cible (wvw, pvp, pve, etc.)"
+    )
+    team_size: Mapped[int] = mapped_column(
+        Integer, default=5, comment="Taille d'équipe recommandée"
+    )
+    is_public: Mapped[bool] = mapped_column(
+        Boolean, default=False, comment="Si le build est public ou privé"
+    )
 
     created_by_id: Mapped[int] = mapped_column(
         Integer,
@@ -45,12 +59,17 @@ class Build(Base, TimeStampedMixin):
     )
     # Les champs created_at et updated_at sont fournis par TimeStampedMixin
     updated_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now(), comment="Dernière mise à jour du build"
+        DateTime(timezone=True),
+        onupdate=func.now(),
+        comment="Dernière mise à jour du build",
     )
 
     # Configuration du build (compétences, armes, etc.)
     config: Mapped[Dict[str, Any]] = mapped_column(
-        JSON, nullable=False, default=dict, comment="Configuration du build (compétences, armes, etc.)"
+        JSON,
+        nullable=False,
+        default=dict,
+        comment="Configuration du build (compétences, armes, etc.)",
     )
 
     # Contraintes et exigences du build
@@ -68,16 +87,26 @@ class Build(Base, TimeStampedMixin):
     )
 
     # Relations
-    created_by: Mapped["User"] = relationship("User", back_populates="builds", lazy="selectin")
+    created_by: Mapped["User"] = relationship(
+        "User", back_populates="builds", lazy="selectin"
+    )
     compositions: Mapped[List["Composition"]] = relationship(
-        "Composition", back_populates="build", cascade="all, delete-orphan", lazy="selectin"
+        "Composition",
+        back_populates="build",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )
     # Relation many-to-many avec Profession via la table d'association build_profession
     # Cette relation est gérée à travers la table d'association build_profession
     professions: Mapped[List["Profession"]] = relationship(
-        "Profession", secondary=build_profession, back_populates="builds", lazy="selectin"
+        "Profession",
+        secondary=build_profession,
+        back_populates="builds",
+        lazy="selectin",
     )
-    team: Mapped[Optional["Team"]] = relationship("Team", back_populates="builds", lazy="selectin")
+    team: Mapped[Optional["Team"]] = relationship(
+        "Team", back_populates="builds", lazy="selectin"
+    )
     # La relation avec EliteSpecialization est gérée via la table d'association composition_members
     # qui est liée aux compositions, pas directement aux builds
 

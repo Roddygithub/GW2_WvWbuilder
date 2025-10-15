@@ -20,7 +20,9 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
     CRUD operations for Tag model with optimized loading and caching.
     """
 
-    async def get(self, db: AsyncSession, id: Any, load_relations: bool = False) -> Optional[Tag]:
+    async def get(
+        self, db: AsyncSession, id: Any, load_relations: bool = False
+    ) -> Optional[Tag]:
         """
         Get a tag by ID with optional relation loading.
 
@@ -45,7 +47,9 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
 
         # Load relations if requested
         if load_relations:
-            query = query.options(selectinload(Tag.compositions).selectinload(CompositionTag.composition))
+            query = query.options(
+                selectinload(Tag.compositions).selectinload(CompositionTag.composition)
+            )
 
         # Execute query
         result = await db.execute(query)
@@ -57,7 +61,9 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
 
         return tag
 
-    async def get_by_name(self, db: AsyncSession, *, name: str, load_relations: bool = False) -> Optional[Tag]:
+    async def get_by_name(
+        self, db: AsyncSession, *, name: str, load_relations: bool = False
+    ) -> Optional[Tag]:
         """
         Get a tag by name with optional relation loading.
 
@@ -82,7 +88,9 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
 
         # Load relations if requested
         if load_relations:
-            query = query.options(selectinload(Tag.compositions).selectinload(CompositionTag.composition))
+            query = query.options(
+                selectinload(Tag.compositions).selectinload(CompositionTag.composition)
+            )
 
         # Execute query
         result = await db.execute(query)
@@ -95,7 +103,12 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
         return tag
 
     async def get_multi(
-        self, db: AsyncSession, *, skip: int = 0, limit: int = 100, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        load_relations: bool = False,
     ) -> List[Tag]:
         """
         Get multiple tags with optional relation loading.
@@ -122,7 +135,9 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
 
         # Load relations if requested
         if load_relations:
-            query = query.options(selectinload(Tag.compositions).selectinload(CompositionTag.composition))
+            query = query.options(
+                selectinload(Tag.compositions).selectinload(CompositionTag.composition)
+            )
 
         # Execute query
         result = await db.execute(query)
@@ -135,7 +150,13 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
         return tags
 
     async def get_multi_by_composition(
-        self, db: AsyncSession, *, composition_id: int, skip: int = 0, limit: int = 100, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        composition_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        load_relations: bool = False,
     ) -> List[Tag]:
         """
         Get multiple tags by composition ID with optional relation loading.
@@ -170,7 +191,9 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
 
         # Load relations if requested
         if load_relations:
-            query = query.options(selectinload(Tag.compositions).selectinload(CompositionTag.composition))
+            query = query.options(
+                selectinload(Tag.compositions).selectinload(CompositionTag.composition)
+            )
 
         # Execute query
         result = await db.execute(query)
@@ -203,7 +226,9 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
 
         return db_obj
 
-    async def update(self, db: AsyncSession, *, db_obj: Tag, obj_in: Union[TagUpdate, Dict[str, Any]]) -> Tag:
+    async def update(
+        self, db: AsyncSession, *, db_obj: Tag, obj_in: Union[TagUpdate, Dict[str, Any]]
+    ) -> Tag:
         """
         Update a tag and invalidate related caches.
 
@@ -265,7 +290,10 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
         return tag
 
     async def invalidate_cache(
-        self, db: AsyncSession, tag_id: Optional[int] = None, tag_name: Optional[str] = None
+        self,
+        db: AsyncSession,
+        tag_id: Optional[int] = None,
+        tag_name: Optional[str] = None,
     ) -> None:
         """
         Invalidate cache for tag and related data.
@@ -291,7 +319,11 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
         # Invalidate composition-tag relationship caches
         if tag_id:
             # Get all compositions that have this tag
-            result = await db.execute(select(CompositionTag.composition_id).where(CompositionTag.tag_id == tag_id))
+            result = await db.execute(
+                select(CompositionTag.composition_id).where(
+                    CompositionTag.tag_id == tag_id
+                )
+            )
             composition_ids = result.scalars().all()
 
             # Invalidate cache for each composition's tags

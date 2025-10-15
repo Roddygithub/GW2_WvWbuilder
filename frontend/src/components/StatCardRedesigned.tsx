@@ -3,14 +3,14 @@
  * Immersive stat cards with glow effects and animations
  */
 
-import { motion } from 'framer-motion';
-import { LucideIcon } from 'lucide-react';
+import { motion } from "framer-motion";
+import { LucideIcon } from "lucide-react";
 
 interface StatCardRedesignedProps {
   title: string;
   value: string | number;
   icon: LucideIcon;
-  color: 'emerald' | 'blue' | 'purple' | 'amber';
+  color: "emerald" | "blue" | "purple" | "amber";
   subtitle?: string;
   trend?: {
     value: number;
@@ -21,32 +21,32 @@ interface StatCardRedesignedProps {
 
 const colorConfig = {
   emerald: {
-    gradient: 'from-emerald-500 to-emerald-600',
-    glow: 'shadow-[0_0_20px_rgba(16,185,129,0.4)]',
-    glowHover: 'shadow-[0_0_30px_rgba(16,185,129,0.6)]',
-    border: 'border-emerald-500/30',
-    text: 'text-emerald-400',
+    gradient: "from-emerald-500 to-emerald-600",
+    glow: "shadow-[0_0_20px_rgba(16,185,129,0.4)]",
+    glowHover: "shadow-[0_0_30px_rgba(16,185,129,0.6)]",
+    border: "border-emerald-500/30",
+    text: "text-emerald-400",
   },
   blue: {
-    gradient: 'from-blue-500 to-blue-600',
-    glow: 'shadow-[0_0_20px_rgba(59,130,246,0.4)]',
-    glowHover: 'shadow-[0_0_30px_rgba(59,130,246,0.6)]',
-    border: 'border-blue-500/30',
-    text: 'text-blue-400',
+    gradient: "from-blue-500 to-blue-600",
+    glow: "shadow-[0_0_20px_rgba(59,130,246,0.4)]",
+    glowHover: "shadow-[0_0_30px_rgba(59,130,246,0.6)]",
+    border: "border-blue-500/30",
+    text: "text-blue-400",
   },
   purple: {
-    gradient: 'from-purple-500 to-purple-600',
-    glow: 'shadow-[0_0_20px_rgba(168,85,247,0.4)]',
-    glowHover: 'shadow-[0_0_30px_rgba(168,85,247,0.6)]',
-    border: 'border-purple-500/30',
-    text: 'text-purple-400',
+    gradient: "from-purple-500 to-purple-600",
+    glow: "shadow-[0_0_20px_rgba(168,85,247,0.4)]",
+    glowHover: "shadow-[0_0_30px_rgba(168,85,247,0.6)]",
+    border: "border-purple-500/30",
+    text: "text-purple-400",
   },
   amber: {
-    gradient: 'from-amber-500 to-amber-600',
-    glow: 'shadow-[0_0_20px_rgba(245,158,11,0.4)]',
-    glowHover: 'shadow-[0_0_30px_rgba(245,158,11,0.6)]',
-    border: 'border-amber-500/30',
-    text: 'text-amber-400',
+    gradient: "from-amber-500 to-amber-600",
+    glow: "shadow-[0_0_20px_rgba(245,158,11,0.4)]",
+    glowHover: "shadow-[0_0_30px_rgba(245,158,11,0.6)]",
+    border: "border-amber-500/30",
+    text: "text-amber-400",
   },
 };
 
@@ -66,7 +66,7 @@ export default function StatCardRedesigned({
       data-testid="stat-card"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5, ease: 'easeOut' }}
+      transition={{ delay, duration: 0.5, ease: "easeOut" }}
       whileHover={{ scale: 1.05, y: -5 }}
       className={`
         relative overflow-hidden rounded-2xl
@@ -90,7 +90,7 @@ export default function StatCardRedesigned({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         className={`absolute inset-0 border-2 ${config.border} rounded-2xl`}
       />
 
@@ -121,12 +121,12 @@ export default function StatCardRedesigned({
                 px-2 py-1 rounded-lg text-xs font-bold
                 ${
                   trend.isPositive
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : 'bg-red-500/20 text-red-400'
+                    ? "bg-emerald-500/20 text-emerald-400"
+                    : "bg-red-500/20 text-red-400"
                 }
               `}
             >
-              {trend.isPositive ? '+' : ''}
+              {trend.isPositive ? "+" : ""}
               {trend.value}%
             </motion.div>
           )}
@@ -148,9 +148,7 @@ export default function StatCardRedesigned({
         </motion.p>
 
         {/* Subtitle */}
-        {subtitle && (
-          <p className="mt-2 text-xs text-slate-500">{subtitle}</p>
-        )}
+        {subtitle && <p className="mt-2 text-xs text-slate-500">{subtitle}</p>}
 
         {/* Decorative Line */}
         <motion.div

@@ -3,10 +3,10 @@
  * Animated action buttons with glow effects
  */
 
-import { motion } from 'framer-motion';
-import { Plus, Layers, FileText, Activity } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { motion } from "framer-motion";
+import { Plus, Layers, FileText, Activity } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface ActionButton {
   title: string;
@@ -20,28 +20,28 @@ interface ActionButton {
 
 const actions: ActionButton[] = [
   {
-    title: 'Create Composition',
-    description: 'Build a new squad composition',
+    title: "Create Composition",
+    description: "Build a new squad composition",
     icon: Layers,
-    gradient: 'from-emerald-500 to-emerald-600',
-    glow: 'shadow-[0_0_20px_rgba(16,185,129,0.4)]',
-    path: '/compositions/new',
+    gradient: "from-emerald-500 to-emerald-600",
+    glow: "shadow-[0_0_20px_rgba(16,185,129,0.4)]",
+    path: "/compositions/new",
   },
   {
-    title: 'Create Build',
-    description: 'Design a new character build',
+    title: "Create Build",
+    description: "Design a new character build",
     icon: FileText,
-    gradient: 'from-blue-500 to-blue-600',
-    glow: 'shadow-[0_0_20px_rgba(59,130,246,0.4)]',
-    path: '/builder',
+    gradient: "from-blue-500 to-blue-600",
+    glow: "shadow-[0_0_20px_rgba(59,130,246,0.4)]",
+    path: "/builder",
   },
   {
-    title: 'View Activity',
-    description: 'See all your recent actions',
+    title: "View Activity",
+    description: "See all your recent actions",
     icon: Activity,
-    gradient: 'from-purple-500 to-purple-600',
-    glow: 'shadow-[0_0_20px_rgba(168,85,247,0.4)]',
-    onClick: () => toast.info('Activity page coming soon!'),
+    gradient: "from-purple-500 to-purple-600",
+    glow: "shadow-[0_0_20px_rgba(168,85,247,0.4)]",
+    onClick: () => toast.info("Activity page coming soon!"),
   },
 ];
 
@@ -110,7 +110,7 @@ export default function QuickActions() {
                 transition={{
                   duration: 2,
                   repeat: Infinity,
-                  ease: 'easeInOut',
+                  ease: "easeInOut",
                   delay: index * 0.2,
                 }}
                 className="absolute inset-0 border-2 border-purple-500/20 rounded-2xl"

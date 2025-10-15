@@ -13,7 +13,9 @@ from app.db.dependencies import get_db
 from app.schemas.token import TokenPayload
 
 
-def create_access_token(subject: Union[str, int], expires_delta: timedelta = None, **kwargs) -> str:
+def create_access_token(
+    subject: Union[str, int], expires_delta: timedelta = None, **kwargs
+) -> str:
     """
     Crée un token JWT d'accès.
 
@@ -36,16 +38,22 @@ def create_access_token(subject: Union[str, int], expires_delta: timedelta = Non
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+        )
 
     # Utiliser l'ID de l'utilisateur comme sujet et inclure les données supplémentaires
     # Convertir l'expiration en timestamp pour la compatibilité avec TokenPayload
     to_encode = {"exp": int(expire.timestamp()), "sub": str(subject), **kwargs}
-    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
     return encoded_jwt
 
 
-def create_refresh_token(subject: Union[str, int], expires_delta: timedelta = None, **kwargs) -> str:
+def create_refresh_token(
+    subject: Union[str, int], expires_delta: timedelta = None, **kwargs
+) -> str:
     """
     Crée un token de rafraîchissement JWT.
 
@@ -89,6 +97,7 @@ def verify_token(token: str) -> Dict[str, Any]:
             settings.JWT_SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM],
             options={"verify_aud": False},
+            leeway=10,
         )
         token_data = TokenPayload(**payload)
         return token_data.dict()
@@ -113,7 +122,9 @@ def verify_refresh_token(token: str) -> Dict[str, Any]:
         HTTPException: Si le token est invalide ou expiré
     """
     try:
-        payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        payload = jwt.decode(
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM], leeway=10
+        )
         # Convertir le timestamp en datetime pour la validation
         exp_datetime = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
 
@@ -126,7 +137,12 @@ def verify_refresh_token(token: str) -> Dict[str, Any]:
             )
 
         # Créer le TokenPayload avec les données décodées
-        token_data = TokenPayload(sub=payload["sub"], exp=exp_datetime, iat=payload.get("iat"), jti=payload.get("jti"))
+        token_data = TokenPayload(
+            sub=payload["sub"],
+            exp=exp_datetime,
+            iat=payload.get("iat"),
+            jti=payload.get("jti"),
+        )
 
         return token_data.dict()
     except (JWTError, ValidationError) as e:
@@ -157,7 +173,9 @@ def get_token_from_request(request: Request) -> Optional[str]:
         Optional[str]: The extracted token or None if not found
     """
     # Check Authorization header (case insensitive)
-    auth_header = next((v for k, v in request.headers.items() if k.lower() == "authorization"), None)
+    auth_header = next(
+        (v for k, v in request.headers.items() if k.lower() == "authorization"), None
+    )
     if auth_header and auth_header.startswith("Bearer "):
         token = auth_header.split(" ")[1]
         return token
@@ -178,7 +196,7 @@ async def get_current_user(
     """
     Get the current authenticated user from the JWT token.
     The token subject should be the user's ID.
-    
+
     Creates its own database session to avoid FastAPI dependency blocking issues.
 
     Args:
@@ -192,7 +210,7 @@ async def get_current_user(
     """
     from app.db.session import AsyncSessionLocal
     from sqlalchemy import select
-    
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -205,6 +223,7 @@ async def get_current_user(
             settings.JWT_SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM],
             options={"verify_aud": False},
+            leeway=10,
         )
         token_data = TokenPayload(**payload)
         user_id = token_data.sub
@@ -224,10 +243,10 @@ async def get_current_user(
         stmt = select(models.User).where(models.User.id == int(user_id))
         result = await db.execute(stmt)
         user = result.scalars().first()
-        
+
         if user is None:
             raise credentials_exception
-        
+
         # Extract all needed data immediately before session closes
         # This prevents DetachedInstanceError
         _ = user.id
@@ -261,5 +280,7 @@ async def get_current_active_superuser(
     Get the current active superuser.
     """
     if not current_user.is_superuser:
-        raise HTTPException(status_code=400, detail="The user doesn't have enough privileges")
+        raise HTTPException(
+            status_code=400, detail="The user doesn't have enough privileges"
+        )
     return current_user

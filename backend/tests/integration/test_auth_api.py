@@ -27,13 +27,22 @@ class TestAuthAPI:
         """Teste la connexion réussie d'un utilisateur."""
         # Créer un utilisateur de test
         password = random_password()
-        user = create_user(db=db_session, email=random_email(), password=password, is_active=True, is_verified=True)
+        user = create_user(
+            db=db_session,
+            email=random_email(),
+            password=password,
+            is_active=True,
+            is_verified=True,
+        )
 
         # Tester la connexion
         login_data = {"username": user.email, "password": password}
 
         response = await post(
-            client, f"{settings.API_V1_STR}/auth/login", json=login_data, expected_status=status.HTTP_200_OK
+            client,
+            f"{settings.API_V1_STR}/auth/login",
+            json=login_data,
+            expected_status=status.HTTP_200_OK,
         )
 
         # Vérifier la réponse
@@ -45,14 +54,21 @@ class TestAuthAPI:
         """Teste la tentative de connexion avec des identifiants invalides."""
         # Créer un utilisateur de test
         user = create_user(
-            db=db_session, email=random_email(), password=random_password(), is_active=True, is_verified=True
+            db=db_session,
+            email=random_email(),
+            password=random_password(),
+            is_active=True,
+            is_verified=True,
         )
 
         # Tester avec un mot de passe incorrect
         login_data = {"username": user.email, "password": "wrong_password"}
 
         response = await post(
-            client, f"{settings.API_V1_STR}/auth/login", json=login_data, expected_status=status.HTTP_401_UNAUTHORIZED
+            client,
+            f"{settings.API_V1_STR}/auth/login",
+            json=login_data,
+            expected_status=status.HTTP_401_UNAUTHORIZED,
         )
 
         # Vérifier le message d'erreur
@@ -61,7 +77,10 @@ class TestAuthAPI:
     async def test_get_current_user(self, client: TestClient, db_session, auth_headers):
         """Teste la récupération des informations de l'utilisateur connecté."""
         response = await get(
-            client, f"{settings.API_V1_STR}/users/me", headers=auth_headers, expected_status=status.HTTP_200_OK
+            client,
+            f"{settings.API_V1_STR}/users/me",
+            headers=auth_headers,
+            expected_status=status.HTTP_200_OK,
         )
 
         # Vérifier que les informations de l'utilisateur sont renvoyées
@@ -102,7 +121,9 @@ class TestPasswordReset:
     async def test_request_password_reset(self, client: TestClient, db_session):
         """Teste la demande de réinitialisation de mot de passe."""
         # Créer un utilisateur de test
-        user = create_user(db=db_session, email=random_email(), is_active=True, is_verified=True)
+        user = create_user(
+            db=db_session, email=random_email(), is_active=True, is_verified=True
+        )
 
         # Demander une réinitialisation de mot de passe
         response = await post(
@@ -119,7 +140,9 @@ class TestPasswordReset:
     async def test_reset_password(self, client: TestClient, db_session):
         """Teste la réinitialisation du mot de passe avec un token valide."""
         # Créer un utilisateur de test
-        user = create_user(db=db_session, email=random_email(), is_active=True, is_verified=True)
+        user = create_user(
+            db=db_session, email=random_email(), is_active=True, is_verified=True
+        )
 
         # Générer un token de réinitialisation (dans un environnement réel, ce serait envoyé par email)
         from app.core.security import create_reset_token
@@ -144,7 +167,10 @@ class TestPasswordReset:
         login_data = {"username": user.email, "password": new_password}
 
         response = await post(
-            client, f"{settings.API_V1_STR}/auth/login", json=login_data, expected_status=status.HTTP_200_OK
+            client,
+            f"{settings.API_V1_STR}/auth/login",
+            json=login_data,
+            expected_status=status.HTTP_200_OK,
         )
 
         # Vérifier que la connexion est réussie

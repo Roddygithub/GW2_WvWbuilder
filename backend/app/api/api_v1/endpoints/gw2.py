@@ -64,7 +64,9 @@ async def list_characters(gw2_client: GW2Client = Depends(get_gw2_client)):
 
 
 @router.get("/characters/{character_name}", response_model=Dict[str, Any])
-async def get_character(character_name: str, gw2_client: GW2Client = Depends(get_gw2_client)):
+async def get_character(
+    character_name: str, gw2_client: GW2Client = Depends(get_gw2_client)
+):
     """
     Get detailed information about a specific character.
 
@@ -130,7 +132,9 @@ async def list_professions(gw2_client: GW2Client = Depends(get_gw2_client)):
 
 
 @router.get("/professions/{profession_id}", response_model=Dict[str, Any])
-async def get_profession(profession_id: str, gw2_client: GW2Client = Depends(get_gw2_client)):
+async def get_profession(
+    profession_id: str, gw2_client: GW2Client = Depends(get_gw2_client)
+):
     """
     Get detailed information about a profession.
 

@@ -1,0 +1,72 @@
+# Configuration d'optimisation pour WvW Guild Raid (15-30 joueurs)
+mode: "guild_raid"
+squad_size_range: [15, 30]
+
+# Pondérations des objectifs (total = 1.0)
+weights:
+  boon_uptime: 0.25            # Couverture par sous-groupe
+  coordination: 0.20           # Synergies entre sous-groupes
+  damage: 0.20                 # DPS burst coordonné
+  healing: 0.12                # Sustain ciblé
+  crowd_control: 0.10          # CC coordonné
+  survivability: 0.08          # Mitigation
+  utility: 0.05                # Stealth, portals, pulls
+
+# Boons critiques avec uptime par sous-groupe
+critical_boons:
+  might: 0.90
+  quickness: 0.85
+  alacrity: 0.80
+  stability: 0.80
+  protection: 0.75
+  fury: 0.85
+  resolution: 0.65
+
+# Distribution des rôles recommandée (par sous-groupe de 5)
+role_distribution:
+  healer:
+    min: 2
+    max: 6
+    optimal: 4                 # ~1 par sous-groupe
+  boon_support:
+    min: 4
+    max: 10
+    optimal: 6                 # ~1-2 par sous-groupe
+  dps:
+    min: 8
+    max: 20
+    optimal: 15
+  utility:
+    min: 1
+    max: 5
+    optimal: 3
+
+# Capacités McM spécifiques
+wvw_capabilities:
+  cleanses_per_second: 6.0
+  boon_rip_per_second: 4.0
+  projectile_hate_uptime: 0.60
+  stability_pulses: 3
+  cc_break_bar_damage: 800
+  coordinated_burst: 50000     # Burst collectif coordonné
+
+# Structure par sous-groupe (5 joueurs)
+subgroup_structure:
+  supports_per_subgroup: 2     # Healer + boon support
+  dps_per_subgroup: 3
+  balance_tolerance: 0.15      # Tolérance déséquilibre entre sous-groupes
+
+# Pénalités
+penalties:
+  missing_critical_boon: 0.25
+  subgroup_imbalance: 0.20     # Sous-groupes mal équilibrés
+  role_imbalance: 0.15
+  no_coordination: 0.20        # Manque de synergies
+
+# Synergies positives (emphasis sur coordination)
+synergies:
+  firebrand_scourge: 0.06
+  herald_scrapper: 0.05
+  tempest_druid: 0.04
+  coordinated_cc: 0.08         # CC synchronisé
+  stacked_burst: 0.07          # Burst coordonné

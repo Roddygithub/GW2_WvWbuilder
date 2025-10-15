@@ -94,19 +94,37 @@ async def async_client(app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
 @pytest.fixture
 def mock_user() -> User:
     """Returns a mock active user."""
-    return User(id=1, username="testuser", email="test@example.com", is_active=True, is_superuser=False)
+    return User(
+        id=1,
+        username="testuser",
+        email="test@example.com",
+        is_active=True,
+        is_superuser=False,
+    )
 
 
 @pytest.fixture
 def mock_inactive_user() -> User:
     """Returns a mock inactive user."""
-    return User(id=2, username="inactive", email="inactive@example.com", is_active=False, is_superuser=False)
+    return User(
+        id=2,
+        username="inactive",
+        email="inactive@example.com",
+        is_active=False,
+        is_superuser=False,
+    )
 
 
 @pytest.fixture
 def mock_superuser() -> User:
     """Returns a mock active superuser."""
-    return User(id=3, username="super", email="super@example.com", is_active=True, is_superuser=True)
+    return User(
+        id=3,
+        username="super",
+        email="super@example.com",
+        is_active=True,
+        is_superuser=True,
+    )
 
 
 @pytest.mark.asyncio
@@ -180,9 +198,13 @@ async def test_get_current_user_dependency(mock_user: User):
     mock_db = AsyncMock()
     mock_request = AsyncMock()
     with patch(
-        "app.api.deps.security.get_current_user", new_callable=AsyncMock, return_value={"sub": str(mock_user.id)}
+        "app.api.deps.security.get_current_user",
+        new_callable=AsyncMock,
+        return_value={"sub": str(mock_user.id)},
     ):
-        with patch("app.api.deps.crud.user.get", new_callable=AsyncMock, return_value=mock_user):
+        with patch(
+            "app.api.deps.crud.user.get", new_callable=AsyncMock, return_value=mock_user
+        ):
             user = await get_current_user(request=mock_request, db=mock_db)
         assert user == mock_user
 

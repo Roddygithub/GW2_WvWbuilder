@@ -15,15 +15,21 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     )
 
 
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
-    errors = [{"loc": e["loc"], "msg": e["msg"], "type": e["type"]} for e in exc.errors()]
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
+    errors = [
+        {"loc": e["loc"], "msg": e["msg"], "type": e["type"]} for e in exc.errors()
+    ]
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": "Validation error", "errors": errors},
     )
 
 
-async def integrity_error_handler(request: Request, exc: IntegrityError) -> JSONResponse:
+async def integrity_error_handler(
+    request: Request, exc: IntegrityError
+) -> JSONResponse:
     error_msg = str(exc.orig) if exc.orig else "Database integrity error"
     if "duplicate key" in error_msg.lower():
         return JSONResponse(
@@ -36,14 +42,18 @@ async def integrity_error_handler(request: Request, exc: IntegrityError) -> JSON
     )
 
 
-async def not_found_exception_handler(request: Request, exc: NoResultFound) -> JSONResponse:
+async def not_found_exception_handler(
+    request: Request, exc: NoResultFound
+) -> JSONResponse:
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
         content={"detail": "The requested resource was not found"},
     )
 
 
-async def custom_exception_handler(request: Request, exc: CustomException) -> JSONResponse:
+async def custom_exception_handler(
+    request: Request, exc: CustomException
+) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail, "error": exc.__class__.__name__},

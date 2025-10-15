@@ -176,10 +176,14 @@ def create_test_image(
     if filename is None:
         filename = f"test.{format}"
 
-    return TestFile(content=buffer.getvalue(), filename=filename, content_type=content_type)
+    return TestFile(
+        content=buffer.getvalue(), filename=filename, content_type=content_type
+    )
 
 
-def create_test_zip(files: List[Tuple[str, Union[bytes, str]]], filename: str = "test.zip") -> TestFile:
+def create_test_zip(
+    files: List[Tuple[str, Union[bytes, str]]], filename: str = "test.zip"
+) -> TestFile:
     """Create a test zip file.
 
     Args:
@@ -198,7 +202,9 @@ def create_test_zip(files: List[Tuple[str, Union[bytes, str]]], filename: str = 
                 content = content.encode("utf-8")
             zf.writestr(name, content)
 
-    return TestFile(content=buffer.getvalue(), filename=filename, content_type="application/zip")
+    return TestFile(
+        content=buffer.getvalue(), filename=filename, content_type="application/zip"
+    )
 
 
 def assert_files_equal(
@@ -328,6 +334,8 @@ def create_temp_file(
     if isinstance(content, str) and not text:
         content = content.encode("utf-8")
 
-    with tempfile.NamedTemporaryFile(mode=mode, suffix=suffix, prefix=prefix, dir=dir, delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        mode=mode, suffix=suffix, prefix=prefix, dir=dir, delete=False
+    ) as f:
         f.write(content)
         return Path(f.name)

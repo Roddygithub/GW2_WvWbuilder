@@ -99,11 +99,15 @@ class SuccessResponse(BaseModel):
     message: str = Field(..., description="Success message")
 
     class Config:
-        json_schema_extra = {"example": {"success": True, "message": "Build deleted successfully"}}
+        json_schema_extra = {
+            "example": {"success": True, "message": "Build deleted successfully"}
+        }
 
 
 def create_success_response(
-    data: Any = None, message: Optional[str] = None, meta: Optional[Dict[str, Any]] = None
+    data: Any = None,
+    message: Optional[str] = None,
+    meta: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Helper function to create a success response.
@@ -129,7 +133,9 @@ def create_success_response(
     return response
 
 
-def create_error_response(error: str, detail: Optional[str] = None, code: Optional[str] = None) -> Dict[str, Any]:
+def create_error_response(
+    error: str, detail: Optional[str] = None, code: Optional[str] = None
+) -> Dict[str, Any]:
     """
     Helper function to create an error response.
 
@@ -154,7 +160,9 @@ def create_error_response(error: str, detail: Optional[str] = None, code: Option
     return response
 
 
-def create_paginated_response(data: List[Any], total: int, page: int, page_size: int) -> Dict[str, Any]:
+def create_paginated_response(
+    data: List[Any], total: int, page: int, page_size: int
+) -> Dict[str, Any]:
     """
     Helper function to create a paginated response.
 

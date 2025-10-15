@@ -38,7 +38,9 @@ class KeyRotationManager:
         """
         self._config = self._load_or_initialize(initial_key)
 
-    def _load_or_initialize(self, initial_key: Optional[str] = None) -> KeyRotationConfig:
+    def _load_or_initialize(
+        self, initial_key: Optional[str] = None
+    ) -> KeyRotationConfig:
         """Charge la configuration existante ou initialise une nouvelle configuration."""
         # Dans une implémentation réelle, cela pourrait charger depuis une base de données
         # ou un service de configuration sécurisé comme AWS Secrets Manager ou HashiCorp Vault
@@ -46,7 +48,9 @@ class KeyRotationManager:
         # Pour cette implémentation, nous utilisons une configuration en mémoire
         # qui sera perdue au redémarrage du serveur
         key = initial_key or secrets.token_urlsafe(64)
-        return KeyRotationConfig(current_key=key, next_rotation=datetime.utcnow() + timedelta(days=1))
+        return KeyRotationConfig(
+            current_key=key, next_rotation=datetime.utcnow() + timedelta(days=1)
+        )
 
     def get_current_key(self) -> str:
         """Retourne la clé actuelle et effectue une rotation si nécessaire."""
@@ -105,7 +109,10 @@ class KeyRotationManager:
         # Essayer d'abord avec la clé actuelle
         try:
             return jwt.decode(
-                token, self._config.current_key, algorithms=[settings.JWT_ALGORITHM], options={"verify_aud": False}
+                token,
+                self._config.current_key,
+                algorithms=[settings.JWT_ALGORITHM],
+                options={"verify_aud": False},
             )
         except jwt.JWTError as e:
             # Si échec et qu'il y a une clé précédente, essayer avec

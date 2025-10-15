@@ -32,7 +32,12 @@ async def get_most_used_tags(
     """
     # Requête pour compter le nombre d'utilisations de chaque tag
     stmt = (
-        select(Tag.id, Tag.name, Tag.description, func.count(CompositionTag.tag_id).label("usage_count"))
+        select(
+            Tag.id,
+            Tag.name,
+            Tag.description,
+            func.count(CompositionTag.tag_id).label("usage_count"),
+        )
         .join(CompositionTag, Tag.id == CompositionTag.tag_id, isouter=True)
         .group_by(Tag.id)
         .order_by(func.count(CompositionTag.tag_id).desc())
@@ -44,7 +49,12 @@ async def get_most_used_tags(
 
     # Convertir les résultats en objets Pydantic
     return [
-        TagStats(id=tag.id, name=tag.name, description=tag.description, usage_count=tag.usage_count or 0)
+        TagStats(
+            id=tag.id,
+            name=tag.name,
+            description=tag.description,
+            usage_count=tag.usage_count or 0,
+        )
         for tag in tags_with_usage
     ]
 

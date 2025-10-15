@@ -1,0 +1,70 @@
+# Configuration d'optimisation pour PvE Fractales (5 joueurs)
+mode: "fractale"
+game_type: "pve"
+squad_size_range: [5, 5]
+
+# Pondérations des objectifs (total = 1.0)
+weights:
+  damage: 0.30              # DPS important mais pas seul critère
+  boon_uptime: 0.25         # Boons critiques (quickness, alacrity)
+  crowd_control: 0.15       # CC pour break bars
+  survivability: 0.15       # Survie aux mécaniques
+  healing: 0.10             # Heal modéré
+  utility: 0.05             # Portals, stealth, etc.
+
+# Boons critiques pour fractales
+critical_boons:
+  might: 0.95               # 25 stacks permanent
+  fury: 0.95                # Crit chance max
+  quickness: 0.95           # Rotation optimale
+  alacrity: 0.95            # Cooldown reduction
+  protection: 0.70          # Mitigation
+  aegis: 0.60               # Block attacks
+  stability: 0.50           # Moins critique qu'en McM
+
+# Distribution des rôles recommandée (5 joueurs)
+role_distribution:
+  healer:
+    min: 0
+    max: 1
+    optimal: 1              # 1 healer/quickness (ex: Firebrand)
+  boon_support:
+    min: 1
+    max: 2
+    optimal: 1              # 1 alacrity (ex: Mechanist, Specter)
+  dps:
+    min: 2
+    max: 4
+    optimal: 3              # 3 DPS purs
+  utility:
+    min: 0
+    max: 1
+    optimal: 0
+
+# Capacités PvE fractales spécifiques
+pve_capabilities:
+  burst_damage: 15000       # Burst pour phases
+  sustained_dps: 12000      # DPS soutenu
+  cc_break_bar_damage: 800  # CC pour break bars
+  boon_generation: 0.90     # Génération boons
+  projectile_reflect: 0.50  # Reflect projectiles
+  portal_access: 0.30       # Portals pour skips
+
+# Composition standard fractale
+standard_comp:
+  quickness_provider: 1     # Firebrand, Chrono, Harbinger
+  alacrity_provider: 1      # Mechanist, Specter, Renegade
+  dps: 3                    # Power ou Condi DPS
+
+# Pénalités
+penalties:
+  missing_quickness: 0.40   # Critique
+  missing_alacrity: 0.40    # Critique
+  low_cc: 0.25              # Break bars importants
+  low_damage: 0.20          # Clear rapide
+
+# Synergies positives
+synergies:
+  firebrand_mechanist: 0.08 # Comp meta
+  power_dps_synergy: 0.06   # Banners, spirits
+  condi_dps_synergy: 0.06   # Condi application

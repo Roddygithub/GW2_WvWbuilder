@@ -1,5 +1,9 @@
 import { useState, useMemo, useCallback } from "react";
-import type { SquadMember, Role, Composition as CompositionType } from "@/types/squad";
+import type {
+  SquadMember,
+  Role,
+  Composition as CompositionType,
+} from "@/types/squad";
 import { ALL_ROLES, PROFESSION_ROLES } from "@/data/professions";
 
 interface UseSquadBuilderProps {
@@ -11,16 +15,13 @@ export function useSquadBuilder({ initialComposition }: UseSquadBuilderProps) {
     initialComposition?.professions?.map((prof, index) => ({
       id: Date.now() + index,
       profession: prof,
-    })) || []
+    })) || [],
   );
 
-  const addProfession = useCallback(
-    (profession: string) => {
-      const newMember: SquadMember = { id: Date.now(), profession };
-      setComposition((prev) => [...prev, newMember]);
-    },
-    []
-  );
+  const addProfession = useCallback((profession: string) => {
+    const newMember: SquadMember = { id: Date.now(), profession };
+    setComposition((prev) => [...prev, newMember]);
+  }, []);
 
   const removeProfession = useCallback((id: number) => {
     setComposition((prev) => prev.filter((member) => member.id !== id));

@@ -112,7 +112,9 @@ def create_db_engine(url: str, **kwargs) -> AsyncEngine:
 # Moteur de base de données principal
 if settings.TESTING:
     # Utilisation d'une base de données en mémoire partagée pour les tests
-    async_database_url = "sqlite+aiosqlite:///file:testdb?mode=memory&cache=shared&uri=true"
+    async_database_url = (
+        "sqlite+aiosqlite:///file:testdb?mode=memory&cache=shared&uri=true"
+    )
 else:
     async_database_url = settings.get_async_database_url()
 
@@ -154,7 +156,10 @@ class Transaction:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
             await self.transaction.rollback()
-            logger.error("Erreur de transaction, rollback effectué", exc_info=(exc_type, exc_val, exc_tb))
+            logger.error(
+                "Erreur de transaction, rollback effectué",
+                exc_info=(exc_type, exc_val, exc_tb),
+            )
             return False
 
         try:
@@ -163,7 +168,9 @@ class Transaction:
             return True
         except Exception:
             await self.transaction.rollback()
-            logger.error("Erreur lors de la validation de la transaction", exc_info=True)
+            logger.error(
+                "Erreur lors de la validation de la transaction", exc_info=True
+            )
             raise
 
 

@@ -209,7 +209,9 @@ class TestPasswordResetToken:
         try:
             from datetime import timedelta
 
-            token = generate_password_reset_token(email, expires_delta=timedelta(seconds=-1))
+            token = generate_password_reset_token(
+                email, expires_delta=timedelta(seconds=-1)
+            )
             verified_email = verify_password_reset_token(token)
             assert verified_email is None
         except TypeError:

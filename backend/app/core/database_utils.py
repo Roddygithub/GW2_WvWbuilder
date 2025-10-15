@@ -42,7 +42,9 @@ class DatabaseManager:
             # Pour PostgreSQL/MySQL, on utilise des requêtes spécifiques
             async with self.engine.connect() as conn:
                 if "postgresql" in str(self.engine.url):
-                    result = await conn.execute(text("SELECT pg_database_size(current_database())"))
+                    result = await conn.execute(
+                        text("SELECT pg_database_size(current_database())")
+                    )
                     return result.scalar()
                 else:
                     # MySQL/MariaDB
@@ -104,7 +106,9 @@ class DatabaseManager:
         if self.is_sqlite:
             db_path = self.engine.url.database
             if db_path == ":memory:":
-                logger.warning("Impossible de sauvegarder une base de données en mémoire")
+                logger.warning(
+                    "Impossible de sauvegarder une base de données en mémoire"
+                )
                 return None
 
             backup_dir_path = Path(backup_dir)
@@ -119,7 +123,9 @@ class DatabaseManager:
             logger.info(f"Sauvegarde créée: {backup_path}")
             return backup_path
         else:
-            logger.warning("La sauvegarde automatique n'est pas implémentée pour ce type de base de données")
+            logger.warning(
+                "La sauvegarde automatique n'est pas implémentée pour ce type de base de données"
+            )
             return None
 
     async def optimize_database(self) -> Dict[str, Any]:
@@ -154,7 +160,9 @@ class DatabaseManager:
 
         except Exception as e:
             results["status"] = f"error: {str(e)}"
-            logger.error("Erreur lors de l'optimisation de la base de données", exc_info=True)
+            logger.error(
+                "Erreur lors de l'optimisation de la base de données", exc_info=True
+            )
 
         return results
 

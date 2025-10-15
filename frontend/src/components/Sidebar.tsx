@@ -3,9 +3,9 @@
  * Animated sidebar with navigation links
  */
 
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Layers,
@@ -15,7 +15,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sword,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface NavItem {
   name: string;
@@ -24,11 +24,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { name: 'Compositions', path: '/compositions', icon: Layers },
-  { name: 'Builds', path: '/builder', icon: FileText },
-  { name: 'Teams', path: '/teams', icon: Users },
-  { name: 'Settings', path: '/settings', icon: Settings },
+  { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { name: "Compositions", path: "/compositions", icon: Layers },
+  { name: "Builds", path: "/builder", icon: FileText },
+  { name: "Teams", path: "/teams", icon: Users },
+  { name: "Settings", path: "/settings", icon: Settings },
 ];
 
 export default function Sidebar() {
@@ -39,8 +39,8 @@ export default function Sidebar() {
     <motion.aside
       data-testid="sidebar"
       initial={{ x: -300 }}
-      animate={{ x: 0, width: isCollapsed ? '80px' : '280px' }}
-      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      animate={{ x: 0, width: isCollapsed ? "80px" : "280px" }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className="fixed left-0 top-0 h-screen bg-gradient-to-b from-slate-950 via-purple-950 to-slate-950 border-r border-purple-500/20 backdrop-blur-md z-50"
     >
       {/* Logo Section */}
@@ -89,14 +89,18 @@ export default function Sidebar() {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
           const testId =
-            item.name === 'Dashboard' ? 'nav-dashboard' :
-            item.name === 'Compositions' ? 'nav-compositions' :
-            item.name === 'Builds' ? 'nav-builds' :
-            item.name === 'Teams' ? 'nav-teams' : undefined;
+            item.name === "Dashboard"
+              ? "nav-dashboard"
+              : item.name === "Compositions"
+                ? "nav-compositions"
+                : item.name === "Builds"
+                  ? "nav-builds"
+                  : item.name === "Teams"
+                    ? "nav-teams"
+                    : undefined;
 
           return (
-            <Link key={item.path} to={item.path} data-testid={testId}
-            >
+            <Link key={item.path} to={item.path} data-testid={testId}>
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -108,8 +112,8 @@ export default function Sidebar() {
                   transition-all duration-300 cursor-pointer
                   ${
                     isActive
-                      ? 'bg-gradient-to-r from-purple-500/20 to-violet-500/20 border border-purple-400/40 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
-                      : 'bg-slate-800/40 border border-transparent hover:border-purple-500/20 hover:bg-slate-800/60'
+                      ? "bg-gradient-to-r from-purple-500/20 to-violet-500/20 border border-purple-400/40 shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+                      : "bg-slate-800/40 border border-transparent hover:border-purple-500/20 hover:bg-slate-800/60"
                   }
                 `}
               >
@@ -118,14 +122,14 @@ export default function Sidebar() {
                   flex items-center justify-center w-10 h-10 rounded-lg
                   ${
                     isActive
-                      ? 'bg-gradient-to-br from-purple-500 to-violet-600 shadow-lg'
-                      : 'bg-slate-700/50'
+                      ? "bg-gradient-to-br from-purple-500 to-violet-600 shadow-lg"
+                      : "bg-slate-700/50"
                   }
                 `}
                 >
                   <Icon
                     className={`w-5 h-5 ${
-                      isActive ? 'text-white' : 'text-purple-300'
+                      isActive ? "text-white" : "text-purple-300"
                     }`}
                   />
                 </div>
@@ -134,11 +138,11 @@ export default function Sidebar() {
                   {!isCollapsed && (
                     <motion.span
                       initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: 'auto' }}
+                      animate={{ opacity: 1, width: "auto" }}
                       exit={{ opacity: 0, width: 0 }}
                       transition={{ duration: 0.2 }}
                       className={`font-medium ${
-                        isActive ? 'text-purple-200' : 'text-slate-300'
+                        isActive ? "text-purple-200" : "text-slate-300"
                       }`}
                     >
                       {item.name}

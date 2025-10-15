@@ -10,7 +10,9 @@ from app import models, schemas
 router = APIRouter()
 
 
-async def _composition_to_schema(db: AsyncSession, comp: models.Composition) -> schemas.Composition:
+async def _composition_to_schema(
+    db: AsyncSession, comp: models.Composition
+) -> schemas.Composition:
     # Build members from association table
     members_stmt = select(
         models.models.composition_members.c.user_id,
@@ -37,7 +39,11 @@ async def _composition_to_schema(db: AsyncSession, comp: models.Composition) -> 
     members_list = []
     for m in members:
         role = await db.get(models.Role, m["role_id"]) if m["role_id"] else None
-        profession = await db.get(models.Profession, m["profession_id"]) if m["profession_id"] else None
+        profession = (
+            await db.get(models.Profession, m["profession_id"])
+            if m["profession_id"]
+            else None
+        )
         user = await db.get(models.User, m["user_id"]) if m["user_id"] else None
         elite_specialization = (
             await db.get(models.EliteSpecialization, m["elite_specialization_id"])
@@ -52,7 +58,9 @@ async def _composition_to_schema(db: AsyncSession, comp: models.Composition) -> 
                 "profession_id": m["profession_id"],
                 "profession_name": profession.name if profession else None,
                 "elite_specialization_id": m["elite_specialization_id"],
-                "elite_specialization_name": elite_specialization.name if elite_specialization else None,
+                "elite_specialization_name": (
+                    elite_specialization.name if elite_specialization else None
+                ),
                 "notes": m["notes"],
                 "user_name": user.username if user else None,
             }
@@ -73,7 +81,9 @@ async def _composition_to_schema(db: AsyncSession, comp: models.Composition) -> 
     )
 
 
-async def _validate_member_refs(db: AsyncSession, m: schemas.CompositionMemberBase | dict):
+async def _validate_member_refs(
+    db: AsyncSession, m: schemas.CompositionMemberBase | dict
+):
     """
     Validate that all foreign key references in a member exist.
     Returns a dict of the validated member data.
@@ -84,17 +94,28 @@ async def _validate_member_refs(db: AsyncSession, m: schemas.CompositionMemberBa
     if "role_id" in member_data and member_data["role_id"] is not None:
         role = await db.get(models.Role, member_data["role_id"])
         if not role:
-            raise HTTPException(status_code=400, detail=f"Role with id {member_data['role_id']} not found")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Role with id {member_data['role_id']} not found",
+            )
 
     # Check profession exists if specified
     if "profession_id" in member_data and member_data["profession_id"] is not None:
         profession = await db.get(models.Profession, member_data["profession_id"])
         if not profession:
-            raise HTTPException(status_code=400, detail=f"Profession with id {member_data['profession_id']} not found")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Profession with id {member_data['profession_id']} not found",
+            )
 
     # Check elite spec exists if specified
-    if "elite_specialization_id" in member_data and member_data["elite_specialization_id"] is not None:
-        elite_spec = await db.get(models.EliteSpecialization, member_data["elite_specialization_id"])
+    if (
+        "elite_specialization_id" in member_data
+        and member_data["elite_specialization_id"] is not None
+    ):
+        elite_spec = await db.get(
+            models.EliteSpecialization, member_data["elite_specialization_id"]
+        )
         if not elite_spec:
             raise HTTPException(
                 status_code=400,
@@ -124,7 +145,9 @@ async def _upsert_members(
     for m in members:
         member_data = m.dict() if hasattr(m, "dict") else m
         member_data["composition_id"] = composition_id
-        await db.execute(insert(models.models.composition_members).values(**member_data))
+        await db.execute(
+            insert(models.models.composition_members).values(**member_data)
+        )
 
 
 @router.post("/", response_model=schemas.Composition, status_code=201)
@@ -144,7 +167,7 @@ async def create_composition(
 
     # Create the composition
     composition_data = composition_in.dict(exclude={"members"})
-    composition = models.Composition(**composition_data, created_by_id=current_user.id)
+    composition = models.Composition(**composition_data, created_by=current_user.id)
     db.add(composition)
     await db.commit()
     await db.refresh(composition)
@@ -176,7 +199,12 @@ async def read_compositions(
 
     # Only show private compositions to their owners or admins
     if not current_user.is_superuser:
-        query = query.where(or_(models.Composition.is_public, models.Composition.created_by_id == current_user.id))
+        query = query.where(
+            or_(
+                models.Composition.is_public,
+                models.Composition.created_by == current_user.id,
+            )
+        )
 
     result = await db.execute(query.offset(skip).limit(limit))
     compositions = result.scalars().all()
@@ -197,7 +225,11 @@ async def read_composition(
         raise HTTPException(status_code=404, detail="Composition not found")
 
     # Check permissions
-    if not composition.is_public and composition.created_by_id != current_user.id and not current_user.is_superuser:
+    if (
+        not composition.is_public
+        and composition.created_by != current_user.id
+        and not current_user.is_superuser
+    ):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     return await _composition_to_schema(db, composition)
@@ -219,7 +251,7 @@ async def update_composition(
         raise HTTPException(status_code=404, detail="Composition not found")
 
     # Check permissions
-    if composition.created_by_id != current_user.id and not current_user.is_superuser:
+    if composition.created_by != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Update composition data
@@ -254,7 +286,7 @@ async def delete_composition(
         raise HTTPException(status_code=404, detail="Composition not found")
 
     # Check permissions
-    if composition.created_by_id != current_user.id and not current_user.is_superuser:
+    if composition.created_by != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Delete members first

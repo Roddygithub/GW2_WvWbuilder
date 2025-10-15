@@ -56,7 +56,9 @@ async def update_role(
     """
     role = await crud.role.get(db, id=role_id)
     if not role:
-        raise NotFoundException(detail="The role with this id does not exist in the system")
+        raise NotFoundException(
+            detail="The role with this id does not exist in the system"
+        )
     role = await crud.role.update(db, db_obj=role, obj_in=role_in)
     return role
 
@@ -90,6 +92,8 @@ async def delete_role(
     """
     role = await crud.role.get(db, id=role_id)
     if not role:
-        raise NotFoundException(detail="The role with this id does not exist in the system")
+        raise NotFoundException(
+            detail="The role with this id does not exist in the system"
+        )
     role = await crud.role.remove(db, id=role_id)
     return role

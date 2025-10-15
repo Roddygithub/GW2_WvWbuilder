@@ -11,7 +11,9 @@ from app.core.config import settings
 class TestWebhooksAPI:
     """Tests pour les endpoints d'API des webhooks."""
 
-    async def test_create_webhook(self, async_client: AsyncClient, auth_headers, db: AsyncSession):
+    async def test_create_webhook(
+        self, async_client: AsyncClient, auth_headers, db: AsyncSession
+    ):
         """Teste la création d'un nouveau webhook."""
         headers = await auth_headers()
         webhook_data = {
@@ -19,7 +21,9 @@ class TestWebhooksAPI:
             "event_types": ["build.create", "build.update"],
         }
 
-        response = await async_client.post(f"{settings.API_V1_STR}/webhooks/", json=webhook_data, headers=headers)
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/webhooks/", json=webhook_data, headers=headers
+        )
 
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
@@ -34,37 +38,54 @@ class TestWebhooksAPI:
         assert webhook_db.secret is not None
         assert len(webhook_db.secret) == 64
 
-    async def test_read_user_webhooks(self, async_client: AsyncClient, auth_headers, user_factory, db: AsyncSession):
+    async def test_read_user_webhooks(
+        self, async_client: AsyncClient, auth_headers, user_factory, db: AsyncSession
+    ):
         """Teste la récupération des webhooks pour un utilisateur."""
         user = await user_factory(username="webhook_user")
         headers = await auth_headers(username=user.username)
 
         # Créer deux webhooks pour cet utilisateur
         await crud_webhook.create_with_owner(
-            db, obj_in={"url": "https://example.com/1", "event_types": ["build.create"]}, user_id=user.id
+            db,
+            obj_in={"url": "https://example.com/1", "event_types": ["build.create"]},
+            user_id=user.id,
         )
         await crud_webhook.create_with_owner(
-            db, obj_in={"url": "https://example.com/2", "event_types": ["build.delete"]}, user_id=user.id
+            db,
+            obj_in={"url": "https://example.com/2", "event_types": ["build.delete"]},
+            user_id=user.id,
         )
         await db.commit()
 
-        response = await async_client.get(f"{settings.API_V1_STR}/webhooks/", headers=headers)
+        response = await async_client.get(
+            f"{settings.API_V1_STR}/webhooks/", headers=headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert len(data) == 2
-        assert {wh["url"] for wh in data} == {"https://example.com/1", "https://example.com/2"}
+        assert {wh["url"] for wh in data} == {
+            "https://example.com/1",
+            "https://example.com/2",
+        }
 
-    async def test_read_specific_webhook(self, async_client: AsyncClient, auth_headers, user_factory, db: AsyncSession):
+    async def test_read_specific_webhook(
+        self, async_client: AsyncClient, auth_headers, user_factory, db: AsyncSession
+    ):
         """Teste la récupération d'un webhook spécifique par son ID."""
         user = await user_factory(username="specific_webhook_user")
         headers = await auth_headers(username=user.username)
         webhook = await crud_webhook.create_with_owner(
-            db, obj_in={"url": "https://specific.com", "event_types": ["*"]}, user_id=user.id
+            db,
+            obj_in={"url": "https://specific.com", "event_types": ["*"]},
+            user_id=user.id,
         )
         await db.commit()
 
-        response = await async_client.get(f"{settings.API_V1_STR}/webhooks/{webhook.id}", headers=headers)
+        response = await async_client.get(
+            f"{settings.API_V1_STR}/webhooks/{webhook.id}", headers=headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -79,25 +100,35 @@ class TestWebhooksAPI:
         user2_headers = await auth_headers(username="user2_wh")
 
         webhook_user1 = await crud_webhook.create_with_owner(
-            db, obj_in={"url": "https://user1.com", "event_types": ["*"]}, user_id=user1.id
+            db,
+            obj_in={"url": "https://user1.com", "event_types": ["*"]},
+            user_id=user1.id,
         )
         await db.commit()
 
-        response = await async_client.get(f"{settings.API_V1_STR}/webhooks/{webhook_user1.id}", headers=user2_headers)
+        response = await async_client.get(
+            f"{settings.API_V1_STR}/webhooks/{webhook_user1.id}", headers=user2_headers
+        )
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    async def test_update_webhook(self, async_client: AsyncClient, auth_headers, user_factory, db: AsyncSession):
+    async def test_update_webhook(
+        self, async_client: AsyncClient, auth_headers, user_factory, db: AsyncSession
+    ):
         """Teste la mise à jour d'un webhook."""
         user = await user_factory(username="update_webhook_user")
         headers = await auth_headers(username=user.username)
         webhook = await crud_webhook.create_with_owner(
-            db, obj_in={"url": "https://before.com", "event_types": ["build.create"]}, user_id=user.id
+            db,
+            obj_in={"url": "https://before.com", "event_types": ["build.create"]},
+            user_id=user.id,
         )
         await db.commit()
 
         update_data = {"url": "https://after.com", "is_active": False}
         response = await async_client.put(
-            f"{settings.API_V1_STR}/webhooks/{webhook.id}", json=update_data, headers=headers
+            f"{settings.API_V1_STR}/webhooks/{webhook.id}",
+            json=update_data,
+            headers=headers,
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -106,12 +137,16 @@ class TestWebhooksAPI:
         assert data["is_active"] is False
         assert data["event_types"] == ["build.create"]  # Non modifié
 
-    async def test_delete_webhook(self, async_client: AsyncClient, auth_headers, user_factory, db: AsyncSession):
+    async def test_delete_webhook(
+        self, async_client: AsyncClient, auth_headers, user_factory, db: AsyncSession
+    ):
         """Teste la suppression d'un webhook."""
         user = await user_factory(username="delete_webhook_user")
         headers = await auth_headers(username=user.username)
         webhook = await crud_webhook.create_with_owner(
-            db, obj_in={"url": "https://to-delete.com", "event_types": ["*"]}, user_id=user.id
+            db,
+            obj_in={"url": "https://to-delete.com", "event_types": ["*"]},
+            user_id=user.id,
         )
         await db.commit()
 
@@ -119,13 +154,17 @@ class TestWebhooksAPI:
         assert await crud_webhook.get(db, id=webhook.id) is not None
 
         # Supprimer
-        response = await async_client.delete(f"{settings.API_V1_STR}/webhooks/{webhook.id}", headers=headers)
+        response = await async_client.delete(
+            f"{settings.API_V1_STR}/webhooks/{webhook.id}", headers=headers
+        )
         assert response.status_code == status.HTTP_200_OK
 
         # Vérifier qu'il n'existe plus
         assert await crud_webhook.get(db, id=webhook.id) is None
 
-    async def test_create_webhook_invalid_url(self, async_client: AsyncClient, auth_headers):
+    async def test_create_webhook_invalid_url(
+        self, async_client: AsyncClient, auth_headers
+    ):
         """Teste la création d'un webhook avec une URL invalide."""
         headers = await auth_headers()
         webhook_data = {
@@ -133,12 +172,19 @@ class TestWebhooksAPI:
             "event_types": ["build.create"],
         }
 
-        response = await async_client.post(f"{settings.API_V1_STR}/webhooks/", json=webhook_data, headers=headers)
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/webhooks/", json=webhook_data, headers=headers
+        )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.performance
     async def test_webhook_dispatch_performance_n_plus_one(
-        self, async_client: AsyncClient, auth_headers, user_factory, db: AsyncSession, mocker
+        self,
+        async_client: AsyncClient,
+        auth_headers,
+        user_factory,
+        db: AsyncSession,
+        mocker,
     ):
         """
         Vérifie que le dispatch des webhooks ne souffre pas du problème N+1.
@@ -151,7 +197,9 @@ class TestWebhooksAPI:
                 "url": f"https://example.com/perf-webhook-{i}",
                 "event_types": ["build.create"],
             }
-            await crud_webhook.create_with_owner(db, obj_in=webhook_data, user_id=user.id)
+            await crud_webhook.create_with_owner(
+                db, obj_in=webhook_data, user_id=user.id
+            )
         await db.commit()
 
         # Espionner le nombre de requêtes SQL exécutées
@@ -160,7 +208,9 @@ class TestWebhooksAPI:
         # Déclencher un événement qui notifiera les 10 webhooks
         from app.worker import dispatch_webhook_event
 
-        await dispatch_webhook_event("build.create", {"id": 1, "name": "Perf Test Build"})
+        await dispatch_webhook_event(
+            "build.create", {"id": 1, "name": "Perf Test Build"}
+        )
 
         # Analyser le nombre d'appels SQL
         call_count = sql_counter.call_count
@@ -168,10 +218,14 @@ class TestWebhooksAPI:
 
         # Le nombre de requêtes doit être très faible (1 pour récupérer tous les webhooks).
         # Une implémentation N+1 ferait 1 (webhooks) + 10 (users) = 11 requêtes.
-        assert call_count < 3, f"Détection probable d'un problème N+1. Nombre de requêtes SQL : {call_count}"
+        assert (
+            call_count < 3
+        ), f"Détection probable d'un problème N+1. Nombre de requêtes SQL : {call_count}"
 
     @pytest.mark.load_test
-    async def test_webhook_dispatch_under_load(self, async_client: AsyncClient, auth_headers, db: AsyncSession, mocker):
+    async def test_webhook_dispatch_under_load(
+        self, async_client: AsyncClient, auth_headers, db: AsyncSession, mocker
+    ):
         """
         Teste que la création de nombreux builds déclenche correctement les tâches de webhook.
         """
@@ -181,7 +235,9 @@ class TestWebhooksAPI:
             "url": "https://example.com/load-test-webhook",
             "event_types": ["build.create"],
         }
-        await async_client.post(f"{settings.API_V1_STR}/webhooks/", json=webhook_data, headers=headers)
+        await async_client.post(
+            f"{settings.API_V1_STR}/webhooks/", json=webhook_data, headers=headers
+        )
 
         # Espionner la fonction qui met les tâches en file d'attente
         mock_enqueue_job = mocker.patch("app.worker.arq_pool.enqueue_job")
@@ -189,8 +245,14 @@ class TestWebhooksAPI:
         # Créer 20 builds en parallèle
         build_creation_tasks = []
         for i in range(20):
-            build_data = {"name": f"Load Test Build {i}", "game_mode": "wvw", "profession_ids": [1]}
-            task = async_client.post(f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers)
+            build_data = {
+                "name": f"Load Test Build {i}",
+                "game_mode": "wvw",
+                "profession_ids": [1],
+            }
+            task = async_client.post(
+                f"{settings.API_V1_STR}/builds/", json=build_data, headers=headers
+            )
             build_creation_tasks.append(task)
 
         await asyncio.gather(*build_creation_tasks)

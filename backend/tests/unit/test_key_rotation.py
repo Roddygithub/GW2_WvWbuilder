@@ -50,7 +50,9 @@ def test_automatic_rotation():
     """Teste la rotation automatique des clés."""
     # Créer une configuration avec un intervalle de rotation très court
     initial_key = "cle_initiale"
-    rotation_interval = timedelta(seconds=1)  # Rotation toutes les secondes pour le test
+    rotation_interval = timedelta(
+        seconds=1
+    )  # Rotation toutes les secondes pour le test
 
     # Créer une configuration personnalisée
     config = KeyRotationConfig(
@@ -124,7 +126,9 @@ def test_invalid_token():
         manager.decode_token("token.invalide")
 
     # Token signé avec une clé inconnue
-    invalid_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIn0.invalid_signature"
+    invalid_token = (
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIn0.invalid_signature"
+    )
 
     with pytest.raises(JWTError):
         manager.decode_token(invalid_token)

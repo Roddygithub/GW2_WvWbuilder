@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button"
-import { Link } from "react-router-dom"
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 export default function HomePage() {
   return (
@@ -8,8 +8,9 @@ export default function HomePage() {
         Optimize Your WvW Squad
       </h1>
       <p className="mb-8 max-w-2xl text-lg text-muted-foreground">
-        Create, optimize, and share the perfect WvW squad compositions for Guild Wars 2. 
-        Maximize your team's potential with data-driven insights and recommendations.
+        Create, optimize, and share the perfect WvW squad compositions for Guild
+        Wars 2. Maximize your team's potential with data-driven insights and
+        recommendations.
       </p>
       <div className="flex gap-4">
         <Button asChild size="lg">
@@ -19,7 +20,7 @@ export default function HomePage() {
           <Link to="/about">Learn More</Link>
         </Button>
       </div>
-      
+
       <div className="mt-16 grid w-full max-w-5xl grid-cols-1 gap-8 md:grid-cols-3">
         <div className="rounded-lg border p-6 text-left">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
@@ -41,7 +42,8 @@ export default function HomePage() {
           </div>
           <h3 className="mb-2 text-lg font-semibold">Build Compositions</h3>
           <p className="text-sm text-muted-foreground">
-            Create and customize squad compositions for groups of 2 to 20 players with an intuitive interface.
+            Create and customize squad compositions for groups of 2 to 20
+            players with an intuitive interface.
           </p>
         </div>
 
@@ -66,7 +68,8 @@ export default function HomePage() {
           </div>
           <h3 className="mb-2 text-lg font-semibold">Optimize Roles</h3>
           <p className="text-sm text-muted-foreground">
-            Get intelligent suggestions for role distribution based on profession synergies and WvW meta.
+            Get intelligent suggestions for role distribution based on
+            profession synergies and WvW meta.
           </p>
         </div>
 
@@ -92,10 +95,11 @@ export default function HomePage() {
           </div>
           <h3 className="mb-2 text-lg font-semibold">Share & Collaborate</h3>
           <p className="text-sm text-muted-foreground">
-            Share your compositions with your guild or group and get feedback from the community.
+            Share your compositions with your guild or group and get feedback
+            from the community.
           </p>
         </div>
       </div>
     </div>
-  )
+  );
 }

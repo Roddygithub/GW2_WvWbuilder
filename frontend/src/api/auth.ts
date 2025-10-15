@@ -3,10 +3,11 @@
  * Handles login, register, and token management
  */
 
-import { apiPost, getHeaders, removeAuthToken, setAuthToken } from './client';
+import { apiPost, getHeaders, removeAuthToken, setAuthToken } from "./client";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
-const API_V1_STR = '/api/v1';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+const API_V1_STR = "/api/v1";
 
 export interface LoginRequest {
   username: string;
@@ -42,44 +43,51 @@ export interface User {
  */
 export async function login(credentials: LoginRequest): Promise<LoginResponse> {
   const url = `${API_BASE_URL}${API_V1_STR}/auth/login`;
-  
-  console.log('[AUTH] Login attempt:', { username: credentials.username, url });
-  
+
+  console.log("[AUTH] Login attempt:", { username: credentials.username, url });
+
   // Backend expects form-urlencoded
   const formData = new URLSearchParams();
-  formData.append('username', credentials.username);
-  formData.append('password', credentials.password);
+  formData.append("username", credentials.username);
+  formData.append("password", credentials.password);
 
   try {
-    console.log('[AUTH] Sending login request...');
+    console.log("[AUTH] Sending login request...");
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        "Content-Type": "application/x-www-form-urlencoded",
       },
       body: formData.toString(),
-      signal: AbortSignal.timeout(5000), // 5 second timeout
+      mode: "cors",
+      credentials: "include",
+      // Remove timeout for debugging
+      // signal: AbortSignal.timeout(5000),
     });
 
-    console.log('[AUTH] Response received:', response.status, response.statusText);
+    console.log(
+      "[AUTH] Response received:",
+      response.status,
+      response.statusText,
+    );
 
     if (!response.ok) {
       const error = await response.json();
-      console.error('[AUTH] Login error:', error);
-      throw new Error(error.detail || 'Login failed');
+      console.error("[AUTH] Login error:", error);
+      throw new Error(error.detail || "Login failed");
     }
 
     const data: LoginResponse = await response.json();
-    console.log('[AUTH] Login successful, token received');
-    
+    console.log("[AUTH] Login successful, token received");
+
     // Store token
     setAuthToken(data.access_token);
-    
+
     return data;
   } catch (error) {
-    console.error('[AUTH] Login exception:', error);
-    if (error instanceof Error && error.name === 'TimeoutError') {
-      throw new Error('Login request timed out. Please check your connection.');
+    console.error("[AUTH] Login exception:", error);
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw new Error("Login request timed out. Please check your connection.");
     }
     throw error;
   }
@@ -89,7 +97,7 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
  * Register new user
  */
 export async function register(userData: RegisterRequest): Promise<User> {
-  return apiPost<User, RegisterRequest>('/auth/register', userData);
+  return apiPost<User, RegisterRequest>("/auth/register", userData);
 }
 
 /**
@@ -97,15 +105,15 @@ export async function register(userData: RegisterRequest): Promise<User> {
  */
 export async function getCurrentUser(): Promise<User> {
   const url = `${API_BASE_URL}${API_V1_STR}/users/me`;
-  
+
   const response = await fetch(url, {
-    method: 'GET',
+    method: "GET",
     headers: getHeaders(),
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.detail || 'Failed to get user');
+    throw new Error(error.detail || "Failed to get user");
   }
 
   return response.json();
@@ -122,7 +130,7 @@ export function logout(): void {
  * Check if user is authenticated
  */
 export function isAuthenticated(): boolean {
-  const token = localStorage.getItem('access_token');
+  const token = localStorage.getItem("access_token");
   return !!token;
 }
 

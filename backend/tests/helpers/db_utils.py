@@ -175,7 +175,9 @@ async def get_or_create_model(
     return instance, True
 
 
-async def refresh_model(session: AsyncSession, instance: T, attribute_names: Optional[list[str]] = None) -> None:
+async def refresh_model(
+    session: AsyncSession, instance: T, attribute_names: Optional[list[str]] = None
+) -> None:
     """Refresh model attributes from the database.
 
     Args:
@@ -186,7 +188,9 @@ async def refresh_model(session: AsyncSession, instance: T, attribute_names: Opt
     await session.refresh(instance, attribute_names=attribute_names)
 
 
-async def execute_raw_sql(session: AsyncSession, sql: str, params: Optional[dict] = None) -> Any:
+async def execute_raw_sql(
+    session: AsyncSession, sql: str, params: Optional[dict] = None
+) -> Any:
     """Execute raw SQL.
 
     Args:
@@ -217,7 +221,9 @@ async def clear_tables(session: AsyncSession) -> None:
     await session.commit()
 
 
-async def assert_model_exists(session: AsyncSession, model: Type[T], **filters: Any) -> T:
+async def assert_model_exists(
+    session: AsyncSession, model: Type[T], **filters: Any
+) -> T:
     """Assert that a model instance exists.
 
     Args:
@@ -239,7 +245,9 @@ async def assert_model_exists(session: AsyncSession, model: Type[T], **filters: 
     return instance
 
 
-async def assert_model_not_exists(session: AsyncSession, model: Type[T], **filters: Any) -> None:
+async def assert_model_not_exists(
+    session: AsyncSession, model: Type[T], **filters: Any
+) -> None:
     """Assert that a model instance does not exist.
 
     Args:

@@ -18,6 +18,7 @@ router = APIRouter()
 
 class DashboardStats(BaseModel):
     """Dashboard statistics schema"""
+
     total_compositions: int = 0
     total_builds: int = 0
     total_teams: int = 0
@@ -26,6 +27,7 @@ class DashboardStats(BaseModel):
 
 class RecentActivity(BaseModel):
     """Recent activity schema"""
+
     id: str
     type: str  # 'composition', 'build', 'team', 'tag'
     title: str
@@ -66,7 +68,7 @@ async def get_dashboard_stats(
     thirty_days_ago = datetime.utcnow() - timedelta(days=30)
     recent_compositions_stmt = select(func.count(models.Composition.id)).where(
         models.Composition.created_by == current_user.id,
-        models.Composition.created_at >= thirty_days_ago
+        models.Composition.created_at >= thirty_days_ago,
     )
     recent_result = await db.execute(recent_compositions_stmt)
     recent_activity_count = recent_result.scalar() or 0
@@ -108,7 +110,11 @@ async def get_recent_activities(
                 type="composition",
                 title=f"Created composition: {comp.name}",
                 description=comp.description or "No description",
-                timestamp=comp.created_at.isoformat() if comp.created_at else datetime.utcnow().isoformat(),
+                timestamp=(
+                    comp.created_at.isoformat()
+                    if comp.created_at
+                    else datetime.utcnow().isoformat()
+                ),
             )
         )
 
@@ -129,7 +135,11 @@ async def get_recent_activities(
                 type="build",
                 title=f"Created build: {build.name}",
                 description=build.description or "No description",
-                timestamp=build.created_at.isoformat() if build.created_at else datetime.utcnow().isoformat(),
+                timestamp=(
+                    build.created_at.isoformat()
+                    if build.created_at
+                    else datetime.utcnow().isoformat()
+                ),
             )
         )
 
@@ -150,7 +160,11 @@ async def get_recent_activities(
                 type="team",
                 title=f"Created team: {team.name}",
                 description=team.description or "No description",
-                timestamp=team.created_at.isoformat() if team.created_at else datetime.utcnow().isoformat(),
+                timestamp=(
+                    team.created_at.isoformat()
+                    if team.created_at
+                    else datetime.utcnow().isoformat()
+                ),
             )
         )
 

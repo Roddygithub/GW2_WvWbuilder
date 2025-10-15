@@ -57,7 +57,11 @@ async def init_async_db() -> None:
 # Création des fabriques de sessions
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 AsyncSessionLocal = sessionmaker(
-    autocommit=False, autoflush=False, bind=async_engine, class_=AsyncSession, expire_on_commit=False
+    autocommit=False,
+    autoflush=False,
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
 )
 
 

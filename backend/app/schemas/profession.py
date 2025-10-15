@@ -110,22 +110,30 @@ class ProfessionUpdate(BaseModel):
         default=None,
         description="Nouvelle URL de l'icône de la profession (format URL valide)",
         examples=["https://example.com/icons/guardian_updated.png"],
-        json_schema_extra={"x-example": "https://example.com/icons/guardian_updated.png"},
+        json_schema_extra={
+            "x-example": "https://example.com/icons/guardian_updated.png"
+        },
     )
 
     background_url: Optional[HttpUrl] = Field(
         default=None,
         description="Nouvelle URL de l'image de fond de la profession (format URL valide)",
         examples=["https://example.com/backgrounds/guardian_updated.jpg"],
-        json_schema_extra={"x-example": "https://example.com/backgrounds/guardian_updated.jpg"},
+        json_schema_extra={
+            "x-example": "https://example.com/backgrounds/guardian_updated.jpg"
+        },
     )
 
     description: Optional[str] = Field(
         default=None,
         description="Nouvelle description de la profession (max 2000 caractères)",
         max_length=2000,
-        examples=["Description mise à jour du Gardien avec plus de détails sur son gameplay."],
-        json_schema_extra={"x-example": "Description mise à jour du Gardien avec plus de détails sur son gameplay."},
+        examples=[
+            "Description mise à jour du Gardien avec plus de détails sur son gameplay."
+        ],
+        json_schema_extra={
+            "x-example": "Description mise à jour du Gardien avec plus de détails sur son gameplay."
+        },
     )
 
     game_modes: Optional[List[GameMode]] = Field(
@@ -146,7 +154,10 @@ class ProfessionUpdate(BaseModel):
         json_schema_extra={
             "examples": [
                 # Mise à jour partielle - uniquement le nom et la description
-                {"name": "Gardien", "description": "Nouvelle description en français pour le Gardien."},
+                {
+                    "name": "Gardien",
+                    "description": "Nouvelle description en français pour le Gardien.",
+                },
                 # Mise à jour complète
                 {
                     "name": "Guardian",
@@ -181,7 +192,10 @@ class ProfessionInDBBase(ProfessionBase):
     """
 
     id: int = Field(
-        ..., examples=[1], description="Identifiant unique de la profession", json_schema_extra={"x-example": 1}
+        ...,
+        examples=[1],
+        description="Identifiant unique de la profession",
+        json_schema_extra={"x-example": 1},
     )
 
     created_at: datetime = Field(
@@ -200,7 +214,8 @@ class ProfessionInDBBase(ProfessionBase):
 
     # Relations
     elite_specializations: List["EliteSpecializationInDB"] = Field(
-        default_factory=list, description="Liste des spécialisations d'élite disponibles pour cette profession"
+        default_factory=list,
+        description="Liste des spécialisations d'élite disponibles pour cette profession",
     )
 
     elite_specialization_count: int = Field(
@@ -210,7 +225,9 @@ class ProfessionInDBBase(ProfessionBase):
     )
 
     builds_count: int = Field(
-        0, description="Nombre de builds associés à cette profession", json_schema_extra={"x-example": 42}
+        0,
+        description="Nombre de builds associés à cette profession",
+        json_schema_extra={"x-example": 42},
     )
 
     model_config = ConfigDict(
@@ -243,7 +260,8 @@ class Profession(ProfessionInDBBase):
 
     # Relations avec d'autres modèles
     elite_specializations: List["EliteSpecialization"] = Field(
-        default_factory=list, description="Liste complète des spécialisations d'élite disponibles pour cette profession"
+        default_factory=list,
+        description="Liste complète des spécialisations d'élite disponibles pour cette profession",
     )
 
     # Méthodes utilitaires
@@ -258,7 +276,9 @@ class Profession(ProfessionInDBBase):
         """
         return any(spec.id == spec_id for spec in self.elite_specializations)
 
-    def get_elite_specialization_by_id(self, spec_id: int) -> Optional["EliteSpecialization"]:
+    def get_elite_specialization_by_id(
+        self, spec_id: int
+    ) -> Optional["EliteSpecialization"]:
         """Récupère une spécialisation d'élite par son identifiant.
 
         Args:
@@ -267,7 +287,9 @@ class Profession(ProfessionInDBBase):
         Returns:
             Optional[EliteSpecialization]: La spécialisation d'élite si trouvée, None sinon
         """
-        return next((spec for spec in self.elite_specializations if spec.id == spec_id), None)
+        return next(
+            (spec for spec in self.elite_specializations if spec.id == spec_id), None
+        )
 
     def get_active_elite_specializations(self) -> List["EliteSpecialization"]:
         """Récupère la liste des spécialisations d'élite actives.
@@ -373,7 +395,9 @@ class EliteSpecializationBase(BaseModel):
         None,
         description="URL de l'image de fond de la spécialisation",
         examples=["https://example.com/backgrounds/firebrand.jpg"],
-        json_schema_extra={"x-example": "https://example.com/backgrounds/firebrand.jpg"},
+        json_schema_extra={
+            "x-example": "https://example.com/backgrounds/firebrand.jpg"
+        },
     )
 
     weapon_type: str = Field(
@@ -397,7 +421,9 @@ class EliteSpecializationBase(BaseModel):
         min_length=10,
         max_length=2000,
         description="Description détaillée de la spécialisation, ses mécaniques uniques et son style de jeu",
-        examples=["Spécialisation d'élite maniant le grimoire et axée sur le support et les dégâts de condition."],
+        examples=[
+            "Spécialisation d'élite maniant le grimoire et axée sur le support et les dégâts de condition."
+        ],
         json_schema_extra={
             "x-example": "Spécialisation d'élite maniant le grimoire et axée sur le support et les dégâts de condition."
         },
@@ -478,14 +504,18 @@ class EliteSpecializationUpdate(BaseModel):
         default=None,
         description="Nouvelle URL de l'icône de la spécialisation (format URL valide)",
         examples=["https://example.com/icons/firebrand_updated.png"],
-        json_schema_extra={"x-example": "https://example.com/icons/firebrand_updated.png"},
+        json_schema_extra={
+            "x-example": "https://example.com/icons/firebrand_updated.png"
+        },
     )
 
     background_url: Optional[HttpUrl] = Field(
         default=None,
         description="Nouvelle URL de l'image de fond de la spécialisation (format URL valide)",
         examples=["https://example.com/backgrounds/firebrand_updated.jpg"],
-        json_schema_extra={"x-example": "https://example.com/backgrounds/firebrand_updated.jpg"},
+        json_schema_extra={
+            "x-example": "https://example.com/backgrounds/firebrand_updated.jpg"
+        },
     )
 
     weapon_type: Optional[str] = Field(
@@ -510,11 +540,15 @@ class EliteSpecializationUpdate(BaseModel):
         max_length=2000,
         description="Nouvelle description de la spécialisation (10-2000 caractères)",
         examples=["Nouvelle description mise à jour de la spécialisation Firebrand."],
-        json_schema_extra={"x-example": "Nouvelle description mise à jour de la spécialisation Firebrand."},
+        json_schema_extra={
+            "x-example": "Nouvelle description mise à jour de la spécialisation Firebrand."
+        },
     )
 
     is_active: Optional[bool] = Field(
-        default=None, description="Nouvel état d'activation de la spécialisation", json_schema_extra={"x-example": True}
+        default=None,
+        description="Nouvel état d'activation de la spécialisation",
+        json_schema_extra={"x-example": True},
     )
 
     release_date: Optional[date] = Field(
@@ -600,7 +634,9 @@ class EliteSpecializationInDBBase(EliteSpecializationBase):
 
     # Relations
     builds_count: int = Field(
-        0, description="Nombre de builds associés à cette spécialisation d'élite", json_schema_extra={"x-example": 27}
+        0,
+        description="Nombre de builds associés à cette spécialisation d'élite",
+        json_schema_extra={"x-example": 27},
     )
 
     profession_name: Optional[str] = Field(
@@ -640,7 +676,11 @@ class EliteSpecializationInDBBase(EliteSpecializationBase):
     @model_validator(mode="after")
     def set_profession_name_if_missing(self) -> "EliteSpecializationInDBBase":
         """Définit le nom de la profession si non fourni."""
-        if hasattr(self, "profession") and self.profession and not hasattr(self, "profession_name"):
+        if (
+            hasattr(self, "profession")
+            and self.profession
+            and not hasattr(self, "profession_name")
+        ):
             self.profession_name = self.profession.name
         return self
 
@@ -653,7 +693,8 @@ class EliteSpecialization(EliteSpecializationInDBBase):
     """
 
     profession: Optional["Profession"] = Field(
-        None, description="Détails complets de la profession parente à laquelle cette spécialisation appartient"
+        None,
+        description="Détails complets de la profession parente à laquelle cette spécialisation appartient",
     )
 
     # Méthodes utilitaires
@@ -666,7 +707,9 @@ class EliteSpecialization(EliteSpecializationInDBBase):
         weapons = [self.weapon_type] if self.weapon_type else []
         if hasattr(self, "secondary_weapon_types") and self.secondary_weapon_types:
             weapons.extend(self.secondary_weapon_types)
-        return list(dict.fromkeys(weapons))  # Supprime les doublons tout en préservant l'ordre
+        return list(
+            dict.fromkeys(weapons)
+        )  # Supprime les doublons tout en préservant l'ordre
 
     def get_game_mode_affinity(self, game_mode: GameMode) -> float:
         """Récupère l'affinité de la spécialisation pour un mode de jeu donné.
@@ -681,7 +724,9 @@ class EliteSpecialization(EliteSpecializationInDBBase):
             return self.game_mode_affinity.get(game_mode, 0.5)
         return 0.5
 
-    def is_viable_for_game_mode(self, game_mode: GameMode, threshold: float = 0.5) -> bool:
+    def is_viable_for_game_mode(
+        self, game_mode: GameMode, threshold: float = 0.5
+    ) -> bool:
         """Vérifie si la spécialisation est viable pour un mode de jeu donné.
 
         Args:

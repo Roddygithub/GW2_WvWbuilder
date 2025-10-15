@@ -28,11 +28,13 @@ def get_password_hash(password: str) -> str:
     # Bcrypt has a 72-byte limit, so we pre-hash long passwords with SHA-256
     password_bytes = password.encode("utf-8")
     if len(password_bytes) > 72:
-        logger.debug(f"Password exceeds 72 bytes ({len(password_bytes)} bytes), pre-hashing with SHA-256")
+        logger.debug(
+            f"Password exceeds 72 bytes ({len(password_bytes)} bytes), pre-hashing with SHA-256"
+        )
         # Use SHA-256 to create a fixed-length hash that's always <72 bytes (64 hex chars)
         password = hashlib.sha256(password_bytes).hexdigest()
         password_bytes = password.encode("utf-8")
-    
+
     # Hash with bcrypt (12 rounds)
     salt = bcrypt.gensalt(rounds=12)
     hashed = bcrypt.hashpw(password_bytes, salt)
@@ -59,7 +61,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
             logger.debug("Password exceeds 72 bytes, using SHA-256 pre-hash")
             plain_password = hashlib.sha256(password_bytes).hexdigest()
             password_bytes = plain_password.encode("utf-8")
-        
+
         # Verify the password
         hashed_bytes = hashed_password.encode("utf-8")
         return bcrypt.checkpw(password_bytes, hashed_bytes)

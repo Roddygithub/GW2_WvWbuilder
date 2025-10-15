@@ -35,7 +35,9 @@ async def read_teams(
     # Récupérer les équipes où l'utilisateur est membre ou propriétaire
     stmt = (
         select(Team)
-        .where((Team.owner_id == current_user.id) | (Team.members.any(id=current_user.id)))
+        .where(
+            (Team.owner_id == current_user.id) | (Team.members.any(id=current_user.id))
+        )
         .offset(skip)
         .limit(limit)
     )
@@ -78,7 +80,11 @@ async def read_team(
     """
     Récupère une équipe par son ID.
     """
-    stmt = select(Team).options(selectinload(Team.owner), selectinload(Team.members)).where(Team.id == team_id)
+    stmt = (
+        select(Team)
+        .options(selectinload(Team.owner), selectinload(Team.members))
+        .where(Team.id == team_id)
+    )
     result = await db.execute(stmt)
     team = result.scalar_one_or_none()
 
@@ -184,7 +190,9 @@ async def get_public_compositions(
 
     stmt = (
         select(Composition)
-        .where((Composition.team_id == team_id) & (Composition.is_public == True))  # noqa: E712
+        .where(
+            (Composition.team_id == team_id) & (Composition.is_public == True)
+        )  # noqa: E712
         .offset(skip)
         .limit(limit)
     )
@@ -206,7 +214,8 @@ async def get_team_members(
     """
     # Vérifier que l'utilisateur a accès à l'équipe
     stmt = select(Team).where(
-        (Team.id == team_id) & ((Team.owner_id == current_user.id) | (Team.members.any(id=current_user.id)))
+        (Team.id == team_id)
+        & ((Team.owner_id == current_user.id) | (Team.members.any(id=current_user.id)))
     )
     result = await db.execute(stmt)
     team = result.scalar_one_or_none()

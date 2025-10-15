@@ -32,14 +32,18 @@ class TestAuthHeaders:
     ):
         """Test that the tokens in auth_headers are valid."""
         # Test admin token
-        response = await async_client.get("/api/v1/auth/me", headers=auth_headers["admin"])
+        response = await async_client.get(
+            "/api/v1/auth/me", headers=auth_headers["admin"]
+        )
         assert response.status_code == 200
         data = response.json()
         assert "is_superuser" in data
         assert data["is_superuser"] is True
 
         # Test user token
-        response = await async_client.get("/api/v1/auth/me", headers=auth_headers["user"])
+        response = await async_client.get(
+            "/api/v1/auth/me", headers=auth_headers["user"]
+        )
         assert response.status_code == 200
         data = response.json()
         assert "is_superuser" in data
@@ -49,7 +53,9 @@ class TestAuthHeaders:
 class TestCleanDB:
     """Tests for the clean_db fixture."""
 
-    async def test_clean_db_cleans_tables(self, db: AsyncSession, test_user: User, clean_db):
+    async def test_clean_db_cleans_tables(
+        self, db: AsyncSession, test_user: User, clean_db
+    ):
         """Test that clean_db removes all data from tables."""
         # Verify user was created by test_user fixture
         result = await db.execute(text("SELECT COUNT(*) FROM users"))
@@ -64,7 +70,9 @@ class TestCleanDB:
             assert count == 0, "Users table should be empty after cleanup"
 
             # Verify we can still use the database
-            new_user = User(username="newuser", email="test@example.com", hashed_password="password")
+            new_user = User(
+                username="newuser", email="test@example.com", hashed_password="password"
+            )
             db.add(new_user)
             await db.commit()
 
@@ -72,7 +80,9 @@ class TestCleanDB:
             count = result.scalar_one()
             assert count == 1, "Should be able to add data after cleanup"
 
-    async def test_clean_db_handles_foreign_keys(self, db: AsyncSession, test_user: User, clean_db):
+    async def test_clean_db_handles_foreign_keys(
+        self, db: AsyncSession, test_user: User, clean_db
+    ):
         """Test that clean_db handles foreign key constraints correctly."""
         # Create test data with relationships
         role = Role(name="test_role")
@@ -123,7 +133,11 @@ class TestDatabaseSetup:
         # Start a transaction
         async with db.begin_nested():
             # Add test data
-            user = User(username="rollbackuser", email="rollback@test.com", hashed_password="password")
+            user = User(
+                username="rollbackuser",
+                email="rollback@test.com",
+                hashed_password="password",
+            )
             db.add(user)
             await db.flush()
 
@@ -153,7 +167,9 @@ class TestFixturesIntegration:
         assert result.scalar_one() > 0, "Test user should exist"
 
         # Test API access with auth headers
-        response = await async_client.get("/api/v1/auth/me", headers=auth_headers["user"])
+        response = await async_client.get(
+            "/api/v1/auth/me", headers=auth_headers["user"]
+        )
         assert response.status_code == 200
 
         # Clean up and verify
@@ -162,7 +178,9 @@ class TestFixturesIntegration:
             assert result.scalar_one() == 0, "Users table should be empty after cleanup"
 
             # Test that we can still use the database
-            new_user = User(username="newuser2", email="new@example.com", hashed_password="password")
+            new_user = User(
+                username="newuser2", email="new@example.com", hashed_password="password"
+            )
             db.add(new_user)
             await db.commit()
 

@@ -32,7 +32,8 @@ async def get_db_metrics(
     """
     if not current_user.is_superuser:
         raise HTTPException(
-            status_code=403, detail="Vous n'avez pas les autorisations nécessaires pour accéder à ces métriques"
+            status_code=403,
+            detail="Vous n'avez pas les autorisations nécessaires pour accéder à ces métriques",
         )
 
     # Limiter le nombre de métriques retournées
@@ -41,7 +42,9 @@ async def get_db_metrics(
 
 
 @router.get("/db/issues", response_model=List[Dict[str, Any]])
-async def get_db_issues(current_user: User = Depends(get_current_active_user)) -> List[Dict[str, Any]]:
+async def get_db_issues(
+    current_user: User = Depends(get_current_active_user),
+) -> List[Dict[str, Any]]:
     """
     Vérifie les problèmes potentiels dans la base de données.
 
@@ -53,14 +56,17 @@ async def get_db_issues(current_user: User = Depends(get_current_active_user)) -
     """
     if not current_user.is_superuser:
         raise HTTPException(
-            status_code=403, detail="Vous n'avez pas les autorisations nécessaires pour accéder à ces informations"
+            status_code=403,
+            detail="Vous n'avez pas les autorisations nécessaires pour accéder à ces informations",
         )
 
     return await db_monitor.check_for_issues()
 
 
 @router.get("/db/status", response_model=Dict[str, Any])
-async def get_db_status(current_user: User = Depends(get_current_active_user)) -> Dict[str, Any]:
+async def get_db_status(
+    current_user: User = Depends(get_current_active_user),
+) -> Dict[str, Any]:
     """
     Récupère l'état actuel de la base de données.
 
@@ -72,11 +78,14 @@ async def get_db_status(current_user: User = Depends(get_current_active_user)) -
     """
     if not current_user.is_superuser:
         raise HTTPException(
-            status_code=403, detail="Vous n'avez pas les autorisations nécessaires pour accéder à ces informations"
+            status_code=403,
+            detail="Vous n'avez pas les autorisations nécessaires pour accéder à ces informations",
         )
 
     # Récupérer les métriques les plus récentes
-    latest_metrics = db_monitor.metrics_history[-1] if db_monitor.metrics_history else None
+    latest_metrics = (
+        db_monitor.metrics_history[-1] if db_monitor.metrics_history else None
+    )
 
     # Vérifier les problèmes actuels
     issues = await db_monitor.check_for_issues()

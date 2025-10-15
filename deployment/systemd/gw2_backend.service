@@ -1,0 +1,51 @@
+[Unit]
+Description=GW2 WvW Builder - Backend API (FastAPI)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=gw2app
+Group=gw2app
+WorkingDirectory=/opt/gw2_wvw_builder/backend
+
+# Environment
+Environment="PATH=/opt/gw2_wvw_builder/backend/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONPATH=/opt/gw2_wvw_builder/backend"
+EnvironmentFile=/opt/gw2_wvw_builder/backend/.env
+
+# Command
+ExecStart=/opt/gw2_wvw_builder/backend/.venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 \
+    --port 8000 \
+    --workers 4 \
+    --log-level info \
+    --access-log \
+    --log-config /opt/gw2_wvw_builder/backend/logging.yaml
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=5min
+StartLimitBurst=3
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/gw2_wvw_builder/backend/data
+ReadWritePaths=/var/log/gw2_wvw_builder
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=1G
+CPUQuota=200%
+
+# Logging
+StandardOutput=append:/var/log/gw2_wvw_builder/backend.log
+StandardError=append:/var/log/gw2_wvw_builder/backend_error.log
+SyslogIdentifier=gw2_backend
+
+[Install]
+WantedBy=multi-user.target

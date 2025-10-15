@@ -15,7 +15,10 @@ profession_crud = CRUDProfession(Profession)
 @pytest.fixture
 def mock_profession():
     return Profession(
-        id=1, name="Test Profession", description="Test Description", icon_url="https://example.com/warrior.png"
+        id=1,
+        name="Test Profession",
+        description="Test Description",
+        icon_url="https://example.com/warrior.png",
     )
 
 
@@ -30,7 +33,9 @@ def mock_profession_create():
 
 @pytest.fixture
 def mock_profession_update():
-    return ProfessionUpdate(name="Updated Profession", description="Updated Description")
+    return ProfessionUpdate(
+        name="Updated Profession", description="Updated Description"
+    )
 
 
 # Helper function to create a mock result
@@ -46,7 +51,9 @@ def create_mock_result(return_value, is_list=False):
 # Tests
 class TestCRUDProfession:
     @pytest.mark.asyncio
-    async def test_create_profession_success(self, mock_profession, mock_profession_create):
+    async def test_create_profession_success(
+        self, mock_profession, mock_profession_create
+    ):
         """Test creating a profession with valid data"""
         db = AsyncMock(spec=AsyncSession)
         db.scalar.return_value = mock_profession
@@ -89,7 +96,9 @@ class TestCRUDProfession:
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = create_mock_result(mock_profession)
 
-        result = await profession_crud.update_async(db, db_obj=mock_profession, obj_in=mock_profession_update)
+        result = await profession_crud.update_async(
+            db, db_obj=mock_profession, obj_in=mock_profession_update
+        )
 
         assert result.name == "Updated Profession"
         assert result.description == "Updated Description"
@@ -113,8 +122,12 @@ class TestCRUDProfession:
     async def test_get_all_professions(self, mock_profession):
         """Test retrieving all professions"""
         db = AsyncMock(spec=AsyncSession)
-        mock_profession2 = Profession(id=2, name="Second Profession", description="Desc 2")
-        db.execute.return_value = create_mock_result([mock_profession, mock_profession2], is_list=True)
+        mock_profession2 = Profession(
+            id=2, name="Second Profession", description="Desc 2"
+        )
+        db.execute.return_value = create_mock_result(
+            [mock_profession, mock_profession2], is_list=True
+        )
 
         result = await profession_crud.get_multi_async(db)
 

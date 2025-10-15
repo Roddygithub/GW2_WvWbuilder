@@ -28,13 +28,19 @@ class Team(Base, TimeStampedMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[Optional[str]] = mapped_column(String(500))
-    status: Mapped[TeamStatus] = mapped_column(Enum(TeamStatus), default=TeamStatus.ACTIVE, nullable=False)
+    status: Mapped[TeamStatus] = mapped_column(
+        Enum(TeamStatus), default=TeamStatus.ACTIVE, nullable=False
+    )
     is_public: Mapped[bool] = mapped_column(Boolean, default=False)
-    owner_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    owner_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
     # Les champs created_at et updated_at sont fournis par TimeStampedMixin
 
     # Relations
-    owner: Mapped["User"] = relationship("User", back_populates="owned_teams", foreign_keys=[owner_id])
+    owner: Mapped["User"] = relationship(
+        "User", back_populates="owned_teams", foreign_keys=[owner_id]
+    )
 
     # Relation avec les membres via la table d'association TeamMember
     members: Mapped[List["User"]] = relationship(
@@ -48,10 +54,15 @@ class Team(Base, TimeStampedMixin):
 
     # Relation avec les associations de membres (pour accéder aux détails de la relation)
     member_associations: Mapped[List["TeamMember"]] = relationship(
-        "TeamMember", back_populates="team", cascade="all, delete-orphan", overlaps="members"
+        "TeamMember",
+        back_populates="team",
+        cascade="all, delete-orphan",
+        overlaps="members",
     )
 
-    builds: Mapped[List["Build"]] = relationship("Build", back_populates="team", cascade="all, delete-orphan")
+    builds: Mapped[List["Build"]] = relationship(
+        "Build", back_populates="team", cascade="all, delete-orphan"
+    )
 
     compositions: Mapped[List["Composition"]] = relationship(
         "Composition", back_populates="team", cascade="all, delete-orphan"
@@ -73,7 +84,9 @@ class Team(Base, TimeStampedMixin):
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
-    def add_member(self, user: "User", role: TeamRole = TeamRole.MEMBER, is_admin: bool = False) -> None:
+    def add_member(
+        self, user: "User", role: TeamRole = TeamRole.MEMBER, is_admin: bool = False
+    ) -> None:
         """
         Ajoute un membre à l'équipe avec le rôle et les permissions spécifiés.
 
@@ -86,7 +99,13 @@ class Team(Base, TimeStampedMixin):
             from .team_member import TeamMember
 
             # Créer une nouvelle association TeamMember
-            team_member = TeamMember(team_id=self.id, user_id=user.id, role=role, is_admin=is_admin, is_active=True)
+            team_member = TeamMember(
+                team_id=self.id,
+                user_id=user.id,
+                role=role,
+                is_admin=is_admin,
+                is_active=True,
+            )
 
             # Ajouter l'association à la session
             from app.db.session import SessionLocal
@@ -114,7 +133,8 @@ class Team(Base, TimeStampedMixin):
             db = SessionLocal()
             try:
                 stmt = delete(team_members).where(
-                    (team_members.c.team_id == self.id) & (team_members.c.user_id == user.id)
+                    (team_members.c.team_id == self.id)
+                    & (team_members.c.user_id == user.id)
                 )
                 db.execute(stmt)
                 db.commit()
@@ -136,7 +156,10 @@ class Team(Base, TimeStampedMixin):
             try:
                 stmt = (
                     update(team_members)
-                    .where((team_members.c.team_id == self.id) & (team_members.c.user_id == user.id))
+                    .where(
+                        (team_members.c.team_id == self.id)
+                        & (team_members.c.user_id == user.id)
+                    )
                     .values(role=new_role, updated_at=func.now())
                 )
                 db.execute(stmt)

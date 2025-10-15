@@ -93,7 +93,9 @@ class EliteSpecializationBase(BaseModel):
     """
 
     name: Annotated[str, StringConstraints(min_length=1, max_length=100)] = Field(
-        ..., description="Unique name of the elite specialization (1-100 characters)", examples=["Firebrand"]
+        ...,
+        description="Unique name of the elite specialization (1-100 characters)",
+        examples=["Firebrand"],
     )
     description: str = Field(
         ...,
@@ -102,7 +104,10 @@ class EliteSpecializationBase(BaseModel):
         example="Wields fire and tomes to support allies and burn foes with righteous flames.",
     )
     weapon_type: str = Field(
-        ..., max_length=50, description="Type of weapon this elite specialization introduces", example="Axe"
+        ...,
+        max_length=50,
+        description="Type of weapon this elite specialization introduces",
+        example="Axe",
     )
     icon_url: Optional[str] = Field(
         default=None,
@@ -116,8 +121,15 @@ class EliteSpecializationBase(BaseModel):
         description="URL to the background image for this elite spec (1920x1080px recommended)",
         example="https://example.com/backgrounds/firebrand.jpg",
     )
-    profession_id: int = Field(..., description="ID of the parent profession this elite spec belongs to", example=1)
-    is_active: bool = Field(default=True, description="Whether this elite spec is currently available in the game")
+    profession_id: int = Field(
+        ...,
+        description="ID of the parent profession this elite spec belongs to",
+        example=1,
+    )
+    is_active: bool = Field(
+        default=True,
+        description="Whether this elite spec is currently available in the game",
+    )
     game_mode_affinity: List[GameMode] = Field(
         default_factory=list,
         description="List of game modes this spec is viable in (PVE, PVP, WVW)",
@@ -270,7 +282,10 @@ class EliteSpecializationUpdate(BaseModel):
         example="Uses traps and virtues to smite enemies from range.",
     )
     weapon_type: Optional[str] = Field(
-        default=None, max_length=50, description="Updated weapon type for this elite spec", example="Longbow"
+        default=None,
+        max_length=50,
+        description="Updated weapon type for this elite spec",
+        example="Longbow",
     )
     icon_url: Optional[str] = Field(
         default=None,
@@ -285,11 +300,17 @@ class EliteSpecializationUpdate(BaseModel):
         example="https://example.com/backgrounds/dragonhunter.jpg",
     )
     profession_id: Optional[int] = Field(
-        default=None, description="New parent profession ID if changing professions", example=2
+        default=None,
+        description="New parent profession ID if changing professions",
+        example=2,
     )
-    is_active: Optional[bool] = Field(default=None, description="Set to false to mark this spec as inactive")
+    is_active: Optional[bool] = Field(
+        default=None, description="Set to false to mark this spec as inactive"
+    )
     game_mode_affinity: Optional[List[GameMode]] = Field(
-        default=None, description="Updated list of game modes this spec is viable in", example=["PVE", "PVP"]
+        default=None,
+        description="Updated list of game modes this spec is viable in",
+        example=["PVE", "PVP"],
     )
 
     model_config = ConfigDict(
@@ -346,8 +367,12 @@ class EliteSpecializationInDBBase(EliteSpecializationBase):
     """
 
     id: int = Field(..., description="Unique database identifier")
-    created_at: datetime = Field(..., description="Timestamp when the record was created")
-    updated_at: Optional[datetime] = Field(None, description="Timestamp when the record was last updated")
+    created_at: datetime = Field(
+        ..., description="Timestamp when the record was created"
+    )
+    updated_at: Optional[datetime] = Field(
+        None, description="Timestamp when the record was last updated"
+    )
 
     model_config = ConfigDict(
         from_attributes=True,

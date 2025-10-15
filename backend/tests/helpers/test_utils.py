@@ -37,23 +37,30 @@ class APIResponse:
     def assert_status_code(self, expected_code: int) -> "APIResponse":
         """Vérifie que le code de statut correspond à celui attendu."""
         assert self.status_code == expected_code, (
-            f"Expected status code {expected_code}, got {self.status_code}. " f"Response: {self.response.text}"
+            f"Expected status code {expected_code}, got {self.status_code}. "
+            f"Response: {self.response.text}"
         )
         return self
 
     def assert_json(self, expected_json: dict) -> "APIResponse":
         """Vérifie que la réponse JSON correspond à celle attendue."""
-        assert self.json == expected_json, f"Expected JSON {expected_json}, got {self.json}"
+        assert (
+            self.json == expected_json
+        ), f"Expected JSON {expected_json}, got {self.json}"
         return self
 
     def assert_json_contains(self, expected_data: dict) -> "APIResponse":
         """Vérifie que la réponse JSON contient les données attendues."""
         for key, value in expected_data.items():
             assert key in self.json, f"Key '{key}' not found in response: {self.json}"
-            assert self.json[key] == value, f"Expected {key}={value}, got {key}={self.json[key]}"
+            assert (
+                self.json[key] == value
+            ), f"Expected {key}={value}, got {key}={self.json[key]}"
         return self
 
-    def assert_error(self, error_message: str, status_code: int = status.HTTP_400_BAD_REQUEST) -> "APIResponse":
+    def assert_error(
+        self, error_message: str, status_code: int = status.HTTP_400_BAD_REQUEST
+    ) -> "APIResponse":
         """Vérifie que la réponse contient un message d'erreur spécifique."""
         self.assert_status_code(status_code)
         assert "detail" in self.json, f"No 'detail' in error response: {self.json}"

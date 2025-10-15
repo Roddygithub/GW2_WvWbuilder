@@ -64,16 +64,22 @@ class TestUserService:
         )
 
         # Test with correct password
-        authenticated_user = await user_crud.authenticate(db, email=user.email, password=password)
+        authenticated_user = await user_crud.authenticate(
+            db, email=user.email, password=password
+        )
         assert authenticated_user is not None
         assert authenticated_user.email == user.email
 
         # Test with incorrect password
-        authenticated_user = await user_crud.authenticate(db, email=user.email, password="wrong_password")
+        authenticated_user = await user_crud.authenticate(
+            db, email=user.email, password="wrong_password"
+        )
         assert authenticated_user is None
 
         # Test with non-existent user
-        authenticated_user = await user_crud.authenticate(db, email="nonexistent@example.com", password=password)
+        authenticated_user = await user_crud.authenticate(
+            db, email="nonexistent@example.com", password=password
+        )
         assert authenticated_user is None
 
         # Test with inactive user
@@ -82,7 +88,9 @@ class TestUserService:
         await db.commit()
         await db.refresh(user)
 
-        authenticated_user = await user_crud.authenticate(db, email=user.email, password=password)
+        authenticated_user = await user_crud.authenticate(
+            db, email=user.email, password=password
+        )
         assert authenticated_user is None
 
     async def test_update_user(self, db: AsyncSession):
@@ -103,7 +111,9 @@ class TestUserService:
         }
 
         # Call the update method
-        updated_user = await user_crud.update(db, db_obj=user, obj_in=UserUpdate(**update_data))
+        updated_user = await user_crud.update(
+            db, db_obj=user, obj_in=UserUpdate(**update_data)
+        )
 
         # Check the results
         assert updated_user is not None

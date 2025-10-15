@@ -25,7 +25,9 @@ class TestUserModel:
     """Test cases for the User model."""
 
     @pytest.mark.asyncio
-    async def test_create_user(self, db_session: AsyncSession, test_password: str) -> None:
+    async def test_create_user(
+        self, db_session: AsyncSession, test_password: str
+    ) -> None:
         """Test creating a basic user."""
         try:
             # Create a test user
@@ -63,7 +65,9 @@ class TestUserModel:
         assert not verify_password("wrong_password", user.hashed_password)
 
     @pytest.mark.asyncio
-    async def test_user_relationships(self, db_session: AsyncSession, test_user: User, test_role: Role) -> None:
+    async def test_user_relationships(
+        self, db_session: AsyncSession, test_user: User, test_role: Role
+    ) -> None:
         """Test user relationships with roles."""
         try:
             # Ajouter le rôle à l'utilisateur via la relation
@@ -75,7 +79,9 @@ class TestUserModel:
             result = await db_session.execute(
                 select(User)
                 .where(User.id == test_user.id)
-                .options(selectinload(User.role_associations).selectinload(UserRole.role))
+                .options(
+                    selectinload(User.role_associations).selectinload(UserRole.role)
+                )
             )
             user = result.scalars().first()
 
@@ -98,7 +104,9 @@ class TestUserModel:
                     and hasattr(test_role, "id")
                 ):
                     await db_session.execute(
-                        text("DELETE FROM user_roles WHERE user_id = :user_id AND role_id = :role_id"),
+                        text(
+                            "DELETE FROM user_roles WHERE user_id = :user_id AND role_id = :role_id"
+                        ),
                         {"user_id": test_user.id, "role_id": test_role.id},
                     )
                     await db_session.commit()
@@ -123,7 +131,9 @@ class TestUserModel:
         assert test_user.updated_at is not None
 
     @pytest.mark.asyncio
-    async def test_user_authentication(self, db_session: AsyncSession, test_user: User, test_password: str) -> None:
+    async def test_user_authentication(
+        self, db_session: AsyncSession, test_user: User, test_password: str
+    ) -> None:
         """Test user authentication methods."""
         try:
             # Test password verification
@@ -145,7 +155,9 @@ class TestUserModel:
             raise
 
     @pytest.mark.asyncio
-    async def test_user_validation(self, db_session: AsyncSession, test_user: User) -> None:
+    async def test_user_validation(
+        self, db_session: AsyncSession, test_user: User
+    ) -> None:
         """Test user model validation and constraints."""
         # Test 1: Vérifier que les champs requis sont bien obligatoires
         invalid_user = User()  # Manque tous les champs requis
@@ -219,10 +231,14 @@ class TestUserModel:
 
             # Check updated_at is set and is not before created_at
             assert user.updated_at is not None
-            assert user.updated_at >= user.created_at, "updated_at should be greater than or equal to created_at"
+            assert (
+                user.updated_at >= user.created_at
+            ), "updated_at should be greater than or equal to created_at"
 
             # Log timestamps for debugging
-            logger.info(f"created_at: {user.created_at}, updated_at: {user.updated_at}, before_update: {before_update}")
+            logger.info(
+                f"created_at: {user.created_at}, updated_at: {user.updated_at}, before_update: {before_update}"
+            )
 
         except Exception as e:
             await db_session.rollback()

@@ -15,9 +15,16 @@ class TeamBase(BaseModel):
     """Schéma de base pour une équipe."""
 
     name: str = Field(..., max_length=100, description="Nom de l'équipe")
-    description: Optional[str] = Field(None, max_length=500, description="Description de l'équipe")
-    status: TeamStatus = Field(default=TeamStatus.ACTIVE, description="Statut de l'équipe")
-    is_public: bool = Field(default=False, description="Indique si l'équipe est visible par tous les utilisateurs")
+    description: Optional[str] = Field(
+        None, max_length=500, description="Description de l'équipe"
+    )
+    status: TeamStatus = Field(
+        default=TeamStatus.ACTIVE, description="Statut de l'équipe"
+    )
+    is_public: bool = Field(
+        default=False,
+        description="Indique si l'équipe est visible par tous les utilisateurs",
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -32,7 +39,9 @@ class TeamUpdate(TeamBase):
     """Schéma pour la mise à jour d'une équipe."""
 
     name: Optional[str] = Field(None, max_length=100, description="Nom de l'équipe")
-    description: Optional[str] = Field(None, max_length=500, description="Description de l'équipe")
+    description: Optional[str] = Field(
+        None, max_length=500, description="Description de l'équipe"
+    )
     status: Optional[TeamStatus] = Field(None, description="Statut de l'équipe")
 
 
@@ -50,7 +59,9 @@ class TeamInDBBase(TeamBase):
 class TeamMemberBase(BaseModel):
     """Schéma de base pour un membre d'équipe."""
 
-    role: TeamRole = Field(default=TeamRole.MEMBER, description="Rôle du membre dans l'équipe")
+    role: TeamRole = Field(
+        default=TeamRole.MEMBER, description="Rôle du membre dans l'équipe"
+    )
 
 
 class TeamMemberCreate(TeamMemberBase):
@@ -70,7 +81,9 @@ class TeamMember(TeamMemberBase):
 
     user: User = Field(..., description="Détails de l'utilisateur")
     joined_at: datetime = Field(..., description="Date d'ajout à l'équipe")
-    updated_at: Optional[datetime] = Field(None, description="Date de mise à jour du rôle")
+    updated_at: Optional[datetime] = Field(
+        None, description="Date de mise à jour du rôle"
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -78,7 +91,9 @@ class TeamMember(TeamMemberBase):
 class Team(TeamInDBBase):
     """Schéma complet d'une équipe avec ses membres."""
 
-    members: List[TeamMember] = Field(default_factory=list, description="Liste des membres de l'équipe")
+    members: List[TeamMember] = Field(
+        default_factory=list, description="Liste des membres de l'équipe"
+    )
     member_count: int = Field(0, description="Nombre de membres dans l'équipe")
 
     @model_validator(mode="before")

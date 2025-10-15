@@ -17,7 +17,9 @@ def mock_datetime_utcnow(mock_dt):
     with patch("datetime.datetime") as mock_datetime:
         mock_datetime.utcnow.return_value = mock_dt
         mock_datetime.now.return_value = mock_dt
-        mock_datetime.fromtimestamp.side_effect = lambda *args, **kw: datetime.datetime.fromtimestamp(*args, **kw)
+        mock_datetime.fromtimestamp.side_effect = (
+            lambda *args, **kw: datetime.datetime.fromtimestamp(*args, **kw)
+        )
         mock_datetime.side_effect = lambda *args, **kw: datetime.datetime(*args, **kw)
         yield mock_datetime
 
@@ -91,10 +93,14 @@ def datetime_utc_offset(days=0, hours=0, minutes=0, seconds=0) -> datetime.datet
         A timezone-aware datetime in UTC
     """
     now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
-    return now + datetime.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
+    return now + datetime.timedelta(
+        days=days, hours=hours, minutes=minutes, seconds=seconds
+    )
 
 
-def assert_datetime_approx_equal(dt1: datetime.datetime, dt2: datetime.datetime, delta_seconds: float = 1.0) -> None:
+def assert_datetime_approx_equal(
+    dt1: datetime.datetime, dt2: datetime.datetime, delta_seconds: float = 1.0
+) -> None:
     """Assert that two datetimes are approximately equal.
 
     Args:
@@ -109,7 +115,8 @@ def assert_datetime_approx_equal(dt1: datetime.datetime, dt2: datetime.datetime,
 
     diff = abs((dt1 - dt2).total_seconds())
     assert diff <= delta_seconds, (
-        f"Datetimes differ by {diff} seconds (max {delta_seconds} allowed): " f"{dt1} != {dt2}"
+        f"Datetimes differ by {diff} seconds (max {delta_seconds} allowed): "
+        f"{dt1} != {dt2}"
     )
 
 
@@ -129,4 +136,6 @@ def assert_timing(lo=0.0, hi=1.0):
     finally:
         end = time.time()
         duration = end - start
-        assert lo <= duration <= hi, f"Code ran in {duration:.3f}s, expected {lo:.3f}-{hi:.3f}s"
+        assert (
+            lo <= duration <= hi
+        ), f"Code ran in {duration:.3f}s, expected {lo:.3f}-{hi:.3f}s"

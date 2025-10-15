@@ -35,7 +35,13 @@ async def test_validation_exception_handler():
     """Test validation exception handler."""
     request = MagicMock()
     exc = RequestValidationError(
-        errors=[{"loc": ("body", "field"), "msg": "field required", "type": "value_error.missing"}]
+        errors=[
+            {
+                "loc": ("body", "field"),
+                "msg": "field required",
+                "type": "value_error.missing",
+            }
+        ]
     )
 
     response = await validation_exception_handler(request, exc)

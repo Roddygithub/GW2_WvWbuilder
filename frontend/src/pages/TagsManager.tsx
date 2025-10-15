@@ -4,34 +4,45 @@
  * Connected to production-ready Tags API (78% tested)
  */
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
-import { getTags, createTag, updateTag, deleteTag, type Tag, type CreateTagRequest } from '../api/tags';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../store/authStore";
+import {
+  getTags,
+  createTag,
+  updateTag,
+  deleteTag,
+  type Tag,
+  type CreateTagRequest,
+} from "../api/tags";
 
 export default function TagsManager() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user, isAuthenticated, logout } = useAuthStore();
-  
+
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [formData, setFormData] = useState<CreateTagRequest>({
-    name: '',
-    description: '',
-    category: '',
+    name: "",
+    description: "",
+    category: "",
   });
 
   // Check authentication
   if (!isAuthenticated) {
-    navigate('/login');
+    navigate("/login");
     return null;
   }
 
   // Fetch tags
-  const { data: tags, isLoading, error } = useQuery({
-    queryKey: ['tags'],
+  const {
+    data: tags,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["tags"],
     queryFn: getTags,
   });
 
@@ -39,7 +50,7 @@ export default function TagsManager() {
   const createMutation = useMutation({
     mutationFn: createTag,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tags'] });
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
       setIsCreateModalOpen(false);
       resetForm();
     },
@@ -50,7 +61,7 @@ export default function TagsManager() {
     mutationFn: ({ id, data }: { id: number; data: CreateTagRequest }) =>
       updateTag(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tags'] });
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
       setEditingTag(null);
       resetForm();
     },
@@ -60,12 +71,12 @@ export default function TagsManager() {
   const deleteMutation = useMutation({
     mutationFn: deleteTag,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tags'] });
+      queryClient.invalidateQueries({ queryKey: ["tags"] });
     },
   });
 
   const resetForm = () => {
-    setFormData({ name: '', description: '', category: '' });
+    setFormData({ name: "", description: "", category: "" });
   };
 
   const handleCreate = () => {
@@ -82,20 +93,20 @@ export default function TagsManager() {
     setEditingTag(tag);
     setFormData({
       name: tag.name,
-      description: tag.description || '',
-      category: tag.category || '',
+      description: tag.description || "",
+      category: tag.category || "",
     });
   };
 
   const handleDelete = (id: number) => {
-    if (confirm('Are you sure you want to delete this tag?')) {
+    if (confirm("Are you sure you want to delete this tag?")) {
       deleteMutation.mutate(id);
     }
   };
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -106,11 +117,13 @@ export default function TagsManager() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-white">Tags Manager</h1>
-              <p className="text-sm text-gray-400">Manage your WvW composition tags</p>
+              <p className="text-sm text-gray-400">
+                Manage your WvW composition tags
+              </p>
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate("/dashboard")}
                 className="rounded-md bg-gray-600 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-500"
               >
                 Dashboard
@@ -149,7 +162,8 @@ export default function TagsManager() {
           {error && (
             <div className="rounded-md bg-red-500/10 border border-red-500/50 p-4">
               <p className="text-sm text-red-400">
-                Error loading tags: {error instanceof Error ? error.message : 'Unknown error'}
+                Error loading tags:{" "}
+                {error instanceof Error ? error.message : "Unknown error"}
               </p>
             </div>
           )}
@@ -169,9 +183,13 @@ export default function TagsManager() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-white">{tag.name}</h3>
+                      <h3 className="text-lg font-semibold text-white">
+                        {tag.name}
+                      </h3>
                       {tag.description && (
-                        <p className="mt-1 text-sm text-gray-400">{tag.description}</p>
+                        <p className="mt-1 text-sm text-gray-400">
+                          {tag.description}
+                        </p>
                       )}
                       {tag.category && (
                         <span className="mt-2 inline-block rounded-full bg-purple-600/20 px-2 py-1 text-xs text-purple-400">
@@ -186,8 +204,18 @@ export default function TagsManager() {
                           className="text-blue-400 hover:text-blue-300"
                           title="Edit"
                         >
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                            />
                           </svg>
                         </button>
                         <button
@@ -196,8 +224,18 @@ export default function TagsManager() {
                           title="Delete"
                           disabled={deleteMutation.isPending}
                         >
-                          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
                           </svg>
                         </button>
                       </div>
@@ -215,7 +253,7 @@ export default function TagsManager() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-lg bg-slate-800 p-6 shadow-2xl">
             <h2 className="text-xl font-bold text-white mb-4">
-              {editingTag ? 'Edit Tag' : 'Create New Tag'}
+              {editingTag ? "Edit Tag" : "Create New Tag"}
             </h2>
 
             <div className="space-y-4">
@@ -227,7 +265,9 @@ export default function TagsManager() {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="mt-1 block w-full rounded-md border border-gray-600 bg-slate-700 px-3 py-2 text-white"
                   placeholder="Tag name"
                 />
@@ -240,7 +280,9 @@ export default function TagsManager() {
                 </label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   className="mt-1 block w-full rounded-md border border-gray-600 bg-slate-700 px-3 py-2 text-white"
                   placeholder="Tag description"
                   rows={3}
@@ -255,7 +297,9 @@ export default function TagsManager() {
                 <input
                   type="text"
                   value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, category: e.target.value })
+                  }
                   className="mt-1 block w-full rounded-md border border-gray-600 bg-slate-700 px-3 py-2 text-white"
                   placeholder="e.g., game_mode, role, etc."
                 />
@@ -266,7 +310,8 @@ export default function TagsManager() {
             {(createMutation.error || updateMutation.error) && (
               <div className="mt-4 rounded-md bg-red-500/10 border border-red-500/50 p-3">
                 <p className="text-sm text-red-400">
-                  {createMutation.error?.message || updateMutation.error?.message}
+                  {createMutation.error?.message ||
+                    updateMutation.error?.message}
                 </p>
               </div>
             )}
@@ -289,10 +334,10 @@ export default function TagsManager() {
                 className="rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-500 disabled:opacity-50"
               >
                 {createMutation.isPending || updateMutation.isPending
-                  ? 'Saving...'
+                  ? "Saving..."
                   : editingTag
-                  ? 'Update'
-                  : 'Create'}
+                    ? "Update"
+                    : "Create"}
               </button>
             </div>
           </div>

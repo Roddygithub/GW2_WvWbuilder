@@ -1,7 +1,7 @@
-import { Outlet } from 'react-router-dom'
-import { MainNav } from './main-nav'
-import { SiteHeader } from './site-header'
-import { SiteFooter } from './site-footer'
+import { Outlet } from "react-router-dom";
+import { MainNav } from "./main-nav";
+import { SiteHeader } from "./site-header";
+import { SiteFooter } from "./site-footer";
 
 export default function Layout() {
   return (
@@ -15,5 +15,5 @@ export default function Layout() {
       </div>
       <SiteFooter />
     </div>
-  )
+  );
 }

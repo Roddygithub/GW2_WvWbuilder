@@ -19,20 +19,34 @@ class CRUDProfession(CRUDBase[ProfessionModel, ProfessionCreate, ProfessionUpdat
         stmt = select(self.model).where(self.model.name == name)
         return db.scalars(stmt).first()
 
-    async def get_by_name_async(self, db: AsyncSession, *, name: str) -> Optional[ProfessionModel]:
+    async def get_by_name_async(
+        self, db: AsyncSession, *, name: str
+    ) -> Optional[ProfessionModel]:
         """Get a profession by name (asynchronous)."""
         stmt = select(self.model).where(self.model.name == name)
         result = await db.execute(stmt)
         return result.scalars().first()
 
-    def get_with_elite_specs(self, db: Session, *, id: int) -> Optional[ProfessionModel]:
+    def get_with_elite_specs(
+        self, db: Session, *, id: int
+    ) -> Optional[ProfessionModel]:
         """Get a profession with its elite specializations (synchronous)."""
-        stmt = select(self.model).where(self.model.id == id).options(selectinload(self.model.elite_specializations))
+        stmt = (
+            select(self.model)
+            .where(self.model.id == id)
+            .options(selectinload(self.model.elite_specializations))
+        )
         return db.scalars(stmt).first()
 
-    async def get_with_elite_specs_async(self, db: AsyncSession, *, id: int) -> Optional[ProfessionModel]:
+    async def get_with_elite_specs_async(
+        self, db: AsyncSession, *, id: int
+    ) -> Optional[ProfessionModel]:
         """Get a profession with its elite specializations (asynchronous)."""
-        stmt = select(self.model).where(self.model.id == id).options(selectinload(self.model.elite_specializations))
+        stmt = (
+            select(self.model)
+            .where(self.model.id == id)
+            .options(selectinload(self.model.elite_specializations))
+        )
         result = await db.execute(stmt)
         return result.unique().scalars().first()
 
@@ -40,14 +54,24 @@ class CRUDProfession(CRUDBase[ProfessionModel, ProfessionCreate, ProfessionUpdat
         self, db: Session, *, game_mode: str, skip: int = 0, limit: int = 100
     ) -> List[ProfessionModel]:
         """Get multiple professions by game mode (synchronous)."""
-        stmt = select(self.model).where(self.model.game_modes.contains([game_mode])).offset(skip).limit(limit)
+        stmt = (
+            select(self.model)
+            .where(self.model.game_modes.contains([game_mode]))
+            .offset(skip)
+            .limit(limit)
+        )
         return list(db.scalars(stmt).all())
 
     async def get_multi_by_game_mode_async(
         self, db: AsyncSession, *, game_mode: str, skip: int = 0, limit: int = 100
     ) -> List[ProfessionModel]:
         """Get multiple professions by game mode (asynchronous)."""
-        stmt = select(self.model).where(self.model.game_modes.contains([game_mode])).offset(skip).limit(limit)
+        stmt = (
+            select(self.model)
+            .where(self.model.game_modes.contains([game_mode]))
+            .offset(skip)
+            .limit(limit)
+        )
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
@@ -67,7 +91,9 @@ class CRUDProfession(CRUDBase[ProfessionModel, ProfessionCreate, ProfessionUpdat
         stmt = select(self.model.id).where(self.model.name == name)
         return db.scalars(stmt).first()
 
-    async def get_id_by_name_async(self, db: AsyncSession, *, name: str) -> Optional[int]:
+    async def get_id_by_name_async(
+        self, db: AsyncSession, *, name: str
+    ) -> Optional[int]:
         """Get profession ID by name (asynchronous)."""
         stmt = select(self.model.id).where(self.model.name == name)
         result = await db.execute(stmt)

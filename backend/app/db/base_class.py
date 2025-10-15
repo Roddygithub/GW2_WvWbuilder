@@ -18,8 +18,12 @@ class Base:
     """Classe de base pour tous les modèles SQLAlchemy."""
 
     id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), onupdate=datetime.utcnow, nullable=True)
+    created_at = Column(
+        DateTime(timezone=True), default=datetime.utcnow, nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True), onupdate=datetime.utcnow, nullable=True
+    )
 
     # Génère automatiquement le nom de la table à partir du nom de la classe
     @declared_attr
@@ -47,7 +51,9 @@ def setup_database_events():
     if settings.DEBUG:
         # Active le logging des requêtes SQL en mode debug
         @event.listens_for(Engine, "before_cursor_execute")
-        def before_cursor_execute(conn, cursor, statement, params, context, executemany):
+        def before_cursor_execute(
+            conn, cursor, statement, params, context, executemany
+        ):
             conn.info.setdefault("query_start_time", []).append(time.time())
 
     # Configuration des contraintes de clé étrangère pour SQLite

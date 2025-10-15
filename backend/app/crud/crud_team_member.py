@@ -20,7 +20,9 @@ class CRUDTeamMember(CRUDBase[TeamMember, TeamMemberCreate, TeamMemberUpdate]):
     CRUD operations for TeamMember model with optimized loading and caching.
     """
 
-    async def get(self, db: AsyncSession, id: Any, load_relations: bool = False) -> Optional[TeamMember]:
+    async def get(
+        self, db: AsyncSession, id: Any, load_relations: bool = False
+    ) -> Optional[TeamMember]:
         """
         Get a team member by ID with optional relation loading.
 
@@ -47,7 +49,9 @@ class CRUDTeamMember(CRUDBase[TeamMember, TeamMemberCreate, TeamMemberUpdate]):
         if load_relations:
             query = query.options(
                 selectinload(TeamMember.user),
-                selectinload(TeamMember.team).selectinload(Team.members).joinedload(TeamMember.user),
+                selectinload(TeamMember.team)
+                .selectinload(Team.members)
+                .joinedload(TeamMember.user),
                 selectinload(TeamMember.role),
             )
 
@@ -62,7 +66,12 @@ class CRUDTeamMember(CRUDBase[TeamMember, TeamMemberCreate, TeamMemberUpdate]):
         return member
 
     async def get_by_team_and_user(
-        self, db: AsyncSession, *, team_id: int, user_id: int, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        team_id: int,
+        user_id: int,
+        load_relations: bool = False,
     ) -> Optional[TeamMember]:
         """
         Get a team member by team ID and user ID with optional relation loading.
@@ -85,13 +94,17 @@ class CRUDTeamMember(CRUDBase[TeamMember, TeamMemberCreate, TeamMemberUpdate]):
                 return cached_member
 
         # Build the base query
-        query = select(TeamMember).where((TeamMember.team_id == team_id) & (TeamMember.user_id == user_id))
+        query = select(TeamMember).where(
+            (TeamMember.team_id == team_id) & (TeamMember.user_id == user_id)
+        )
 
         # Load relations if requested
         if load_relations:
             query = query.options(
                 selectinload(TeamMember.user),
-                selectinload(TeamMember.team).selectinload(Team.members).joinedload(TeamMember.user),
+                selectinload(TeamMember.team)
+                .selectinload(Team.members)
+                .joinedload(TeamMember.user),
                 selectinload(TeamMember.role),
             )
 
@@ -106,7 +119,13 @@ class CRUDTeamMember(CRUDBase[TeamMember, TeamMemberCreate, TeamMemberUpdate]):
         return member
 
     async def get_multi_by_team(
-        self, db: AsyncSession, *, team_id: int, skip: int = 0, limit: int = 100, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        team_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        load_relations: bool = False,
     ) -> List[TeamMember]:
         """
         Get multiple team members by team ID with optional relation loading.
@@ -140,7 +159,9 @@ class CRUDTeamMember(CRUDBase[TeamMember, TeamMemberCreate, TeamMemberUpdate]):
 
         # Load relations if requested
         if load_relations:
-            query = query.options(selectinload(TeamMember.user), selectinload(TeamMember.role))
+            query = query.options(
+                selectinload(TeamMember.user), selectinload(TeamMember.role)
+            )
 
         # Execute query
         result = await db.execute(query)
@@ -153,7 +174,13 @@ class CRUDTeamMember(CRUDBase[TeamMember, TeamMemberCreate, TeamMemberUpdate]):
         return members
 
     async def get_multi_by_user(
-        self, db: AsyncSession, *, user_id: int, skip: int = 0, limit: int = 100, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        user_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        load_relations: bool = False,
     ) -> List[TeamMember]:
         """
         Get multiple team members by user ID with optional relation loading.
@@ -187,7 +214,10 @@ class CRUDTeamMember(CRUDBase[TeamMember, TeamMemberCreate, TeamMemberUpdate]):
 
         # Load relations if requested
         if load_relations:
-            query = query.options(selectinload(TeamMember.team).selectinload(Team.owner), selectinload(TeamMember.role))
+            query = query.options(
+                selectinload(TeamMember.team).selectinload(Team.owner),
+                selectinload(TeamMember.role),
+            )
 
         # Execute query
         result = await db.execute(query)
@@ -221,7 +251,11 @@ class CRUDTeamMember(CRUDBase[TeamMember, TeamMemberCreate, TeamMemberUpdate]):
         return db_obj
 
     async def update(
-        self, db: AsyncSession, *, db_obj: TeamMember, obj_in: Union[TeamMemberUpdate, Dict[str, Any]]
+        self,
+        db: AsyncSession,
+        *,
+        db_obj: TeamMember,
+        obj_in: Union[TeamMemberUpdate, Dict[str, Any]],
     ) -> TeamMember:
         """
         Update a team member and invalidate related caches.

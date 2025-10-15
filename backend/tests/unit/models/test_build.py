@@ -68,7 +68,9 @@ class TestBuildModel:
         await db.flush()
 
         # Create a build with professions
-        build = Build(name="Test Build", game_mode="wvw", created_by_id=user.id, config={})
+        build = Build(
+            name="Test Build", game_mode="wvw", created_by_id=user.id, config={}
+        )
         build.professions.extend([guardian, warrior])
         db.add(build)
 
@@ -166,7 +168,9 @@ class TestBuildModel:
         db.add(user)
         await db.flush()
 
-        build = Build(name="Timestamp Test", game_mode="wvw", created_by_id=user.id, config={})
+        build = Build(
+            name="Timestamp Test", game_mode="wvw", created_by_id=user.id, config={}
+        )
         db.add(build)
         await db.commit()
 

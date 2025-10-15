@@ -39,7 +39,9 @@ class KeyRotationService:
         # Clé principale (obligatoire)
         main_key = settings.SECRET_KEY
         if not main_key or main_key == "your-secret-key-here":
-            raise ValueError("La clé secrète principale n'est pas configurée correctement")
+            raise ValueError(
+                "La clé secrète principale n'est pas configurée correctement"
+            )
 
         # Ajout de la clé principale avec l'ID actuel
         self.keys[self.current_key_id] = main_key
@@ -105,7 +107,10 @@ class KeyRotationService:
     def _cleanup_old_keys(self):
         """Nettoie les anciennes clés, ne garde que les 3 plus récentes."""
         # Trier les clés par numéro (du plus ancien au plus récent)
-        sorted_keys = sorted([k for k in self.keys.keys() if k.startswith("key_")], key=lambda x: int(x.split("_")[1]))
+        sorted_keys = sorted(
+            [k for k in self.keys.keys() if k.startswith("key_")],
+            key=lambda x: int(x.split("_")[1]),
+        )
 
         # Supprimer les clés les plus anciennes (sauf les 3 plus récentes)
         for key_id in sorted_keys[:-3]:
@@ -161,7 +166,9 @@ class KeyRotationService:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    def encode_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    def encode_token(
+        self, data: dict, expires_delta: Optional[timedelta] = None
+    ) -> str:
         """
         Crée un nouveau token JWT signé avec la clé actuelle.
 
@@ -177,11 +184,15 @@ class KeyRotationService:
         if expires_delta:
             expire = datetime.utcnow() + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+            expire = datetime.utcnow() + timedelta(
+                minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+            )
 
         to_encode.update({"exp": expire, "kid": self.current_key_id})
 
-        return jwt.encode(to_encode, self.keys[self.current_key_id], algorithm=settings.JWT_ALGORITHM)
+        return jwt.encode(
+            to_encode, self.keys[self.current_key_id], algorithm=settings.JWT_ALGORITHM
+        )
 
 
 # Instance singleton du service

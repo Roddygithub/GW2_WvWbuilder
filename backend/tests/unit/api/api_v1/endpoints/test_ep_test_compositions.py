@@ -84,7 +84,9 @@ class TestCompositionsAPI:
         assert data["is_public"] == update_data["is_public"]
         assert set(data["tags"]) == set(update_data["tags"])
 
-    async def test_list_compositions(self, async_client: AsyncClient, test_composition: Composition, test_user: User):
+    async def test_list_compositions(
+        self, async_client: AsyncClient, test_composition: Composition, test_user: User
+    ):
         """Test listing compositions with pagination."""
         response = await async_client.get(
             f"{settings.API_V1_STR}/compositions/",
@@ -103,7 +105,9 @@ class TestCompositionsAPI:
     ):
         """Test filtering compositions by tag."""
         # First, ensure the test composition has the expected tag
-        if not test_composition.tags or "wvw" not in [t.name for t in test_composition.tags]:
+        if not test_composition.tags or "wvw" not in [
+            t.name for t in test_composition.tags
+        ]:
             update_data = {"tags": ["wvw", "test"]}
             await async_client.put(
                 f"{settings.API_V1_STR}/compositions/{test_composition.id}",

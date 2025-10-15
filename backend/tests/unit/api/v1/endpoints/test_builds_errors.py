@@ -71,13 +71,19 @@ class TestBuildsErrorHandling:
         errors = response.json()["detail"]
 
         # Check for validation errors
-        error_fields = [str(error.get("loc", [""])[1]) for error in errors if len(error.get("loc", [])) > 1]
+        error_fields = [
+            str(error.get("loc", [""])[1])
+            for error in errors
+            if len(error.get("loc", [])) > 1
+        ]
 
         assert "name" in error_fields
         assert "game_mode" in error_fields
         assert "team_size" in error_fields
 
-    async def test_create_build_with_invalid_constraints(self, async_client: AsyncClient, test_user: Dict[str, Any]):
+    async def test_create_build_with_invalid_constraints(
+        self, async_client: AsyncClient, test_user: Dict[str, Any]
+    ):
         """Test creating a build with invalid constraints."""
         invalid_constraints = {
             "name": "Test Build with Invalid Constraints",
@@ -100,7 +106,9 @@ class TestBuildsErrorHandling:
         errors = response.json()["detail"]
         assert any("constraints" in str(error.get("loc", [])) for error in errors)
 
-    async def test_list_builds_with_invalid_pagination(self, async_client: AsyncClient, test_user: Dict[str, Any]):
+    async def test_list_builds_with_invalid_pagination(
+        self, async_client: AsyncClient, test_user: Dict[str, Any]
+    ):
         """Test listing builds with invalid pagination parameters."""
         # Test with negative skip
         response = await async_client.get(

@@ -3,9 +3,9 @@
  * Shows live refresh status with toggle control
  */
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { RefreshCw, Clock, Wifi, WifiOff } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { motion, AnimatePresence } from "framer-motion";
+import { RefreshCw, Clock, Wifi, WifiOff } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 interface LiveRefreshIndicatorProps {
   isRefreshing: boolean;
@@ -38,25 +38,23 @@ export default function LiveRefreshIndicator({
           transition={{
             duration: 2,
             repeat: enabled ? Infinity : 0,
-            ease: 'easeInOut',
+            ease: "easeInOut",
           }}
           className={`w-2 h-2 rounded-full ${
             enabled
-              ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]'
-              : 'bg-slate-500'
+              ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"
+              : "bg-slate-500"
           }`}
         />
         <span className="text-xs font-medium text-slate-300">
-          {enabled ? 'Live' : 'Paused'}
+          {enabled ? "Live" : "Paused"}
         </span>
       </div>
 
       {/* Last Refresh Time */}
       <div className="flex items-center gap-1.5 text-xs text-slate-400">
         <Clock className="w-3.5 h-3.5" />
-        <span>
-          {formatDistanceToNow(lastRefresh, { addSuffix: true })}
-        </span>
+        <span>{formatDistanceToNow(lastRefresh, { addSuffix: true })}</span>
       </div>
 
       {/* Divider */}
@@ -72,15 +70,15 @@ export default function LiveRefreshIndicator({
           p-1.5 rounded-lg transition-all duration-200
           ${
             isRefreshing
-              ? 'bg-slate-700/50 cursor-not-allowed'
-              : 'bg-slate-700/50 hover:bg-purple-500/20 hover:border-purple-500/30'
+              ? "bg-slate-700/50 cursor-not-allowed"
+              : "bg-slate-700/50 hover:bg-purple-500/20 hover:border-purple-500/30"
           }
         `}
         title="Refresh now"
       >
         <RefreshCw
           className={`w-4 h-4 text-slate-300 ${
-            isRefreshing ? 'animate-spin' : ''
+            isRefreshing ? "animate-spin" : ""
           }`}
         />
       </motion.button>
@@ -94,11 +92,11 @@ export default function LiveRefreshIndicator({
           p-1.5 rounded-lg transition-all duration-200
           ${
             enabled
-              ? 'bg-emerald-500/20 border border-emerald-500/30'
-              : 'bg-slate-700/50 hover:bg-slate-600/50'
+              ? "bg-emerald-500/20 border border-emerald-500/30"
+              : "bg-slate-700/50 hover:bg-slate-600/50"
           }
         `}
-        title={enabled ? 'Disable live refresh' : 'Enable live refresh'}
+        title={enabled ? "Disable live refresh" : "Enable live refresh"}
       >
         {enabled ? (
           <Wifi className="w-4 h-4 text-emerald-400" />
@@ -117,9 +115,9 @@ export default function LiveRefreshIndicator({
             className="absolute inset-0 bg-purple-500/5 rounded-xl pointer-events-none"
           >
             <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: '100%' }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              initial={{ x: "-100%" }}
+              animate={{ x: "100%" }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               className="h-full w-1/3 bg-gradient-to-r from-transparent via-purple-500/20 to-transparent"
             />
           </motion.div>

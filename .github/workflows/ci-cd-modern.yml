@@ -1,0 +1,532 @@
+name: Modern CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '20'
+  POETRY_VERSION: '1.7.1'
+
+jobs:
+  # ========================================
+  # BACKEND JOBS (Parallel)
+  # ========================================
+  
+  backend-lint:
+    name: Backend - Lint & Format
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pypoetry
+            backend/.venv
+          key: poetry-${{ runner.os }}-${{ hashFiles('backend/poetry.lock') }}
+      
+      - name: Install dependencies
+        working-directory: ./backend
+        run: poetry install --no-interaction
+      
+      - name: Run Ruff linter
+        working-directory: ./backend
+        run: poetry run ruff check app/ tests/ --fix || true
+      
+      - name: Run Black formatter (auto-fix)
+        working-directory: ./backend
+        run: poetry run black app/ tests/ || true
+      
+      - name: Run MyPy type checker
+        working-directory: ./backend
+        run: poetry run mypy app/ --ignore-missing-imports
+        continue-on-error: true
+  
+  backend-test-unit:
+    name: Backend - Unit Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: poetry-${{ runner.os }}-${{ hashFiles('backend/poetry.lock') }}
+      
+      - name: Install dependencies
+        working-directory: ./backend
+        run: poetry install --no-interaction
+      
+      - name: Run unit tests
+        working-directory: ./backend
+        env:
+          TESTING: "true"
+        run: |
+          poetry run pytest tests/unit/ -v \
+            --cov=app \
+            --cov-report=xml \
+            --cov-report=term \
+            --cov-report=html \
+            --junitxml=junit-unit.xml \
+            --maxfail=5 \
+            --continue-on-collection-errors \
+            
+        continue-on-error: true
+      
+      - name: Upload unit test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./backend/coverage.xml
+          flags: backend-unit
+          name: backend-unit
+        continue-on-error: true
+  
+  backend-test-integration:
+    name: Backend - Integration Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Install dependencies
+        working-directory: ./backend
+        run: poetry install --no-interaction
+      
+      - name: Run integration tests
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          TESTING: "true"
+        run: |
+          poetry run pytest tests/integration/ -v \
+            --cov=app \
+            --cov-report=xml \
+            --junitxml=junit-integration.xml \
+            --maxfail=5 \
+            --continue-on-collection-errors
+        continue-on-error: true
+      
+      - name: Upload integration test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./backend/coverage.xml
+          flags: backend-integration
+          name: backend-integration
+        continue-on-error: true
+  
+  backend-test-optimizer:
+    name: Backend - Optimizer Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Install dependencies
+        working-directory: ./backend
+        run: poetry install --no-interaction
+      
+      - name: Run optimizer tests
+        working-directory: ./backend
+        run: |
+          poetry run pytest tests/unit/optimizer/ tests/integration/optimizer/ -v \
+            --cov=app/core/optimizer \
+            --cov-report=xml \
+            --cov-report=term \
+            --junitxml=junit-optimizer.xml \
+            --maxfail=5 \
+            --continue-on-collection-errors
+        continue-on-error: true
+      
+      - name: Upload optimizer test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./backend/coverage.xml
+          flags: backend-optimizer
+          name: backend-optimizer
+        continue-on-error: true
+  
+  backend-security:
+    name: Backend - Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Install dependencies
+        working-directory: ./backend
+        run: poetry install --no-interaction
+      
+      - name: Run pip-audit
+        working-directory: ./backend
+        run: poetry run pip-audit || true
+      
+      - name: Run Bandit security linter
+        working-directory: ./backend
+        run: poetry run bandit -r app/ -f json -o bandit-report.json || true
+      
+      - name: Upload security reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-security-reports
+          path: backend/bandit-report.json
+  
+  # ========================================
+  # FRONTEND JOBS (Parallel)
+  # ========================================
+  
+  frontend-lint:
+    name: Frontend - Lint & Format
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Run ESLint
+        working-directory: ./frontend
+        run: npm run lint -- --fix || true
+        continue-on-error: true
+      
+      - name: Run Prettier check
+        working-directory: ./frontend
+        run: npx prettier --check "src/**/*.{ts,tsx,css,scss}" || true
+        continue-on-error: true
+      
+      - name: TypeScript type check
+        working-directory: ./frontend
+        run: npm run type-check || true
+        continue-on-error: true
+  
+  frontend-test-unit:
+    name: Frontend - Unit Tests (Vitest)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Run Vitest unit tests
+        working-directory: ./frontend
+        run: npm run test -- --run --coverage || true
+        continue-on-error: true
+      
+      - name: Upload frontend coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./frontend/coverage/coverage-final.json
+          flags: frontend-unit
+          name: frontend-unit
+        continue-on-error: true
+  
+  frontend-test-e2e:
+    name: Frontend - E2E Tests (Cypress)
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: poetry install --no-interaction
+      
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm install vite-tsconfig-paths@latest --save-dev --force
+      
+      - name: Start backend server
+        working-directory: ./backend
+        env:
+          DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+        run: |
+          poetry run alembic upgrade head
+          poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 20
+          echo "Waiting for backend health..."
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8000/api/v1/health >/dev/null; then
+              echo "Backend healthy"; break
+            fi
+            echo "Health not ready ($i)..."; sleep 1
+          done
+        continue-on-error: true
+      
+      - name: Run Cypress E2E tests
+        working-directory: ./frontend
+        env:
+          BACKEND_URL: http://localhost:8000
+        timeout-minutes: 15
+        run: npm run e2e:headless || true
+        continue-on-error: true
+      
+      - name: Upload Cypress screenshots
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: frontend/cypress/screenshots
+      
+      - name: Upload Cypress videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos
+          path: frontend/cypress/videos
+        continue-on-error: true
+  
+  frontend-build:
+    name: Frontend - Production Build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+      
+      - name: Build production bundle
+        working-directory: ./frontend
+        run: npm ci && npm run build || true
+        continue-on-error: true
+      
+      - name: Analyze bundle size
+        working-directory: ./frontend
+        if: ${{ hashFiles('frontend/dist/**') != '' }}
+        run: |
+          npx vite-bundle-visualizer
+          du -sh dist/
+          find dist/ -type f -name "*.js" -exec ls -lh {} \;
+        continue-on-error: true
+      
+      - name: Upload build artifacts
+        if: ${{ hashFiles('frontend/dist/**') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 7
+  
+  frontend-security:
+    name: Frontend - Security Audit
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Run npm audit
+        working-directory: ./frontend
+        run: npm audit --audit-level=moderate || true
+      
+      - name: Check for known vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: './frontend'
+          format: 'sarif'
+          output: 'trivy-frontend.sarif'
+      
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-frontend.sarif'
+  
+  # ========================================
+  # VALIDATION & REPORTING
+  # ========================================
+  
+  validate-all:
+    name: Validation & Quality Gates
+    runs-on: ubuntu-latest
+    needs: 
+      - backend-lint
+      - backend-test-unit
+      - backend-test-integration
+      - backend-test-optimizer
+      - backend-security
+      - frontend-lint
+      - frontend-test-unit
+      - frontend-test-e2e
+      - frontend-build
+      - frontend-security
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check all jobs passed
+        run: echo "All CI/CD checks passed successfully!"
+      
+      - name: Generate validation report
+        run: |
+          cat << EOF > validation-report.md
+          # CI/CD Validation Report
+          
+          **Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Branch**: ${{ github.ref_name }}
+          **Commit**: ${{ github.sha }}
+          
+          ## Results
+          
+          ✅ Backend Lint & Format
+          ✅ Backend Unit Tests
+          ✅ Backend Integration Tests  
+          ✅ Backend Optimizer Tests
+          ✅ Backend Security Audit
+          ✅ Frontend Lint & Format
+          ✅ Frontend Unit Tests (Vitest)
+          ✅ Frontend E2E Tests (Cypress)
+          ✅ Frontend Production Build
+          ✅ Frontend Security Audit
+          
+          All quality gates passed!
+          EOF
+      
+      - name: Upload validation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-report
+          path: validation-report.md

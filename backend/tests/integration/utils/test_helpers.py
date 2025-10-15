@@ -6,7 +6,9 @@ from sqlalchemy.orm import Session
 from app.models import Profession, EliteSpecialization
 
 
-def create_test_profession(db: Session, name: str = None, description: str = None, icon_url: str = None) -> Profession:
+def create_test_profession(
+    db: Session, name: str = None, description: str = None, icon_url: str = None
+) -> Profession:
     """Create a test profession in the database."""
     profession = Profession(
         name=name or "Test Profession",
@@ -24,14 +26,20 @@ def create_test_professions(db: Session, count: int = 3) -> List[Profession]:
     professions = []
     for i in range(count):
         profession = create_test_profession(
-            db=db, name=f"Test Profession {i + 1}", description=f"Test Profession {i + 1} Description"
+            db=db,
+            name=f"Test Profession {i + 1}",
+            description=f"Test Profession {i + 1} Description",
         )
         professions.append(profession)
     return professions
 
 
 def create_test_elite_specialization(
-    db: Session, profession: Profession, name: str = None, description: str = None, icon_url: str = None
+    db: Session,
+    profession: Profession,
+    name: str = None,
+    description: str = None,
+    icon_url: str = None,
 ) -> EliteSpecialization:
     """Create a test elite specialization in the database."""
     elite_spec = EliteSpecialization(

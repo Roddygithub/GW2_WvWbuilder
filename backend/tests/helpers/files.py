@@ -181,7 +181,9 @@ class MockFile:
             filename: Filename
             content_type: Content type
         """
-        self.content = content if isinstance(content, bytes) else content.encode("utf-8")
+        self.content = (
+            content if isinstance(content, bytes) else content.encode("utf-8")
+        )
         self.filename = filename
         self.content_type = content_type
 
@@ -222,13 +224,17 @@ class AsyncMockFile:
             filename: Filename
             content_type: Content type
         """
-        self.content = content if isinstance(content, bytes) else content.encode("utf-8")
+        self.content = (
+            content if isinstance(content, bytes) else content.encode("utf-8")
+        )
         self.filename = filename
         self.content_type = content_type
 
     async def __aenter__(self) -> BinaryIO:
         """Enter async context manager."""
-        self.temp_file = await aiofiles.tempfile.NamedTemporaryFile(delete=False, mode="w+b")
+        self.temp_file = await aiofiles.tempfile.NamedTemporaryFile(
+            delete=False, mode="w+b"
+        )
         await self.temp_file.write(self.content)
         await self.temp_file.seek(0)
         return self.temp_file

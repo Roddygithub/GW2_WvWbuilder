@@ -18,7 +18,9 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "GW2 WvW Builder API"
     VERSION: str = os.getenv("VERSION", "1.0.0")
-    API_VERSION: str = os.getenv("API_VERSION", "1.0.0")  # Pour la compatibilité avec les tests
+    API_VERSION: str = os.getenv(
+        "API_VERSION", "1.0.0"
+    )  # Pour la compatibilité avec les tests
     SERVER_NAME: str = os.getenv("SERVER_NAME", "localhost")
     SERVER_HOST: str = os.getenv("SERVER_HOST", "http://localhost:8000")
 
@@ -26,26 +28,41 @@ class Settings(BaseSettings):
     @property
     def BACKEND_CORS_ORIGINS(self) -> list[str]:
         """Parse CORS origins from environment variable."""
-        cors_str = os.getenv("BACKEND_CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000")
+        cors_str = os.getenv(
+            "BACKEND_CORS_ORIGINS",
+            "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000,http://127.0.0.1:8000",
+        )
         return [origin.strip() for origin in cors_str.split(",") if origin.strip()]
 
     # JWT Configuration
     JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "supersecretjwtkey")
-    JWT_REFRESH_SECRET_KEY: str = os.getenv("JWT_REFRESH_SECRET_KEY", "supersecretrefreshkey")
+    JWT_REFRESH_SECRET_KEY: str = os.getenv(
+        "JWT_REFRESH_SECRET_KEY", "supersecretrefreshkey"
+    )
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-    JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_MINUTES", "1440"))
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
+        os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60")
+    )
+    JWT_REFRESH_TOKEN_EXPIRE_MINUTES: int = int(
+        os.getenv("JWT_REFRESH_TOKEN_EXPIRE_MINUTES", "1440")
+    )
     JWT_TOKEN_PREFIX: str = os.getenv("JWT_TOKEN_PREFIX", "Bearer")
     JWT_ISSUER: str = os.getenv("JWT_ISSUER", "gw2-wvwbuilder-api")
     JWT_AUDIENCE: str = os.getenv("JWT_AUDIENCE", "gw2-wvwbuilder-client")
 
     # For backward compatibility
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-    REFRESH_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_MINUTES", "1440"))
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
+        os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "60")
+    )
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = int(
+        os.getenv("JWT_REFRESH_TOKEN_EXPIRE_MINUTES", "1440")
+    )
 
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "supersecretkeyfordevelopmentonly")
-    SECRET_KEY_ROTATION_INTERVAL_DAYS: int = int(os.getenv("SECRET_KEY_ROTATION_INTERVAL_DAYS", "90"))
+    SECRET_KEY_ROTATION_INTERVAL_DAYS: int = int(
+        os.getenv("SECRET_KEY_ROTATION_INTERVAL_DAYS", "90")
+    )
     MAX_OLD_KEYS: int = int(os.getenv("MAX_OLD_KEYS", "3"))
 
     # Database
@@ -134,7 +151,9 @@ class Settings(BaseSettings):
                 return self.DATABASE_URL
             elif self.DATABASE_URL.startswith("postgresql"):
                 if "+asyncpg" not in self.DATABASE_URL:
-                    return self.DATABASE_URL.replace("postgresql", "postgresql+asyncpg", 1)
+                    return self.DATABASE_URL.replace(
+                        "postgresql", "postgresql+asyncpg", 1
+                    )
                 return self.DATABASE_URL
             elif self.DATABASE_URL.startswith("mysql"):
                 if "+asyncmy" not in self.DATABASE_URL:
@@ -146,7 +165,9 @@ class Settings(BaseSettings):
         if not self.ASYNC_SQLALCHEMY_DATABASE_URI.startswith(
             "sqlite+aiosqlite"
         ) and self.ASYNC_SQLALCHEMY_DATABASE_URI.startswith("sqlite"):
-            return self.ASYNC_SQLALCHEMY_DATABASE_URI.replace("sqlite", "sqlite+aiosqlite", 1)
+            return self.ASYNC_SQLALCHEMY_DATABASE_URI.replace(
+                "sqlite", "sqlite+aiosqlite", 1
+            )
 
         return self.ASYNC_SQLALCHEMY_DATABASE_URI
 
@@ -164,19 +185,30 @@ def validate_secret_keys() -> None:
     """
     if settings.ENVIRONMENT == "production":
         # Check SECRET_KEY
-        if not settings.SECRET_KEY or settings.SECRET_KEY == "supersecretkeyfordevelopmentonly":
+        if (
+            not settings.SECRET_KEY
+            or settings.SECRET_KEY == "supersecretkeyfordevelopmentonly"
+        ):
             raise ValueError(
-                "SECRET_KEY must be set to a strong value in production. " "Generate one with: openssl rand -hex 32"
+                "SECRET_KEY must be set to a strong value in production. "
+                "Generate one with: openssl rand -hex 32"
             )
 
         # Check JWT_SECRET_KEY
-        if not settings.JWT_SECRET_KEY or settings.JWT_SECRET_KEY == "supersecretjwtkey":
+        if (
+            not settings.JWT_SECRET_KEY
+            or settings.JWT_SECRET_KEY == "supersecretjwtkey"
+        ):
             raise ValueError(
-                "JWT_SECRET_KEY must be set to a strong value in production. " "Generate one with: openssl rand -hex 32"
+                "JWT_SECRET_KEY must be set to a strong value in production. "
+                "Generate one with: openssl rand -hex 32"
             )
 
         # Check JWT_REFRESH_SECRET_KEY
-        if not settings.JWT_REFRESH_SECRET_KEY or settings.JWT_REFRESH_SECRET_KEY == "supersecretrefreshkey":
+        if (
+            not settings.JWT_REFRESH_SECRET_KEY
+            or settings.JWT_REFRESH_SECRET_KEY == "supersecretrefreshkey"
+        ):
             raise ValueError(
                 "JWT_REFRESH_SECRET_KEY must be set to a strong value in production. "
                 "Generate one with: openssl rand -hex 32"
@@ -184,13 +216,19 @@ def validate_secret_keys() -> None:
 
         # Check minimum key length (64 hex chars = 32 bytes)
         if len(settings.SECRET_KEY) < 64:
-            raise ValueError("SECRET_KEY must be at least 64 characters long (32 bytes in hex)")
+            raise ValueError(
+                "SECRET_KEY must be at least 64 characters long (32 bytes in hex)"
+            )
 
         if len(settings.JWT_SECRET_KEY) < 64:
-            raise ValueError("JWT_SECRET_KEY must be at least 64 characters long (32 bytes in hex)")
+            raise ValueError(
+                "JWT_SECRET_KEY must be at least 64 characters long (32 bytes in hex)"
+            )
 
         if len(settings.JWT_REFRESH_SECRET_KEY) < 64:
-            raise ValueError("JWT_REFRESH_SECRET_KEY must be at least 64 characters long (32 bytes in hex)")
+            raise ValueError(
+                "JWT_REFRESH_SECRET_KEY must be at least 64 characters long (32 bytes in hex)"
+            )
 
 
 def get_settings() -> Settings:

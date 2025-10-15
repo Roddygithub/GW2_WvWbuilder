@@ -24,7 +24,9 @@ class CRUDPermission(CRUDBase[Permission, PermissionCreate, PermissionUpdate]):
         """Get a permission by code."""
         return db.query(Permission).filter(Permission.code == code).first()
 
-    def get_multi(self, db: Session, *, skip: int = 0, limit: int = 100, is_active: bool = None) -> List[Permission]:
+    def get_multi(
+        self, db: Session, *, skip: int = 0, limit: int = 100, is_active: bool = None
+    ) -> List[Permission]:
         """Get multiple permissions with optional filtering."""
         query = db.query(Permission)
 

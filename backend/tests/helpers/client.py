@@ -33,7 +33,9 @@ class TestClientFactory:
         """
         return TestClient(app=self.app, **kwargs)
 
-    def get_authenticated_client(self, user: User, scopes: Optional[list[str]] = None, **kwargs: Any) -> TestClient:
+    def get_authenticated_client(
+        self, user: User, scopes: Optional[list[str]] = None, **kwargs: Any
+    ) -> TestClient:
         """Get an authenticated test client.
 
         Args:
@@ -51,7 +53,9 @@ class TestClientFactory:
 
         return client
 
-    async def get_async_client(self, base_url: str = "http://test", **kwargs: Any) -> AsyncGenerator[AsyncClient, None]:
+    async def get_async_client(
+        self, base_url: str = "http://test", **kwargs: Any
+    ) -> AsyncGenerator[AsyncClient, None]:
         """Get an asynchronous test client.
 
         Args:
@@ -61,7 +65,9 @@ class TestClientFactory:
         Yields:
             An AsyncClient instance
         """
-        async with AsyncClient(transport=ASGITransport(app=self.app), base_url=base_url, **kwargs) as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=self.app), base_url=base_url, **kwargs
+        ) as client:
             yield client
 
     async def get_authenticated_async_client(
@@ -79,7 +85,9 @@ class TestClientFactory:
         """
         access_token = create_access_token(subject=user.id, scopes=scopes or [])
 
-        async with AsyncClient(transport=ASGITransport(app=self.app), base_url="http://test", **kwargs) as client:
+        async with AsyncClient(
+            transport=ASGITransport(app=self.app), base_url="http://test", **kwargs
+        ) as client:
             client.headers.update({"Authorization": f"Bearer {access_token}"})
             yield client
 
@@ -206,7 +214,9 @@ async def create_test_role(
     return role
 
 
-def get_auth_headers(user_id: Union[str, int], scopes: Optional[list[str]] = None) -> Dict[str, str]:
+def get_auth_headers(
+    user_id: Union[str, int], scopes: Optional[list[str]] = None
+) -> Dict[str, str]:
     """Get authentication headers for a user.
 
     Args:

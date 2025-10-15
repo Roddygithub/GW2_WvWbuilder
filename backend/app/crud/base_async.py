@@ -28,13 +28,17 @@ class CRUDBaseAsync(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         result = await db.execute(stmt)
         return result.scalars().first()
 
-    async def get_multi(self, db: AsyncSession, *, skip: int = 0, limit: int = 100) -> List[ModelType]:
+    async def get_multi(
+        self, db: AsyncSession, *, skip: int = 0, limit: int = 100
+    ) -> List[ModelType]:
         """Get multiple objects with pagination."""
         stmt = self._select_stmt.offset(skip).limit(limit)
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
-    async def create(self, db: AsyncSession, *, obj_in: Union[CreateSchemaType, Dict[str, Any]]) -> ModelType:
+    async def create(
+        self, db: AsyncSession, *, obj_in: Union[CreateSchemaType, Dict[str, Any]]
+    ) -> ModelType:
         """Create a new object."""
         if isinstance(obj_in, dict):
             create_data = obj_in

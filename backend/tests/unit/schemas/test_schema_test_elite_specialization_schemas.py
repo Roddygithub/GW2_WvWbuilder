@@ -139,13 +139,19 @@ def test_elite_specialization_in_db():
 def test_elite_specialization_examples():
     """Test that the example data in schemas is valid."""
     # Test create example
-    create_example = EliteSpecializationCreate.model_config["json_schema_extra"]["example"]
+    create_example = EliteSpecializationCreate.model_config["json_schema_extra"][
+        "example"
+    ]
     assert EliteSpecializationCreate(**create_example)
 
     # Test update example
-    update_example = EliteSpecializationUpdate.model_config["json_schema_extra"]["example"]
+    update_example = EliteSpecializationUpdate.model_config["json_schema_extra"][
+        "example"
+    ]
     assert EliteSpecializationUpdate(**update_example)
 
     # Test in-db example
-    in_db_example = EliteSpecializationInDBBase.model_config["json_schema_extra"]["example"]
+    in_db_example = EliteSpecializationInDBBase.model_config["json_schema_extra"][
+        "example"
+    ]
     assert EliteSpecializationInDBBase(**in_db_example)

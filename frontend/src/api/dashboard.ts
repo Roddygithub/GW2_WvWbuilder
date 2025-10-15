@@ -3,7 +3,7 @@
  * Endpoints for dashboard statistics and data
  */
 
-import { apiGet } from './client';
+import { apiGet } from "./client";
 
 export interface DashboardStats {
   total_compositions: number;
@@ -14,7 +14,7 @@ export interface DashboardStats {
 
 export interface RecentActivity {
   id: string;
-  type: 'composition' | 'build' | 'team' | 'tag';
+  type: "composition" | "build" | "team" | "tag";
   title: string;
   description: string;
   timestamp: string;
@@ -24,13 +24,15 @@ export interface RecentActivity {
  * Get dashboard statistics
  */
 export async function getDashboardStats(): Promise<DashboardStats> {
-  return apiGet<DashboardStats>('/dashboard/stats');
+  return apiGet<DashboardStats>("/dashboard/stats");
 }
 
 /**
  * Get recent user activities
  */
-export async function getRecentActivities(limit = 10): Promise<RecentActivity[]> {
+export async function getRecentActivities(
+  limit = 10,
+): Promise<RecentActivity[]> {
   return apiGet<RecentActivity[]>(`/dashboard/activities?limit=${limit}`);
 }
 

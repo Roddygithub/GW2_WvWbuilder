@@ -20,7 +20,9 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
     CRUD operations for Profession model with optimized loading and caching.
     """
 
-    async def get(self, db: AsyncSession, id: Any, load_relations: bool = False) -> Optional[Profession]:
+    async def get(
+        self, db: AsyncSession, id: Any, load_relations: bool = False
+    ) -> Optional[Profession]:
         """
         Get a profession by ID with optional relation loading.
 
@@ -46,7 +48,9 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
         # Load relations if requested
         if load_relations:
             query = query.options(
-                selectinload(Profession.elite_specializations).selectinload(EliteSpecialization.builds),
+                selectinload(Profession.elite_specializations).selectinload(
+                    EliteSpecialization.builds
+                ),
                 selectinload(Profession.builds),
             )
 
@@ -61,7 +65,12 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
         return profession
 
     async def get_by_name(
-        self, db: AsyncSession, *, name: str, include_inactive: bool = False, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        name: str,
+        include_inactive: bool = False,
+        load_relations: bool = False,
     ) -> Optional[Profession]:
         """
         Get a profession by name with optional relation loading.
@@ -93,7 +102,9 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
         # Load relations if requested
         if load_relations:
             query = query.options(
-                selectinload(Profession.elite_specializations).selectinload(EliteSpecialization.builds),
+                selectinload(Profession.elite_specializations).selectinload(
+                    EliteSpecialization.builds
+                ),
                 selectinload(Profession.builds),
             )
 
@@ -102,7 +113,12 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
         profession = result.scalars().first()
 
         # Cache the result if not loading relations and including inactive
-        if settings.CACHE_ENABLED and not load_relations and include_inactive and profession:
+        if (
+            settings.CACHE_ENABLED
+            and not load_relations
+            and include_inactive
+            and profession
+        ):
             await cache.set(cache_key, profession, ttl=settings.CACHE_TTL)
 
         return profession
@@ -138,7 +154,9 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
                 return cached_professions
 
         # Build the base query
-        query = select(Profession).order_by(Profession.name.asc()).offset(skip).limit(limit)
+        query = (
+            select(Profession).order_by(Profession.name.asc()).offset(skip).limit(limit)
+        )
 
         # Filter out inactive professions if needed
         if not include_inactive:
@@ -147,7 +165,9 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
         # Load relations if requested
         if load_relations:
             query = query.options(
-                selectinload(Profession.elite_specializations).selectinload(EliteSpecialization.builds),
+                selectinload(Profession.elite_specializations).selectinload(
+                    EliteSpecialization.builds
+                ),
                 selectinload(Profession.builds),
             )
 
@@ -162,7 +182,12 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
         return professions
 
     async def get_with_elite_specs(
-        self, db: AsyncSession, *, id: int, include_inactive: bool = False, load_builds: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        id: int,
+        include_inactive: bool = False,
+        load_builds: bool = False,
     ) -> Optional[Profession]:
         """
         Get a profession with its elite specializations.
@@ -185,18 +210,28 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
                 return cached_profession
 
         # Build the base query
-        query = select(Profession).where(Profession.id == id).options(selectinload(Profession.elite_specializations))
+        query = (
+            select(Profession)
+            .where(Profession.id == id)
+            .options(selectinload(Profession.elite_specializations))
+        )
 
         # Filter out inactive elite specs if needed
         if not include_inactive:
             query = query.options(
-                selectinload(Profession.elite_specializations.and_(EliteSpecialization.is_active == True))  # noqa: E712
+                selectinload(
+                    Profession.elite_specializations.and_(
+                        EliteSpecialization.is_active == True
+                    )
+                )  # noqa: E712
             )
 
         # Load builds if requested
         if load_builds:
             query = query.options(
-                selectinload(Profession.elite_specializations).selectinload(EliteSpecialization.builds)
+                selectinload(Profession.elite_specializations).selectinload(
+                    EliteSpecialization.builds
+                )
             )
 
         # Execute query
@@ -204,7 +239,12 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
         profession = result.scalars().first()
 
         # Cache the result if not loading builds and including inactive
-        if settings.CACHE_ENABLED and not load_builds and include_inactive and profession:
+        if (
+            settings.CACHE_ENABLED
+            and not load_builds
+            and include_inactive
+            and profession
+        ):
             await cache.set(cache_key, profession, ttl=settings.CACHE_TTL)
 
         return profession
@@ -232,7 +272,11 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
         return db_obj
 
     async def update(
-        self, db: AsyncSession, *, db_obj: Profession, obj_in: Union[ProfessionUpdate, Dict[str, Any]]
+        self,
+        db: AsyncSession,
+        *,
+        db_obj: Profession,
+        obj_in: Union[ProfessionUpdate, Dict[str, Any]],
     ) -> Profession:
         """
         Update a profession and invalidate related caches.
@@ -295,7 +339,10 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
         return profession
 
     async def invalidate_cache(
-        self, db: AsyncSession, profession_id: Optional[int] = None, profession_name: Optional[str] = None
+        self,
+        db: AsyncSession,
+        profession_id: Optional[int] = None,
+        profession_name: Optional[str] = None,
     ) -> None:
         """
         Invalidate cache for profession and related data.
@@ -323,7 +370,9 @@ class CRUDProfession(CRUDBase[Profession, ProfessionCreate, ProfessionUpdate]):
         if profession_id:
             # Get all elite specs for this profession
             result = await db.execute(
-                select(EliteSpecialization.id).where(EliteSpecialization.profession_id == profession_id)
+                select(EliteSpecialization.id).where(
+                    EliteSpecialization.profession_id == profession_id
+                )
             )
             elite_spec_ids = result.scalars().all()
 

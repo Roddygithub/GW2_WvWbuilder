@@ -12,10 +12,14 @@ os.environ["REDIS_URL"] = ""
 os.environ["CACHE_ENABLED"] = "false"
 
 # Add the parent directory to the path so we can import app
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../app")))
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../app"))
+)
 
 # Create the static directory if it doesn't exist
-static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../app/static"))
+static_dir = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../app/static")
+)
 os.makedirs(static_dir, exist_ok=True)
 
 # Create an empty file in the static directory to avoid the error
@@ -87,15 +91,21 @@ def test_application_creation():
     assert test_app.version == "0.1.0"
 
     # Check that CORS middleware is added
-    cors_middleware = next((m for m in test_app.user_middleware if m.cls == CORSMiddleware), None)
+    cors_middleware = next(
+        (m for m in test_app.user_middleware if m.cls == CORSMiddleware), None
+    )
     assert cors_middleware is not None
 
     # Check that GZip middleware is added
-    gzip_middleware = next((m for m in test_app.user_middleware if m.cls == GZipMiddleware), None)
+    gzip_middleware = next(
+        (m for m in test_app.user_middleware if m.cls == GZipMiddleware), None
+    )
     assert gzip_middleware is not None
 
     # Check that Session middleware is added
-    session_middleware = next((m for m in test_app.user_middleware if m.cls == SessionMiddleware), None)
+    session_middleware = next(
+        (m for m in test_app.user_middleware if m.cls == SessionMiddleware), None
+    )
     assert session_middleware is not None
 
 
@@ -173,7 +183,9 @@ def test_internal_exception_handler():
     # Add a custom exception handler for 500 errors
     @test_app.exception_handler(Exception)
     async def internal_exception_handler(request: Request, exc: Exception):
-        return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+        return JSONResponse(
+            status_code=500, content={"detail": "Internal server error"}
+        )
 
     # Add a route that raises an exception
     @test_app.get("/test-internal-exception")
@@ -253,4 +265,6 @@ def test_validation_exception_handler():
     )
 
     # At least one of the validation errors should be present
-    assert name_error_found or age_error_found, f"Expected validation errors not found in: {error_messages}"
+    assert (
+        name_error_found or age_error_found
+    ), f"Expected validation errors not found in: {error_messages}"

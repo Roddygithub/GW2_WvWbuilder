@@ -22,9 +22,16 @@ logger = logging.getLogger(__name__)
 class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
     """CRUD operations for Build model with both sync and async support."""
 
-    def get_multi_by_owner(self, db: Session, *, owner_id: int, skip: int = 0, limit: int = 100) -> List[models.Build]:
+    def get_multi_by_owner(
+        self, db: Session, *, owner_id: int, skip: int = 0, limit: int = 100
+    ) -> List[models.Build]:
         """Get multiple builds by owner ID (synchronous)."""
-        stmt = select(self.model).where(self.model.created_by_id == owner_id).offset(skip).limit(limit)
+        stmt = (
+            select(self.model)
+            .where(self.model.created_by_id == owner_id)
+            .offset(skip)
+            .limit(limit)
+        )
         return list(db.scalars(stmt).all())
 
     async def get_multi_by_owner_async(
@@ -38,7 +45,10 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
         """Get multiple builds by owner ID (asynchronous)."""
         stmt = (
             select(self.model)
-            .options(selectinload(self.model.professions), selectinload(self.model.created_by))
+            .options(
+                selectinload(self.model.professions),
+                selectinload(self.model.created_by),
+            )
             .where(self.model.created_by_id == owner_id)
             .offset(skip)
             .limit(limit)
@@ -46,16 +56,28 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
-    def get_public_builds(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[models.Build]:
+    def get_public_builds(
+        self, db: Session, *, skip: int = 0, limit: int = 100
+    ) -> List[models.Build]:
         """Get public builds (synchronous)."""
-        stmt = select(self.model).where(self.model.is_public == True).offset(skip).limit(limit)  # noqa: E712
+        stmt = (
+            select(self.model)
+            .where(self.model.is_public == True)
+            .offset(skip)
+            .limit(limit)
+        )  # noqa: E712
         return list(db.scalars(stmt).all())
 
-    async def get_public_builds_async(self, db: AsyncSession, *, skip: int = 0, limit: int = 100) -> List[models.Build]:
+    async def get_public_builds_async(
+        self, db: AsyncSession, *, skip: int = 0, limit: int = 100
+    ) -> List[models.Build]:
         """Get public builds (asynchronous)."""
         stmt = (
             select(self.model)
-            .options(selectinload(self.model.professions), selectinload(self.model.created_by))
+            .options(
+                selectinload(self.model.professions),
+                selectinload(self.model.created_by),
+            )
             .where(self.model.is_public == True)  # noqa: E712
             .offset(skip)
             .limit(limit)
@@ -63,7 +85,9 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
-    def create_with_owner(self, db: Session, *, obj_in: schemas.BuildCreate, owner_id: int) -> Optional[Build]:
+    def create_with_owner(
+        self, db: Session, *, obj_in: schemas.BuildCreate, owner_id: int
+    ) -> Optional[Build]:
         """
         Create a new build with the given owner and profession associations (synchronous).
 
@@ -88,12 +112,16 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
 
             # Verify all professions exist before starting the transaction
             if profession_ids:
-                existing_professions = db.query(Profession).filter(Profession.id.in_(profession_ids)).all()
+                existing_professions = (
+                    db.query(Profession).filter(Profession.id.in_(profession_ids)).all()
+                )
                 existing_ids = {p.id for p in existing_professions}
                 missing_ids = set(profession_ids) - existing_ids
 
                 if missing_ids:
-                    error_msg = f"The following profession IDs do not exist: {missing_ids}"
+                    error_msg = (
+                        f"The following profession IDs do not exist: {missing_ids}"
+                    )
                     logger.error(error_msg)
                     raise ValueError(error_msg)
 
@@ -119,7 +147,9 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
             if profession_ids:
                 for prof_id in profession_ids:
                     logger.info(f"Adding profession {prof_id} to build {db_obj.id}")
-                    stmt = build_profession.insert().values(build_id=db_obj.id, profession_id=prof_id)
+                    stmt = build_profession.insert().values(
+                        build_id=db_obj.id, profession_id=prof_id
+                    )
                     db.execute(stmt)
 
             db.commit()
@@ -155,17 +185,22 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
 
             # Verify all professions exist before starting the transaction
             if profession_ids:
-                stmt = select(func.count(Profession.id)).where(Profession.id.in_(profession_ids))
+                stmt = select(func.count(Profession.id)).where(
+                    Profession.id.in_(profession_ids)
+                )
                 result = await db.execute(stmt)
                 count = result.scalar_one()
                 if count != len(set(profession_ids)):
                     # Find which ones are missing for a better error message
-                    existing_stmt = select(Profession.id).where(Profession.id.in_(profession_ids))
+                    existing_stmt = select(Profession.id).where(
+                        Profession.id.in_(profession_ids)
+                    )
                     existing_result = await db.execute(existing_stmt)
                     existing_ids = {r[0] for r in existing_result}
                     missing_ids = set(profession_ids) - existing_ids
                     raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND, detail=f"Professions not found: {missing_ids}"
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"Professions not found: {missing_ids}",
                     )
 
             # Add required fields
@@ -194,7 +229,9 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
 
             # Prepare constraints as a dictionary if they exist
             constraints_dict = (
-                generation_request.constraints.dict() if hasattr(generation_request.constraints, "dict") else {}
+                generation_request.constraints.dict()
+                if hasattr(generation_request.constraints, "dict")
+                else {}
             )
 
             # Create a new build with the generated composition
@@ -225,7 +262,8 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
                 "updated_at": build.updated_at.isoformat(),
                 "profession_ids": [p.id for p in selected_professions],
                 "professions": [
-                    {"id": p.id, "name": p.name, "description": p.description or ""} for p in selected_professions
+                    {"id": p.id, "name": p.name, "description": p.description or ""}
+                    for p in selected_professions
                 ],
                 "config": build.config or {},
                 "constraints": build.constraints or {},
@@ -254,11 +292,20 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
 
             # Prepare metrics
             metrics = {
-                "boon_coverage": {"might": 100.0, "fury": 100.0, "quickness": 50.0, "alacrity": 0.0},
+                "boon_coverage": {
+                    "might": 100.0,
+                    "fury": 100.0,
+                    "quickness": 50.0,
+                    "alacrity": 0.0,
+                },
                 "role_distribution": {
                     "healer": 1,
                     "support": 1,
-                    "dps": generation_request.team_size - 2 if generation_request.team_size > 2 else 1,
+                    "dps": (
+                        generation_request.team_size - 2
+                        if generation_request.team_size > 2
+                        else 1
+                    ),
                 },
                 "profession_distribution": {p.name: 1 for p in selected_professions},
             }
@@ -272,16 +319,23 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
             )
         except Exception as e:
             return schemas.BuildGenerationResponse(
-                success=False, message=f"Error generating build: {str(e)}", build=None, suggested_composition=[]
+                success=False,
+                message=f"Error generating build: {str(e)}",
+                build=None,
+                suggested_composition=[],
             )
 
-    def get_with_professions(self, db: Session, *, id: int, user_id: Optional[int] = None) -> Optional[models.Build]:
+    def get_with_professions(
+        self, db: Session, *, id: int, user_id: Optional[int] = None
+    ) -> Optional[models.Build]:
         """Get a build with its professions (synchronous)."""
         stmt = select(self.model).where(self.model.id == id)
 
         # Check if user has access
         if user_id is not None:
-            stmt = stmt.where((self.model.is_public == True) | (self.model.created_by_id == user_id))  # noqa: E712
+            stmt = stmt.where(
+                (self.model.is_public == True) | (self.model.created_by_id == user_id)
+            )  # noqa: E712
 
         stmt = stmt.options(joinedload(self.model.professions))
         return db.scalars(stmt).first()
@@ -294,7 +348,9 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
 
         # Check if user has access
         if user_id is not None:
-            stmt = stmt.where((self.model.is_public == True) | (self.model.created_by_id == user_id))  # noqa: E712
+            stmt = stmt.where(
+                (self.model.is_public == True) | (self.model.created_by_id == user_id)
+            )  # noqa: E712
 
         stmt = stmt.options(joinedload(self.model.professions))
         result = await db.execute(stmt)
@@ -329,7 +385,11 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
             # Handle profession updates if needed
             if "profession_ids" in update_data:
                 # Remove existing associations
-                db.execute(build_profession.delete().where(build_profession.c.build_id == db_obj.id))
+                db.execute(
+                    build_profession.delete().where(
+                        build_profession.c.build_id == db_obj.id
+                    )
+                )
 
                 # Add new associations
                 for prof_id in update_data.pop("profession_ids", []):
@@ -338,7 +398,9 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
                     if not prof:
                         raise ValueError(f"Profession with ID {prof_id} not found")
 
-                    stmt = build_profession.insert().values(build_id=db_obj.id, profession_id=prof_id)
+                    stmt = build_profession.insert().values(
+                        build_id=db_obj.id, profession_id=prof_id
+                    )
                     db.execute(stmt)
 
             # Update other fields
@@ -385,13 +447,19 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
             # Handle profession updates if needed
             if "profession_ids" in update_data:
                 # Remove existing associations
-                await db.execute(build_profession.delete().where(build_profession.c.build_id == db_obj.id))
+                await db.execute(
+                    build_profession.delete().where(
+                        build_profession.c.build_id == db_obj.id
+                    )
+                )
 
                 # Add new associations
                 profession_ids = update_data.pop("profession_ids", [])
                 if profession_ids:
                     # Verify all professions exist in a single query
-                    stmt = select(Profession.id).where(Profession.id.in_(profession_ids))
+                    stmt = select(Profession.id).where(
+                        Profession.id.in_(profession_ids)
+                    )
                     result = await db.execute(stmt)
                     existing_ids = {row[0] for row in result.all()}
 
@@ -399,7 +467,9 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
                         if prof_id not in existing_ids:
                             raise ValueError(f"Profession with ID {prof_id} not found")
 
-                        stmt = build_profession.insert().values(build_id=db_obj.id, profession_id=prof_id)
+                        stmt = build_profession.insert().values(
+                            build_id=db_obj.id, profession_id=prof_id
+                        )
                         await db.execute(stmt)
 
             # Update other fields
@@ -473,9 +543,10 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
             # Ensure we have enough unique professions for the team size
             if len(profession_ids) < generation_request.team_size:
                 # If not enough unique professions, allow duplicates
-                profession_ids = (profession_ids * (generation_request.team_size // len(profession_ids) + 1))[
-                    : generation_request.team_size
-                ]
+                profession_ids = (
+                    profession_ids
+                    * (generation_request.team_size // len(profession_ids) + 1)
+                )[: generation_request.team_size]
 
             # Shuffle to randomize the selection
             random.shuffle(profession_ids)
@@ -539,14 +610,20 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
                 },
                 "role_distribution": {
                     "healer": sum(
-                        1 for m in composition if "heal" in m["role"].lower() or "support" in m["role"].lower()
+                        1
+                        for m in composition
+                        if "heal" in m["role"].lower() or "support" in m["role"].lower()
                     ),
                     "dps": sum(1 for m in composition if "dps" in m["role"].lower()),
-                    "support": sum(1 for m in composition if "support" in m["role"].lower()),
+                    "support": sum(
+                        1 for m in composition if "support" in m["role"].lower()
+                    ),
                     "utility": 0,  # This would be calculated based on actual utilities
                 },
                 "profession_distribution": {
-                    m["profession"]: sum(1 for x in composition if x["profession"] == m["profession"])
+                    m["profession"]: sum(
+                        1 for x in composition if x["profession"] == m["profession"]
+                    )
                     for m in composition
                 },
             }

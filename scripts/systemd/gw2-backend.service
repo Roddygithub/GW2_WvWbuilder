@@ -1,0 +1,47 @@
+[Unit]
+Description=GW2 WvW Builder Backend Service
+After=network.target
+Documentation=https://github.com/Roddygithub/GW2_WvWbuilder
+
+[Service]
+Type=simple
+User=roddy
+Group=roddy
+WorkingDirectory=/home/roddy/GW2_WvWbuilder/backend
+
+# Environment variables
+Environment="PATH=/home/roddy/.local/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="PYTHONUNBUFFERED=1"
+Environment="ENVIRONMENT=production"
+
+# Load environment file if exists
+EnvironmentFile=-/home/roddy/GW2_WvWbuilder/backend/.env
+
+# Start command
+ExecStart=/usr/bin/env poetry run uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 2 --log-level info
+
+# Restart policy
+Restart=always
+RestartSec=10
+StartLimitInterval=200
+StartLimitBurst=5
+
+# Logging
+StandardOutput=append:/home/roddy/GW2_WvWbuilder/backend.log
+StandardError=append:/home/roddy/GW2_WvWbuilder/backend.log
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/roddy/GW2_WvWbuilder/backend
+ReadWritePaths=/home/roddy/GW2_WvWbuilder/backend.log
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=1G
+CPUQuota=200%
+
+[Install]
+WantedBy=multi-user.target

@@ -20,7 +20,9 @@ class CRUDTeam(CRUDBase[Team, TeamCreate, TeamUpdate]):
     CRUD operations for Team model with optimized loading and caching.
     """
 
-    async def get(self, db: AsyncSession, id: Any, load_relations: bool = False) -> Optional[Team]:
+    async def get(
+        self, db: AsyncSession, id: Any, load_relations: bool = False
+    ) -> Optional[Team]:
         """
         Get a team by ID with optional relation loading.
 
@@ -47,7 +49,9 @@ class CRUDTeam(CRUDBase[Team, TeamCreate, TeamUpdate]):
         if load_relations:
             query = query.options(
                 selectinload(Team.members).joinedload(TeamMember.user),
-                selectinload(Team.compositions).selectinload(Composition.tags).joinedload(CompositionTag.tag),
+                selectinload(Team.compositions)
+                .selectinload(Composition.tags)
+                .joinedload(CompositionTag.tag),
                 selectinload(Team.owner),
             )
 
@@ -61,7 +65,9 @@ class CRUDTeam(CRUDBase[Team, TeamCreate, TeamUpdate]):
 
         return team
 
-    async def get_by_name(self, db: AsyncSession, *, name: str, load_relations: bool = False) -> Optional[Team]:
+    async def get_by_name(
+        self, db: AsyncSession, *, name: str, load_relations: bool = False
+    ) -> Optional[Team]:
         """
         Get a team by name with optional relation loading.
 
@@ -88,7 +94,9 @@ class CRUDTeam(CRUDBase[Team, TeamCreate, TeamUpdate]):
         if load_relations:
             query = query.options(
                 selectinload(Team.members).joinedload(TeamMember.user),
-                selectinload(Team.compositions).selectinload(Composition.tags).joinedload(CompositionTag.tag),
+                selectinload(Team.compositions)
+                .selectinload(Composition.tags)
+                .joinedload(CompositionTag.tag),
                 selectinload(Team.owner),
             )
 
@@ -102,7 +110,9 @@ class CRUDTeam(CRUDBase[Team, TeamCreate, TeamUpdate]):
 
         return team
 
-    async def create_with_owner(self, db: AsyncSession, *, obj_in: TeamCreate, owner_id: int) -> Team:
+    async def create_with_owner(
+        self, db: AsyncSession, *, obj_in: TeamCreate, owner_id: int
+    ) -> Team:
         """
         Create a new team with an owner.
 
@@ -128,7 +138,13 @@ class CRUDTeam(CRUDBase[Team, TeamCreate, TeamUpdate]):
 
         return db_obj
 
-    async def update(self, db: AsyncSession, *, db_obj: Team, obj_in: Union[TeamUpdate, Dict[str, Any]]) -> Team:
+    async def update(
+        self,
+        db: AsyncSession,
+        *,
+        db_obj: Team,
+        obj_in: Union[TeamUpdate, Dict[str, Any]],
+    ) -> Team:
         """
         Update a team and invalidate related caches.
 
@@ -180,10 +196,14 @@ class CRUDTeam(CRUDBase[Team, TeamCreate, TeamUpdate]):
         await db.commit()
         return team
 
-    async def add_member(self, db: AsyncSession, *, team_id: int, user_id: int, role: str = "member") -> bool:
+    async def add_member(
+        self, db: AsyncSession, *, team_id: int, user_id: int, role: str = "member"
+    ) -> bool:
         """Add a member to a team."""
         # Check if user is already a member
-        stmt = select(team_members).where((team_members.c.team_id == team_id) & (team_members.c.user_id == user_id))
+        stmt = select(team_members).where(
+            (team_members.c.team_id == team_id) & (team_members.c.user_id == user_id)
+        )
         result = await db.execute(stmt)
         if result.first():
             return False  # User is already a member
@@ -194,22 +214,34 @@ class CRUDTeam(CRUDBase[Team, TeamCreate, TeamUpdate]):
         await db.commit()
         return True
 
-    async def remove_member(self, db: AsyncSession, *, team_id: int, user_id: int) -> bool:
+    async def remove_member(
+        self, db: AsyncSession, *, team_id: int, user_id: int
+    ) -> bool:
         """Remove a member from a team."""
         # Check if user is a member
-        stmt = select(team_members).where((team_members.c.team_id == team_id) & (team_members.c.user_id == user_id))
+        stmt = select(team_members).where(
+            (team_members.c.team_id == team_id) & (team_members.c.user_id == user_id)
+        )
         result = await db.execute(stmt)
         if not result.first():
             return False  # User is not a member
 
         # Remove user from team
-        stmt = team_members.delete().where((team_members.c.team_id == team_id) & (team_members.c.user_id == user_id))
+        stmt = team_members.delete().where(
+            (team_members.c.team_id == team_id) & (team_members.c.user_id == user_id)
+        )
         await db.execute(stmt)
         await db.commit()
         return True
 
     async def get_members(
-        self, db: AsyncSession, *, team_id: int, skip: int = 0, limit: int = 100, load_teams: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        team_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        load_teams: bool = False,
     ) -> List[User]:
         """
         Get all members of a team with optional team loading.
@@ -258,17 +290,28 @@ class CRUDTeam(CRUDBase[Team, TeamCreate, TeamUpdate]):
     async def is_member(self, db: AsyncSession, *, team_id: int, user_id: int) -> bool:
         """Check if a user is a member of a team."""
         result = await db.execute(
-            select(team_members).where((team_members.c.team_id == team_id) & (team_members.c.user_id == user_id))
+            select(team_members).where(
+                (team_members.c.team_id == team_id)
+                & (team_members.c.user_id == user_id)
+            )
         )
         return result.first() is not None
 
     async def is_owner(self, db: AsyncSession, *, team_id: int, user_id: int) -> bool:
         """Check if a user is the owner of a team."""
-        result = await db.execute(select(Team).where((Team.id == team_id) & (Team.owner_id == user_id)))
+        result = await db.execute(
+            select(Team).where((Team.id == team_id) & (Team.owner_id == user_id))
+        )
         return result.first() is not None
 
     async def get_user_teams(
-        self, db: AsyncSession, *, user_id: int, skip: int = 0, limit: int = 100, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        user_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        load_relations: bool = False,
     ) -> List[Team]:
         """
         Get all teams a user is a member of with optional relation loading.

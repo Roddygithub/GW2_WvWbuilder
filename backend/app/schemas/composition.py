@@ -30,7 +30,9 @@ class CompositionMemberBase(BaseModel):
     notes: Optional[str] = Field(None, examples=["Focus on healing the frontline"])
     is_commander: bool = Field(default=False, examples=[False])
     is_secondary_commander: bool = Field(default=False, examples=[False])
-    custom_build_url: Optional[str] = Field(None, examples=["https://snowcrows.com/builds/guardian/firebrand"])
+    custom_build_url: Optional[str] = Field(
+        None, examples=["https://snowcrows.com/builds/guardian/firebrand"]
+    )
     priority: int = Field(
         default=1,
         ge=1,
@@ -65,7 +67,9 @@ class CompositionBase(BaseModel):
     name: str = Field(..., min_length=2, max_length=100, examples=["Zerg Frontline"])
     description: Optional[str] = Field(
         None,
-        examples=["A balanced frontline composition with strong healing and boon support"],
+        examples=[
+            "A balanced frontline composition with strong healing and boon support"
+        ],
     )
     squad_size: int = Field(
         ...,
@@ -99,7 +103,11 @@ class CompositionBase(BaseModel):
     @field_validator("max_players")
     @classmethod
     def max_players_must_be_gte_min_players(cls, v: int, info: Any) -> int:
-        if hasattr(info, "data") and "min_players" in info.data and v < info.data["min_players"]:
+        if (
+            hasattr(info, "data")
+            and "min_players" in info.data
+            and v < info.data["min_players"]
+        ):
             raise ValueError("max_players must be greater than or equal to min_players")
         return v
 
@@ -152,7 +160,9 @@ class CompositionCreate(CompositionBase):
 class CompositionUpdate(BaseModel):
     """Schema for updating composition data"""
 
-    name: Optional[str] = Field(None, min_length=2, max_length=100, examples=["Updated Zerg Frontline"])
+    name: Optional[str] = Field(
+        None, min_length=2, max_length=100, examples=["Updated Zerg Frontline"]
+    )
     description: Optional[str] = None
     squad_size: Optional[int] = Field(None, ge=1, le=50, examples=[15])
     is_public: Optional[bool] = None
@@ -214,7 +224,9 @@ class Composition(CompositionInDBBase):
         json_schema_extra={
             "examples": [
                 {
-                    **CompositionInDBBase.model_config["json_schema_extra"]["examples"][0],
+                    **CompositionInDBBase.model_config["json_schema_extra"]["examples"][
+                        0
+                    ],
                     "members": [
                         {
                             "id": 1,
@@ -259,7 +271,11 @@ class CompositionTagBase(BaseModel):
     description: Optional[str] = Field(None, examples=["Ideal for large scale battles"])
 
     model_config = ConfigDict(
-        json_schema_extra={"examples": [{"name": "zerg", "description": "Ideal for large scale battles"}]}
+        json_schema_extra={
+            "examples": [
+                {"name": "zerg", "description": "Ideal for large scale battles"}
+            ]
+        }
     )
 
 
@@ -270,7 +286,9 @@ class CompositionTagCreate(CompositionTagBase):
 class CompositionTagUpdate(BaseModel):
     """Schema for updating composition tag data"""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=50, examples=["zerg_updated"])
+    name: Optional[str] = Field(
+        None, min_length=1, max_length=50, examples=["zerg_updated"]
+    )
     description: Optional[str] = Field(None, examples=["Updated description"])
 
     model_config = ConfigDict(
@@ -323,7 +341,9 @@ class CompositionSearch(BaseModel):
     created_by: Optional[int] = None
     is_public: Optional[bool] = True
     sort_by: Optional[str] = Field("created_at", examples=["created_at"])
-    sort_order: Optional[str] = Field("desc", pattern=r"^(asc|desc)$", examples=["desc"])
+    sort_order: Optional[str] = Field(
+        "desc", pattern=r"^(asc|desc)$", examples=["desc"]
+    )
     offset: int = Field(0, ge=0)
     limit: int = Field(10, ge=1, le=100)
 
@@ -351,27 +371,24 @@ class CompositionOptimizationRequest(BaseModel):
     """Schema for composition optimization request"""
 
     squad_size: int = Field(..., ge=1, le=50, examples=[10])
-    fixed_roles: Optional[List[Dict[str, Any]]] = Field(
-        default=None,
-        examples=[
-            [
-                {
-                    "profession_id": 1,
-                    "elite_specialization_id": 3,
-                    "count": 2,
-                    "role_type": "healer",
-                },
-                {
-                    "profession_id": 2,
-                    "elite_specialization_id": 5,
-                    "count": 3,
-                    "role_type": "dps",
-                },
-            ]
-        ],
+    game_type: str = Field(
+        ..., examples=["wvw", "pve"], description="Game type: wvw or pve"
     )
-    game_mode: str = Field(default="wvw", examples=["wvw"])
-    preferred_roles: Optional[Dict[str, int]] = Field(default=None, examples=[{"healer": 2, "dps": 5, "support": 3}])
+    game_mode: str = Field(
+        ...,
+        examples=["zerg", "roaming", "guild_raid", "openworld", "fractale", "raid"],
+        description="Specific game mode",
+    )
+    fixed_professions: Optional[List[int]] = Field(
+        default=None,
+        examples=[[1, 2, 4]],
+        description="List of profession IDs to include (if user wants to choose classes). Engine will optimize roles and specs.",
+    )
+    preferred_roles: Optional[Dict[str, int]] = Field(
+        default=None,
+        examples=[{"healer": 2, "dps": 5, "support": 3}],
+        description="Deprecated - roles are now auto-optimized",
+    )
     min_boon_uptime: Optional[Dict[str, float]] = Field(
         default=None, examples=[{"might": 0.9, "quickness": 0.8, "alacrity": 0.7}]
     )
@@ -416,10 +433,10 @@ class CompositionOptimizationRequest(BaseModel):
         examples=[[10, 15]],
         description="List of elite specialization IDs to exclude from optimization",
     )
-    optimization_goals: List[str] = Field(
-        default_factory=lambda: ["boon_uptime", "healing", "damage"],
+    optimization_goals: Optional[List[str]] = Field(
+        default=None,
         examples=[["boon_uptime", "healing", "damage"]],
-        description="List of optimization goals in order of priority",
+        description="Deprecated - goals are now auto-determined by game_type and game_mode",
     )
 
     model_config = ConfigDict(
@@ -427,6 +444,9 @@ class CompositionOptimizationRequest(BaseModel):
             "examples": [
                 {
                     "squad_size": 10,
+                    "game_type": "wvw",
+                    "game_mode": "zerg",
+                    "fixed_professions": None,
                     "fixed_roles": [
                         {
                             "profession_id": 1,
@@ -485,8 +505,12 @@ class CompositionOptimizationResult(BaseModel):
             }
         ],
     )
-    role_distribution: Dict[str, int] = Field(..., examples=[{"healer": 2, "dps": 5, "support": 3}])
-    boon_coverage: Dict[str, float] = Field(..., examples=[{"might": 0.95, "quickness": 0.9, "alacrity": 0.8}])
+    role_distribution: Dict[str, int] = Field(
+        ..., examples=[{"healer": 2, "dps": 5, "support": 3}]
+    )
+    boon_coverage: Dict[str, float] = Field(
+        ..., examples=[{"might": 0.95, "quickness": 0.9, "alacrity": 0.8}]
+    )
     notes: Optional[List[str]] = Field(
         default=None,
         examples=[
@@ -501,7 +525,9 @@ class CompositionOptimizationResult(BaseModel):
         json_schema_extra={
             "examples": [
                 {
-                    "composition": Composition.model_config["json_schema_extra"]["examples"][0],
+                    "composition": Composition.model_config["json_schema_extra"][
+                        "examples"
+                    ][0],
                     "score": 0.85,
                     "metrics": {
                         "boon_uptime": 0.9,
@@ -528,7 +554,9 @@ class CompositionEvaluation(BaseModel):
     composition_id: int = Field(..., examples=[1])
     evaluator_id: int = Field(..., examples=[1])
     rating: int = Field(..., ge=1, le=5, examples=[4])
-    feedback: Optional[str] = Field(default=None, examples=["Great composition for zerg fights!"])
+    feedback: Optional[str] = Field(
+        default=None, examples=["Great composition for zerg fights!"]
+    )
     suggested_improvements: Optional[List[str]] = Field(
         default=None,
         examples=[["Add more condition cleanses", "Consider adding more stability"]],
@@ -539,7 +567,9 @@ class CompositionEvaluation(BaseModel):
         examples=["2023-11-28"],
         description="Game version this evaluation is based on",
     )
-    game_mode: str = Field(default="wvw", examples=["wvw"], description="Game mode this evaluation is for")
+    game_mode: str = Field(
+        default="wvw", examples=["wvw"], description="Game mode this evaluation is for"
+    )
     tags: Optional[List[str]] = Field(
         default=None,
         examples=[["zerg", "frontline", "meta"]],

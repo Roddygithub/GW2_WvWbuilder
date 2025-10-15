@@ -12,7 +12,9 @@ from app.core.config import settings
 # Test cases
 @patch("app.core.logging_config.Path")
 @patch("app.core.logging_config.logging.config.dictConfig")
-@patch.dict("app.core.logging_config.settings.__dict__", {"DEBUG": False, "LOG_TO_FILE": False})
+@patch.dict(
+    "app.core.logging_config.settings.__dict__", {"DEBUG": False, "LOG_TO_FILE": False}
+)
 def test_setup_logging_creates_log_dir(mock_dict_config, mock_path):
     """Test that setup_logging creates the log directory if it doesn't exist."""
     # Setup mock for Path
@@ -111,7 +113,9 @@ def test_setup_logging_log_to_file(mock_get_logger, mock_dict_config, monkeypatc
 
 @patch("app.core.logging_config.logging.config.dictConfig")
 @patch("app.core.logging_config.logging.getLogger")
-def test_setup_logging_unhandled_exception(mock_get_logger, mock_dict_config, monkeypatch):
+def test_setup_logging_unhandled_exception(
+    mock_get_logger, mock_dict_config, monkeypatch
+):
     """Test that unhandled exceptions are logged."""
     # Setup
     mock_logger = MagicMock()
@@ -142,7 +146,9 @@ def test_setup_logging_unhandled_exception(mock_get_logger, mock_dict_config, mo
 
 @patch("app.core.logging_config.logging.config.dictConfig")
 @patch("app.core.logging_config.logging.getLogger")
-def test_setup_logging_keyboard_interrupt(mock_get_logger, mock_dict_config, monkeypatch):
+def test_setup_logging_keyboard_interrupt(
+    mock_get_logger, mock_dict_config, monkeypatch
+):
     """Test that KeyboardInterrupt is not logged by the exception hook."""
     # Setup
     mock_logger = MagicMock()
@@ -166,7 +172,9 @@ def test_setup_logging_keyboard_interrupt(mock_get_logger, mock_dict_config, mon
     excepthook(test_exc_type, test_exc_value, test_traceback)
 
     # Verify the original excepthook was called
-    original_excepthook.assert_called_once_with(test_exc_type, test_exc_value, test_traceback)
+    original_excepthook.assert_called_once_with(
+        test_exc_type, test_exc_value, test_traceback
+    )
 
     # Verify the logger was not called
     mock_logger.critical.assert_not_called()
@@ -195,7 +203,9 @@ def test_setup_logging_logger_levels(mock_get_logger, mock_dict_config, monkeypa
 
 @patch("app.core.logging_config.logging.config.dictConfig")
 @patch("app.core.logging_config.logging.getLogger")
-def test_setup_logging_third_party_loggers(mock_get_logger, mock_dict_config, monkeypatch):
+def test_setup_logging_third_party_loggers(
+    mock_get_logger, mock_dict_config, monkeypatch
+):
     """Test that third-party loggers are configured with appropriate levels."""
     # Setup
     mock_logger = MagicMock()

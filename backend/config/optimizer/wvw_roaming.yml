@@ -1,0 +1,61 @@
+# Configuration d'optimisation pour WvW Roaming/Havoc (2-10 joueurs)
+mode: "roaming"
+squad_size_range: [2, 10]
+
+# Pondérations des objectifs (total = 1.0)
+weights:
+  burst_damage: 0.30           # Burst mono-cible
+  mobility: 0.20               # Vitesse, stealth, disengage
+  self_sustain: 0.20           # Self-heal, barrier
+  crowd_control: 0.15          # Stun chain, immobilize
+  boon_uptime: 0.10            # Boons personnels
+  utility: 0.05                # Stealth, reveal, pulls
+
+# Boons critiques (moins exigeants qu'en zerg)
+critical_boons:
+  might: 0.70
+  fury: 0.75
+  quickness: 0.60
+  protection: 0.60
+  stability: 0.50              # Moins critique en petit groupe
+
+# Distribution des rôles recommandée
+role_distribution:
+  healer:
+    min: 0
+    max: 1
+    optimal: 0                 # Souvent pas de healer dédié
+  boon_support:
+    min: 0
+    max: 2
+    optimal: 1
+  dps:
+    min: 1
+    max: 8
+    optimal: 5
+  utility:
+    min: 0
+    max: 3
+    optimal: 2
+
+# Capacités McM spécifiques
+wvw_capabilities:
+  burst_damage: 15000          # Burst mono-cible
+  stealth_uptime: 0.30         # Stealth access
+  mobility_skills: 3           # Nombre de skills mobilité
+  disengage_options: 2         # Options de fuite
+  single_target_cc: 3          # CC mono-cible
+  self_heal_per_second: 800    # Self-sustain
+
+# Pénalités
+penalties:
+  low_mobility: 0.4            # Manque de mobilité critique
+  no_disengage: 0.3            # Pas d'option de fuite
+  low_burst: 0.25              # Burst insuffisant
+  too_many_supports: 0.2       # Trop de supports ralentit
+
+# Synergies positives
+synergies:
+  thief_mesmer: 0.08           # Stealth + portals
+  warrior_guardian: 0.06       # Burst + sustain
+  ranger_necro: 0.05           # Immob + fear chain

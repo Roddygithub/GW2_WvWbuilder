@@ -1,14 +1,17 @@
-import * as React from "react"
-import { useForm as useReactHookForm, type UseFormReturn } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import * as React from "react";
+import {
+  useForm as useReactHookForm,
+  type UseFormReturn,
+} from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 type FormProps<T extends z.ZodType> = {
-  children: React.ReactNode
-  form: UseFormReturn<z.infer<T>>
-  onSubmit: (values: z.infer<T>) => void
-  className?: string
-}
+  children: React.ReactNode;
+  form: UseFormReturn<z.infer<T>>;
+  onSubmit: (values: z.infer<T>) => void;
+  className?: string;
+};
 
 const Form = <T extends z.ZodType>({
   children,
@@ -20,17 +23,17 @@ const Form = <T extends z.ZodType>({
     <form onSubmit={form.handleSubmit(onSubmit)} className={className}>
       {children}
     </form>
-  )
-}
+  );
+};
 
 const FormField = <T extends z.ZodType>({
   control,
   name,
   render,
 }: {
-  control: UseFormReturn<z.infer<T>>["control"]
-  name: keyof z.infer<T>
-  render: (props: { field: any }) => React.ReactNode
+  control: UseFormReturn<z.infer<T>>["control"];
+  name: keyof z.infer<T>;
+  render: (props: { field: any }) => React.ReactNode;
 }) => {
   return (
     <div className="space-y-2">
@@ -40,12 +43,12 @@ const FormField = <T extends z.ZodType>({
         },
       })}
     </div>
-  )
-}
+  );
+};
 
 const FormItem = ({ children }: { children: React.ReactNode }) => {
-  return <div className="space-y-1">{children}</div>
-}
+  return <div className="space-y-1">{children}</div>;
+};
 
 const FormLabel = ({
   children,
@@ -59,15 +62,15 @@ const FormLabel = ({
     >
       {children}
     </label>
-  )
-}
+  );
+};
 
 const FormControl = ({
   children,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => {
-  return <div {...props}>{children}</div>
-}
+  return <div {...props}>{children}</div>;
+};
 
 const FormDescription = ({
   children,
@@ -75,14 +78,11 @@ const FormDescription = ({
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) => {
   return (
-    <p
-      className={`text-sm text-muted-foreground ${className}`}
-      {...props}
-    >
+    <p className={`text-sm text-muted-foreground ${className}`} {...props}>
       {children}
     </p>
-  )
-}
+  );
+};
 
 const FormMessage = ({
   children,
@@ -96,8 +96,8 @@ const FormMessage = ({
     >
       {children}
     </p>
-  )
-}
+  );
+};
 
 export {
   Form,
@@ -109,4 +109,4 @@ export {
   FormField,
   useReactHookForm,
   zodResolver,
-}
+};

@@ -15,6 +15,7 @@ module.exports = {
     },
     extend: {
       colors: {
+        // Shadcn UI colors
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -47,6 +48,29 @@ module.exports = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        // GW2 Theme Colors
+        gw2: {
+          gold: {
+            DEFAULT: '#FFC107',
+            light: '#FFD54F',
+            dark: '#FF8F00',
+          },
+          red: {
+            DEFAULT: '#B71C1C',
+            light: '#EF5350',
+            dark: '#8B0000',
+          },
+          fractal: {
+            DEFAULT: '#263238',
+            light: '#455A64',
+            dark: '#0D1117',
+          },
+          offwhite: {
+            DEFAULT: '#F5F5F5',
+            light: '#FAFAFA',
+            dark: '#E0E0E0',
+          },
         },
       },
       borderRadius: {

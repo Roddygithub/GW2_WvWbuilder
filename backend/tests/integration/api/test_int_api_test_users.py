@@ -160,7 +160,9 @@ class TestUserRoles:
         admin_headers = client.auth_header(user=admin)
 
         # Add role to user
-        response = client.post(f"/api/v1/users/{user.id}/roles/{role.id}", headers=admin_headers)
+        response = client.post(
+            f"/api/v1/users/{user.id}/roles/{role.id}", headers=admin_headers
+        )
 
         assert (
             response.status_code == status.HTTP_200_OK
@@ -170,7 +172,9 @@ class TestUserRoles:
         response = client.get(f"/api/v1/users/{user.id}", headers=admin_headers)
         assert response.status_code == status.HTTP_200_OK
         user_data = response.json()
-        assert any(r["id"] == role.id for r in user_data["roles"]), f"Role {role.id} was not added to user {user.id}"
+        assert any(
+            r["id"] == role.id for r in user_data["roles"]
+        ), f"Role {role.id} was not added to user {user.id}"
 
     def test_remove_role_from_user(self, client: TestClient, db: Session):
         # Create an admin user who has permission to remove roles
@@ -192,7 +196,9 @@ class TestUserRoles:
         ), f"Role {role.id} was not initially assigned to user {user.id}"
 
         # Remove role from user
-        response = client.delete(f"/api/v1/users/{user.id}/roles/{role.id}", headers=admin_headers)
+        response = client.delete(
+            f"/api/v1/users/{user.id}/roles/{role.id}", headers=admin_headers
+        )
 
         assert (
             response.status_code == status.HTTP_200_OK

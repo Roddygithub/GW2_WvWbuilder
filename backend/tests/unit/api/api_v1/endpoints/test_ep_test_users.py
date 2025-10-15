@@ -16,7 +16,9 @@ pytestmark = pytest.mark.asyncio
 class TestUsersAPI:
     """Test suite for Users API endpoints."""
 
-    async def test_create_user_success(self, async_client: AsyncClient, test_role: Role, db: AsyncSession):
+    async def test_create_user_success(
+        self, async_client: AsyncClient, test_role: Role, db: AsyncSession
+    ):
         """Test creating a new user with valid data."""
         user_data = {
             "email": "newuser@example.com",
@@ -27,7 +29,9 @@ class TestUsersAPI:
             "role_ids": [test_role.id],
         }
 
-        response = await async_client.post(f"{settings.API_V1_STR}/users/", json=user_data)
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/users/", json=user_data
+        )
 
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
@@ -38,7 +42,9 @@ class TestUsersAPI:
         assert len(data["roles"]) == 1
         assert data["roles"][0]["id"] == test_role.id
 
-    async def test_create_user_duplicate_email(self, async_client: AsyncClient, test_user: User):
+    async def test_create_user_duplicate_email(
+        self, async_client: AsyncClient, test_user: User
+    ):
         """Test creating a user with a duplicate email."""
         user_data = {
             "email": test_user.email,  # Duplicate email
@@ -47,7 +53,9 @@ class TestUsersAPI:
             "full_name": "Duplicate Email",
         }
 
-        response = await async_client.post(f"{settings.API_V1_STR}/users/", json=user_data)
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/users/", json=user_data
+        )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "email" in response.text.lower()
@@ -84,16 +92,22 @@ class TestUsersAPI:
         assert data["email"] == update_data["email"]
         assert data["full_name"] == update_data["full_name"]
 
-    async def test_list_users(self, async_client: AsyncClient, test_user: User, superuser_token_headers: dict):
+    async def test_list_users(
+        self, async_client: AsyncClient, test_user: User, superuser_token_headers: dict
+    ):
         """Test listing users (admin only)."""
-        response = await async_client.get(f"{settings.API_V1_STR}/users/", headers=superuser_token_headers)
+        response = await async_client.get(
+            f"{settings.API_V1_STR}/users/", headers=superuser_token_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert isinstance(data, list)
         assert any(user["id"] == test_user.id for user in data)
 
-    async def test_get_user_by_id(self, async_client: AsyncClient, test_user: User, superuser_token_headers: dict):
+    async def test_get_user_by_id(
+        self, async_client: AsyncClient, test_user: User, superuser_token_headers: dict
+    ):
         """Test retrieving a user by ID (admin only)."""
         response = await async_client.get(
             f"{settings.API_V1_STR}/users/{test_user.id}",
@@ -147,7 +161,9 @@ class TestUsersAPI:
             "password": "testpassword123",
             "full_name": "To Be Deleted",
         }
-        create_response = await async_client.post(f"{settings.API_V1_STR}/users/", json=user_data)
+        create_response = await async_client.post(
+            f"{settings.API_V1_STR}/users/", json=user_data
+        )
         user_id = create_response.json()["id"]
 
         # Now delete the user
@@ -158,5 +174,7 @@ class TestUsersAPI:
         assert delete_response.status_code == status.HTTP_204_NO_CONTENT
 
         # Verify the user is gone
-        get_response = await async_client.get(f"{settings.API_V1_STR}/users/{user_id}", headers=superuser_token_headers)
+        get_response = await async_client.get(
+            f"{settings.API_V1_STR}/users/{user_id}", headers=superuser_token_headers
+        )
         assert get_response.status_code == status.HTTP_404_NOT_FOUND

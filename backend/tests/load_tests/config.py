@@ -31,16 +31,25 @@ class LocustConfig:
         self.log_level: str = os.getenv("LOCUST_LOG_LEVEL", "INFO").upper()
         self.csv_prefix: str = os.getenv("LOCUST_CSV_PREFIX", "reports/locust")
         self.html_report: str = os.getenv("LOCUST_HTML", "reports/locust_report.html")
-        self.only_summary: bool = os.getenv("LOCUST_ONLY_SUMMARY", "true").lower() == "true"
+        self.only_summary: bool = (
+            os.getenv("LOCUST_ONLY_SUMMARY", "true").lower() == "true"
+        )
         self.logfile: str = os.getenv("LOCUST_LOGFILE", "reports/locust.log")
 
         # Configuration avancée
-        self.tags: List[str] = os.getenv("LOCUST_TAGS", "").split(",") if os.getenv("LOCUST_TAGS") else []
+        self.tags: List[str] = (
+            os.getenv("LOCUST_TAGS", "").split(",") if os.getenv("LOCUST_TAGS") else []
+        )
         self.exclude_tags: List[str] = (
-            os.getenv("LOCUST_EXCLUDE_TAGS", "").split(",") if os.getenv("LOCUST_EXCLUDE_TAGS") else []
+            os.getenv("LOCUST_EXCLUDE_TAGS", "").split(",")
+            if os.getenv("LOCUST_EXCLUDE_TAGS")
+            else []
         )
         self.percentiles: List[float] = [
-            float(p) for p in os.getenv("LOCUST_PERCENTILES", "0.5,0.9,0.95,0.99,0.999").split(",")
+            float(p)
+            for p in os.getenv("LOCUST_PERCENTILES", "0.5,0.9,0.95,0.99,0.999").split(
+                ","
+            )
         ]
 
         # Charger la configuration depuis le fichier si spécifié
@@ -72,7 +81,9 @@ class LocustConfig:
                 self.stages = config["stages"]
 
         except (json.JSONDecodeError, FileNotFoundError) as e:
-            print(f"Avertissement: Impossible de charger le fichier de configuration {config_path}: {e}")
+            print(
+                f"Avertissement: Impossible de charger le fichier de configuration {config_path}: {e}"
+            )
 
     def to_dict(self) -> Dict[str, Any]:
         """Convertit la configuration en dictionnaire.

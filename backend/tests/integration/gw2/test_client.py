@@ -51,7 +51,11 @@ TEST_CHARACTER = {
     "equipment": [{"id": 12345, "slot": "Coat", "binding": "Account"}],
     "equipment_pvp": {},
     "specializations": {
-        "pve": [{"id": 1, "traits": [1, 2, 3]}, {"id": 2, "traits": [4, 5, 6]}, {"id": 3, "traits": [7, 8, 9]}]
+        "pve": [
+            {"id": 1, "traits": [1, 2, 3]},
+            {"id": 2, "traits": [4, 5, 6]},
+            {"id": 3, "traits": [7, 8, 9]},
+        ]
     },
     "skills": {
         "pve": [
@@ -187,7 +191,9 @@ class TestGW2Client:
         """Test rate limit handling with retry logic."""
         # First response: rate limit exceeded
         rate_limit_response = mock_response(
-            status_code=429, json_data={"text": "too many requests"}, headers={"Retry-After": "1"}
+            status_code=429,
+            json_data={"text": "too many requests"},
+            headers={"Retry-After": "1"},
         )
 
         # Second response: success
@@ -249,7 +255,9 @@ class TestGW2APIEndpoints:
     async def test_gw2_account_endpoint(self, test_app, mock_gw2_account):
         """Test the /gw2/account endpoint."""
         async with AsyncClient(app=app, base_url="http://test") as ac:
-            response = await ac.get("/api/v1/gw2/account", headers={"X-GW2-API-Key": "test-api-key"})
+            response = await ac.get(
+                "/api/v1/gw2/account", headers={"X-GW2-API-Key": "test-api-key"}
+            )
 
         assert response.status_code == 200
         data = response.json()
@@ -262,7 +270,8 @@ class TestGW2APIEndpoints:
         """Test the /gw2/characters/{name} endpoint."""
         async with AsyncClient(app=app, base_url="http://test") as ac:
             response = await ac.get(
-                "/api/v1/gw2/characters/Test%20Character", headers={"X-GW2-API-Key": "test-api-key"}
+                "/api/v1/gw2/characters/Test%20Character",
+                headers={"X-GW2-API-Key": "test-api-key"},
             )
 
         assert response.status_code == 200
@@ -298,7 +307,9 @@ def mock_gw2_account(monkeypatch):
     async def mock_get_account(self):
         return models.Account(**TEST_ACCOUNT)
 
-    monkeypatch.setattr("app.api.api_v1.endpoints.gw2.GW2Client.get_account", mock_get_account)
+    monkeypatch.setattr(
+        "app.api.api_v1.endpoints.gw2.GW2Client.get_account", mock_get_account
+    )
 
 
 @pytest.fixture
@@ -308,7 +319,9 @@ def mock_gw2_character(monkeypatch):
     async def mock_get_character(self, character_name):
         return models.Character(**{**TEST_CHARACTER, "name": character_name})
 
-    monkeypatch.setattr("app.api.api_v1.endpoints.gw2.GW2Client.get_character", mock_get_character)
+    monkeypatch.setattr(
+        "app.api.api_v1.endpoints.gw2.GW2Client.get_character", mock_get_character
+    )
 
 
 @pytest.fixture
@@ -318,4 +331,6 @@ def mock_gw2_item(monkeypatch):
     async def mock_get_item(self, item_id):
         return models.Item(**{**TEST_ITEM, "id": item_id})
 
-    monkeypatch.setattr("app.api.api_v1.endpoints.gw2.GW2Client.get_item", mock_get_item)
+    monkeypatch.setattr(
+        "app.api.api_v1.endpoints.gw2.GW2Client.get_item", mock_get_item
+    )

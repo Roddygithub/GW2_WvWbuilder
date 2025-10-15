@@ -39,7 +39,9 @@ def random_url(scheme: str = "https", netloc: str = "example.com") -> str:
     Returns:
         A random URL.
     """
-    path = "/".join([""] + [random_lower_string(5) for _ in range(random.randint(1, 3))])
+    path = "/".join(
+        [""] + [random_lower_string(5) for _ in range(random.randint(1, 3))]
+    )
     return f"{scheme}://{netloc}{path}"
 
 

@@ -38,7 +38,10 @@ def create_mock_sql_result(return_value):
     return mock_result
 
 
-@patch("app.crud.crud_composition.composition.invalidate_composition_cache", new_callable=AsyncMock)
+@patch(
+    "app.crud.crud_composition.composition.invalidate_composition_cache",
+    new_callable=AsyncMock,
+)
 class TestCRUDComposition:
     """Test suite for composition CRUD operations."""
 
@@ -48,7 +51,9 @@ class TestCRUDComposition:
         db = AsyncMock(spec=AsyncSession)
         comp_in = CompositionCreate(name="New Comp")
 
-        created_comp = await composition_crud.create_with_owner(db, obj_in=comp_in, user_id=mock_user.id)
+        created_comp = await composition_crud.create_with_owner(
+            db, obj_in=comp_in, user_id=mock_user.id
+        )
 
         assert created_comp.name == comp_in.name
         assert created_comp.created_by == mock_user.id
@@ -83,7 +88,9 @@ class TestCRUDComposition:
         db.execute.return_value = mock_result
 
         # Appeler la méthode à tester
-        result = await composition_crud.add_tag(db, composition_id=composition_id, tag_id=tag_id)
+        result = await composition_crud.add_tag(
+            db, composition_id=composition_id, tag_id=tag_id
+        )
 
         # Vérifier les appels
         assert result is True
@@ -92,7 +99,9 @@ class TestCRUDComposition:
         mock_invalidate_cache.assert_called_once_with(db, composition_id=composition_id)
 
     @pytest.mark.asyncio
-    async def test_add_existing_tag(self, mock_invalidate_cache, mock_composition, mock_tag):
+    async def test_add_existing_tag(
+        self, mock_invalidate_cache, mock_composition, mock_tag
+    ):
         """Test that adding an existing tag does not cause issues."""
         db = AsyncMock(spec=AsyncSession)
         composition_id = 1
@@ -104,7 +113,9 @@ class TestCRUDComposition:
         db.execute.return_value = mock_result
 
         # Appeler la méthode à tester
-        result = await composition_crud.add_tag(db, composition_id=composition_id, tag_id=tag_id)
+        result = await composition_crud.add_tag(
+            db, composition_id=composition_id, tag_id=tag_id
+        )
 
         # Vérifier les appels
         assert result is False
@@ -125,7 +136,9 @@ class TestCRUDComposition:
         db.execute.return_value = mock_result
 
         # Appeler la méthode à tester
-        result = await composition_crud.remove_tag(db, composition_id=composition_id, tag_id=tag_id)
+        result = await composition_crud.remove_tag(
+            db, composition_id=composition_id, tag_id=tag_id
+        )
 
         # Vérifier les appels
         assert result is True

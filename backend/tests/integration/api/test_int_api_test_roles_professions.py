@@ -61,7 +61,9 @@ class TestRoles:
         token = create_access_token(subject=user.email)
 
         # Tester la liste
-        response = client.get("/api/v1/roles/", headers={"Authorization": f"Bearer {token}"})
+        response = client.get(
+            "/api/v1/roles/", headers={"Authorization": f"Bearer {token}"}
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -105,7 +107,9 @@ class TestRoles:
         token = create_access_token(subject=admin.email)
 
         # Supprimer le rôle
-        response = client.delete(f"/api/v1/roles/{role_id}", headers={"Authorization": f"Bearer {token}"})
+        response = client.delete(
+            f"/api/v1/roles/{role_id}", headers={"Authorization": f"Bearer {token}"}
+        )
 
         assert response.status_code == status.HTTP_200_OK
 
@@ -142,7 +146,11 @@ class TestProfessions:
         assert data["name"] == profession_data["name"]
 
         # Vérifier en base
-        profession = db.query(Profession).filter(Profession.name == profession_data["name"]).first()
+        profession = (
+            db.query(Profession)
+            .filter(Profession.name == profession_data["name"])
+            .first()
+        )
         assert profession is not None
         assert profession.description == profession_data["description"]
 
@@ -160,13 +168,17 @@ class TestProfessions:
         token = create_access_token(subject=user.email)
 
         # Tester la liste
-        response = client.get("/api/v1/professions/", headers={"Authorization": f"Bearer {token}"})
+        response = client.get(
+            "/api/v1/professions/", headers={"Authorization": f"Bearer {token}"}
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert len(data) >= len(professions)
         profession_names = {p.name for p in professions}
-        assert all(p["name"] in profession_names for p in data if p["name"] in profession_names)
+        assert all(
+            p["name"] in profession_names for p in data if p["name"] in profession_names
+        )
 
 
 class TestEliteSpecializations:
@@ -200,7 +212,11 @@ class TestEliteSpecializations:
         assert data["profession_id"] == profession.id
 
         # Vérifier en base
-        spec = db.query(EliteSpecialization).filter(EliteSpecialization.name == spec_data["name"]).first()
+        spec = (
+            db.query(EliteSpecialization)
+            .filter(EliteSpecialization.name == spec_data["name"])
+            .first()
+        )
         assert spec is not None
         assert spec.profession_id == profession.id
 

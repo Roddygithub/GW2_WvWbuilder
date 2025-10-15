@@ -31,7 +31,9 @@ from app.core.config import settings
 from app.core.security import get_password_hash, create_access_token
 
 # Configuration du logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 # Désactiver les logs de certains modules trop verbeux
@@ -46,20 +48,32 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 TEST_ASYNC_DATABASE_URL = "sqlite+aiosqlite:///:memory:?cache=shared"
 
 # Création du moteur de base de données de test
-logger.info(f"Configuration de la base de données de test avec l'URL : {TEST_ASYNC_DATABASE_URL}")
+logger.info(
+    f"Configuration de la base de données de test avec l'URL : {TEST_ASYNC_DATABASE_URL}"
+)
 
 test_engine = create_async_engine(
     TEST_ASYNC_DATABASE_URL,
     echo=settings.SQL_ECHO,
     future=True,
-    connect_args={"check_same_thread": False, "timeout": 30, "uri": True, "isolation_level": "IMMEDIATE"},
+    connect_args={
+        "check_same_thread": False,
+        "timeout": 30,
+        "uri": True,
+        "isolation_level": "IMMEDIATE",
+    },
     poolclass=StaticPool,
     pool_pre_ping=True,
 )
 
 # Configuration de la session de test
 TestingSessionLocal = async_sessionmaker(
-    autocommit=False, autoflush=False, bind=test_engine, expire_on_commit=False, class_=AsyncSession, twophase=False
+    autocommit=False,
+    autoflush=False,
+    bind=test_engine,
+    expire_on_commit=False,
+    class_=AsyncSession,
+    twophase=False,
 )
 
 
@@ -84,7 +98,9 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "asyncio: marque les tests asynchrones")
     config.addinivalue_line("markers", "integration: marque les tests d'intégration")
     config.addinivalue_line("markers", "unit: marque les tests unitaires")
-    config.addinivalue_line("markers", "db: marque les tests qui utilisent la base de données")
+    config.addinivalue_line(
+        "markers", "db: marque les tests qui utilisent la base de données"
+    )
 
 
 # Marqueurs pour les tests
@@ -113,7 +129,9 @@ def db_marker(f):
 
 
 @pytest_asyncio.fixture(scope="function")
-async def override_get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_async_db)):
+async def override_get_current_user(
+    token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_async_db)
+):
     """
     Surcharge de la dépendance get_current_user pour les tests.
 
@@ -233,7 +251,9 @@ def event_loop():
                     task.cancel()
 
                 # Exécuter la boucle jusqu'à ce que toutes les tâches soient terminées
-                loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
+                loop.run_until_complete(
+                    asyncio.gather(*pending, return_exceptions=True)
+                )
 
                 # Vérifier les exceptions dans les tâches annulées
                 for task in pending:
@@ -241,7 +261,9 @@ def event_loop():
                         try:
                             task.result()
                         except Exception as e:
-                            logger.error(f"La tâche {task} a généré une exception : {e}")
+                            logger.error(
+                                f"La tâche {task} a généré une exception : {e}"
+                            )
         finally:
             # Fermer la boucle
             if not loop.is_closed():
@@ -309,7 +331,9 @@ async def init_test_db(request) -> AsyncGenerator[None, None]:
     # Vérifier les modèles chargés
     async with test_engine.connect() as conn:
         # Afficher toutes les tables
-        result = await conn.execute(text("SELECT name, sql FROM sqlite_master WHERE type='table'"))
+        result = await conn.execute(
+            text("SELECT name, sql FROM sqlite_master WHERE type='table'")
+        )
         tables = result.fetchall()
         print("\n[DEBUG] ==== Tables dans la base de données ====")
         for name, sql in tables:
@@ -318,7 +342,10 @@ async def init_test_db(request) -> AsyncGenerator[None, None]:
 
             # Afficher les index pour cette table
             index_result = await conn.execute(
-                text("SELECT name, sql FROM sqlite_master WHERE type='index' AND tbl_name=:name"), {"name": name}
+                text(
+                    "SELECT name, sql FROM sqlite_master WHERE type='index' AND tbl_name=:name"
+                ),
+                {"name": name},
             )
             indexes = index_result.fetchall()
             if indexes:
@@ -327,7 +354,9 @@ async def init_test_db(request) -> AsyncGenerator[None, None]:
                     print(f"    - {idx_name}: {idx_sql}")
 
         print("\n[DEBUG] ==== Contenu des tables ====")
-        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
+        result = await conn.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table'")
+        )
         table_names = [row[0] for row in result.fetchall()]
 
         for table_name in table_names:
@@ -355,7 +384,9 @@ async def init_test_db(request) -> AsyncGenerator[None, None]:
 
     # Verify tables were created
     async with test_engine.connect() as conn:
-        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
+        result = await conn.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table'")
+        )
         tables = result.fetchall()
         print(f"Tables created: {tables}")
 
@@ -449,7 +480,9 @@ async def auth_headers(test_user: User, client: AsyncClient):
         dict: En-têtes d'authentification
     """
 
-    access_token = create_access_token(data={"sub": test_user.email}, expires_delta=timedelta(minutes=15))
+    access_token = create_access_token(
+        data={"sub": test_user.email}, expires_delta=timedelta(minutes=15)
+    )
 
     return {"Authorization": f"Bearer {access_token}"}
 
@@ -467,7 +500,9 @@ async def admin_auth_headers(admin_user: User, client: AsyncClient):
         dict: En-têtes d'authentification
     """
 
-    access_token = create_access_token(data={"sub": admin_user.email}, expires_delta=timedelta(minutes=15))
+    access_token = create_access_token(
+        data={"sub": admin_user.email}, expires_delta=timedelta(minutes=15)
+    )
 
     return {"Authorization": f"Bearer {access_token}"}
 
@@ -489,7 +524,9 @@ async def admin_user(db_session: AsyncSession):
     admin_role = admin_role.scalar_one_or_none()
 
     if not admin_role:
-        admin_role = Role(name="admin", description="Administrateur", is_active=True, is_default=False)
+        admin_role = Role(
+            name="admin", description="Administrateur", is_active=True, is_default=False
+        )
         db_session.add(admin_role)
         await db_session.commit()
 
@@ -544,7 +581,11 @@ async def test_profession(db_session: AsyncSession):
     Returns:
         Profession: Une profession de test avec un nom unique
     """
-    profession = Profession(name=f"Test Profession {uuid.uuid4().hex[:4]}", icon="test_icon.png", is_active=True)
+    profession = Profession(
+        name=f"Test Profession {uuid.uuid4().hex[:4]}",
+        icon="test_icon.png",
+        is_active=True,
+    )
 
     db_session.add(profession)
     await db_session.commit()

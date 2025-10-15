@@ -50,7 +50,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             stmt = stmt.options(*kwargs["options"])
         return db.scalars(stmt).first()
 
-    def get_multi(self, db: Session, *, skip: int = 0, limit: int = 100, **filters) -> List[ModelType]:
+    def get_multi(
+        self, db: Session, *, skip: int = 0, limit: int = 100, **filters
+    ) -> List[ModelType]:
         """Get multiple objects with optional filtering and pagination.
 
         Args:
@@ -71,7 +73,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
         return list(db.scalars(stmt).all())
 
-    def create(self, db: Session, *, obj_in: Union[CreateSchemaType, Dict[str, Any]]) -> ModelType:
+    def create(
+        self, db: Session, *, obj_in: Union[CreateSchemaType, Dict[str, Any]]
+    ) -> ModelType:
         """Create a new object.
 
         Args:
@@ -144,7 +148,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     # --- Asynchronous methods ---
 
-    async def get_async(self, db: AsyncSession, id: Any, **kwargs) -> Optional[ModelType]:
+    async def get_async(
+        self, db: AsyncSession, id: Any, **kwargs
+    ) -> Optional[ModelType]:
         """Asynchronously get a single object by ID.
 
         Args:
@@ -161,7 +167,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         result = await db.execute(stmt)
         return result.scalars().first()
 
-    async def get_multi_async(self, db: AsyncSession, *, skip: int = 0, limit: int = 100, **filters) -> List[ModelType]:
+    async def get_multi_async(
+        self, db: AsyncSession, *, skip: int = 0, limit: int = 100, **filters
+    ) -> List[ModelType]:
         """Asynchronously get multiple objects with optional filtering and pagination.
 
         Args:
@@ -183,7 +191,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
-    async def create_async(self, db: AsyncSession, *, obj_in: Union[CreateSchemaType, Dict[str, Any]]) -> ModelType:
+    async def create_async(
+        self, db: AsyncSession, *, obj_in: Union[CreateSchemaType, Dict[str, Any]]
+    ) -> ModelType:
         """Asynchronously create a new object.
 
         Args:

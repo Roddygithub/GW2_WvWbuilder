@@ -3,9 +3,17 @@
  * Recharts visualization of user activity over time
  */
 
-import { motion } from 'framer-motion';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp } from 'lucide-react';
+import { motion } from "framer-motion";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { TrendingUp } from "lucide-react";
 
 interface ActivityData {
   date: string;
@@ -20,13 +28,13 @@ interface ActivityChartProps {
 
 // Mock data for demonstration (replace with real API data)
 const defaultData: ActivityData[] = [
-  { date: 'Mon', compositions: 4, builds: 3, teams: 2 },
-  { date: 'Tue', compositions: 3, builds: 5, teams: 1 },
-  { date: 'Wed', compositions: 2, builds: 4, teams: 3 },
-  { date: 'Thu', compositions: 5, builds: 6, teams: 2 },
-  { date: 'Fri', compositions: 4, builds: 4, teams: 4 },
-  { date: 'Sat', compositions: 6, builds: 7, teams: 3 },
-  { date: 'Sun', compositions: 5, builds: 5, teams: 2 },
+  { date: "Mon", compositions: 4, builds: 3, teams: 2 },
+  { date: "Tue", compositions: 3, builds: 5, teams: 1 },
+  { date: "Wed", compositions: 2, builds: 4, teams: 3 },
+  { date: "Thu", compositions: 5, builds: 6, teams: 2 },
+  { date: "Fri", compositions: 4, builds: 4, teams: 4 },
+  { date: "Sat", compositions: 6, builds: 7, teams: 3 },
+  { date: "Sun", compositions: 5, builds: 5, teams: 2 },
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -45,7 +53,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export default function ActivityChart({ data = defaultData }: ActivityChartProps) {
+export default function ActivityChart({
+  data = defaultData,
+}: ActivityChartProps) {
   return (
     <motion.div
       data-testid="activity-chart"
@@ -81,7 +91,10 @@ export default function ActivityChart({ data = defaultData }: ActivityChartProps
 
       {/* Chart */}
       <ResponsiveContainer width="100%" height={250}>
-        <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+        <AreaChart
+          data={data}
+          margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+        >
           <defs>
             <linearGradient id="colorCompositions" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
@@ -100,13 +113,13 @@ export default function ActivityChart({ data = defaultData }: ActivityChartProps
           <XAxis
             dataKey="date"
             stroke="#94a3b8"
-            style={{ fontSize: '12px' }}
-            tick={{ fill: '#94a3b8' }}
+            style={{ fontSize: "12px" }}
+            tick={{ fill: "#94a3b8" }}
           />
           <YAxis
             stroke="#94a3b8"
-            style={{ fontSize: '12px' }}
-            tick={{ fill: '#94a3b8' }}
+            style={{ fontSize: "12px" }}
+            tick={{ fill: "#94a3b8" }}
           />
           <Tooltip content={<CustomTooltip />} />
           <Area

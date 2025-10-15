@@ -13,7 +13,9 @@ import bcrypt
 logger = logging.getLogger(__name__)
 
 
-def verify_password(plain_password: Optional[str], hashed_password: Optional[str]) -> bool:
+def verify_password(
+    plain_password: Optional[str], hashed_password: Optional[str]
+) -> bool:
     """Verify if the provided plain password matches the hashed password.
 
     Args:
@@ -38,7 +40,7 @@ def verify_password(plain_password: Optional[str], hashed_password: Optional[str
             logger.debug("Password exceeds 72 bytes, using SHA-256 pre-hash")
             plain_password = hashlib.sha256(password_bytes).hexdigest()
             password_bytes = plain_password.encode("utf-8")
-        
+
         hashed_bytes = hashed_password.encode("utf-8")
         return bcrypt.checkpw(password_bytes, hashed_bytes)
     except Exception as e:
@@ -68,10 +70,12 @@ def get_password_hash(password: str) -> str:
         # Handle long passwords (>72 bytes) with SHA-256 pre-hash
         password_bytes = password.encode("utf-8")
         if len(password_bytes) > 72:
-            logger.debug(f"Password exceeds 72 bytes ({len(password_bytes)} bytes), pre-hashing with SHA-256")
+            logger.debug(
+                f"Password exceeds 72 bytes ({len(password_bytes)} bytes), pre-hashing with SHA-256"
+            )
             password = hashlib.sha256(password_bytes).hexdigest()
             password_bytes = password.encode("utf-8")
-        
+
         # Hash with bcrypt (12 rounds)
         salt = bcrypt.gensalt(rounds=12)
         hashed = bcrypt.hashpw(password_bytes, salt)

@@ -24,7 +24,8 @@ from app.core.exceptions import (
 
 # OAuth2 scheme for token authentication
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False  # Permet de gérer manuellement l'absence de token
+    tokenUrl=f"{settings.API_V1_STR}/auth/login",
+    auto_error=False,  # Permet de gérer manuellement l'absence de token
 )
 
 
@@ -37,7 +38,7 @@ async def get_current_user(
 ) -> models.User:
     """
     Dependency to get the current user from the JWT token.
-    
+
     Creates its own database session to avoid FastAPI dependency blocking issues.
 
     Args:
@@ -51,14 +52,18 @@ async def get_current_user(
         CredentialsException: If token is invalid or user not found
     """
     from app.db.session import AsyncSessionLocal
-    
+
     # Handle test environment with special token
     if token == "x":
         async with AsyncSessionLocal() as db:
             user = await crud.user_crud.get_async(db, id=1)
             if not user:
                 # Create a test user if it doesn't exist
-                user_in = models.UserCreate(email="test@example.com", password="testpassword", full_name="Test User")
+                user_in = models.UserCreate(
+                    email="test@example.com",
+                    password="testpassword",
+                    full_name="Test User",
+                )
                 user = await crud.user_crud.create_async(db, obj_in=user_in)
                 # Re-fetch user
                 user = await crud.user_crud.get_async(db, id=1)
@@ -89,6 +94,7 @@ async def get_current_user(
 
         # DEBUG: Log to confirm new code is loaded and what claims are present
         import logging
+
         logger = logging.getLogger(__name__)
         logger.info(
             f"[NEW CODE] get_current_user: user_id={user_id}, aud={'aud' in payload}, using AsyncSessionLocal"
@@ -103,7 +109,7 @@ async def get_current_user(
             )
             if not user:
                 raise UserNotFoundException()
-            
+
             # Extract all needed data immediately before session closes
             # This prevents DetachedInstanceError
             _ = user.id
@@ -223,7 +229,12 @@ async def get_team_and_check_access(
         is_admin = bool(result.first())
 
     # Vérifier si l'utilisateur a accès à l'équipe
-    has_access = is_owner or is_admin or team.is_public or any(member.id == current_user.id for member in team.members)
+    has_access = (
+        is_owner
+        or is_admin
+        or team.is_public
+        or any(member.id == current_user.id for member in team.members)
+    )
 
     if not has_access:
         raise HTTPException(
@@ -246,7 +257,9 @@ async def get_webhook_service(
 async def get_gw2_client(
     x_gw2_api_key: Optional[str] = Header(None, description="Guild Wars 2 API key"),
     accept_language: str = Header("en", description="Preferred language for responses"),
-    x_schema_version: str = Header("2022-03-23T00:00:00Z", description="API schema version"),
+    x_schema_version: str = Header(
+        "2022-03-23T00:00:00Z", description="API schema version"
+    ),
 ) -> GW2Client:
     """
     Dependency that provides a GW2 API client.

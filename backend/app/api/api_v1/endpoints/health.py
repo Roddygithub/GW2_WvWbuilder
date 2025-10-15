@@ -26,4 +26,7 @@ async def health_check(db: AsyncSession = Depends(get_async_db)) -> JSONResponse
     except Exception as e:
         db_status = f"error: {str(e)}"
 
-    return JSONResponse(status_code=200, content={"status": "ok", "database": db_status, "version": "1.0.0"})
+    return JSONResponse(
+        status_code=200,
+        content={"status": "ok", "database": db_status, "version": "1.0.0"},
+    )

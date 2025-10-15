@@ -27,7 +27,11 @@ from app.models.team import Team
 from app.models.team_member import TeamMember
 
 # Tables d'association
-from app.models.association_tables import build_profession, role_permissions, composition_members
+from app.models.association_tables import (
+    build_profession,
+    role_permissions,
+    composition_members,
+)
 from app.models.user_role import UserRole
 
 # Liste de tous les modèles à importer pour la création des tables
@@ -60,7 +64,9 @@ logger = logging.getLogger(__name__)
 # S'assurer que tous les modèles sont importés
 logger.info("Chargement des modèles pour la base de données...")
 for model in MODELS:
-    logger.debug(f"Modèle chargé: {model.__name__ if hasattr(model, '__name__') else model}")
+    logger.debug(
+        f"Modèle chargé: {model.__name__ if hasattr(model, '__name__') else model}"
+    )
 
 __all__ = [
     # SQLAlchemy Base

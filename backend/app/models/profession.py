@@ -31,10 +31,15 @@ class Profession(Base, TimeStampedMixin):
     """
 
     __tablename__ = "professions"
-    __table_args__ = {"comment": "Stocke les différentes professions (classes) de Guild Wars 2"}
+    __table_args__ = {
+        "comment": "Stocke les différentes professions (classes) de Guild Wars 2"
+    }
 
     id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True, comment="Identifiant unique de la profession"
+        Integer,
+        primary_key=True,
+        index=True,
+        comment="Identifiant unique de la profession",
     )
 
     name: Mapped[str] = mapped_column(
@@ -50,23 +55,34 @@ class Profession(Base, TimeStampedMixin):
     )
 
     description: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True, comment="Description de la profession et de son style de jeu"
+        Text,
+        nullable=True,
+        comment="Description de la profession et de son style de jeu",
     )
 
     game_modes: Mapped[Optional[List[str]]] = mapped_column(
-        JSON, nullable=True, default=[], comment="Liste des modes de jeu où cette profession est viable (wvw, pvp, pve)"
+        JSON,
+        nullable=True,
+        default=[],
+        comment="Liste des modes de jeu où cette profession est viable (wvw, pvp, pve)",
     )
 
     is_active: Mapped[bool] = mapped_column(
-        Boolean, default=True, comment="Indique si la profession est actuellement disponible dans le jeu"
+        Boolean,
+        default=True,
+        comment="Indique si la profession est actuellement disponible dans le jeu",
     )
 
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), comment="Date de création de l'entrée"
+        DateTime(timezone=True),
+        server_default=func.now(),
+        comment="Date de création de l'entrée",
     )
 
     updated_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now(), comment="Date de dernière mise à jour de l'entrée"
+        DateTime(timezone=True),
+        onupdate=func.now(),
+        comment="Date de dernière mise à jour de l'entrée",
     )
 
     # Relations
@@ -79,7 +95,11 @@ class Profession(Base, TimeStampedMixin):
     )
 
     builds: Mapped[List["Build"]] = relationship(
-        "Build", secondary=build_profession, back_populates="professions", viewonly=True, lazy="selectin"
+        "Build",
+        secondary=build_profession,
+        back_populates="professions",
+        viewonly=True,
+        lazy="selectin",
     )
 
     def __repr__(self) -> str:
@@ -106,9 +126,13 @@ class Profession(Base, TimeStampedMixin):
         }
 
         if include_related:
-            result["elite_specializations"] = [es.to_dict() for es in self.elite_specializations]
+            result["elite_specializations"] = [
+                es.to_dict() for es in self.elite_specializations
+            ]
         else:
-            result["elite_specialization_ids"] = [es.id for es in self.elite_specializations]
+            result["elite_specialization_ids"] = [
+                es.id for es in self.elite_specializations
+            ]
 
         return result
 
@@ -135,7 +159,9 @@ class Profession(Base, TimeStampedMixin):
             ValueError: Si la spécialisation appartient déjà à une autre profession
         """
         if elite_spec.profession_id is not None and elite_spec.profession_id != self.id:
-            raise ValueError("Cette spécialisation appartient déjà à une autre profession")
+            raise ValueError(
+                "Cette spécialisation appartient déjà à une autre profession"
+            )
 
         if elite_spec not in self.elite_specializations:
             self.elite_specializations.append(elite_spec)
@@ -151,7 +177,9 @@ class Profession(Base, TimeStampedMixin):
             self.elite_specializations.remove(elite_spec)
             elite_spec.profession = None
 
-    def get_elite_specialization_by_name(self, name: str) -> Optional["EliteSpecialization"]:
+    def get_elite_specialization_by_name(
+        self, name: str
+    ) -> Optional["EliteSpecialization"]:
         """Récupère une spécialisation d'élite par son nom.
 
         Args:
@@ -160,4 +188,11 @@ class Profession(Base, TimeStampedMixin):
         Returns:
             Optional[EliteSpecialization]: La spécialisation d'élite si trouvée, None sinon
         """
-        return next((es for es in self.elite_specializations if es.name.lower() == name.lower()), None)
+        return next(
+            (
+                es
+                for es in self.elite_specializations
+                if es.name.lower() == name.lower()
+            ),
+            None,
+        )

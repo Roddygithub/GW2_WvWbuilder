@@ -94,14 +94,21 @@ def assert_build_matches_data(build_data: Dict[str, Any], build_in_db: Build) ->
 
 
 @pytest.mark.asyncio
-async def test_generate_build(client: TestClient, db_session: AsyncSession, user_factory) -> None:
+async def test_generate_build(
+    client: TestClient, db_session: AsyncSession, user_factory
+) -> None:
     """Test generating a build with default parameters."""
     # Setup test data - create a test user with user_factory
-    test_user = await user_factory(email="test@example.com", password="testpassword", is_active=True)
+    test_user = await user_factory(
+        email="test@example.com", password="testpassword", is_active=True
+    )
     await db_session.commit()
 
     # Create some professions for testing
-    professions = [await ProfessionFactory.create(name=f"Test Profession {i}", game_modes=["wvw"]) for i in range(5)]
+    professions = [
+        await ProfessionFactory.create(name=f"Test Profession {i}", game_modes=["wvw"])
+        for i in range(5)
+    ]
     await db_session.commit()
 
     # Prepare build generation request data
@@ -132,7 +139,9 @@ async def test_generate_build(client: TestClient, db_session: AsyncSession, user
     headers = {"Authorization": f"Bearer {token}"}
 
     # Make the request with authentication
-    response = client.post(f"{settings.API_V1_STR}/builds/generate/", json=build_data, headers=headers)
+    response = client.post(
+        f"{settings.API_V1_STR}/builds/generate/", json=build_data, headers=headers
+    )
 
     # Debug output if test fails
     if response.status_code != 200:
@@ -148,7 +157,9 @@ async def test_generate_build(client: TestClient, db_session: AsyncSession, user
     assert data["success"] is True, f"Expected success=True, got {data['success']}"
     assert "message" in data, f"Response missing 'message' key: {data}"
     assert "build" in data, f"Response missing 'build' key: {data}"
-    assert "suggested_composition" in data, f"Response missing 'suggested_composition' key: {data}"
+    assert (
+        "suggested_composition" in data
+    ), f"Response missing 'suggested_composition' key: {data}"
 
     # Verify build data in the response
     build = data["build"]
@@ -205,7 +216,9 @@ async def setup_test_professions(db_session: AsyncSession) -> None:
 
     for prof_data in professions:
         # Check if profession exists asynchronously
-        result = await db_session.execute(select(Profession).where(Profession.name == prof_data["name"]))
+        result = await db_session.execute(
+            select(Profession).where(Profession.name == prof_data["name"])
+        )
         existing = result.scalars().first()
 
         if not existing:
@@ -325,13 +338,17 @@ class TestGenerateBuild:
         )
 
     @pytest.mark.asyncio
-    async def test_generate_build_success(self, client: TestClient, db_session: AsyncSession):
+    async def test_generate_build_success(
+        self, client: TestClient, db_session: AsyncSession
+    ):
         """Test successful build generation with default parameters."""
         response = self._make_request(client)
         assert response.status_code == 200, response.text
         data = response.json()
         assert data["success"] is True, f"Expected success=True, got {data}"
-        assert "suggested_composition" in data, "Response should contain 'suggested_composition'"
+        assert (
+            "suggested_composition" in data
+        ), "Response should contain 'suggested_composition'"
         assert (
             len(data["suggested_composition"]) == self.valid_request["team_size"]
         ), f"Expected {self.valid_request['team_size']} team members, got {len(data['suggested_composition'])}"
@@ -384,7 +401,9 @@ class TestGenerateBuild:
 
         # Verify role distribution in the generated composition
         composition = data["suggested_composition"]
-        assert len(composition) == team_size, f"Expected {team_size} team members, got {len(composition)}"
+        assert (
+            len(composition) == team_size
+        ), f"Expected {team_size} team members, got {len(composition)}"
 
         # Count actual roles in the composition
         actual_roles = {"healer": 0, "dps": 0, "support": 0}
@@ -397,7 +416,9 @@ class TestGenerateBuild:
         assert (
             actual_roles["healer"] >= min_healers
         ), f"Expected at least {min_healers} healers, got {actual_roles['healer']}"
-        assert actual_roles["dps"] >= min_dps, f"Expected at least {min_dps} DPS, got {actual_roles['dps']}"
+        assert (
+            actual_roles["dps"] >= min_dps
+        ), f"Expected at least {min_dps} DPS, got {actual_roles['dps']}"
         assert (
             actual_roles["support"] >= min_support
         ), f"Expected at least {min_support} supports, got {actual_roles['support']}"
@@ -462,7 +483,9 @@ class TestGenerateBuild:
     def test_generate_build_with_profession_preferences(self, client: TestClient):
         """Test build generation with specific profession preferences."""
         # Select only specific professions
-        preferred_professions = [p.name for p in self.professions[:3]]  # First 3 profession names
+        preferred_professions = [
+            p.name for p in self.professions[:3]
+        ]  # First 3 profession names
         response = self._make_request(
             client,
             {
@@ -564,7 +587,9 @@ class TestGenerateBuild:
     def test_generate_build_with_invalid_requirements(self, client: TestClient):
         """Test build generation with invalid requirements."""
         # Test with invalid role type
-        response = self._make_request(client, {"team_size": 3, "required_roles": ["invalid_role"]})
+        response = self._make_request(
+            client, {"team_size": 3, "required_roles": ["invalid_role"]}
+        )
 
         # Should return 422 for invalid role type
         assert response.status_code == 422
@@ -595,8 +620,12 @@ class TestGenerateBuild:
         assert response.status_code == 200, response.text
         data = response.json()
         assert "build" in data, "Build should be included in the response"
-        assert "suggested_composition" in data, "Suggested composition should be included in the response"
-        assert len(data["suggested_composition"]) == 5, "Should generate a team of 5 characters"
+        assert (
+            "suggested_composition" in data
+        ), "Suggested composition should be included in the response"
+        assert (
+            len(data["suggested_composition"]) == 5
+        ), "Should generate a team of 5 characters"
 
 
 def test_generate_build_invalid_data(client: TestClient, db: Session) -> None:
@@ -640,8 +669,12 @@ def test_create_build(client: TestClient, db: Session) -> None:
     test_user = client._test_user
 
     # Create test professions
-    profession1 = create_test_profession(db, name="Test Profession 1", description="Test Profession 1 Description")
-    profession2 = create_test_profession(db, name="Test Profession 2", description="Test Profession 2 Description")
+    profession1 = create_test_profession(
+        db, name="Test Profession 1", description="Test Profession 1 Description"
+    )
+    profession2 = create_test_profession(
+        db, name="Test Profession 2", description="Test Profession 2 Description"
+    )
     db.commit()
 
     # Create test build data
@@ -669,7 +702,10 @@ def test_create_build(client: TestClient, db: Session) -> None:
     assert build_response["description"] == build_data["description"]
     assert build_response["created_by_id"] == test_user.id
     assert len(build_response["professions"]) == 2
-    assert {p["id"] for p in build_response["professions"]} == {profession1.id, profession2.id}
+    assert {p["id"] for p in build_response["professions"]} == {
+        profession1.id,
+        profession2.id,
+    }
 
     # Verify the build was saved to the database
     db_build = db.query(Build).filter(Build.id == build_response["id"]).first()
@@ -740,7 +776,9 @@ def test_create_duplicate_build(client: TestClient, db: Session) -> None:
     assert "already exists" in response.json()["detail"].lower()
 
 
-def test_create_build_with_nonexistent_professions(client: TestClient, db: Session) -> None:
+def test_create_build_with_nonexistent_professions(
+    client: TestClient, db: Session
+) -> None:
     """Test creating a build with non-existent profession IDs."""
     # Create a valid profession first
     profession = Profession(
@@ -769,7 +807,9 @@ def test_create_build_with_nonexistent_professions(client: TestClient, db: Sessi
 def test_create_build_validation_errors(client: TestClient, db: Session) -> None:
     """Test creating a build with invalid data (validation errors)."""
     # Create a valid profession for the tests
-    profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
+    profession = Profession(
+        name="Test Profession", description="Test", icon_url="test.png"
+    )
     db.add(profession)
     db.commit()
 
@@ -868,7 +908,9 @@ def test_get_private_build_unauthorized(client: TestClient, db: Session) -> None
     db.add(other_user)
 
     # Create a profession
-    profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
+    profession = Profession(
+        name="Test Profession", description="Test", icon_url="test.png"
+    )
     db.add(profession)
     db.commit()
     db.refresh(profession)
@@ -911,7 +953,9 @@ def test_update_build(client: TestClient, db: Session) -> None:
     # Create a profession for the build
     from app.models.profession import Profession
 
-    profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
+    profession = Profession(
+        name="Test Profession", description="Test", icon_url="test.png"
+    )
     db.add(profession)
     db.commit()
 
@@ -1001,7 +1045,9 @@ def test_update_build_unauthorized(client: TestClient, db: Session) -> None:
     db.add(other_user)
 
     # Create a profession
-    profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
+    profession = Profession(
+        name="Test Profession", description="Test", icon_url="test.png"
+    )
     db.add(profession)
     db.commit()
     db.refresh(profession)
@@ -1046,7 +1092,9 @@ def test_update_build_validation_errors(client: TestClient, db: Session) -> None
     """Test updating a build with invalid data."""
     # First create a build to update
     # Create a profession for the build
-    profession = Profession(name="Test Profession", description="Test", icon_url="test.png")
+    profession = Profession(
+        name="Test Profession", description="Test", icon_url="test.png"
+    )
     db.add(profession)
     db.commit()
 
@@ -1176,7 +1224,9 @@ def test_list_builds(client: TestClient, db: Session) -> None:
         # Each build gets 2 professions
         for j in range(2):
             profession_idx = (i + j) % len(professions)
-            bp = BuildProfession(build_id=build.id, profession_id=professions[profession_idx].id)
+            bp = BuildProfession(
+                build_id=build.id, profession_id=professions[profession_idx].id
+            )
             db.add(bp)
     db.commit()
 
@@ -1222,7 +1272,9 @@ def test_list_builds(client: TestClient, db: Session) -> None:
     assert all(build["game_mode"] == "wvw" for build in content)
 
     # Test 4: Filter by team size range
-    response = client.get(f"{settings.API_V1_STR}/builds/?min_team_size=5&max_team_size=5")
+    response = client.get(
+        f"{settings.API_V1_STR}/builds/?min_team_size=5&max_team_size=5"
+    )
     assert response.status_code == 200, response.text
     content = response.json()
     assert len(content) >= 1
@@ -1235,7 +1287,9 @@ def test_list_builds(client: TestClient, db: Session) -> None:
     assert len(content) == 1
 
     # Test 6: Sort by creation date (newest first)
-    response = client.get(f"{settings.API_V1_STR}/builds/?sort_by=created_at&sort_order=desc")
+    response = client.get(
+        f"{settings.API_V1_STR}/builds/?sort_by=created_at&sort_order=desc"
+    )
     assert response.status_code == 200, response.text
     content = response.json()
     assert len(content) >= 2

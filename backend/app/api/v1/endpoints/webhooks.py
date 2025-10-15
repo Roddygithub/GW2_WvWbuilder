@@ -24,7 +24,9 @@ async def create_webhook(
     Crée un webhook pour recevoir des notifications sur des événements spécifiques.
     Le secret du webhook sera généré automatiquement et ne sera visible qu'une seule fois.
     """
-    webhook = await webhook_service.create_webhook(webhook_in=webhook_in, user_id=current_user.id)
+    webhook = await webhook_service.create_webhook(
+        webhook_in=webhook_in, user_id=current_user.id
+    )
     return webhook
 
 
@@ -43,7 +45,9 @@ async def read_webhooks(
     """
     Récupère les webhooks de l'utilisateur.
     """
-    webhooks = await webhook_service.get_webhooks(user_id=current_user.id, skip=skip, limit=limit)
+    webhooks = await webhook_service.get_webhooks(
+        user_id=current_user.id, skip=skip, limit=limit
+    )
     return webhooks
 
 
@@ -62,9 +66,13 @@ async def read_webhook(
     Récupère un webhook par son ID.
     L'utilisateur doit être le propriétaire du webhook.
     """
-    webhook = await webhook_service.get_webhook(webhook_id=webhook_id, user_id=current_user.id)
+    webhook = await webhook_service.get_webhook(
+        webhook_id=webhook_id, user_id=current_user.id
+    )
     if not webhook:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Webhook non trouvé")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Webhook non trouvé"
+        )
     return webhook
 
 
@@ -85,9 +93,13 @@ async def update_webhook(
     Seuls les champs fournis dans le corps de la requête seront mis à jour.
     """
     # Get the webhook first to check ownership
-    webhook = await webhook_service.get_webhook(webhook_id=webhook_id, user_id=current_user.id)
+    webhook = await webhook_service.get_webhook(
+        webhook_id=webhook_id, user_id=current_user.id
+    )
     if not webhook:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Webhook non trouvé")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Webhook non trouvé"
+        )
 
     # Update the webhook
     updated_webhook = await webhook_service.update_webhook(
@@ -96,7 +108,8 @@ async def update_webhook(
 
     if not updated_webhook:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Échec de la mise à jour du webhook"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Échec de la mise à jour du webhook",
         )
 
     return updated_webhook
@@ -117,16 +130,23 @@ async def delete_webhook(
     L'utilisateur doit être le propriétaire du webhook pour le supprimer.
     """
     # Get the webhook first to check ownership
-    webhook = await webhook_service.get_webhook(webhook_id=webhook_id, user_id=current_user.id)
+    webhook = await webhook_service.get_webhook(
+        webhook_id=webhook_id, user_id=current_user.id
+    )
     if not webhook:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Webhook non trouvé")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Webhook non trouvé"
+        )
 
     # Delete the webhook
-    deleted_webhook = await webhook_service.delete_webhook(webhook_id=webhook_id, user_id=current_user.id)
+    deleted_webhook = await webhook_service.delete_webhook(
+        webhook_id=webhook_id, user_id=current_user.id
+    )
 
     if not deleted_webhook:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Échec de la suppression du webhook"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Échec de la suppression du webhook",
         )
 
     return deleted_webhook

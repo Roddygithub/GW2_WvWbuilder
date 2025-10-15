@@ -3,7 +3,7 @@
  * Reusable card for displaying statistics
  */
 
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   title: string;
@@ -21,7 +21,7 @@ export default function StatCard({
   title,
   value,
   icon: Icon,
-  iconColor = 'bg-purple-600',
+  iconColor = "bg-purple-600",
   trend,
   subtitle,
 }: StatCardProps) {
@@ -31,17 +31,15 @@ export default function StatCard({
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-400">{title}</p>
           <p className="mt-2 text-3xl font-bold text-white">{value}</p>
-          {subtitle && (
-            <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
-          )}
+          {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
           {trend && (
             <div className="mt-2 flex items-center text-sm">
               <span
                 className={`font-medium ${
-                  trend.isPositive ? 'text-green-400' : 'text-red-400'
+                  trend.isPositive ? "text-green-400" : "text-red-400"
                 }`}
               >
-                {trend.isPositive ? '+' : ''}
+                {trend.isPositive ? "+" : ""}
                 {trend.value}%
               </span>
               <span className="ml-2 text-gray-400">from last month</span>

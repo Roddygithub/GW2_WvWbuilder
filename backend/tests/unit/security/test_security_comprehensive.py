@@ -89,7 +89,9 @@ async def test_get_current_user_with_invalid_token_payload():
     """Test getting current user with token missing required fields."""
     with patch("app.core.security.jwt.decode") as mock_decode:
         # Token missing 'sub' field
-        mock_decode.return_value = {"exp": datetime.now(timezone.utc) + timedelta(minutes=30)}
+        mock_decode.return_value = {
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=30)
+        }
         with pytest.raises(HTTPException) as exc_info:
             await get_current_user(db=MagicMock(), token="invalid.payload.token")
         assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED

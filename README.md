@@ -1,6 +1,7 @@
 # 🏰 GW2 WvW Builder
 
 [![Full CI](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/full-ci.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
+[![CI/CD Complete](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/ci-cd-complete.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
 [![Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/tests.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
 [![codecov](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/main/graph/badge.svg)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
 [![Python Version](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)

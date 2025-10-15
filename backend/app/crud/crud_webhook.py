@@ -12,7 +12,9 @@ from app.schemas.webhook import WebhookCreate, WebhookUpdate
 
 
 class CRUDWebhook(CRUDBase[Webhook, WebhookCreate, WebhookUpdate]):
-    async def create_with_owner(self, db: AsyncSession, *, obj_in: WebhookCreate, user_id: int) -> Webhook:
+    async def create_with_owner(
+        self, db: AsyncSession, *, obj_in: WebhookCreate, user_id: int
+    ) -> Webhook:
         obj_in_data = jsonable_encoder(obj_in)
         secret = secrets.token_hex(32)
         db_obj = self.model(**obj_in_data, user_id=user_id, secret=secret)
@@ -24,10 +26,17 @@ class CRUDWebhook(CRUDBase[Webhook, WebhookCreate, WebhookUpdate]):
     async def get_multi_by_owner(
         self, db: AsyncSession, *, user_id: int, skip: int = 0, limit: int = 100
     ) -> List[Webhook]:
-        result = await db.execute(select(self.model).where(self.model.user_id == user_id).offset(skip).limit(limit))
+        result = await db.execute(
+            select(self.model)
+            .where(self.model.user_id == user_id)
+            .offset(skip)
+            .limit(limit)
+        )
         return result.scalars().all()
 
-    async def get_multi_by_event_type(self, db: AsyncSession, *, event_type: str) -> List[Webhook]:
+    async def get_multi_by_event_type(
+        self, db: AsyncSession, *, event_type: str
+    ) -> List[Webhook]:
         """
         Récupère tous les webhooks actifs abonnés à un type d'événement spécifique.
         Utilise selectinload pour éviter les problèmes N+1 en chargeant l'utilisateur.

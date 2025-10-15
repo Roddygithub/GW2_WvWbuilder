@@ -51,10 +51,14 @@ async def test_update_async() -> None:
         assert created_obj.name == "Test Update Async"
 
         # Update the object
-        update_data = ProfessionUpdate(name="Updated Name Async", description="Updated Description Async")
+        update_data = ProfessionUpdate(
+            name="Updated Name Async", description="Updated Description Async"
+        )
 
         # Test update_async
-        updated_obj = await test_crud.update_async(db, db_obj=created_obj, obj_in=update_data)
+        updated_obj = await test_crud.update_async(
+            db, db_obj=created_obj, obj_in=update_data
+        )
 
         # Verify the update
         assert updated_obj is not None

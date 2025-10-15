@@ -53,7 +53,9 @@ class TestBuildBase:
         # Test invalid game mode
         with pytest.raises(ValidationError) as exc_info:
             BuildBase(name="Test Build", game_mode="invalid")
-        assert "Input should be 'wvw', 'pvp', 'pve', 'raids' or 'fractals'" in str(exc_info.value)
+        assert "Input should be 'wvw', 'pvp', 'pve', 'raids' or 'fractals'" in str(
+            exc_info.value
+        )
 
         # Test team size out of range
         with pytest.raises(ValidationError) as exc_info:
@@ -85,7 +87,9 @@ class TestBuildCreate:
         # Test empty profession_ids
         with pytest.raises(ValidationError) as exc_info:
             BuildCreate(name="Test Build", game_mode="wvw", profession_ids=[])
-        assert "List should have at least 1 item after validation, not 0" in str(exc_info.value)
+        assert "List should have at least 1 item after validation, not 0" in str(
+            exc_info.value
+        )
 
         # Test too many profession_ids
         with pytest.raises(ValidationError) as exc_info:
@@ -101,7 +105,10 @@ class TestBuildCreate:
         # Test invalid characters
         with pytest.raises(ValueError) as exc_info:
             BuildCreate(name="Invalid@Name!", game_mode="wvw", profession_ids=[1])
-        assert "Name can only contain alphanumeric characters, spaces, and hyphens" in str(exc_info.value)
+        assert (
+            "Name can only contain alphanumeric characters, spaces, and hyphens"
+            in str(exc_info.value)
+        )
 
 
 class TestBuildUpdate:
@@ -134,7 +141,9 @@ class TestBuildUpdate:
         # Test empty profession_ids
         with pytest.raises(ValidationError) as exc_info:
             BuildUpdate(profession_ids=[])
-        assert "List should have at least 1 item after validation, not 0" in str(exc_info.value)
+        assert "List should have at least 1 item after validation, not 0" in str(
+            exc_info.value
+        )
 
         # Test too many profession_ids
         with pytest.raises(ValidationError) as exc_info:

@@ -32,29 +32,39 @@ class TeamMember(Base, TimeStampedMixin):
 
     # Clés primaires composées
     team_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("teams.id", ondelete="CASCADE"), primary_key=True, index=True
+        Integer,
+        ForeignKey("teams.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )
     user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, index=True
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+        index=True,
     )
 
     # Attributs de la relation
-    role: Mapped[TeamRole] = mapped_column(default=TeamRole.MEMBER, nullable=False, index=True)
+    role: Mapped[TeamRole] = mapped_column(
+        default=TeamRole.MEMBER, nullable=False, index=True
+    )
 
-    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    is_admin: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, index=True
+    )
 
     # Horodatages
     # Les champs created_at et updated_at sont fournis par TimeStampedMixin
-    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False, index=True
+    )
 
     # Relations
     user: Mapped["User"] = relationship("User", back_populates="team_associations")
     team: Mapped["Team"] = relationship("Team", back_populates="member_associations")
 
     def __repr__(self) -> str:
-        return (
-            f"<TeamMember(team_id={self.team_id}, user_id={self.user_id}, role={self.role}, is_admin={self.is_admin})>"
-        )
+        return f"<TeamMember(team_id={self.team_id}, user_id={self.user_id}, role={self.role}, is_admin={self.is_admin})>"
 
     def to_dict(self) -> dict:
         """Convertit l'objet en dictionnaire pour la sérialisation."""
