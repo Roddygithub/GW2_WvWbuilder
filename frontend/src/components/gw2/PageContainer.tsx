@@ -6,7 +6,7 @@
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
 import { pageVariants } from "@/lib/animations";
-import { cn } from "@lib/utils";
+import { cn } from "@/lib/utils";
 
 interface PageContainerProps {
   children: ReactNode;

@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { cn } from "@lib/utils";
+import { cn } from "@/lib/utils";
 import type { Composition } from "@/types/squad";
 import { formatDistanceToNow } from "date-fns";
 import { Link } from "react-router-dom";

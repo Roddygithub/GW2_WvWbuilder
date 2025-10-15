@@ -5,7 +5,7 @@
 
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
-import { cn } from "@lib/utils";
+import { cn } from "@/lib/utils";
 
 interface GW2CardProps {
   children: ReactNode;
