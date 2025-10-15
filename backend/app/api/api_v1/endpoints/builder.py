@@ -7,11 +7,12 @@ based on game mode, squad size, and optimization goals.
 
 import logging
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
 from app.core.optimizer import optimize_composition
+from app.core.cache import cache_response
 from app.schemas.composition import (
     CompositionOptimizationRequest,
     CompositionOptimizationResult,
@@ -178,10 +179,13 @@ async def optimize_composition_endpoint(
 @router.get(
     "/modes",
     response_model=Dict[str, Any],
-    summary="Get available game types and modes",
+    summary="Get available game modes",
 )
+@cache_response(ttl=3600)  # Cache for 1 hour (game modes rarely change)
 async def get_game_modes(
-    current_user: User = Depends(deps.get_current_active_user),
+    request: Request,
+    response: Response,
+    current_user: User = Depends(deps.get_current_user),
 ) -> Dict[str, Any]:
     """
     Get list of available game types and modes for composition optimization.
@@ -249,7 +253,10 @@ async def get_game_modes(
     summary="Get available professions",
     description="Returns a list of available professions for fixed profession selection.",
 )
+@cache_response(ttl=3600)  # Cache for 1 hour
 async def get_available_professions(
+    request: Request,
+    response: Response,
     current_user: User = Depends(deps.get_current_active_user),
 ) -> dict:
     """
@@ -275,7 +282,10 @@ async def get_available_professions(
     summary="Get available roles",
     description="Returns a list of available roles for composition optimization.",
 )
+@cache_response(ttl=3600)  # Cache for 1 hour
 async def get_available_roles(
+    request: Request,
+    response: Response,
     current_user: User = Depends(deps.get_current_active_user),
 ) -> dict:
     """Get available roles for composition optimization."""
