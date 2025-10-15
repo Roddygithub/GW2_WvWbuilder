@@ -4,8 +4,6 @@ import Register from './pages/Register'
 import DashboardRedesigned from './pages/DashboardRedesigned'
 import TagsManager from './pages/TagsManager'
 import GW2Test from './pages/GW2Test'
-import BuilderPage from './pages/builder'
-import BuilderOptimizerPage from './pages/BuilderOptimizer'
 import BuilderV2Page from './pages/BuilderV2'
 import CompositionsPage from './pages/compositions'
 import CompositionCreate from './pages/CompositionCreate'
@@ -40,8 +38,6 @@ function App() {
         </ProtectedRoute>
       } />
       <Route path="/builder" element={<ProtectedRoute><BuilderV2Page /></ProtectedRoute>} />
-      <Route path="/builder/v1" element={<ProtectedRoute><BuilderOptimizerPage /></ProtectedRoute>} />
-      <Route path="/builder/legacy" element={<ProtectedRoute><MainLayout><BuilderPage /></MainLayout></ProtectedRoute>} />
       
       {/* Coming Soon Pages */}
       <Route path="/builds" element={
