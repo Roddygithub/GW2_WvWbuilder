@@ -6,7 +6,7 @@ based on game mode, squad size, and optimization goals.
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
