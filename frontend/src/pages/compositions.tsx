@@ -7,17 +7,22 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Layers } from "lucide-react";
+import { Search, Layers, Plus } from "lucide-react";
 import { useCompositions, useDeleteComposition } from '@/hooks/useCompositions';
 import LoadingState from '@/components/LoadingState';
 import ErrorState from '@/components/ErrorState';
 import EmptyState from '@/components/EmptyState';
 import { GW2Card } from '@/components/gw2/GW2Card';
+import { toast } from 'sonner';
 
 export default function CompositionsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const { data: compositions, isLoading, isError, error, refetch } = useCompositions();
   const deleteMutation = useDeleteComposition();
+
+  const handleCreateNew = () => {
+    toast.info('Create Composition page coming soon! Builder integration in progress.');
+  };
 
   const handleDelete = async (id: number) => {
     if (confirm('Are you sure you want to delete this composition?')) {
@@ -48,22 +53,25 @@ export default function CompositionsPage() {
     <div className="space-y-6">
       <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Saved Compositions</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl font-bold tracking-tight text-white">Saved Compositions</h2>
+          <p className="text-slate-400">
             Browse and manage your saved squad compositions
           </p>
         </div>
-        <Button>Create New</Button>
+        <Button onClick={handleCreateNew} className="bg-purple-600 hover:bg-purple-700">
+          <Plus className="w-4 h-4 mr-2" />
+          Create New
+        </Button>
       </div>
 
       {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
         <Input
           placeholder="Search compositions..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 md:w-[300px]"
+          className="w-full pl-10 md:w-[300px] bg-slate-800/50 border-slate-700 text-white"
         />
       </div>
 
@@ -73,6 +81,7 @@ export default function CompositionsPage() {
           title="No Compositions Found"
           message={searchQuery ? "No compositions match your search" : "Create your first squad composition to get started"}
           actionLabel="Create Composition"
+          onAction={handleCreateNew}
           icon={Layers}
         />
       )}
