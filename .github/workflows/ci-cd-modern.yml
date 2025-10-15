@@ -8,7 +8,6 @@ on:
   workflow_dispatch:
 
 env:
-  PYTHON_VERSION: '3.11'
   NODE_VERSION: '20'
   POETRY_VERSION: '1.7.1'
 
@@ -20,14 +19,17 @@ jobs:
   backend-lint:
     name: Backend - Lint & Format
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
     
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup Python
+      - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
       
       - name: Install Poetry
@@ -49,28 +51,40 @@ jobs:
       
       - name: Run Ruff linter
         working-directory: ./backend
-        run: poetry run ruff check app/ tests/ --fix || true
+        run: poetry run ruff check app/ tests/
       
-      - name: Run Black formatter (auto-fix)
+      - name: Run Black formatter check
         working-directory: ./backend
-        run: poetry run black app/ tests/ || true
+        run: poetry run black --check app/ tests/
+      
+      - name: Run isort import sorter
+        working-directory: ./backend
+        run: poetry run isort --check-only app/ tests/
+      
+      - name: Run flake8 linter
+        working-directory: ./backend
+        run: poetry run flake8 app/ tests/ --max-line-length=120 --extend-ignore=E203,W503
+        continue-on-error: true
       
       - name: Run MyPy type checker
         working-directory: ./backend
-        run: poetry run mypy app/ --ignore-missing-imports
+        run: poetry run mypy app/ --ignore-missing-imports --warn-unused-ignores
         continue-on-error: true
   
   backend-test-unit:
     name: Backend - Unit Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
     
     steps:
       - uses: actions/checkout@v4
       
-      - name: Setup Python
+      - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: ${{ matrix.python-version }}
       
       - name: Install Poetry
         run: |
@@ -103,12 +117,16 @@ jobs:
             
         continue-on-error: true
       
-      - name: Upload unit test coverage
+      - name: Upload unit test coverage to Codecov
+        if: matrix.python-version == '3.11'
         uses: codecov/codecov-action@v4
         with:
           file: ./backend/coverage.xml
           flags: backend-unit
-          name: backend-unit
+          name: backend-unit-py${{ matrix.python-version }}
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         continue-on-error: true
   
   backend-test-integration:
@@ -136,7 +154,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: '3.11'
       
       - name: Install Poetry
         run: |
@@ -179,7 +197,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: '3.11'
       
       - name: Install Poetry
         run: |
@@ -220,7 +238,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: '3.11'
       
       - name: Install Poetry
         run: |
@@ -339,7 +357,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version: '3.11'
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
