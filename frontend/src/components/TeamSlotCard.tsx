@@ -6,7 +6,7 @@
 import { motion } from "framer-motion";
 import { User, Trash2, Edit2 } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from '../lib/utils';
 
 interface TeamSlotCardProps {
   slotNumber: number;
