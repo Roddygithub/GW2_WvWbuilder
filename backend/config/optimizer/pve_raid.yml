@@ -1,0 +1,83 @@
+# Configuration d'optimisation pour PvE Raids/Strike Missions (10 joueurs)
+mode: "raid"
+game_type: "pve"
+squad_size_range: [10, 10]
+
+# Pondérations des objectifs (total = 1.0)
+weights:
+  damage: 0.30              # DPS primordial
+  boon_uptime: 0.25         # Boons 100% uptime
+  healing: 0.15             # Heal pour sustain groupe
+  crowd_control: 0.10       # CC pour phases
+  survivability: 0.10       # Survie aux mécaniques
+  utility: 0.10             # Portals, banners, spirits
+
+# Boons critiques pour raids (100% uptime requis)
+critical_boons:
+  might: 1.00               # 25 stacks permanent
+  fury: 1.00                # 100% crit chance
+  quickness: 1.00           # Rotation optimale
+  alacrity: 1.00            # Cooldown reduction
+  protection: 0.80          # Mitigation importante
+  aegis: 0.60               # Block attacks
+  resolution: 0.70          # Condi cleanse
+  stability: 0.50           # Certains bosses
+
+# Distribution des rôles recommandée (10 joueurs)
+role_distribution:
+  healer:
+    min: 1
+    max: 2
+    optimal: 2              # 2 healers (1 par sous-groupe)
+  boon_support:
+    min: 2
+    max: 3
+    optimal: 2              # Quickness + Alacrity
+  dps:
+    min: 5
+    max: 8
+    optimal: 6              # 6 DPS purs
+  utility:
+    min: 0
+    max: 2
+    optimal: 0
+
+# Structure par sous-groupe (5 joueurs chacun)
+subgroup_structure:
+  subgroups: 2
+  healer_per_subgroup: 1
+  boon_support_per_subgroup: 1
+  dps_per_subgroup: 3
+  balance_tolerance: 0.10
+
+# Capacités PvE raids spécifiques
+pve_capabilities:
+  burst_damage: 18000       # Burst pour phases
+  sustained_dps: 15000      # DPS soutenu élevé
+  cc_break_bar_damage: 1200 # CC pour break bars
+  boon_generation: 1.00     # 100% uptime boons
+  healing_per_second: 3000  # Heal groupe
+  utility_skills: 3         # Banners, spirits, portals
+
+# Composition standard raid
+standard_comp:
+  quickness_providers: 2    # 1 par sous-groupe
+  alacrity_providers: 2     # 1 par sous-groupe
+  healers: 2                # 1 par sous-groupe (Druid, Scrapper)
+  dps: 4                    # DPS purs
+
+# Pénalités
+penalties:
+  missing_quickness: 0.50   # Critique
+  missing_alacrity: 0.50    # Critique
+  subgroup_imbalance: 0.30  # Sous-groupes déséquilibrés
+  low_damage: 0.25          # DPS checks
+  missing_healer: 0.35      # Sustain groupe
+
+# Synergies positives
+synergies:
+  druid_mechanist: 0.08     # Comp meta
+  firebrand_renegade: 0.08  # Boon coverage
+  power_dps_banners: 0.07   # Warrior banners
+  condi_dps_spirits: 0.07   # Ranger spirits
+  coordinated_cc: 0.06      # CC synchronisé

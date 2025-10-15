@@ -144,7 +144,7 @@ async def create_composition(
 
     # Create the composition
     composition_data = composition_in.dict(exclude={"members"})
-    composition = models.Composition(**composition_data, created_by_id=current_user.id)
+    composition = models.Composition(**composition_data, created_by=current_user.id)
     db.add(composition)
     await db.commit()
     await db.refresh(composition)
@@ -176,7 +176,7 @@ async def read_compositions(
 
     # Only show private compositions to their owners or admins
     if not current_user.is_superuser:
-        query = query.where(or_(models.Composition.is_public, models.Composition.created_by_id == current_user.id))
+        query = query.where(or_(models.Composition.is_public, models.Composition.created_by == current_user.id))
 
     result = await db.execute(query.offset(skip).limit(limit))
     compositions = result.scalars().all()
@@ -197,7 +197,7 @@ async def read_composition(
         raise HTTPException(status_code=404, detail="Composition not found")
 
     # Check permissions
-    if not composition.is_public and composition.created_by_id != current_user.id and not current_user.is_superuser:
+    if not composition.is_public and composition.created_by != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     return await _composition_to_schema(db, composition)
@@ -219,7 +219,7 @@ async def update_composition(
         raise HTTPException(status_code=404, detail="Composition not found")
 
     # Check permissions
-    if composition.created_by_id != current_user.id and not current_user.is_superuser:
+    if composition.created_by != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Update composition data
@@ -254,7 +254,7 @@ async def delete_composition(
         raise HTTPException(status_code=404, detail="Composition not found")
 
     # Check permissions
-    if composition.created_by_id != current_user.id and not current_user.is_superuser:
+    if composition.created_by != current_user.id and not current_user.is_superuser:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     # Delete members first

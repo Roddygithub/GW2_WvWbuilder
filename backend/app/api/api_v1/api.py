@@ -14,6 +14,7 @@ from app.api.api_v1.endpoints import (
     metrics,
     gw2,
     dashboard,
+    builder,
 )
 
 api_router = APIRouter()
@@ -40,3 +41,6 @@ api_router.include_router(gw2.router, prefix="/gw2", tags=["GW2"])
 
 # Include dashboard endpoints
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+
+# Include builder/optimizer endpoints
+api_router.include_router(builder.router, prefix="/builder", tags=["Builder"])

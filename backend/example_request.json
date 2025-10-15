@@ -1,0 +1,29 @@
+{
+  "squad_size": 15,
+  "fixed_roles": [
+    {
+      "profession_id": 1,
+      "elite_specialization_id": 3,
+      "count": 2,
+      "role_type": "healer"
+    }
+  ],
+  "game_mode": "zerg",
+  "preferred_roles": {
+    "healer": 3,
+    "boon_support": 3,
+    "dps": 9
+  },
+  "min_boon_uptime": null,
+  "min_healing": null,
+  "min_damage": null,
+  "min_cc": null,
+  "min_cleanses": null,
+  "preferred_weapons": null,
+  "excluded_elite_specializations": null,
+  "optimization_goals": [
+    "boon_uptime",
+    "healing",
+    "damage"
+  ]
+}

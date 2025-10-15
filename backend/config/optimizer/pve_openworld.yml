@@ -1,0 +1,61 @@
+# Configuration d'optimisation pour PvE Open World (1-5 joueurs)
+mode: "openworld"
+game_type: "pve"
+squad_size_range: [1, 5]
+
+# Pondérations des objectifs (total = 1.0)
+weights:
+  damage: 0.35              # DPS important pour clear rapide
+  survivability: 0.25       # Solo/petit groupe = sustain crucial
+  mobility: 0.15            # Déplacements fréquents
+  self_sustain: 0.15        # Self-heal important
+  boon_uptime: 0.10         # Boons personnels suffisants
+
+# Boons critiques (moins exigeants qu'en groupe)
+critical_boons:
+  might: 0.70
+  fury: 0.70
+  quickness: 0.50           # Pas critique en open world
+  protection: 0.60
+  swiftness: 0.80           # Mobilité importante
+
+# Distribution des rôles recommandée
+role_distribution:
+  healer:
+    min: 0
+    max: 1
+    optimal: 0              # Pas de healer dédié en open world
+  boon_support:
+    min: 0
+    max: 1
+    optimal: 0
+  dps:
+    min: 1
+    max: 5
+    optimal: 4              # Majorité DPS
+  utility:
+    min: 0
+    max: 2
+    optimal: 1
+
+# Capacités PvE spécifiques
+pve_capabilities:
+  burst_damage: 12000       # Burst pour mobs
+  sustained_dps: 8000       # DPS soutenu
+  self_heal_per_second: 600 # Self-sustain
+  mobility_skills: 2        # Mobilité
+  aoe_damage: 0.70          # AoE pour groupes de mobs
+  single_target_dps: 0.30   # Single target pour champions
+
+# Pénalités
+penalties:
+  low_survivability: 0.35   # Critique en solo
+  low_mobility: 0.25        # Déplacements fréquents
+  low_damage: 0.20          # Clear rapide important
+  too_many_supports: 0.30   # Ralentit la progression
+
+# Synergies positives
+synergies:
+  power_dps_mix: 0.05       # Mix power DPS
+  condi_dps_mix: 0.05       # Mix condi DPS
+  self_sufficient: 0.08     # Builds autonomes

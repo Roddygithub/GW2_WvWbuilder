@@ -351,27 +351,14 @@ class CompositionOptimizationRequest(BaseModel):
     """Schema for composition optimization request"""
 
     squad_size: int = Field(..., ge=1, le=50, examples=[10])
-    fixed_roles: Optional[List[Dict[str, Any]]] = Field(
+    game_type: str = Field(..., examples=["wvw", "pve"], description="Game type: wvw or pve")
+    game_mode: str = Field(..., examples=["zerg", "roaming", "guild_raid", "openworld", "fractale", "raid"], description="Specific game mode")
+    fixed_professions: Optional[List[int]] = Field(
         default=None,
-        examples=[
-            [
-                {
-                    "profession_id": 1,
-                    "elite_specialization_id": 3,
-                    "count": 2,
-                    "role_type": "healer",
-                },
-                {
-                    "profession_id": 2,
-                    "elite_specialization_id": 5,
-                    "count": 3,
-                    "role_type": "dps",
-                },
-            ]
-        ],
+        examples=[[1, 2, 4]],
+        description="List of profession IDs to include (if user wants to choose classes). Engine will optimize roles and specs.",
     )
-    game_mode: str = Field(default="wvw", examples=["wvw"])
-    preferred_roles: Optional[Dict[str, int]] = Field(default=None, examples=[{"healer": 2, "dps": 5, "support": 3}])
+    preferred_roles: Optional[Dict[str, int]] = Field(default=None, examples=[{"healer": 2, "dps": 5, "support": 3}], description="Deprecated - roles are now auto-optimized")
     min_boon_uptime: Optional[Dict[str, float]] = Field(
         default=None, examples=[{"might": 0.9, "quickness": 0.8, "alacrity": 0.7}]
     )
@@ -416,10 +403,10 @@ class CompositionOptimizationRequest(BaseModel):
         examples=[[10, 15]],
         description="List of elite specialization IDs to exclude from optimization",
     )
-    optimization_goals: List[str] = Field(
-        default_factory=lambda: ["boon_uptime", "healing", "damage"],
+    optimization_goals: Optional[List[str]] = Field(
+        default=None,
         examples=[["boon_uptime", "healing", "damage"]],
-        description="List of optimization goals in order of priority",
+        description="Deprecated - goals are now auto-determined by game_type and game_mode",
     )
 
     model_config = ConfigDict(
@@ -427,6 +414,9 @@ class CompositionOptimizationRequest(BaseModel):
             "examples": [
                 {
                     "squad_size": 10,
+                    "game_type": "wvw",
+                    "game_mode": "zerg",
+                    "fixed_professions": None,
                     "fixed_roles": [
                         {
                             "profession_id": 1,

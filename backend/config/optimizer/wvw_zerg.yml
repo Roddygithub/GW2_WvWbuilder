@@ -1,0 +1,65 @@
+# Configuration d'optimisation pour WvW Zerg (30-50 joueurs)
+mode: "zerg"
+squad_size_range: [30, 50]
+
+# Pondérations des objectifs (total = 1.0)
+weights:
+  boon_uptime: 0.25        # Stabilité, might, quickness, alacrity critiques
+  healing: 0.15            # Sustain du groupe
+  damage: 0.15             # DPS collectif
+  crowd_control: 0.10      # CC pour engages
+  survivability: 0.15      # Barrière, protection, aegis
+  boon_rip: 0.10          # Strip/corrupt des boons ennemis
+  cleanse: 0.10           # Condition removal
+
+# Boons critiques avec uptime minimum requis
+critical_boons:
+  stability: 0.85          # Essentiel contre CC
+  might: 0.90              # 25 stacks
+  quickness: 0.85          # Rotation optimale
+  alacrity: 0.80           # Cooldown reduction
+  protection: 0.75         # Damage mitigation
+  resolution: 0.70         # Condition cleanse
+  fury: 0.80               # Crit chance
+  aegis: 0.60              # Block attacks
+
+# Distribution des rôles recommandée
+role_distribution:
+  healer: 
+    min: 4
+    max: 8
+    optimal: 6
+  boon_support:
+    min: 6
+    max: 12
+    optimal: 8
+  dps:
+    min: 15
+    max: 35
+    optimal: 25
+  utility:
+    min: 2
+    max: 6
+    optimal: 4
+
+# Capacités McM spécifiques minimales
+wvw_capabilities:
+  cleanses_per_second: 8.0      # Condition removal
+  boon_rip_per_second: 5.0      # Strip/corrupt
+  projectile_hate_uptime: 0.70  # Bubbles/walls
+  stability_pulses: 4           # Nombre de sources de stab
+  cc_break_bar_damage: 1000     # Total CC par rotation
+  rezz_speed_bonus: 2.0         # Vitesse de rezz
+
+# Pénalités
+penalties:
+  missing_critical_boon: 0.3    # Pénalité si boon critique manquant
+  role_imbalance: 0.2           # Trop/pas assez de rôles
+  duplicate_elite: 0.1          # Trop de même élite (>4)
+  no_commander: 0.15            # Pas de tag
+
+# Synergies positives
+synergies:
+  firebrand_scourge: 0.05       # Combo heal + barrier
+  herald_scrapper: 0.04         # Alac + superspeed
+  tempest_druid: 0.03           # Auras + spirits
