@@ -15,14 +15,18 @@ import {
 } from '../api/compositions';
 import type { Composition } from '../types/squad';
 import { toast } from 'sonner';
+import { getAuthToken } from '../api/client';
 
 /**
  * Hook to fetch all compositions
  */
 export const useCompositions = () => {
+  const isAuthenticated = !!getAuthToken();
+  
   return useQuery<Composition[], Error>({
     queryKey: ['compositions'],
     queryFn: getCompositions,
+    enabled: isAuthenticated, // Only fetch when authenticated
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
