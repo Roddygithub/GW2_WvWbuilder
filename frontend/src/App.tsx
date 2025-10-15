@@ -34,8 +34,9 @@ function App() {
         {/* Test Routes */}
         <Route path="/gw2-test" element={<GW2Test />} />
         
-        {/* Protected Routes with MainLayout */}
-        <Route path="/dashboard" element={<ProtectedRoute><MainLayout><DashboardRedesigned /></MainLayout></ProtectedRoute>} />
+        {/* Protected Routes */}
+        {/* Dashboard has its own layout (Sidebar + Header integrated) */}
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardRedesigned /></ProtectedRoute>} />
         <Route path="/tags" element={<ProtectedRoute><MainLayout><TagsManager /></MainLayout></ProtectedRoute>} />
         
         {/* Functional Pages */}
