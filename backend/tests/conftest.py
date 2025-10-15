@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 import pytest
 import pytest_asyncio
+from freezegun import freeze_time
 
 # Configuration des plugins pytest (doit être dans le conftest top-level)
 pytest_plugins = ["pytest_asyncio", "pytest_mock", "pytest_cov"]
@@ -104,6 +105,16 @@ def event_loop():
 
     # Configurer le niveau de log pour asyncio
     logging.getLogger("asyncio").setLevel(logging.WARNING)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _freeze_time_session():
+    """Freeze time globally during the test session to avoid flakiness.
+
+    Ensures deterministic behavior for JWT expirations and any time-based logic.
+    """
+    with freeze_time("2025-01-01 00:00:00"):
+        yield
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True)

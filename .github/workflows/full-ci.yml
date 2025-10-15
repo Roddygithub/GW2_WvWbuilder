@@ -41,12 +41,12 @@ jobs:
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: |
         cd backend
-        poetry install --no-interaction --no-root
+        poetry install --no-interaction --no-root --with test,dev
     
     - name: Install project
       run: |
         cd backend
-        poetry install --no-interaction
+        poetry install --no-interaction --with test,dev
     
     - name: Run pytest with coverage
       run: |

@@ -176,7 +176,7 @@ jobs:
     
     - name: Upload coverage to Codecov
       if: success() && github.event_name == 'push'
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./backend/coverage.xml
@@ -184,7 +184,7 @@ jobs:
     
     - name: Upload test results
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-results
         path: |
@@ -216,7 +216,7 @@ jobs:
         severity: 'CRITICAL,HIGH'
     
     - name: Upload SARIF results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-results.sarif'
     
