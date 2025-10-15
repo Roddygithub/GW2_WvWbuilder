@@ -211,16 +211,13 @@ jobs:
           git tag -a "v${{ steps.version.outputs.version }}" -m "Production release v${{ steps.version.outputs.version }}"
           git push origin "v${{ steps.version.outputs.version }}" || echo "Tag already exists"
 
-  # Job 6: Deploy to Production (manual approval)
+  # Job 6: Deploy to Production
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: [build-and-tag]
-    # Environment configuration (requires GitHub repository environment setup)
-    # Uncomment when you create the 'production' environment in GitHub Settings
-    # environment:
-    #   name: production
-    #   url: https://gw2builder.example.com
+    # Note: To enable manual approval with environment protection rules,
+    # create an environment in: Repository Settings > Environments > New environment
     
     steps:
       - name: Checkout code
