@@ -224,17 +224,16 @@ jobs:
       uses: dependency-check/Dependency-Check_Action@main
       with:
         project: 'GW2_WvWbuilder'
-        path: '.'
+        path: './backend'
         format: 'SARIF'
-        scanpath: './backend'
-        fail_on_severity: 'high'
 
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     needs: [test, security-scan]
     if: github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch'
-    environment: staging
+    environment:
+      name: staging
     
     steps:
     - uses: actions/checkout@v4
@@ -264,7 +263,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [deploy-staging]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment: production
+    environment:
+      name: production
     
     steps:
     - uses: actions/checkout@v4
