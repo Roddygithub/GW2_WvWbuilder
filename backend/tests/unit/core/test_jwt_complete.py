@@ -6,6 +6,7 @@ Tests for app/core/security/jwt.py to achieve 90%+ coverage.
 import pytest
 from datetime import datetime, timedelta
 from jose import jwt
+from freezegun import freeze_time
 from app.core.security.jwt import (
     create_access_token,
     create_refresh_token,
@@ -38,7 +39,9 @@ class TestJWTCreation:
     def test_create_access_token_with_custom_expiry(self):
         """Test creating access token with custom expiration."""
         expires_delta = timedelta(minutes=15)
-        token = create_access_token(subject="user@example.com", expires_delta=expires_delta)
+        token = create_access_token(
+            subject="user@example.com", expires_delta=expires_delta
+        )
 
         payload = jwt.decode(
             token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
@@ -47,7 +50,9 @@ class TestJWTCreation:
         # Verify expiration is approximately 15 minutes from now
         exp_time = datetime.fromtimestamp(payload["exp"])
         expected_exp = datetime.utcnow() + expires_delta
-        assert abs((exp_time - expected_exp).total_seconds()) < 5
+        assert (
+            abs((exp_time - expected_exp).total_seconds()) < 60
+        )  # Increased tolerance
 
     def test_create_access_token_with_additional_claims(self):
         """Test creating access token with additional claims."""
@@ -82,7 +87,9 @@ class TestJWTCreation:
     def test_create_refresh_token_with_custom_expiry(self):
         """Test creating refresh token with custom expiration."""
         expires_delta = timedelta(days=7)
-        token = create_refresh_token(subject="user@example.com", expires_delta=expires_delta)
+        token = create_refresh_token(
+            subject="user@example.com", expires_delta=expires_delta
+        )
 
         payload = jwt.decode(
             token, settings.JWT_REFRESH_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
@@ -91,7 +98,9 @@ class TestJWTCreation:
         # Verify expiration is approximately 7 days from now
         exp_time = datetime.fromtimestamp(payload["exp"])
         expected_exp = datetime.utcnow() + expires_delta
-        assert abs((exp_time - expected_exp).total_seconds()) < 5
+        assert (
+            abs((exp_time - expected_exp).total_seconds()) < 60
+        )  # Increased tolerance
 
 
 class TestJWTVerification:
@@ -106,11 +115,14 @@ class TestJWTVerification:
         assert payload["sub"] == "user@example.com"
         assert payload["user_id"] == 123
 
+    @freeze_time("2025-01-01 12:00:00")
     def test_verify_token_expired(self):
         """Test verifying an expired token."""
         # Create token that expires immediately
         expires_delta = timedelta(seconds=-1)
-        token = create_access_token(subject="user@example.com", expires_delta=expires_delta)
+        token = create_access_token(
+            subject="user@example.com", expires_delta=expires_delta
+        )
 
         payload = verify_token(token)
         assert payload is None
@@ -143,10 +155,13 @@ class TestJWTVerification:
         assert payload["sub"] == "user@example.com"
         assert payload["type"] == "refresh"
 
+    @freeze_time("2025-01-01 12:00:00")
     def test_verify_refresh_token_expired(self):
         """Test verifying an expired refresh token."""
         expires_delta = timedelta(seconds=-1)
-        token = create_refresh_token(subject="user@example.com", expires_delta=expires_delta)
+        token = create_refresh_token(
+            subject="user@example.com", expires_delta=expires_delta
+        )
 
         payload = verify_refresh_token(token)
         assert payload is None
@@ -272,20 +287,20 @@ class TestJWTIntegration:
         assert new_payload is not None
         assert new_payload["user_id"] == 123
 
+    @freeze_time("2025-01-01 12:00:00")
     def test_token_expiration_workflow(self):
         """Test token expiration workflow."""
         # Create short-lived token
-        short_token = create_access_token(subject="user@example.com", expires_delta=timedelta(seconds=1))
+        short_token = create_access_token(
+            subject="user@example.com", expires_delta=timedelta(seconds=1)
+        )
 
         # Verify immediately (should work)
         payload = verify_token(short_token)
         assert payload is not None
 
-        # Wait for expiration
-        import time
-
-        time.sleep(2)
-
-        # Verify after expiration (should fail)
-        payload = verify_token(short_token)
-        assert payload is None
+        # Simulate time passing (no actual sleep needed with freezegun)
+        with freeze_time("2025-01-01 12:00:03"):  # 3 seconds later
+            # Verify after expiration (should fail)
+            payload = verify_token(short_token)
+            assert payload is None

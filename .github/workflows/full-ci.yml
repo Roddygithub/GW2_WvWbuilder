@@ -167,6 +167,7 @@ jobs:
       run: |
         cd frontend
         npm ci
+        npm install vite-tsconfig-paths@latest --save-dev --force
     
     - name: Run ESLint
       run: |
