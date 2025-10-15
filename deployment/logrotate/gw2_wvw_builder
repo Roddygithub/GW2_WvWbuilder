@@ -1,0 +1,30 @@
+# Logrotate configuration for GW2 WvW Builder
+# Install to: /etc/logrotate.d/gw2_wvw_builder
+
+/var/log/gw2_wvw_builder/*.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 gw2app gw2app
+    sharedscripts
+    postrotate
+        systemctl reload gw2_backend >/dev/null 2>&1 || true
+    endscript
+}
+
+/var/log/nginx/gw2_wvw_builder_*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 www-data adm
+    sharedscripts
+    postrotate
+        systemctl reload nginx >/dev/null 2>&1 || true
+    endscript
+}

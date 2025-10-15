@@ -1,0 +1,23 @@
+# Crontab entries for GW2 WvW Builder
+# Install with: crontab -e (as gw2app user or root)
+
+# Database backup every Sunday at 3 AM
+0 3 * * 0 /opt/gw2_wvw_builder/deployment/scripts/backup_db.sh sqlite >> /var/log/gw2_wvw_builder/backup_cron.log 2>&1
+
+# Alternative: Daily backup at 2 AM
+# 0 2 * * * /opt/gw2_wvw_builder/deployment/scripts/backup_db.sh sqlite >> /var/log/gw2_wvw_builder/backup_cron.log 2>&1
+
+# Certificate renewal (handled by certbot, but can be added as backup)
+0 3 * * * certbot renew --quiet --post-hook "systemctl reload nginx" >> /var/log/gw2_wvw_builder/certbot_cron.log 2>&1
+
+# Health check monitoring every 5 minutes (optional)
+# */5 * * * * /opt/gw2_wvw_builder/deployment/scripts/monitor_backend.py >> /var/log/gw2_wvw_builder/monitor_cron.log 2>&1
+
+# Log cleanup (if not using logrotate) - Remove logs older than 90 days
+0 4 * * 0 find /var/log/gw2_wvw_builder -name "*.log" -mtime +90 -delete
+
+# Notes:
+# - Adjust paths according to your installation
+# - Ensure scripts have execute permissions (chmod +x)
+# - Test manually before adding to cron
+# - Check logs to verify execution
