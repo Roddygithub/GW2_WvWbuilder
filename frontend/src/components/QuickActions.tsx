@@ -25,7 +25,7 @@ const actions: ActionButton[] = [
     icon: Layers,
     gradient: 'from-emerald-500 to-emerald-600',
     glow: 'shadow-[0_0_20px_rgba(16,185,129,0.4)]',
-    path: '/compositions/new',
+    onClick: () => toast.info('Create Composition page coming soon! Builder integration in progress.'),
   },
   {
     title: 'Create Build',
