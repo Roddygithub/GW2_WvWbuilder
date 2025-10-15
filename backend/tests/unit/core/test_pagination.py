@@ -1,64 +1,70 @@
 """Tests for pagination utilities."""
 
 import pytest
-from app.core.pagination import get_skip_limit, Paginated
+from app.core.pagination import (
+    PaginationParams,
+    PaginatedResponse,
+    paginate,
+    create_paginated_response,
+)
 
 
-def test_get_skip_limit_default():
-    """Test default pagination values."""
-    skip, limit = get_skip_limit()
-    assert skip == 0
-    assert limit == 100
+def test_pagination_params_default():
+    """Test default pagination parameters."""
+    params = PaginationParams()
+    assert params.page == 1
+    assert params.size == 20
+    assert params.offset == 0
+    assert params.limit == 20
 
 
-def test_get_skip_limit_custom():
-    """Test custom pagination values."""
-    skip, limit = get_skip_limit(page=2, page_size=50)
-    assert skip == 50
-    assert limit == 50
+def test_pagination_params_custom():
+    """Test custom pagination parameters."""
+    params = PaginationParams(page=3, size=50)
+    assert params.page == 3
+    assert params.size == 50
+    assert params.offset == 100  # (3-1) * 50
+    assert params.limit == 50
 
 
-def test_get_skip_limit_negative_page():
-    """Test negative page number defaults to 1."""
-    skip, limit = get_skip_limit(page=-1, page_size=10)
-    assert skip == 0
-    assert limit == 10
+def test_pagination_params_first_page():
+    """Test pagination for first page."""
+    params = PaginationParams(page=1, size=10)
+    assert params.offset == 0
+    assert params.limit == 10
 
 
-def test_get_skip_limit_max_limit():
-    """Test maximum limit enforcement."""
-    skip, limit = get_skip_limit(page=1, page_size=1000)
-    assert limit == 1000  # or max limit if enforced
-
-
-def test_paginated_model():
-    """Test Paginated model creation."""
+def test_create_paginated_response():
+    """Test creating paginated response."""
     items = [1, 2, 3, 4, 5]
-    paginated = Paginated(
-        items=items,
-        total=100,
-        page=1,
-        page_size=5,
-        pages=20
-    )
+    params = PaginationParams(page=1, size=5)
     
-    assert paginated.items == items
-    assert paginated.total == 100
-    assert paginated.page == 1
-    assert paginated.page_size == 5
-    assert paginated.pages == 20
+    response = create_paginated_response(items, total=100, pagination=params)
+    
+    assert response["items"] == items
+    assert response["total"] == 100
+    assert response["page"] == 1
+    assert response["size"] == 5
+    assert response["pages"] == 20
 
 
-def test_paginated_empty():
-    """Test Paginated with empty results."""
-    paginated = Paginated(
-        items=[],
-        total=0,
-        page=1,
-        page_size=10,
-        pages=0
-    )
+def test_create_paginated_response_empty():
+    """Test paginated response with empty results."""
+    params = PaginationParams(page=1, size=10)
     
-    assert paginated.items == []
-    assert paginated.total == 0
-    assert paginated.pages == 0
+    response = create_paginated_response([], total=0, pagination=params)
+    
+    assert response["items"] == []
+    assert response["total"] == 0
+    assert response["pages"] == 0
+
+
+def test_create_paginated_response_last_page():
+    """Test paginated response for last incomplete page."""
+    items = [1, 2, 3]
+    params = PaginationParams(page=3, size=10)
+    
+    response = create_paginated_response(items, total=23, pagination=params)
+    
+    assert response["pages"] == 3
+    assert len(response["items"]) == 3
