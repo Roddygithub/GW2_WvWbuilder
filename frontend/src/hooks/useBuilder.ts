@@ -3,53 +3,53 @@
  * React Query hooks for squad builder and optimizer
  */
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import {
-  optimizeSquad,
-  calculateSynergy,
-  getProfessionRecommendations,
-  type OptimizeSquadRequest,
-  type CalculateSynergyRequest,
-  type BuilderRole,
+  optimizeComposition,
+  getGameModes,
+  getAvailableRoles,
+  type CompositionOptimizationRequest,
+  type CompositionOptimizationResult,
 } from '../api/builder';
 import { toast } from 'sonner';
 
 /**
  * Hook to optimize squad composition
  */
-export const useOptimizeSquad = () => {
+export const useOptimizeComposition = () => {
   return useMutation({
-    mutationFn: (request: OptimizeSquadRequest) => optimizeSquad(request),
-    onSuccess: () => {
-      toast.success('Squad optimisé avec succès!');
+    mutationFn: (request: CompositionOptimizationRequest) => optimizeComposition(request),
+    onSuccess: (data: CompositionOptimizationResult) => {
+      toast.success(`Composition optimisée avec un score de ${(data.score * 100).toFixed(0)}%!`);
     },
     onError: (error: any) => {
-      toast.error(error.detail || 'Erreur lors de l\'optimisation');
+      const message = error?.response?.data?.detail || error?.message || 'Erreur lors de l\'optimisation';
+      toast.error(message);
     },
   });
 };
 
 /**
- * Hook to calculate squad synergies
+ * Hook to get available game modes
  */
-export const useCalculateSynergy = () => {
-  return useMutation({
-    mutationFn: (request: CalculateSynergyRequest) => calculateSynergy(request),
-    onError: (error: any) => {
-      toast.error(error.detail || 'Erreur lors du calcul des synergies');
-    },
+export const useGameModes = () => {
+  return useQuery({
+    queryKey: ['builder', 'modes'],
+    queryFn: getGameModes,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
 /**
- * Hook to get profession recommendations
+ * Hook to get available roles
  */
-export const useProfessionRecommendations = () => {
-  return useMutation({
-    mutationFn: ({ currentRoles, targetSize }: { currentRoles: BuilderRole[]; targetSize: number }) =>
-      getProfessionRecommendations(currentRoles, targetSize),
-    onError: (error: any) => {
-      toast.error(error.detail || 'Erreur lors de la récupération des recommandations');
-    },
+export const useAvailableRoles = () => {
+  return useQuery({
+    queryKey: ['builder', 'roles'],
+    queryFn: getAvailableRoles,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
+
+// Legacy export for backward compatibility
+export const useOptimizeSquad = useOptimizeComposition;

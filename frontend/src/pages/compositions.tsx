@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,15 +14,16 @@ import LoadingState from '@/components/LoadingState';
 import ErrorState from '@/components/ErrorState';
 import EmptyState from '@/components/EmptyState';
 import { GW2Card } from '@/components/gw2/GW2Card';
-import { toast } from 'sonner';
+// no toasts here; navigate to the create page
 
 export default function CompositionsPage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const { data: compositions, isLoading, isError, error, refetch } = useCompositions();
   const deleteMutation = useDeleteComposition();
 
   const handleCreateNew = () => {
-    toast.info('Create Composition page coming soon! Builder integration in progress.');
+    navigate('/compositions/new');
   };
 
   const handleDelete = async (id: number) => {

@@ -3,7 +3,12 @@
  * Centralized HTTP client for backend communication
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+// In development, prefer Vite proxy to avoid CORS (see vite.config.ts)
+const isDev = import.meta.env.MODE !== 'production';
+const useProxy = (import.meta.env.VITE_API_USE_PROXY ?? 'true') === 'true';
+const API_BASE_URL = isDev && useProxy
+  ? ''
+  : (import.meta.env.VITE_API_BASE_URL || '');
 const API_V1_STR = '/api/v1';
 
 export interface ApiError {
