@@ -1,18 +1,20 @@
 # 📊 Résultats Validation GitHub Actions
 
-**✅ VALIDATION COMPLÉTÉE - RÉSULTATS RÉELS GITHUB ACTIONS**
+**✅ VALIDATION EN COURS - RÉSULTATS INTERMÉDIAIRES**
 
-**Date vérification**: 2025-10-15 14:18:00 UTC+2  
-**Commit**: b2ba97b (a7146c5 corrections)  
+**Date vérification**: 2025-10-15 14:35:00 UTC+2  
+**Commit testé**: f51ddcc (Option B - force vite-tsconfig-paths)  
+**Commit actuel**: da851db (Option A - disable npm cache) 🔄 RUNNING  
 **Repository**: https://github.com/Roddygithub/GW2_WvWbuilder/actions
 
 ---
 
 ## 🎯 Statut Global
 
-**Décision Finale**: ☑️ **CORRECTIONS SUPPLÉMENTAIRES NÉCESSAIRES ❌**
+**Décision Finale**: ☑️ **NOUVELLE TENTATIVE EN COURS - Option A appliquée**
 
-**Raison principale**: Problème persistant `@/lib/utils` module not found (cache GitHub Actions)
+**Run f51ddcc**: ❌ ÉCHEC - Option B n'a PAS résolu @/lib/utils  
+**Run da851db**: 🔄 EN COURS - Option A (disable cache) en test
 
 ---
 
@@ -24,10 +26,11 @@
 
 | Champ | Valeur |
 |-------|--------|
-| **Status Global** | ❌ FAIL (1/11 jobs PASS) |
-| **Run URL** | https://github.com/Roddygithub/GW2_WvWbuilder/actions/runs/18528401840 |
-| **Commit SHA** | a7146c5 (with corrections) |
-| **Duration** | 2m26s |
+| **Status Global** | ❌ FAIL (1/11 jobs PASS) - Option B failed |
+| **Run URL (f51ddcc)** | https://github.com/Roddygithub/GW2_WvWbuilder/actions/runs/18528841293 |
+| **Run URL (da851db)** | 🔄 RUNNING - Option A test |
+| **Commit SHA** | f51ddcc → da851db |
+| **Duration** | 2m53s (f51ddcc) |
 
 ### Jobs Status (11 jobs)
 
