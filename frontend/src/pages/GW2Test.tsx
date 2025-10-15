@@ -3,7 +3,7 @@
  * Test page to verify GW2 API integration
  */
 
-import { useGW2Professions, useGW2APIStatus } from '../hooks/useGW2Professions';
+import { useGW2Professions, useGW2APIStatus } from "../hooks/useGW2Professions";
 
 export default function GW2Test() {
   const { data: professions, isLoading, isError, error } = useGW2Professions();
@@ -17,9 +17,7 @@ export default function GW2Test() {
           <h1 className="text-4xl font-bold text-white mb-4">
             Guild Wars 2 API Test
           </h1>
-          <p className="text-gray-300">
-            Vérification de la connexion API GW2
-          </p>
+          <p className="text-gray-300">Vérification de la connexion API GW2</p>
         </div>
 
         {/* API Status */}
@@ -29,9 +27,13 @@ export default function GW2Test() {
             <p className="text-gray-400">Vérification...</p>
           ) : (
             <div className="flex items-center gap-3">
-              <div className={`w-4 h-4 rounded-full ${apiAvailable ? 'bg-green-500' : 'bg-red-500'}`} />
+              <div
+                className={`w-4 h-4 rounded-full ${apiAvailable ? "bg-green-500" : "bg-red-500"}`}
+              />
               <span className="text-white font-medium">
-                {apiAvailable ? '✅ API GW2 Connectée' : '❌ API GW2 Non Disponible'}
+                {apiAvailable
+                  ? "✅ API GW2 Connectée"
+                  : "❌ API GW2 Non Disponible"}
               </span>
             </div>
           )}
@@ -39,18 +41,24 @@ export default function GW2Test() {
 
         {/* Professions List */}
         <div className="bg-slate-800/50 rounded-lg p-6 backdrop-blur-sm">
-          <h2 className="text-2xl font-bold text-white mb-6">⚔️ Professions GW2</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">
+            ⚔️ Professions GW2
+          </h2>
 
           {isLoading && (
             <div className="text-center py-8">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-purple-500 border-t-transparent"></div>
-              <p className="mt-4 text-gray-400">Chargement des professions...</p>
+              <p className="mt-4 text-gray-400">
+                Chargement des professions...
+              </p>
             </div>
           )}
 
           {isError && (
             <div className="bg-red-500/10 border border-red-500 rounded-lg p-4">
-              <p className="text-red-400 font-medium">❌ Erreur de chargement</p>
+              <p className="text-red-400 font-medium">
+                ❌ Erreur de chargement
+              </p>
               <p className="text-red-300 text-sm mt-2">{error?.message}</p>
             </div>
           )}
@@ -58,8 +66,12 @@ export default function GW2Test() {
           {professions && (
             <>
               <div className="mb-4 text-gray-300">
-                <p><strong>Total:</strong> {professions.length} professions</p>
-                <p><strong>Source:</strong> API officielle Guild Wars 2</p>
+                <p>
+                  <strong>Total:</strong> {professions.length} professions
+                </p>
+                <p>
+                  <strong>Source:</strong> API officielle Guild Wars 2
+                </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -77,17 +89,21 @@ export default function GW2Test() {
                         />
                       )}
                       <div>
-                        <h3 className="text-white font-bold">{profession.name}</h3>
+                        <h3 className="text-white font-bold">
+                          {profession.name}
+                        </h3>
                         <p className="text-gray-400 text-sm">{profession.id}</p>
                       </div>
                     </div>
 
                     <div className="space-y-2 text-sm">
                       <div className="text-gray-300">
-                        <strong>Spécialisations:</strong> {profession.specializations.length}
+                        <strong>Spécialisations:</strong>{" "}
+                        {profession.specializations.length}
                       </div>
                       <div className="text-gray-300">
-                        <strong>Armes:</strong> {Object.keys(profession.weapons).length}
+                        <strong>Armes:</strong>{" "}
+                        {Object.keys(profession.weapons).length}
                       </div>
                       {profession.flags && profession.flags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2">
@@ -112,8 +128,9 @@ export default function GW2Test() {
         {/* Info */}
         <div className="mt-8 bg-blue-500/10 border border-blue-500/50 rounded-lg p-4">
           <p className="text-blue-300">
-            ℹ️ <strong>Info:</strong> Cette page teste la connexion avec l'API officielle Guild Wars 2.
-            Les données affichées sont récupérées en temps réel depuis l'API.
+            ℹ️ <strong>Info:</strong> Cette page teste la connexion avec l'API
+            officielle Guild Wars 2. Les données affichées sont récupérées en
+            temps réel depuis l'API.
           </p>
         </div>
       </div>

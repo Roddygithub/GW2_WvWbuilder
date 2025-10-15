@@ -3,11 +3,17 @@
  * Visual indicator for backup status with manual trigger
  */
 
-import { motion } from 'framer-motion';
-import { Database, RefreshCw, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { motion } from "framer-motion";
+import {
+  Database,
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+} from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface BackupStatusBarProps {
   lastBackupTime?: Date;
@@ -27,7 +33,7 @@ export default function BackupStatusBar({
   const [isHovered, setIsHovered] = useState(false);
 
   const getTimeAgo = (date?: Date) => {
-    if (!date) return 'Never';
+    if (!date) return "Never";
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
     if (seconds < 60) return `${seconds}s ago`;
     if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
@@ -38,7 +44,7 @@ export default function BackupStatusBar({
   const handleManualBackup = () => {
     if (onManualBackup && !isBackingUp) {
       onManualBackup();
-      toast.info('Backup started...');
+      toast.info("Backup started...");
     }
   };
 
@@ -47,13 +53,13 @@ export default function BackupStatusBar({
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       className={cn(
-        'flex items-center justify-between px-4 py-3 rounded-lg backdrop-blur-sm border transition-all duration-300',
+        "flex items-center justify-between px-4 py-3 rounded-lg backdrop-blur-sm border transition-all duration-300",
         hasError
-          ? 'bg-red-500/10 border-red-500/30'
+          ? "bg-red-500/10 border-red-500/30"
           : isBackingUp
-          ? 'bg-blue-500/10 border-blue-500/30'
-          : 'bg-slate-800/40 border-purple-500/20 hover:border-purple-500/40',
-        className
+            ? "bg-blue-500/10 border-blue-500/30"
+            : "bg-slate-800/40 border-purple-500/20 hover:border-purple-500/40",
+        className,
       )}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
@@ -62,14 +68,18 @@ export default function BackupStatusBar({
       <div className="flex items-center space-x-3">
         <motion.div
           animate={isBackingUp ? { rotate: 360 } : {}}
-          transition={{ duration: 1, repeat: isBackingUp ? Infinity : 0, ease: 'linear' }}
+          transition={{
+            duration: 1,
+            repeat: isBackingUp ? Infinity : 0,
+            ease: "linear",
+          }}
           className={cn(
-            'w-10 h-10 rounded-full flex items-center justify-center',
+            "w-10 h-10 rounded-full flex items-center justify-center",
             hasError
-              ? 'bg-red-500/20 border border-red-500/40'
+              ? "bg-red-500/20 border border-red-500/40"
               : isBackingUp
-              ? 'bg-blue-500/20 border border-blue-500/40'
-              : 'bg-purple-500/20 border border-purple-500/40'
+                ? "bg-blue-500/20 border border-blue-500/40"
+                : "bg-purple-500/20 border border-purple-500/40",
           )}
         >
           {hasError ? (
@@ -83,7 +93,11 @@ export default function BackupStatusBar({
 
         <div>
           <p className="text-sm font-medium text-slate-200">
-            {hasError ? 'Backup Failed' : isBackingUp ? 'Backup in Progress' : 'Backup Status'}
+            {hasError
+              ? "Backup Failed"
+              : isBackingUp
+                ? "Backup in Progress"
+                : "Backup Status"}
           </p>
           <div className="flex items-center space-x-2 mt-0.5">
             <Clock className="w-3 h-3 text-slate-400" />
@@ -101,14 +115,14 @@ export default function BackupStatusBar({
         onClick={handleManualBackup}
         disabled={isBackingUp}
         className={cn(
-          'flex items-center space-x-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300',
+          "flex items-center space-x-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-300",
           isBackingUp
-            ? 'bg-slate-700/50 text-slate-400 cursor-not-allowed'
-            : 'bg-gradient-to-r from-purple-500/20 to-violet-500/20 hover:from-purple-500/30 hover:to-violet-500/30 text-purple-300 border border-purple-500/30'
+            ? "bg-slate-700/50 text-slate-400 cursor-not-allowed"
+            : "bg-gradient-to-r from-purple-500/20 to-violet-500/20 hover:from-purple-500/30 hover:to-violet-500/30 text-purple-300 border border-purple-500/30",
         )}
       >
         <Database className="w-4 h-4" />
-        <span>{isBackingUp ? 'Backing up...' : 'Backup Now'}</span>
+        <span>{isBackingUp ? "Backing up..." : "Backup Now"}</span>
       </motion.button>
 
       {/* Progress Bar */}
@@ -118,7 +132,7 @@ export default function BackupStatusBar({
           animate={{ scaleX: 1 }}
           transition={{ duration: 2, repeat: Infinity }}
           className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-b-lg"
-          style={{ transformOrigin: 'left' }}
+          style={{ transformOrigin: "left" }}
         />
       )}
 

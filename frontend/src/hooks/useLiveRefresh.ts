@@ -3,9 +3,9 @@
  * Automatically refreshes data at specified intervals
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useEffect, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface UseLiveRefreshOptions {
   /**
@@ -13,24 +13,24 @@ interface UseLiveRefreshOptions {
    * @default 30000 (30 seconds)
    */
   interval?: number;
-  
+
   /**
    * Query keys to invalidate on refresh
    */
   queryKeys: string[][];
-  
+
   /**
    * Enable/disable live refresh
    * @default true
    */
   enabled?: boolean;
-  
+
   /**
    * Show toast notification on refresh
    * @default false
    */
   showToast?: boolean;
-  
+
   /**
    * Callback when refresh occurs
    */
@@ -53,31 +53,31 @@ export function useLiveRefresh({
     if (isRefreshing) return;
 
     setIsRefreshing(true);
-    
+
     try {
       // Invalidate all specified query keys
       await Promise.all(
         queryKeys.map((key) =>
-          queryClient.invalidateQueries({ queryKey: key })
-        )
+          queryClient.invalidateQueries({ queryKey: key }),
+        ),
       );
 
       setLastRefresh(new Date());
-      
+
       if (showToast) {
-        toast.success('Dashboard refreshed', {
-          description: 'Latest data loaded successfully',
+        toast.success("Dashboard refreshed", {
+          description: "Latest data loaded successfully",
           duration: 2000,
         });
       }
 
       onRefresh?.();
     } catch (error) {
-      console.error('Failed to refresh data:', error);
-      
+      console.error("Failed to refresh data:", error);
+
       if (showToast) {
-        toast.error('Refresh failed', {
-          description: 'Could not load latest data',
+        toast.error("Refresh failed", {
+          description: "Could not load latest data",
           duration: 3000,
         });
       }

@@ -30,7 +30,9 @@ class AppLifespan:
         logger.info("Démarrage des composants de l'application")
 
         # Démarrer la surveillance de la base de données
-        self.monitor_task = asyncio.create_task(db_monitor.start_monitoring(interval=300))  # Toutes les 5 minutes
+        self.monitor_task = asyncio.create_task(
+            db_monitor.start_monitoring(interval=300)
+        )  # Toutes les 5 minutes
         logger.info("Surveillance de la base de données démarrée")
 
         # Enregistrer les gestionnaires d'arrêt

@@ -138,7 +138,9 @@ async def init_test_db() -> AsyncGenerator[None, None]:
         await conn.run_sync(Base.metadata.create_all)
 
         # Vérifier les tables créées
-        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
+        result = await conn.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table'")
+        )
         tables = [row[0] for row in result.fetchall()]
         print(f"Tables créées: {', '.join(tables)}")
 
@@ -146,7 +148,9 @@ async def init_test_db() -> AsyncGenerator[None, None]:
     print("\n=== Vérification des tables créées ===")
     async with test_engine.connect() as conn:
         # Liste des tables dans la base de données
-        result = await conn.execute(text("SELECT name, sql FROM sqlite_master WHERE type='table'"))
+        result = await conn.execute(
+            text("SELECT name, sql FROM sqlite_master WHERE type='table'")
+        )
         tables = {row[0]: row[1] for row in result.fetchall()}
 
         print("\n=== Tables dans la base de données ===")
@@ -166,7 +170,9 @@ async def init_test_db() -> AsyncGenerator[None, None]:
                     print(f"  Erreur lors de la récupération des colonnes: {e}")
 
         # Vérifier les index
-        result = await conn.execute(text("SELECT name, tbl_name, sql FROM sqlite_master WHERE type='index'"))
+        result = await conn.execute(
+            text("SELECT name, tbl_name, sql FROM sqlite_master WHERE type='index'")
+        )
         indexes = result.fetchall()
         if indexes:
             print("\n=== Index dans la base de données ===")
@@ -189,7 +195,7 @@ async def init_test_db() -> AsyncGenerator[None, None]:
 async def db_session(event_loop) -> AsyncGenerator[AsyncSession, None]:
     """
     Create a clean database session for testing.
-    
+
     Uses file-based SQLite with commits (no rollback) to ensure data visibility
     across fixtures and endpoints. Tables are truncated between tests.
     """
@@ -216,12 +222,13 @@ async def db_session(event_loop) -> AsyncGenerator[AsyncSession, None]:
             await session.close()
         except Exception as e:
             logger.warning(f"Error closing session: {e}")
-        
+
         # Clean up: truncate all tables for next test
         # Use a fresh connection to avoid greenlet issues
         try:
             async with test_engine.connect() as conn:
                 from app.models import Base
+
                 # Start a transaction for cleanup
                 async with conn.begin():
                     # Disable foreign keys temporarily for cleanup
@@ -231,7 +238,9 @@ async def db_session(event_loop) -> AsyncGenerator[AsyncSession, None]:
                         try:
                             await conn.execute(text(f"DELETE FROM {table.name}"))
                         except Exception as table_error:
-                            logger.warning(f"Failed to clean table {table.name}: {table_error}")
+                            logger.warning(
+                                f"Failed to clean table {table.name}: {table_error}"
+                            )
                     await conn.execute(text("PRAGMA foreign_keys=ON"))
         except Exception as e:
             # If cleanup fails (e.g., greenlet issues), log but don't fail the test
@@ -245,7 +254,9 @@ async def db(db_session: AsyncSession) -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest.fixture
-def override_get_db(db_session: AsyncSession) -> Callable[..., AsyncGenerator[AsyncSession, None]]:
+def override_get_db(
+    db_session: AsyncSession,
+) -> Callable[..., AsyncGenerator[AsyncSession, None]]:
     """
     Override the get_db dependency for testing.
 
@@ -269,13 +280,16 @@ def override_get_db(db_session: AsyncSession) -> Callable[..., AsyncGenerator[As
 
 
 @pytest.fixture
-def override_get_db_sync(db_session: AsyncSession) -> Callable[..., AsyncGenerator[AsyncSession, None]]:
+def override_get_db_sync(
+    db_session: AsyncSession,
+) -> Callable[..., AsyncGenerator[AsyncSession, None]]:
     """
     Override the sync get_db dependency for testing (returns async session).
-    
+
     Note: Even though the original get_db is sync, we return an async generator
     because FastAPI can handle both sync and async dependencies.
     """
+
     async def _override_get_db_sync() -> AsyncGenerator[AsyncSession, None]:
         try:
             yield db_session
@@ -283,7 +297,7 @@ def override_get_db_sync(db_session: AsyncSession) -> Callable[..., AsyncGenerat
             if db_session.in_transaction():
                 await db_session.rollback()
             raise
-    
+
     return _override_get_db_sync
 
 
@@ -350,7 +364,9 @@ async def test_profession(db_session: AsyncSession) -> Profession:
 
 
 @pytest_asyncio.fixture
-async def test_build(db_session: AsyncSession, test_user: User, test_profession: Profession) -> Build:
+async def test_build(
+    db_session: AsyncSession, test_user: User, test_profession: Profession
+) -> Build:
     """Create a single test build."""
     build = Build(
         name=f"Test Build {uuid.uuid4().hex[:4]}",
@@ -371,7 +387,9 @@ async def test_build(db_session: AsyncSession, test_user: User, test_profession:
 
 
 @pytest_asyncio.fixture
-async def test_builds(db_session: AsyncSession, test_user: User, test_profession: Profession) -> List[Build]:
+async def test_builds(
+    db_session: AsyncSession, test_user: User, test_profession: Profession
+) -> List[Build]:
     """Create multiple test builds."""
     builds = []
     for i in range(5):
@@ -415,7 +433,9 @@ def mock_redis():
 
         async def incr(self, key, amount=1, **kwargs):
             if hasattr(self, "_in_pipeline") and self._in_pipeline:
-                self._pipeline_commands.append({"method": "incr", "key": key, "amount": amount})
+                self._pipeline_commands.append(
+                    {"method": "incr", "key": key, "amount": amount}
+                )
                 return self
 
             current = int(self.data.get(key, 0))
@@ -425,7 +445,9 @@ def mock_redis():
 
         async def expire(self, key, ttl, **kwargs):
             if hasattr(self, "_in_pipeline") and self._in_pipeline:
-                self._pipeline_commands.append({"method": "expire", "key": key, "ttl": ttl})
+                self._pipeline_commands.append(
+                    {"method": "expire", "key": key, "ttl": ttl}
+                )
                 return self
 
             # Dans ce mock, on ne fait rien avec l'expiration
@@ -465,7 +487,9 @@ def mock_redis():
     mock_redis = MockRedis()
 
     # Patcher la propriété redis_client pour retourner notre mock
-    with patch("app.core.config.Settings.redis_client", new_callable=PropertyMock) as mock_prop:
+    with patch(
+        "app.core.config.Settings.redis_client", new_callable=PropertyMock
+    ) as mock_prop:
         # Assurons-nous que le champ existe avant de le patcher, au cas où
         if not hasattr(mock_prop, "return_value"):
             setattr(type(settings), "redis_client", None)
@@ -519,7 +543,10 @@ def mock_fastapi_limiter(monkeypatch):
 
 
 @pytest.fixture
-def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]], override_get_db_sync: Callable[..., AsyncGenerator[AsyncSession, None]]) -> FastAPI:
+def app(
+    override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]],
+    override_get_db_sync: Callable[..., AsyncGenerator[AsyncSession, None]],
+) -> FastAPI:
     """Create a test FastAPI application with rate limiting and Redis disabled."""
     # Désactiver le chargement des variables d'environnement pour les tests
     os.environ["ENVIRONMENT"] = "test"
@@ -537,21 +564,23 @@ def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]], over
     settings.CACHE_ENABLED = False
     settings.REDIS_URL = ""
     settings.DEBUG = True
-    
+
     # CRITICAL: Ensure JWT keys match for token creation/validation
     settings.JWT_SECRET_KEY = "test-secret-key-for-jwt"
     settings.SECRET_KEY = "test-secret-key-for-jwt"
-    
+
     # CRITICAL: Long-lived tokens for tests (1 hour instead of default)
     settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 60
     settings.ACCESS_TOKEN_EXPIRE_MINUTES = 60
-    
+
     # CRITICAL: Force app to use the same test database file
     settings.DATABASE_URL = TEST_DATABASE_URL
     settings.ASYNC_SQLALCHEMY_DATABASE_URI = TEST_DATABASE_URL
 
     # Créer le répertoire static s'il n'existe pas
-    static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../app/static"))
+    static_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "../../app/static")
+    )
     os.makedirs(static_dir, exist_ok=True)
 
     # Créer un fichier vide dans le répertoire static pour éviter l'erreur
@@ -564,27 +593,32 @@ def app(override_get_db: Callable[..., AsyncGenerator[AsyncSession, None]], over
     # Surcharger la dépendance de la base de données pour utiliser notre session de test
     # Override both sync and async DB dependencies
     from app.db.session import get_db as get_db_sync
+
     app.dependency_overrides[get_async_db] = override_get_db
-    app.dependency_overrides[get_db_sync] = override_get_db_sync  # Tags endpoint uses sync get_db
+    app.dependency_overrides[get_db_sync] = (
+        override_get_db_sync  # Tags endpoint uses sync get_db
+    )
 
     # Override get_current_user to return the user stored in app.state by auth_headers
     # This bypasses JWT validation issues while still using real users from the DB
     async def mock_get_current_user():
         """Return the test user stored in app.state by auth_headers fixture."""
-        if hasattr(app.state, 'test_user') and app.state.test_user:
+        if hasattr(app.state, "test_user") and app.state.test_user:
             return app.state.test_user
         # Fallback: create a default test user if none exists
         from app.models.user import User
+
         return User(
             id=999,
             username="default_test_user",
             email="default@test.com",
             is_active=True,
             is_superuser=False,
-            hashed_password="dummy"
+            hashed_password="dummy",
         )
-    
+
     from app.api.deps import get_current_user
+
     app.dependency_overrides[get_current_user] = mock_get_current_user
 
     yield app
@@ -673,13 +707,14 @@ async def async_client(app: FastAPI):
 async def auth_headers(db_session: AsyncSession, app: FastAPI):
     """
     Fixture callable to create users dynamically and return auth headers.
-    
+
     Usage:
         headers = await auth_headers(username="testuser", is_superuser=True)
-    
+
     This fixture creates a real user in the DB and stores it in app.state
     for the mocked get_current_user to retrieve.
     """
+
     async def _auth_headers(
         username: str = None,
         email: str = None,
@@ -689,18 +724,16 @@ async def auth_headers(db_session: AsyncSession, app: FastAPI):
     ):
         from datetime import timedelta
         from sqlalchemy import select
-        
+
         # Generate unique username/email if not provided
         unique_id = uuid.uuid4().hex[:8]
         username = username or f"user_{unique_id}"
         email = email or f"{username}@example.com"
-        
+
         # Check if user already exists (for cleanup robustness)
-        result = await db_session.execute(
-            select(User).where(User.username == username)
-        )
+        result = await db_session.execute(select(User).where(User.username == username))
         user = result.scalar_one_or_none()
-        
+
         if user is None:
             # Create user in DB
             user = User(
@@ -713,18 +746,17 @@ async def auth_headers(db_session: AsyncSession, app: FastAPI):
             db_session.add(user)
             await db_session.commit()
             await db_session.refresh(user)
-        
+
         # Store user in app.state for mocked get_current_user
         app.state.test_user = user
-        
+
         # Create JWT token with user ID as subject (backend expects int ID in sub)
         # Use long expiration for tests to avoid expiry during test execution
         access_token = create_access_token(
-            subject=str(user.id),
-            expires_delta=timedelta(hours=1)  # 1 hour for tests
+            subject=str(user.id), expires_delta=timedelta(hours=1)  # 1 hour for tests
         )
         return {"Authorization": f"Bearer {access_token}"}
-    
+
     return _auth_headers
 
 
@@ -732,8 +764,10 @@ async def auth_headers(db_session: AsyncSession, app: FastAPI):
 async def tag_factory(db_session: AsyncSession):
     """Factory fixture to create tags for testing."""
     from app.models.tag import Tag
-    
-    async def _create_tag(name: str = None, description: str = None, category: str = None):
+
+    async def _create_tag(
+        name: str = None, description: str = None, category: str = None
+    ):
         unique_id = uuid.uuid4().hex[:6]
         tag = Tag(
             name=name or f"Tag_{unique_id}",
@@ -744,13 +778,14 @@ async def tag_factory(db_session: AsyncSession):
         await db_session.commit()
         await db_session.refresh(tag)
         return tag
-    
+
     return _create_tag
 
 
 @pytest_asyncio.fixture
 async def user_factory(db_session: AsyncSession):
     """Factory fixture to create users for testing."""
+
     async def _create_user(
         username: str = None,
         email: str = None,
@@ -761,7 +796,7 @@ async def user_factory(db_session: AsyncSession):
         unique_id = uuid.uuid4().hex[:8]
         username = username or f"user_{unique_id}"
         email = email or f"{username}@example.com"
-        
+
         user = User(
             username=username,
             email=email,
@@ -773,7 +808,7 @@ async def user_factory(db_session: AsyncSession):
         await db_session.commit()
         await db_session.refresh(user)
         return user
-    
+
     return _create_user
 
 
@@ -781,7 +816,7 @@ async def user_factory(db_session: AsyncSession):
 async def role_factory(db_session: AsyncSession):
     """Factory fixture to create roles for testing."""
     from app.models.role import Role
-    
+
     async def _create_role(name: str = None, description: str = None):
         unique_id = uuid.uuid4().hex[:6]
         role = Role(
@@ -792,7 +827,7 @@ async def role_factory(db_session: AsyncSession):
         await db_session.commit()
         await db_session.refresh(role)
         return role
-    
+
     return _create_role
 
 
@@ -800,7 +835,7 @@ async def role_factory(db_session: AsyncSession):
 async def profession_factory(db_session: AsyncSession):
     """Factory fixture to create professions for testing."""
     from app.models.profession import Profession
-    
+
     async def _create_profession(name: str = None):
         unique_id = uuid.uuid4().hex[:6]
         profession = Profession(
@@ -810,7 +845,7 @@ async def profession_factory(db_session: AsyncSession):
         await db_session.commit()
         await db_session.refresh(profession)
         return profession
-    
+
     return _create_profession
 
 
@@ -818,7 +853,7 @@ async def profession_factory(db_session: AsyncSession):
 async def build_factory(db_session: AsyncSession, user_factory):
     """Factory fixture to create builds for testing."""
     from app.models.build import Build
-    
+
     async def _create_build(
         name: str = None,
         description: str = None,
@@ -826,12 +861,12 @@ async def build_factory(db_session: AsyncSession, user_factory):
         is_public: bool = True,
     ):
         unique_id = uuid.uuid4().hex[:6]
-        
+
         # Create a creator if not provided
         if creator_id is None:
             creator = await user_factory(username=f"creator_{unique_id}")
             creator_id = creator.id
-        
+
         build = Build(
             name=name or f"Build_{unique_id}",
             description=description or f"Description for {name or 'build'}",
@@ -842,7 +877,7 @@ async def build_factory(db_session: AsyncSession, user_factory):
         await db_session.commit()
         await db_session.refresh(build)
         return build
-    
+
     return _create_build
 
 
@@ -850,19 +885,19 @@ async def build_factory(db_session: AsyncSession, user_factory):
 async def webhook_factory(db_session: AsyncSession, user_factory):
     """Factory fixture to create webhooks for testing."""
     from app.models.webhook import Webhook
-    
+
     async def _create_webhook(
         url: str = None,
         user_id: int = None,
         is_active: bool = True,
     ):
         unique_id = uuid.uuid4().hex[:6]
-        
+
         # Create a user if not provided
         if user_id is None:
             user = await user_factory(username=f"webhook_user_{unique_id}")
             user_id = user.id
-        
+
         webhook = Webhook(
             url=url or f"https://example.com/webhook_{unique_id}",
             user_id=user_id,
@@ -872,5 +907,5 @@ async def webhook_factory(db_session: AsyncSession, user_factory):
         await db_session.commit()
         await db_session.refresh(webhook)
         return webhook
-    
+
     return _create_webhook

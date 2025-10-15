@@ -33,7 +33,9 @@ class KeyManager:
     def __init__(self, key_file: Optional[Path] = None):
         """Initialize the key manager."""
         self.key_file = (
-            key_file or Path(settings.SECRETS_DIR) / "keys.json" if hasattr(settings, "SECRETS_DIR") else KEY_FILE
+            key_file or Path(settings.SECRETS_DIR) / "keys.json"
+            if hasattr(settings, "SECRETS_DIR")
+            else KEY_FILE
         )
         self.keys: Dict[str, Dict] = {}
         self.current_key_id: Optional[str] = None
@@ -125,7 +127,9 @@ class KeyManager:
             self._generate_new_key()
             return
 
-        last_rotated = datetime.fromisoformat(current_key.get("last_rotated", datetime.utcnow().isoformat()))
+        last_rotated = datetime.fromisoformat(
+            current_key.get("last_rotated", datetime.utcnow().isoformat())
+        )
         if datetime.utcnow() - last_rotated > timedelta(days=KEY_ROTATION_DAYS):
             self.rotate_keys()
 

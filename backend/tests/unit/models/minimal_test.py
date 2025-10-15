@@ -86,7 +86,9 @@ async def setup_db():
 
     # Verify tables were created
     async with engine.connect() as conn:
-        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
+        result = await conn.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table'")
+        )
         tables = [row[0] for row in result.fetchall()]
         logger.info(f"Created tables: {tables}")
 
@@ -135,7 +137,9 @@ class TestMinimalDB:
     async def test_tables_exist(self, setup_db, db):
         """Verify that all expected tables exist."""
         # Get all tables in the database
-        result = await db.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
+        result = await db.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table'")
+        )
         tables = [row[0] for row in result.fetchall()]
         logger.info(f"Tables in database: {tables}")
 
@@ -157,7 +161,9 @@ class TestMinimalDB:
         logger.info(f"Base metadata tables: {list(Base.metadata.tables.keys())}")
 
         for table in required_tables:
-            assert table in tables, f"Required table {table} not found in database. Found tables: {tables}"
+            assert (
+                table in tables
+            ), f"Required table {table} not found in database. Found tables: {tables}"
 
     async def test_create_user(self, setup_db, db):
         """Test creating a simple user."""

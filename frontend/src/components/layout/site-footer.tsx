@@ -1,6 +1,6 @@
 export function SiteFooter() {
-  const currentYear = new Date().getFullYear()
-  
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="border-t py-6">
       <div className="container flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
@@ -28,5 +28,5 @@ export function SiteFooter() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

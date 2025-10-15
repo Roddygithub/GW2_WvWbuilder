@@ -36,7 +36,10 @@ MAX_BACKOFF_DELAY = 30.0  # seconds
 TIMEOUT = 10.0  # seconds
 
 # Headers to include in webhook requests
-DEFAULT_HEADERS = {"User-Agent": f"GW2WvWBuilder-Webhooks/{settings.VERSION}", "Content-Type": "application/json"}
+DEFAULT_HEADERS = {
+    "User-Agent": f"GW2WvWBuilder-Webhooks/{settings.VERSION}",
+    "Content-Type": "application/json",
+}
 
 # Type variables for generic typing
 ModelType = TypeVar("ModelType", bound=Base)
@@ -97,10 +100,13 @@ class WebhookService:
             await self.db.rollback()
             logger.error(f"Failed to create webhook: {str(e)}", exc_info=True)
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create webhook: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to create webhook: {str(e)}",
             )
 
-    async def get_webhook(self, webhook_id: int, user_id: Optional[int] = None) -> Optional[Webhook]:
+    async def get_webhook(
+        self, webhook_id: int, user_id: Optional[int] = None
+    ) -> Optional[Webhook]:
         """Get a webhook by ID, optionally checking ownership.
 
         Args:
@@ -121,11 +127,17 @@ class WebhookService:
             return result.scalars().first()
 
         except Exception as e:
-            logger.error(f"Error fetching webhook {webhook_id}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Error fetching webhook {webhook_id}: {str(e)}", exc_info=True
+            )
             return None
 
     async def get_webhooks(
-        self, user_id: Optional[int] = None, skip: int = 0, limit: int = 100, filters: Optional[Dict[str, Any]] = None
+        self,
+        user_id: Optional[int] = None,
+        skip: int = 0,
+        limit: int = 100,
+        filters: Optional[Dict[str, Any]] = None,
     ) -> List[Webhook]:
         """Get a paginated list of webhooks, optionally filtered by user and other criteria.
 
@@ -164,7 +176,9 @@ class WebhookService:
     async def get_user_webhooks(self, user_id: int) -> List[Webhook]:
         """Return all webhooks for a given user."""
         try:
-            result = await self.db.execute(select(Webhook).where(Webhook.user_id == user_id))
+            result = await self.db.execute(
+                select(Webhook).where(Webhook.user_id == user_id)
+            )
             return result.scalars().all()
         except Exception as e:
             logger.error(f"Error fetching user webhooks: {e}", exc_info=True)
@@ -173,7 +187,11 @@ class WebhookService:
     def validate_url(self, url: str) -> bool:
         """Very basic URL validation for tests."""
         try:
-            return isinstance(url, str) and url.startswith(("http://", "https://")) and "." in url
+            return (
+                isinstance(url, str)
+                and url.startswith(("http://", "https://"))
+                and "." in url
+            )
         except Exception:
             return False
 
@@ -185,10 +203,14 @@ class WebhookService:
         except Exception:
             return False
 
-    async def update_webhook(self, webhook_id: int, webhook_in: WebhookUpdate) -> Optional[Webhook]:
+    async def update_webhook(
+        self, webhook_id: int, webhook_in: WebhookUpdate
+    ) -> Optional[Webhook]:
         """Update a webhook asynchronously."""
         try:
-            result = await self.db.execute(select(Webhook).where(Webhook.id == webhook_id))
+            result = await self.db.execute(
+                select(Webhook).where(Webhook.id == webhook_id)
+            )
             db_webhook = result.scalars().first()
             if not db_webhook:
                 return None
@@ -213,7 +235,9 @@ class WebhookService:
     async def delete_webhook(self, webhook_id: int) -> bool:
         """Delete a webhook asynchronously."""
         try:
-            result = await self.db.execute(select(Webhook).where(Webhook.id == webhook_id))
+            result = await self.db.execute(
+                select(Webhook).where(Webhook.id == webhook_id)
+            )
             db_webhook = result.scalars().first()
             if not db_webhook:
                 return False
@@ -236,11 +260,16 @@ class WebhookService:
             payload_bytes = bytes(payload)
         else:
             payload_bytes = json.dumps(str(payload)).encode()
-        return hmac.new(secret.encode(), msg=payload_bytes, digestmod=hashlib.sha256).hexdigest()
+        return hmac.new(
+            secret.encode(), msg=payload_bytes, digestmod=hashlib.sha256
+        ).hexdigest()
 
     @staticmethod
     async def dispatch_webhook(
-        db: Session, event_type: str, payload: Dict[str, Any], user_id: Optional[int] = None
+        db: Session,
+        event_type: str,
+        payload: Dict[str, Any],
+        user_id: Optional[int] = None,
     ) -> None:
         """
         Envoie un événement à tous les webhooks abonnés à cet événement.
@@ -251,7 +280,9 @@ class WebhookService:
             payload: Données à envoyer dans le webhook
             user_id: ID de l'utilisateur concerné (optionnel)
         """
-        query = db.query(Webhook).filter(Webhook.is_active, Webhook.event_types.any(event_type))
+        query = db.query(Webhook).filter(
+            Webhook.is_active, Webhook.event_types.any(event_type)
+        )
 
         if user_id:
             query = query.filter(Webhook.user_id == user_id)
@@ -265,14 +296,22 @@ class WebhookService:
         try:
             payload_json = json.dumps(payload, default=str).encode()
         except TypeError as e:
-            logger.error(f"Failed to serialize webhook payload for event {event_type}: {e}", exc_info=True)
+            logger.error(
+                f"Failed to serialize webhook payload for event {event_type}: {e}",
+                exc_info=True,
+            )
             return
 
         async with httpx.AsyncClient(timeout=settings.WEBHOOK_TIMEOUT) as client:
             tasks = [
-                WebhookService._send_single_webhook(client, webhook, event_type, payload_json) for webhook in webhooks
+                WebhookService._send_single_webhook(
+                    client, webhook, event_type, payload_json
+                )
+                for webhook in webhooks
             ]
-            await asyncio.gather(*tasks, return_exceptions=False)  # exceptions are handled in _send_single_webhook
+            await asyncio.gather(
+                *tasks, return_exceptions=False
+            )  # exceptions are handled in _send_single_webhook
 
     async def send_webhook(self, webhook: Webhook, payload: Dict[str, Any]) -> bool:
         """Send a webhook once and return success boolean."""
@@ -292,7 +331,9 @@ class WebhookService:
 
         async with httpx.AsyncClient(timeout=TIMEOUT) as client:
             try:
-                resp = await client.post(str(webhook.url), content=payload_json, headers=headers)
+                resp = await client.post(
+                    str(webhook.url), content=payload_json, headers=headers
+                )
                 return 200 <= resp.status_code < 400
             except Exception as e:
                 logger.warning(f"Webhook send failed: {e}")
@@ -329,7 +370,10 @@ class WebhookService:
 
     @staticmethod
     async def _send_single_webhook(
-        client: httpx.AsyncClient, webhook: Webhook, event_type: str, payload_json: bytes
+        client: httpx.AsyncClient,
+        webhook: Webhook,
+        event_type: str,
+        payload_json: bytes,
     ) -> None:
         """Envoie un événement à un seul webhook avec une logique de tentatives."""
         signature = WebhookService.generate_signature(webhook.secret, payload_json)
@@ -343,7 +387,9 @@ class WebhookService:
         delay = INITIAL_BACKOFF_DELAY
         for attempt in range(MAX_RETRIES):
             try:
-                response = await client.post(str(webhook.url), content=payload_json, headers=headers)
+                response = await client.post(
+                    str(webhook.url), content=payload_json, headers=headers
+                )
                 response.raise_for_status()  # Lève une exception pour les statuts 4xx/5xx
                 logger.info(
                     f"Webhook {webhook.id} sent to {webhook.url} on attempt {attempt + 1} - Status: {response.status_code}"
@@ -365,10 +411,14 @@ class WebhookService:
                     # It's safe as long as it's quick and not awaited.
                     webhook.is_active = False
                     # The session that dispatched this event will commit this change.
-                    logger.info(f"Webhook {webhook.id} has been disabled due to repeated failures.")
+                    logger.info(
+                        f"Webhook {webhook.id} has been disabled due to repeated failures."
+                    )
 
 
-async def get_webhook_service(db: AsyncSession = Depends(get_async_db)) -> WebhookService:
+async def get_webhook_service(
+    db: AsyncSession = Depends(get_async_db),
+) -> WebhookService:
     """Dependency that provides a WebhookService instance with a database session.
 
     Args:

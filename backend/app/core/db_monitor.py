@@ -80,7 +80,11 @@ class DatabaseMonitor:
 
     async def close(self):
         """Ferme le moteur de base de données s'il a été créé par cette instance."""
-        if hasattr(self, "_is_engine_temporary") and self._is_engine_temporary and self.engine:
+        if (
+            hasattr(self, "_is_engine_temporary")
+            and self._is_engine_temporary
+            and self.engine
+        ):
             await self.engine.dispose()
 
     async def collect_metrics(self) -> DatabaseMetrics:
@@ -196,16 +200,22 @@ class DatabaseMonitor:
             transaction_idle_time = result.scalar() or 0.0
 
             # Taille de la base de données
-            result = await conn.execute(text("SELECT pg_database_size(current_database()) / (1024 * 1024.0)"))
+            result = await conn.execute(
+                text("SELECT pg_database_size(current_database()) / (1024 * 1024.0)")
+            )
             db_size_mb = result.scalar() or 0.0
 
             # Total des requêtes (estimation)
-            result = await conn.execute(text("SELECT sum(calls) FROM pg_stat_statements"))
+            result = await conn.execute(
+                text("SELECT sum(calls) FROM pg_stat_statements")
+            )
             total_queries = result.scalar() or 0
 
             # Deadlocks (depuis le dernier démarrage)
             result = await conn.execute(
-                text("SELECT deadlocks FROM pg_stat_database WHERE datname = current_database()")
+                text(
+                    "SELECT deadlocks FROM pg_stat_database WHERE datname = current_database()"
+                )
             )
             deadlocks = result.scalar() or 0
 
@@ -230,12 +240,16 @@ class DatabaseMonitor:
 
             # Taille de la base de données
             result = await conn.execute(
-                text("SELECT page_count * page_size / (1024 * 1024.0) FROM pragma_page_count(), pragma_page_size()")
+                text(
+                    "SELECT page_count * page_size / (1024 * 1024.0) FROM pragma_page_count(), pragma_page_size()"
+                )
             )
             db_size_mb = result.scalar() or 0.0
 
             # Nombre de tables
-            result = await conn.execute(text("SELECT COUNT(*) FROM sqlite_master WHERE type='table'"))
+            result = await conn.execute(
+                text("SELECT COUNT(*) FROM sqlite_master WHERE type='table'")
+            )
             result.scalar() or 0
 
             # Taille du cache
@@ -325,7 +339,9 @@ class DatabaseMonitor:
 
     async def start_monitoring(self, interval: int = 300):
         """Démarre la surveillance continue de la base de données."""
-        logger.info(f"Démarrage de la surveillance de la base de données (intervalle: {interval}s)")
+        logger.info(
+            f"Démarrage de la surveillance de la base de données (intervalle: {interval}s)"
+        )
 
         while True:
             try:
@@ -343,7 +359,9 @@ class DatabaseMonitor:
                     if issue["severity"] == "error":
                         logger.error(f"[DB] {issue['message']} (Code: {issue['code']})")
                     elif issue["severity"] == "warning":
-                        logger.warning(f"[DB] {issue['message']} (Code: {issue['code']})")
+                        logger.warning(
+                            f"[DB] {issue['message']} (Code: {issue['code']})"
+                        )
                     else:
                         logger.info(f"[DB] {issue['message']} (Code: {issue['code']})")
 
@@ -354,7 +372,9 @@ class DatabaseMonitor:
                 logger.info("Arrêt de la surveillance de la base de données")
                 break
             except Exception as e:
-                logger.error(f"Erreur lors de la surveillance de la base de données: {str(e)}")
+                logger.error(
+                    f"Erreur lors de la surveillance de la base de données: {str(e)}"
+                )
                 await asyncio.sleep(60)  # Attendre 1 minute avant de réessayer
 
 

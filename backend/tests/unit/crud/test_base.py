@@ -55,7 +55,9 @@ def event_loop():
 async def db_engine():
     """Create database engine and tables."""
     # Create a fresh engine for testing with a unique in-memory database
-    test_engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=True, future=True)
+    test_engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:", echo=True, future=True
+    )
 
     # Create tables
     async with test_engine.begin() as conn:
@@ -150,7 +152,9 @@ async def test_get_multi_async(db_session, crud):
     await db_session.execute(delete(TestCRUDModel))
 
     # Add test models to the database with unique IDs
-    test_models = [TestCRUDModel(name=f"test_{i}", is_active=(i % 2 == 0)) for i in range(5)]
+    test_models = [
+        TestCRUDModel(name=f"test_{i}", is_active=(i % 2 == 0)) for i in range(5)
+    ]
 
     for model in test_models:
         db_session.add(model)
@@ -198,7 +202,9 @@ async def test_update_async(db_session, crud, test_update_schema):
     await db_session.commit()
 
     # Test update_async
-    updated = await crud.update_async(db_session, db_obj=test_model, obj_in=test_update_schema)
+    updated = await crud.update_async(
+        db_session, db_obj=test_model, obj_in=test_update_schema
+    )
 
     # Verify the result
     assert updated is not None

@@ -36,7 +36,9 @@ async_engine = create_async_engine(
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-TestingSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=async_engine, class_=AsyncSession)
+TestingSessionLocal = async_sessionmaker(
+    autocommit=False, autoflush=False, bind=async_engine, class_=AsyncSession
+)
 
 # Create sync engine for migrations and setup
 sync_engine = create_engine(
@@ -44,7 +46,9 @@ sync_engine = create_engine(
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
-SyncTestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
+SyncTestingSessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=sync_engine
+)
 
 # Create all tables
 Base.metadata.create_all(bind=sync_engine)
@@ -200,7 +204,9 @@ async def profession_factory(db: AsyncSession) -> Callable[..., Profession]:
 
 
 @pytest_asyncio.fixture(scope="function")
-async def build_factory(db: AsyncSession, user_factory, profession_factory) -> Callable[..., Build]:
+async def build_factory(
+    db: AsyncSession, user_factory, profession_factory
+) -> Callable[..., Build]:
     """Factory for creating test builds."""
 
     async def _build_factory(

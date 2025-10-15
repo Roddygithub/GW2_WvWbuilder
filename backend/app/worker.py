@@ -25,13 +25,17 @@ async def send_webhook(ctx, webhook_id: int, event_type: str, payload: Dict[str,
     avec un délai exponentiel. Si un webhook échoue de manière répétée, il est
     automatiquement désactivé.
     """
-    from app.crud import webhook as crud_webhook  # Import différé pour éviter les importations circulaires
+    from app.crud import (
+        webhook as crud_webhook,
+    )  # Import différé pour éviter les importations circulaires
 
     db = SessionLocal()
     try:
         webhook = await crud_webhook.get(db, id=webhook_id)
         if not webhook or not webhook.is_active:
-            logger.info(f"Webhook {webhook_id} non trouvé ou inactif. Annulation de l'envoi.")
+            logger.info(
+                f"Webhook {webhook_id} non trouvé ou inactif. Annulation de l'envoi."
+            )
             return
 
         signature = generate_webhook_signature(webhook.secret, payload)
@@ -41,17 +45,23 @@ async def send_webhook(ctx, webhook_id: int, event_type: str, payload: Dict[str,
         }
 
         async with httpx.AsyncClient() as client:
-            response = await client.post(webhook.url, json=payload, headers=headers, timeout=10)
+            response = await client.post(
+                webhook.url, json=payload, headers=headers, timeout=10
+            )
             response.raise_for_status()  # Lève une exception pour les statuts 4xx/5xx
 
-        logger.info(f"Webhook {webhook_id} pour l'événement {event_type} envoyé avec succès à {webhook.url}")
+        logger.info(
+            f"Webhook {webhook_id} pour l'événement {event_type} envoyé avec succès à {webhook.url}"
+        )
 
     except httpx.HTTPStatusError as e:
         logger.error(
             f"Échec de l'envoi du webhook {webhook_id} à {webhook.url}. Statut: {e.response.status_code}. Tentative {ctx.get('job_try', 1)}/{MAX_RETRIES}"
         )
         if ctx.get("job_try", 1) >= MAX_RETRIES:
-            logger.warning(f"Le webhook {webhook_id} a échoué après {MAX_RETRIES} tentatives. Désactivation.")
+            logger.warning(
+                f"Le webhook {webhook_id} a échoué après {MAX_RETRIES} tentatives. Désactivation."
+            )
             await crud_webhook.update(db, db_obj=webhook, obj_in={"is_active": False})
         raise e  # Arq va retenter la tâche
     except Exception as e:
@@ -82,7 +92,9 @@ def get_redis_settings():
     """Retourne les paramètres Redis en fonction de l'environnement."""
     if settings.TESTING:
         # Utilise une base de données Redis différente pour les tests
-        return RedisSettings(host=settings.REDIS_HOST, port=settings.REDIS_PORT, database=1)
+        return RedisSettings(
+            host=settings.REDIS_HOST, port=settings.REDIS_PORT, database=1
+        )
 
     # En production/développement, utilise l'URL Redis configurée
     redis_url = settings.redis_url

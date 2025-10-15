@@ -51,7 +51,9 @@ class TestDependencies:
         token = "valid.token.here"
 
         # Mock the security.get_current_user function
-        with patch("app.api.deps.security.get_current_user", new_callable=AsyncMock) as mock_get_user:
+        with patch(
+            "app.api.deps.security.get_current_user", new_callable=AsyncMock
+        ) as mock_get_user:
             mock_get_user.return_value = TEST_USER
 
             # Call the dependency
@@ -65,7 +67,9 @@ class TestDependencies:
     async def test_get_current_active_user(self):
         """Test getting the current active user."""
         # Mock the get_current_user dependency
-        with patch("app.api.deps.get_current_user", new_callable=AsyncMock) as mock_get_user:
+        with patch(
+            "app.api.deps.get_current_user", new_callable=AsyncMock
+        ) as mock_get_user:
             mock_get_user.return_value = TEST_USER
 
             # Call the dependency

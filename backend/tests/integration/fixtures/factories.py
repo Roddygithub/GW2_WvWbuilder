@@ -163,7 +163,9 @@ def create_test_data(db: Session) -> dict:
         build = BuildFactory(created_by=owner)
 
         # Associer 1-3 professions aléatoires
-        build_professions = fake.random_elements(elements=professions, length=fake.random_int(1, 3), unique=True)
+        build_professions = fake.random_elements(
+            elements=professions, length=fake.random_int(1, 3), unique=True
+        )
         build.professions = build_professions
 
         # Associer à une composition aléatoire

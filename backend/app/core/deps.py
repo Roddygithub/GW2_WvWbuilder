@@ -15,15 +15,21 @@ from app.models.user import User
 from app.schemas.token import TokenPayload
 
 # Schéma OAuth2 pour l'authentification par token
-reusable_oauth2 = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/login/access-token")
+reusable_oauth2 = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_V1_STR}/login/access-token"
+)
 
 
-def get_current_user(db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)) -> User:
+def get_current_user(
+    db: Session = Depends(get_db), token: str = Depends(reusable_oauth2)
+) -> User:
     """
     Obtient l'utilisateur actuellement authentifié à partir du token JWT.
     """
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[security.ALGORITHM])
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+        )
         token_data = TokenPayload(**payload)
     except (JWTError, ValidationError):
         raise HTTPException(
@@ -54,5 +60,7 @@ def get_current_active_superuser(
     Vérifie que l'utilisateur actuel est un superutilisateur.
     """
     if not current_user.is_superuser:
-        raise HTTPException(status_code=400, detail="L'utilisateur n'a pas les privilèges suffisants")
+        raise HTTPException(
+            status_code=400, detail="L'utilisateur n'a pas les privilèges suffisants"
+        )
     return current_user

@@ -29,7 +29,9 @@ class KeyRotationService:
         """Initialise le service avec les clés actuelles et historiques."""
         self.current_key_id = "key_1"
         self.keys: Dict[str, str] = {}
-        self.key_rotation_interval = timedelta(days=settings.SECRET_KEY_ROTATION_INTERVAL_DAYS)
+        self.key_rotation_interval = timedelta(
+            days=settings.SECRET_KEY_ROTATION_INTERVAL_DAYS
+        )
         self.last_rotation_date = datetime.now(timezone.utc)
         self._initialize_keys()
 
@@ -107,7 +109,10 @@ class KeyRotationService:
     def _cleanup_old_keys(self):
         """Nettoie les anciennes clés, ne garde que les plus récentes."""
         # Trier les clés par numéro (du plus ancien au plus récent)
-        sorted_keys = sorted([k for k in self.keys.keys() if k.startswith("key_")], key=lambda x: int(x.split("_")[1]))
+        sorted_keys = sorted(
+            [k for k in self.keys.keys() if k.startswith("key_")],
+            key=lambda x: int(x.split("_")[1]),
+        )
 
         # Supprimer les clés les plus anciennes (sauf les plus récentes)
         for key_id in sorted_keys[: -settings.MAX_OLD_KEYS]:
@@ -163,7 +168,9 @@ class KeyRotationService:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    def encode_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    def encode_token(
+        self, data: dict, expires_delta: Optional[timedelta] = None
+    ) -> str:
         """
         Crée un nouveau token JWT signé avec la clé actuelle.
 
@@ -179,11 +186,15 @@ class KeyRotationService:
         if expires_delta:
             expire = datetime.now(timezone.utc) + expires_delta
         else:
-            expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+            expire = datetime.now(timezone.utc) + timedelta(
+                minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+            )
 
         to_encode.update({"exp": expire, "kid": self.current_key_id})
 
-        return jwt.encode(to_encode, self.keys[self.current_key_id], algorithm=settings.JWT_ALGORITHM)
+        return jwt.encode(
+            to_encode, self.keys[self.current_key_id], algorithm=settings.JWT_ALGORITHM
+        )
 
     def __iter__(self):
         """Permet d'itérer sur les paires (key_id, key_value)."""

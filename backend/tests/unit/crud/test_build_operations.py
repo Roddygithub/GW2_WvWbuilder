@@ -65,7 +65,9 @@ class TestCRUDBuildCreate:
     """Tests for build creation operations."""
 
     @pytest.mark.asyncio
-    async def test_create_with_owner_async_success(self, build_data, build_model, profession_models):
+    async def test_create_with_owner_async_success(
+        self, build_data, build_model, profession_models
+    ):
         """Test successful async build creation with professions."""
         # Setup
         db = AsyncMock(spec=AsyncSession)
@@ -91,10 +93,14 @@ class TestCRUDBuildCreate:
         build_in = BuildCreate(**build_data)
 
         # Mock the actual method we're testing with the correct signature
-        with patch("app.crud.build.CRUDBuild.create_with_owner_async", new_callable=AsyncMock) as mock_create:
+        with patch(
+            "app.crud.build.CRUDBuild.create_with_owner_async", new_callable=AsyncMock
+        ) as mock_create:
             mock_create.return_value = build_model
 
-            result = await crud_build.create_with_owner_async(db=db, obj_in=build_in, owner_id=TEST_USER_ID)
+            result = await crud_build.create_with_owner_async(
+                db=db, obj_in=build_in, owner_id=TEST_USER_ID
+            )
 
             # Assertions
             assert result is not None
@@ -129,11 +135,19 @@ class TestCRUDBuildCreate:
         build_in = BuildCreate(**test_data)
 
         # Mock the actual method to raise the expected error
-        with patch("app.crud.build.CRUDBuild.create_with_owner_async", new_callable=AsyncMock) as mock_create:
-            mock_create.side_effect = ValueError("Profession with ID 999 not found in database")
+        with patch(
+            "app.crud.build.CRUDBuild.create_with_owner_async", new_callable=AsyncMock
+        ) as mock_create:
+            mock_create.side_effect = ValueError(
+                "Profession with ID 999 not found in database"
+            )
 
-            with pytest.raises(ValueError, match="Profession with ID 999 not found in database"):
-                await crud_build.create_with_owner_async(db=db, obj_in=build_in, owner_id=TEST_USER_ID)
+            with pytest.raises(
+                ValueError, match="Profession with ID 999 not found in database"
+            ):
+                await crud_build.create_with_owner_async(
+                    db=db, obj_in=build_in, owner_id=TEST_USER_ID
+                )
 
             # Verify the method was called with the right parameters
             mock_create.assert_awaited_once()
@@ -148,7 +162,9 @@ class TestCRUDBuildRead:
     """Tests for build read operations."""
 
     @pytest.mark.asyncio
-    async def test_get_with_professions_async_success(self, build_model, profession_models):
+    async def test_get_with_professions_async_success(
+        self, build_model, profession_models
+    ):
         """Test getting a build with its professions."""
         # Setup
         db = AsyncMock(spec=AsyncSession)
@@ -194,7 +210,9 @@ class TestCRUDBuildUpdate:
     """Tests for build update operations."""
 
     @pytest.mark.asyncio
-    async def test_update_with_professions_async_success(self, build_model, profession_models):
+    async def test_update_with_professions_async_success(
+        self, build_model, profession_models
+    ):
         """Test successful build update with profession changes."""
         # Setup
         db = AsyncMock(spec=AsyncSession)
@@ -253,7 +271,9 @@ class TestCRUDBuildDelete:
         db = AsyncMock(spec=AsyncSession)
 
         # Mock the get_async method to return our build
-        with patch("app.crud.build.build.get_async", new_callable=AsyncMock) as mock_get_async:
+        with patch(
+            "app.crud.build.build.get_async", new_callable=AsyncMock
+        ) as mock_get_async:
             mock_get_async.return_value = build_model
 
             # Execute delete
@@ -302,7 +322,9 @@ class TestCRUDBuildEdgeCases:
         ) as mock_update:
 
             # Configure the mock to raise an IntegrityError
-            mock_update.side_effect = IntegrityError("Concurrent update detected", params=None, orig=None)
+            mock_update.side_effect = IntegrityError(
+                "Concurrent update detected", params=None, orig=None
+            )
 
             # Execute and assert
             with pytest.raises(IntegrityError, match="Concurrent update detected"):
@@ -329,14 +351,18 @@ class TestCRUDBuildEdgeCases:
         build_in = BuildCreate(**build_data)
 
         # Mock the create method to raise a SQLAlchemyError
-        with patch("app.crud.build.CRUDBuild.create_with_owner_async", new_callable=AsyncMock) as mock_create:
+        with patch(
+            "app.crud.build.CRUDBuild.create_with_owner_async", new_callable=AsyncMock
+        ) as mock_create:
 
             # Configure the mock to raise a SQLAlchemyError
             mock_create.side_effect = SQLAlchemyError("Database connection failed")
 
             # Execute and assert
             with pytest.raises(SQLAlchemyError, match="Database connection failed"):
-                await crud_build.create_with_owner_async(db=db, obj_in=build_in, owner_id=TEST_USER_ID)
+                await crud_build.create_with_owner_async(
+                    db=db, obj_in=build_in, owner_id=TEST_USER_ID
+                )
 
             # Verify the method was called with the right parameters
             mock_create.assert_awaited_once()

@@ -68,7 +68,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Démarrage de la surveillance de la base de données...")
     from app.core import db_monitor
 
-    monitor_task = asyncio.create_task(db_monitor.start_monitoring(interval=300))  # Toutes les 5 minutes
+    monitor_task = asyncio.create_task(
+        db_monitor.start_monitoring(interval=300)
+    )  # Toutes les 5 minutes
 
     try:
         yield  # L'application est en cours d'exécution
@@ -167,7 +169,9 @@ def create_application() -> FastAPI:
         # Only mount static files if not in test environment
         if settings.ENVIRONMENT != "test":
             print(f"Mounting static directory at: {static_dir}")
-            application.mount("/static", StaticFiles(directory=static_dir), name="static")
+            application.mount(
+                "/static", StaticFiles(directory=static_dir), name="static"
+            )
         else:
             print("Skipping static files mount in test environment")
 
@@ -185,58 +189,68 @@ def create_application() -> FastAPI:
 
     # Add exception handlers
     @application.exception_handler(HTTPException)
-    async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    async def http_exception_handler(
+        request: Request, exc: HTTPException
+    ) -> JSONResponse:
         return JSONResponse(
             status_code=exc.status_code,
             content={"detail": exc.detail},
         )
 
     @application.exception_handler(RequestValidationError)
-    async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+    async def validation_exception_handler(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
         return JSONResponse(
             status_code=422,
             content={"detail": exc.errors(), "body": exc.body},
         )
 
     @application.exception_handler(500)
-    async def internal_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    async def internal_exception_handler(
+        request: Request, exc: Exception
+    ) -> JSONResponse:
         # Log the error
         logger.error(f"Internal server error: {exc}", exc_info=True)
-        
+
         # In debug mode, return the actual error
         if settings.DEBUG:
             import traceback
+
             return JSONResponse(
                 status_code=500,
                 content={
                     "detail": str(exc),
                     "type": type(exc).__name__,
-                    "traceback": traceback.format_exc()
+                    "traceback": traceback.format_exc(),
                 },
             )
-        
+
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error"},
         )
-    
+
     @application.exception_handler(Exception)
-    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    async def global_exception_handler(
+        request: Request, exc: Exception
+    ) -> JSONResponse:
         # Log the error
         logger.error(f"Unhandled exception: {exc}", exc_info=True)
-        
+
         # In debug mode, return the actual error
         if settings.DEBUG:
             import traceback
+
             return JSONResponse(
                 status_code=500,
                 content={
                     "detail": str(exc),
                     "type": type(exc).__name__,
-                    "traceback": traceback.format_exc()
+                    "traceback": traceback.format_exc(),
                 },
             )
-        
+
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error"},

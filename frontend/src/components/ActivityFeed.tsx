@@ -3,11 +3,11 @@
  * Displays recent user activities
  */
 
-import { Clock, FileText, Users, Tag } from 'lucide-react';
+import { Clock, FileText, Users, Tag } from "lucide-react";
 
 export interface Activity {
   id: string;
-  type: 'composition' | 'build' | 'team' | 'tag';
+  type: "composition" | "build" | "team" | "tag";
   title: string;
   description: string;
   timestamp: string;
@@ -26,19 +26,24 @@ const activityIcons = {
 };
 
 const activityColors = {
-  composition: 'bg-green-600',
-  build: 'bg-blue-600',
-  team: 'bg-purple-600',
-  tag: 'bg-yellow-600',
+  composition: "bg-green-600",
+  build: "bg-blue-600",
+  team: "bg-purple-600",
+  tag: "bg-yellow-600",
 };
 
-export default function ActivityFeed({ activities, maxItems = 5 }: ActivityFeedProps) {
+export default function ActivityFeed({
+  activities,
+  maxItems = 5,
+}: ActivityFeedProps) {
   const displayActivities = activities.slice(0, maxItems);
 
   if (displayActivities.length === 0) {
     return (
       <div className="rounded-lg bg-slate-800/50 p-6 shadow-xl backdrop-blur-sm">
-        <h3 className="text-lg font-semibold text-white mb-4">Recent Activity</h3>
+        <h3 className="text-lg font-semibold text-white mb-4">
+          Recent Activity
+        </h3>
         <div className="text-center py-8">
           <Clock className="mx-auto h-12 w-12 text-gray-600" />
           <p className="mt-2 text-sm text-gray-400">No recent activity</p>
@@ -87,10 +92,10 @@ function formatTimestamp(timestamp: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+
   return date.toLocaleDateString();
 }

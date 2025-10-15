@@ -3,11 +3,11 @@
  * Modal for theme, language, and notification settings
  */
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Moon, Sun, Globe, Bell, Check } from 'lucide-react';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Moon, Sun, Globe, Bell, Check } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -15,8 +15,8 @@ interface SettingsModalProps {
 }
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
-  const [language, setLanguage] = useState<'en' | 'fr'>('en');
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [language, setLanguage] = useState<"en" | "fr">("en");
   const [notifications, setNotifications] = useState({
     builds: true,
     teams: true,
@@ -24,7 +24,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   });
 
   const handleSave = () => {
-    toast.success('Settings saved successfully!');
+    toast.success("Settings saved successfully!");
     onClose();
   };
 
@@ -46,7 +46,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
             <div className="w-full max-w-2xl bg-gradient-to-br from-slate-900 to-slate-950 rounded-2xl border border-purple-500/30 shadow-[0_0_50px_rgba(168,85,247,0.3)] overflow-hidden">
@@ -72,28 +72,32 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     <span>Theme</span>
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
-                    {['dark', 'light'].map((t) => (
+                    {["dark", "light"].map((t) => (
                       <motion.button
                         key={t}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setTheme(t as 'light' | 'dark')}
+                        onClick={() => setTheme(t as "light" | "dark")}
                         className={cn(
-                          'flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-300',
+                          "flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-300",
                           theme === t
-                            ? 'bg-purple-500/20 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
-                            : 'bg-slate-800/40 border-slate-700 hover:border-slate-600'
+                            ? "bg-purple-500/20 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+                            : "bg-slate-800/40 border-slate-700 hover:border-slate-600",
                         )}
                       >
                         <div className="flex items-center space-x-3">
-                          {t === 'dark' ? (
+                          {t === "dark" ? (
                             <Moon className="w-5 h-5 text-purple-400" />
                           ) : (
                             <Sun className="w-5 h-5 text-amber-400" />
                           )}
-                          <span className="text-slate-200 font-medium capitalize">{t}</span>
+                          <span className="text-slate-200 font-medium capitalize">
+                            {t}
+                          </span>
                         </div>
-                        {theme === t && <Check className="w-5 h-5 text-purple-400" />}
+                        {theme === t && (
+                          <Check className="w-5 h-5 text-purple-400" />
+                        )}
                       </motion.button>
                     ))}
                   </div>
@@ -107,23 +111,27 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
                     {[
-                      { code: 'en', name: 'English' },
-                      { code: 'fr', name: 'Français' },
+                      { code: "en", name: "English" },
+                      { code: "fr", name: "Français" },
                     ].map((lang) => (
                       <motion.button
                         key={lang.code}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setLanguage(lang.code as 'en' | 'fr')}
+                        onClick={() => setLanguage(lang.code as "en" | "fr")}
                         className={cn(
-                          'flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-300',
+                          "flex items-center justify-between p-4 rounded-lg border-2 transition-all duration-300",
                           language === lang.code
-                            ? 'bg-purple-500/20 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.3)]'
-                            : 'bg-slate-800/40 border-slate-700 hover:border-slate-600'
+                            ? "bg-purple-500/20 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+                            : "bg-slate-800/40 border-slate-700 hover:border-slate-600",
                         )}
                       >
-                        <span className="text-slate-200 font-medium">{lang.name}</span>
-                        {language === lang.code && <Check className="w-5 h-5 text-purple-400" />}
+                        <span className="text-slate-200 font-medium">
+                          {lang.name}
+                        </span>
+                        {language === lang.code && (
+                          <Check className="w-5 h-5 text-purple-400" />
+                        )}
                       </motion.button>
                     ))}
                   </div>
@@ -137,40 +145,61 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </h3>
                   <div className="space-y-3">
                     {[
-                      { key: 'builds', label: 'New builds shared', description: 'Get notified when new builds are shared' },
-                      { key: 'teams', label: 'Team updates', description: 'Get notified about team changes' },
-                      { key: 'updates', label: 'System updates', description: 'Get notified about app updates' },
+                      {
+                        key: "builds",
+                        label: "New builds shared",
+                        description: "Get notified when new builds are shared",
+                      },
+                      {
+                        key: "teams",
+                        label: "Team updates",
+                        description: "Get notified about team changes",
+                      },
+                      {
+                        key: "updates",
+                        label: "System updates",
+                        description: "Get notified about app updates",
+                      },
                     ].map((notif) => (
                       <div
                         key={notif.key}
                         className="flex items-center justify-between p-4 rounded-lg bg-slate-800/40 border border-slate-700 hover:border-slate-600 transition-colors"
                       >
                         <div>
-                          <p className="text-slate-200 font-medium">{notif.label}</p>
-                          <p className="text-xs text-slate-400 mt-1">{notif.description}</p>
+                          <p className="text-slate-200 font-medium">
+                            {notif.label}
+                          </p>
+                          <p className="text-xs text-slate-400 mt-1">
+                            {notif.description}
+                          </p>
                         </div>
                         <button
                           onClick={() =>
                             setNotifications((prev) => ({
                               ...prev,
-                              [notif.key]: !prev[notif.key as keyof typeof prev],
+                              [notif.key]:
+                                !prev[notif.key as keyof typeof prev],
                             }))
                           }
                           className={cn(
-                            'relative w-12 h-6 rounded-full transition-colors duration-300',
-                            notifications[notif.key as keyof typeof notifications]
-                              ? 'bg-purple-500'
-                              : 'bg-slate-600'
+                            "relative w-12 h-6 rounded-full transition-colors duration-300",
+                            notifications[
+                              notif.key as keyof typeof notifications
+                            ]
+                              ? "bg-purple-500"
+                              : "bg-slate-600",
                           )}
                         >
                           <motion.div
                             layout
                             transition={{ duration: 0.2 }}
                             className={cn(
-                              'absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-lg',
-                              notifications[notif.key as keyof typeof notifications]
-                                ? 'left-6'
-                                : 'left-0.5'
+                              "absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-lg",
+                              notifications[
+                                notif.key as keyof typeof notifications
+                              ]
+                                ? "left-6"
+                                : "left-0.5",
                             )}
                           />
                         </button>

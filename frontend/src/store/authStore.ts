@@ -3,18 +3,24 @@
  * Global state management for user authentication
  */
 
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { User } from '../api/auth';
-import { getCurrentUser, isAuthenticated, login as apiLogin, logout as apiLogout, register as apiRegister } from '../api/auth';
-import type { LoginRequest, RegisterRequest } from '../api/auth';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { User } from "../api/auth";
+import {
+  getCurrentUser,
+  isAuthenticated,
+  login as apiLogin,
+  logout as apiLogout,
+  register as apiRegister,
+} from "../api/auth";
+import type { LoginRequest, RegisterRequest } from "../api/auth";
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  
+
   // Actions
   login: (credentials: LoginRequest) => Promise<void>;
   register: (userData: RegisterRequest) => Promise<void>;
@@ -33,13 +39,13 @@ export const useAuthStore = create<AuthState>()(
 
       login: async (credentials: LoginRequest) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           await apiLogin(credentials);
-          
+
           // Fetch user profile after successful login
           const user = await getCurrentUser();
-          
+
           set({
             user,
             isAuthenticated: true,
@@ -48,8 +54,8 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error: any) {
           // Normalize error message for Cypress detection (must include "invalid", "incorrect", or "error")
-          let errorMessage = 'Invalid credentials';
-          
+          let errorMessage = "Invalid credentials";
+
           if (error instanceof Error) {
             errorMessage = error.message;
           } else if (error?.response?.data?.detail) {
@@ -57,12 +63,12 @@ export const useAuthStore = create<AuthState>()(
           } else if (error?.message) {
             errorMessage = error.message;
           }
-          
+
           // Ensure error message contains a keyword that Cypress can detect
           if (!/invalid|incorrect|error/i.test(errorMessage)) {
             errorMessage = `Invalid credentials: ${errorMessage}`;
           }
-          
+
           set({
             user: null,
             isAuthenticated: false,
@@ -75,20 +81,20 @@ export const useAuthStore = create<AuthState>()(
 
       register: async (userData: RegisterRequest) => {
         set({ isLoading: true, error: null });
-        
+
         try {
           // Register user - backend returns tokens directly
           const response = await apiRegister(userData);
-          
+
           // If registration returns tokens, use them directly
-          if (response && 'access_token' in response) {
+          if (response && "access_token" in response) {
             // Store token and load user info
             const token = (response as any).access_token as string;
-            localStorage.setItem('access_token', token);
-            
+            localStorage.setItem("access_token", token);
+
             // Load user profile
             const currentUser = await getCurrentUser();
-            
+
             set({
               user: currentUser,
               isAuthenticated: true,
@@ -101,7 +107,7 @@ export const useAuthStore = create<AuthState>()(
               username: userData.email, // Use email instead of username
               password: userData.password,
             });
-            
+
             set({
               user: response,
               isAuthenticated: true,
@@ -110,7 +116,8 @@ export const useAuthStore = create<AuthState>()(
             });
           }
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+          const errorMessage =
+            error instanceof Error ? error.message : "Registration failed";
           set({
             user: null,
             isAuthenticated: false,
@@ -139,7 +146,7 @@ export const useAuthStore = create<AuthState>()(
         }
 
         set({ isLoading: true, error: null });
-        
+
         try {
           const user = await getCurrentUser();
           set({
@@ -153,7 +160,7 @@ export const useAuthStore = create<AuthState>()(
             // Keep user as-is; if null, UI will use fallbacks
             isAuthenticated: true,
             isLoading: false,
-            error: 'Could not load profile. Some features may be limited.',
+            error: "Could not load profile. Some features may be limited.",
           });
         }
       },
@@ -163,13 +170,13 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       partialize: (state) => ({
         isAuthenticated: state.isAuthenticated,
         // Don't persist user data for security
       }),
-    }
-  )
+    },
+  ),
 );
 
 export default useAuthStore;

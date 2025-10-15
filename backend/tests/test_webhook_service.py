@@ -24,7 +24,9 @@ def mock_db_session():
     session = MagicMock(spec=Session)
     session.query.return_value.filter.return_value.all.return_value = []
     session.query.return_value.filter.return_value.first.return_value = None
-    session.query.return_value.filter.return_value.offset.return_value.limit.return_value.all.return_value = []
+    session.query.return_value.filter.return_value.offset.return_value.limit.return_value.all.return_value = (
+        []
+    )
     return session
 
 
@@ -33,17 +35,24 @@ class TestWebhookService:
 
     def test_create_webhook(self, mock_db_session: MagicMock):
         """Test creating a new webhook."""
-        webhook_in = WebhookCreate(url="https://example.com/hook", event_types=["build.create"])
+        webhook_in = WebhookCreate(
+            url="https://example.com/hook", event_types=["build.create"]
+        )
         user_id = 1
         mock_webhook = MagicMock()
         mock_db_session.add.return_value = mock_webhook
 
-        with patch("app.services.webhook_service.generate_secret_key", return_value="test_secret"):
+        with patch(
+            "app.services.webhook_service.generate_secret_key",
+            return_value="test_secret",
+        ):
             with patch("app.models.webhook.Webhook") as mock_webhook_cls:
                 mock_webhook_instance = MagicMock()
                 mock_webhook_cls.return_value = mock_webhook_instance
 
-                result = WebhookService.create_webhook(mock_db_session, webhook_in, user_id)
+                result = WebhookService.create_webhook(
+                    mock_db_session, webhook_in, user_id
+                )
 
                 # Check Webhook was instantiated with correct parameters
                 mock_webhook_cls.assert_called_once_with(
@@ -66,7 +75,9 @@ class TestWebhookService:
         """Test HMAC signature generation."""
         secret = "my_super_secret"
         payload = b'{"key": "value"}'
-        expected_signature = hmac.new(secret.encode(), msg=payload, digestmod=hashlib.sha256).hexdigest()
+        expected_signature = hmac.new(
+            secret.encode(), msg=payload, digestmod=hashlib.sha256
+        ).hexdigest()
 
         signature = WebhookService.generate_signature(secret, payload)
         assert signature == expected_signature
@@ -90,7 +101,9 @@ class TestWebhookService:
         event_type = "build.create"
         payload_json = b'{"data": "test"}'
 
-        await WebhookService._send_single_webhook(mock_client, webhook, event_type, payload_json)
+        await WebhookService._send_single_webhook(
+            mock_client, webhook, event_type, payload_json
+        )
 
         mock_client.post.assert_awaited_once()
         args, kwargs = mock_client.post.await_args
@@ -120,7 +133,9 @@ class TestWebhookService:
         payload_json = b'{"data": "test"}'
 
         # The function should handle the exception and not raise it
-        await WebhookService._send_single_webhook(mock_client, webhook, event_type, payload_json)
+        await WebhookService._send_single_webhook(
+            mock_client, webhook, event_type, payload_json
+        )
 
         # Verify it was called MAX_RETRIES times
         assert mock_client.post.await_count == MAX_RETRIES
@@ -152,7 +167,10 @@ class TestWebhookService:
         )
 
         # Mock the query to return our test webhooks
-        mock_db_session.query.return_value.filter.return_value.all.return_value = [webhook1, webhook2]
+        mock_db_session.query.return_value.filter.return_value.all.return_value = [
+            webhook1,
+            webhook2,
+        ]
 
         # Mock the async client
         mock_client = AsyncMock(spec=httpx.AsyncClient)
@@ -183,10 +201,18 @@ class TestWebhookService:
 
         # Mock webhooks subscribed to the event
         webhook1 = Webhook(
-            id=1, url="https://site1.com/hook", secret="secret1", event_types=[event_type], is_active=True
+            id=1,
+            url="https://site1.com/hook",
+            secret="secret1",
+            event_types=[event_type],
+            is_active=True,
         )
         webhook2 = Webhook(
-            id=2, url="https://site2.com/hook", secret="secret2", event_types=[event_type], is_active=True
+            id=2,
+            url="https://site2.com/hook",
+            secret="secret2",
+            event_types=[event_type],
+            is_active=True,
         )
 
         # Mock the database query to return these webhooks
@@ -196,9 +222,12 @@ class TestWebhookService:
 
         # Patch the underlying send function to avoid actual HTTP calls
         with patch(
-            "app.services.webhook_service.WebhookService._send_single_webhook", new_callable=AsyncMock
+            "app.services.webhook_service.WebhookService._send_single_webhook",
+            new_callable=AsyncMock,
         ) as mock_send:
-            await WebhookService.dispatch_webhook(mock_db_session, event_type, payload, user_id)
+            await WebhookService.dispatch_webhook(
+                mock_db_session, event_type, payload, user_id
+            )
 
             # Verify that the query was constructed correctly
             assert mock_db_session.query.call_count == 1
@@ -222,20 +251,27 @@ class TestWebhookService:
         mock_db_session.query.return_value = mock_query
 
         with patch(
-            "app.services.webhook_service.WebhookService._send_single_webhook", new_callable=AsyncMock
+            "app.services.webhook_service.WebhookService._send_single_webhook",
+            new_callable=AsyncMock,
         ) as mock_send:
             await WebhookService.dispatch_webhook(mock_db_session, "some.event", {}, 1)
 
             # Ensure no send attempts were made
             mock_send.assert_not_called()
 
-    async def test_dispatch_webhook_serialization_error(self, mock_db_session: MagicMock):
+    async def test_dispatch_webhook_serialization_error(
+        self, mock_db_session: MagicMock
+    ):
         """Test that dispatching fails gracefully on payload serialization error."""
         # A complex object that json.dumps can't handle by default
         unserializable_payload = {"time": datetime.now()}
 
         webhook1 = Webhook(
-            id=1, url="https://site1.com/hook", secret="secret1", event_types=["test.event"], is_active=True
+            id=1,
+            url="https://site1.com/hook",
+            secret="secret1",
+            event_types=["test.event"],
+            is_active=True,
         )
         mock_query = MagicMock()
         mock_query.filter.return_value.all.return_value = [webhook1]
@@ -244,9 +280,12 @@ class TestWebhookService:
         # Patch json.dumps to simulate the error
         with patch("json.dumps", side_effect=TypeError("Test serialization error")):
             with patch(
-                "app.services.webhook_service.WebhookService._send_single_webhook", new_callable=AsyncMock
+                "app.services.webhook_service.WebhookService._send_single_webhook",
+                new_callable=AsyncMock,
             ) as mock_send:
-                await WebhookService.dispatch_webhook(mock_db_session, "test.event", unserializable_payload, 1)
+                await WebhookService.dispatch_webhook(
+                    mock_db_session, "test.event", unserializable_payload, 1
+                )
 
                 # The service should log the error and not attempt to send anything
                 mock_send.assert_not_called()
@@ -271,7 +310,9 @@ class TestWebhookService:
         event_type = "build.create"
         payload_json = b'{"data": "test"}'
 
-        await WebhookService._send_single_webhook(mock_client, webhook, event_type, payload_json)
+        await WebhookService._send_single_webhook(
+            mock_client, webhook, event_type, payload_json
+        )
 
         # Verify it was called only once
         assert mock_client.post.await_count == 1
@@ -296,7 +337,9 @@ class TestWebhookService:
         )
 
         # Mock the query to return our test webhook
-        mock_db_session.query.return_value.filter.return_value.first.return_value = test_webhook
+        mock_db_session.query.return_value.filter.return_value.first.return_value = (
+            test_webhook
+        )
 
         # Call the method
         result = WebhookService.get_webhook(mock_db_session, webhook_id, user_id)
@@ -349,7 +392,9 @@ class TestWebhookService:
         )
 
         # Call the method
-        result = WebhookService.get_webhooks(mock_db_session, user_id, skip=skip, limit=limit)
+        result = WebhookService.get_webhooks(
+            mock_db_session, user_id, skip=skip, limit=limit
+        )
 
         # Assertions
         assert result == test_webhooks
@@ -379,7 +424,9 @@ class TestWebhookService:
 
         # Create an update object with some changes
         webhook_in = WebhookUpdate(
-            url="https://updated.example.com/hook", event_types=["updated.event"], is_active=False
+            url="https://updated.example.com/hook",
+            event_types=["updated.event"],
+            is_active=False,
         )
 
         # Create a test webhook that will be updated
@@ -394,10 +441,14 @@ class TestWebhookService:
         )
 
         # Mock the query to return our test webhook
-        mock_db_session.query.return_value.filter.return_value.first.return_value = test_webhook
+        mock_db_session.query.return_value.filter.return_value.first.return_value = (
+            test_webhook
+        )
 
         # Call the method
-        result = WebhookService.update_webhook(mock_db_session, webhook_id, user_id, webhook_in)
+        result = WebhookService.update_webhook(
+            mock_db_session, webhook_id, user_id, webhook_in
+        )
 
         # Assertions
         assert result == test_webhook
@@ -412,7 +463,9 @@ class TestWebhookService:
         mock_db_session.commit.assert_called_once()
         mock_db_session.refresh.assert_called_once_with(test_webhook)
 
-    async def test_dispatch_webhook_serialization_error(self, mock_db_session: MagicMock):
+    async def test_dispatch_webhook_serialization_error(
+        self, mock_db_session: MagicMock
+    ):
         """Test handling of serialization errors during webhook dispatch."""
         # Create a test webhook
         webhook = Webhook(
@@ -424,7 +477,9 @@ class TestWebhookService:
             user_id=1,
             created_at=datetime.now(timezone.utc),
         )
-        mock_db_session.query.return_value.filter.return_value.all.return_value = [webhook]
+        mock_db_session.query.return_value.filter.return_value.all.return_value = [
+            webhook
+        ]
 
         # Create a payload with unserializable data
         class Unserializable:

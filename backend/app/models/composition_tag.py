@@ -25,16 +25,25 @@ class CompositionTag(Base, TimeStampedMixin):
     """
 
     __tablename__ = "composition_tags"
-    __table_args__ = {"extend_existing": True}  # Permet de redéfinir la table si elle existe déjà
+    __table_args__ = {
+        "extend_existing": True
+    }  # Permet de redéfinir la table si elle existe déjà
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     composition_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("compositions.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("compositions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
-    tag_id: Mapped[int] = mapped_column(Integer, ForeignKey("tags.id", ondelete="CASCADE"), nullable=False, index=True)
+    tag_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("tags.id", ondelete="CASCADE"), nullable=False, index=True
+    )
 
     # Relations
-    composition: Mapped["Composition"] = relationship("Composition", back_populates="composition_tags")
+    composition: Mapped["Composition"] = relationship(
+        "Composition", back_populates="composition_tags"
+    )
     tag: Mapped["Tag"] = relationship("Tag", back_populates="composition_tags")
 
     def __repr__(self) -> str:

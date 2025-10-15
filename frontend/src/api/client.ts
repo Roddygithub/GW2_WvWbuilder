@@ -4,12 +4,11 @@
  */
 
 // In development, prefer Vite proxy to avoid CORS (see vite.config.ts)
-const isDev = import.meta.env.MODE !== 'production';
-const useProxy = (import.meta.env.VITE_API_USE_PROXY ?? 'true') === 'true';
-const API_BASE_URL = isDev && useProxy
-  ? ''
-  : (import.meta.env.VITE_API_BASE_URL || '');
-const API_V1_STR = '/api/v1';
+const isDev = import.meta.env.MODE !== "production";
+const useProxy = (import.meta.env.VITE_API_USE_PROXY ?? "true") === "true";
+const API_BASE_URL =
+  isDev && useProxy ? "" : import.meta.env.VITE_API_BASE_URL || "";
+const API_V1_STR = "/api/v1";
 
 export interface ApiError {
   detail?: string;
@@ -23,7 +22,7 @@ export class ApiClientError extends Error {
 
   constructor(status: number, detail: string) {
     super(detail);
-    this.name = 'ApiClientError';
+    this.name = "ApiClientError";
     this.status = status;
     this.detail = detail;
   }
@@ -33,21 +32,21 @@ export class ApiClientError extends Error {
  * Get authentication token from localStorage
  */
 export const getAuthToken = (): string | null => {
-  return localStorage.getItem('access_token');
+  return localStorage.getItem("access_token");
 };
 
 /**
  * Set authentication token in localStorage
  */
 export const setAuthToken = (token: string): void => {
-  localStorage.setItem('access_token', token);
+  localStorage.setItem("access_token", token);
 };
 
 /**
  * Remove authentication token from localStorage
  */
 export const removeAuthToken = (): void => {
-  localStorage.removeItem('access_token');
+  localStorage.removeItem("access_token");
 };
 
 /**
@@ -55,13 +54,13 @@ export const removeAuthToken = (): void => {
  */
 export const getHeaders = (includeAuth = true): HeadersInit => {
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   };
 
   if (includeAuth) {
     const token = getAuthToken();
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers["Authorization"] = `Bearer ${token}`;
     }
   }
 
@@ -73,8 +72,8 @@ export const getHeaders = (includeAuth = true): HeadersInit => {
  */
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    let errorDetail = 'An error occurred';
-    
+    let errorDetail = "An error occurred";
+
     try {
       const errorData: ApiError = await response.json();
       // Backend may return 'detail' or 'msg'
@@ -87,8 +86,8 @@ async function handleResponse<T>(response: Response): Promise<T> {
     if (response.status === 401) {
       removeAuthToken();
       // Redirect to login if not already there
-      if (!window.location.pathname.includes('/login')) {
-        window.location.href = '/login';
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
       }
     }
 
@@ -108,12 +107,12 @@ async function handleResponse<T>(response: Response): Promise<T> {
  */
 export async function apiGet<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   const url = `${API_BASE_URL}${API_V1_STR}${endpoint}`;
-  
+
   const response = await fetch(url, {
-    method: 'GET',
+    method: "GET",
     headers: getHeaders(),
     ...options,
   });
@@ -127,12 +126,12 @@ export async function apiGet<T>(
 export async function apiPost<T, D = unknown>(
   endpoint: string,
   data?: D,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   const url = `${API_BASE_URL}${API_V1_STR}${endpoint}`;
-  
+
   const response = await fetch(url, {
-    method: 'POST',
+    method: "POST",
     headers: getHeaders(),
     body: data ? JSON.stringify(data) : undefined,
     ...options,
@@ -147,12 +146,12 @@ export async function apiPost<T, D = unknown>(
 export async function apiPut<T, D = unknown>(
   endpoint: string,
   data?: D,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   const url = `${API_BASE_URL}${API_V1_STR}${endpoint}`;
-  
+
   const response = await fetch(url, {
-    method: 'PUT',
+    method: "PUT",
     headers: getHeaders(),
     body: data ? JSON.stringify(data) : undefined,
     ...options,
@@ -166,12 +165,12 @@ export async function apiPut<T, D = unknown>(
  */
 export async function apiDelete<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   const url = `${API_BASE_URL}${API_V1_STR}${endpoint}`;
-  
+
   const response = await fetch(url, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: getHeaders(),
     ...options,
   });
@@ -182,12 +181,15 @@ export async function apiDelete<T>(
 /**
  * Health check endpoint
  */
-export async function checkHealth(): Promise<{ status: string; version?: string }> {
+export async function checkHealth(): Promise<{
+  status: string;
+  version?: string;
+}> {
   const url = `${API_BASE_URL}${API_V1_STR}/health`;
-  
+
   const response = await fetch(url, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
   });
 
   return handleResponse(response);

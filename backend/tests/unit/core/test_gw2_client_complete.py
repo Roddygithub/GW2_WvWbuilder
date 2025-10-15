@@ -246,7 +246,10 @@ class TestGW2ClientRateLimiting:
         mock_response = AsyncMock()
         mock_response.status = 200
         mock_response.json = AsyncMock(return_value={})
-        mock_response.headers = {"X-Rate-Limit-Remaining": "250", "X-Rate-Limit-Reset": "60"}
+        mock_response.headers = {
+            "X-Rate-Limit-Remaining": "250",
+            "X-Rate-Limit-Reset": "60",
+        }
 
         mock_session.get = AsyncMock(return_value=mock_response)
         mock_response.__aenter__ = AsyncMock(return_value=mock_response)

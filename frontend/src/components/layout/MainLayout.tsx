@@ -3,11 +3,11 @@
  * Wraps protected pages with Header, Sidebar and consistent styling
  */
 
-import { ReactNode } from 'react';
-import { motion } from 'framer-motion';
-import Header from '../Header';
-import Sidebar from '../Sidebar';
-import { Toaster } from 'sonner';
+import { ReactNode } from "react";
+import { motion } from "framer-motion";
+import Header from "../Header";
+import Sidebar from "../Sidebar";
+import { Toaster } from "sonner";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -36,13 +36,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
       </div>
 
       {/* Toast Notifications */}
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           style: {
-            background: 'rgba(15, 23, 42, 0.95)',
-            border: '1px solid rgba(168, 85, 247, 0.3)',
-            color: '#e2e8f0',
+            background: "rgba(15, 23, 42, 0.95)",
+            border: "1px solid rgba(168, 85, 247, 0.3)",
+            color: "#e2e8f0",
           },
         }}
       />

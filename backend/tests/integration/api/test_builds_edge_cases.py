@@ -16,7 +16,9 @@ def test_create_build_with_empty_name(client: TestClient, db: Session) -> None:
         "profession_ids": [1, 2, 3],
     }
 
-    response = client.post(f"{settings.API_V1_STR}/builds/", json=build_data, headers=client.headers)
+    response = client.post(
+        f"{settings.API_V1_STR}/builds/", json=build_data, headers=client.headers
+    )
     assert response.status_code == 422  # Should fail validation
 
 
@@ -31,7 +33,9 @@ def test_create_build_with_invalid_game_mode(client: TestClient, db: Session) ->
         "profession_ids": [1, 2, 3],
     }
 
-    response = client.post(f"{settings.API_V1_STR}/builds/", json=build_data, headers=client.headers)
+    response = client.post(
+        f"{settings.API_V1_STR}/builds/", json=build_data, headers=client.headers
+    )
     assert response.status_code == 422  # Should fail validation
 
 
@@ -40,14 +44,18 @@ def test_update_nonexistent_build(client: TestClient, db: Session) -> None:
     update_data = {"name": "Updated Name", "description": "This build doesn't exist"}
 
     response = client.put(
-        f"{settings.API_V1_STR}/builds/999999", json=update_data, headers=client.headers  # Non-existent ID
+        f"{settings.API_V1_STR}/builds/999999",
+        json=update_data,
+        headers=client.headers,  # Non-existent ID
     )
     assert response.status_code == 404
 
 
 def test_delete_nonexistent_build(client: TestClient, db: Session) -> None:
     """Test deleting a build that doesn't exist."""
-    response = client.delete(f"{settings.API_V1_STR}/builds/999999", headers=client.headers)  # Non-existent ID
+    response = client.delete(
+        f"{settings.API_V1_STR}/builds/999999", headers=client.headers
+    )  # Non-existent ID
     assert response.status_code == 404
 
 
@@ -68,7 +76,11 @@ def test_generate_build_with_no_professions(client: TestClient, db: Session) -> 
         "constraints": {},
     }
 
-    response = client.post(f"{settings.API_V1_STR}/builds/generate", json=build_data, headers=client.headers)
+    response = client.post(
+        f"{settings.API_V1_STR}/builds/generate",
+        json=build_data,
+        headers=client.headers,
+    )
 
     assert response.status_code == 200
     assert response.json()["success"] is False
@@ -78,8 +90,12 @@ def test_generate_build_with_no_professions(client: TestClient, db: Session) -> 
 def test_list_builds_with_filters(client: TestClient, db: Session) -> None:
     """Test listing builds with various filters."""
     # Create test builds with different attributes
-    builds = [{"name": f"Public Build {i}", "is_public": True, "game_mode": "wvw"} for i in range(3)] + [
-        {"name": f"Private Build {i}", "is_public": False, "game_mode": "pvp"} for i in range(2)
+    builds = [
+        {"name": f"Public Build {i}", "is_public": True, "game_mode": "wvw"}
+        for i in range(3)
+    ] + [
+        {"name": f"Private Build {i}", "is_public": False, "game_mode": "pvp"}
+        for i in range(2)
     ]
 
     for build_data in builds:
@@ -100,13 +116,17 @@ def test_list_builds_with_filters(client: TestClient, db: Session) -> None:
     assert len(data) >= 3  # At least the 3 we created
 
     # Test filtering by is_public
-    response = client.get(f"{settings.API_V1_STR}/builds/", params={"is_public": "true"})
+    response = client.get(
+        f"{settings.API_V1_STR}/builds/", params={"is_public": "true"}
+    )
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= 3  # At least the 3 public builds
 
     # Test searching by name
-    response = client.get(f"{settings.API_V1_STR}/builds/", params={"search": "Public Build"})
+    response = client.get(
+        f"{settings.API_V1_STR}/builds/", params={"search": "Public Build"}
+    )
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= 3  # Should find all public builds

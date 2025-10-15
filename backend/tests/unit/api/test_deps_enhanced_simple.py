@@ -78,7 +78,13 @@ class User:
         return getattr(self, "id", None) == getattr(other, "id", None)
 
     def __hash__(self):
-        return hash((getattr(self, "id", None), getattr(self, "username", None), getattr(self, "email", None)))
+        return hash(
+            (
+                getattr(self, "id", None),
+                getattr(self, "username", None),
+                getattr(self, "email", None),
+            )
+        )
 
 
 # Modèle Team pour les tests
@@ -359,7 +365,11 @@ def create_team_member():
         member.is_admin = is_admin
 
         # Add methods that might be called
-        member.dict = lambda: {"team_id": team_id, "user_id": user_id, "is_admin": is_admin}
+        member.dict = lambda: {
+            "team_id": team_id,
+            "user_id": user_id,
+            "is_admin": is_admin,
+        }
 
         return member
 
@@ -377,11 +387,18 @@ async def test_get_current_user_valid_token(mock_db_session, create_test_user):
     async def mock_user_get(*args, **kwargs):
         # Si des arguments positionnels sont passés, les convertir en arguments nommés
         if args:
-            kwargs.update({"db": args[0] if len(args) > 0 else None, "id": args[1] if len(args) > 1 else None})
+            kwargs.update(
+                {
+                    "db": args[0] if len(args) > 0 else None,
+                    "id": args[1] if len(args) > 1 else None,
+                }
+            )
         return test_user if kwargs.get("id") == test_user.id else None
 
     # Configurer les mocks
-    with patch("app.crud.user_crud.get", new=AsyncMock(side_effect=mock_user_get)) as mock_user_get_func:
+    with patch(
+        "app.crud.user_crud.get", new=AsyncMock(side_effect=mock_user_get)
+    ) as mock_user_get_func:
         # Configurer le mock pour jwt.decode
         with patch("app.api.deps.jwt.decode") as mock_jwt_decode:
             mock_jwt_decode.return_value = {"sub": str(test_user.id)}
@@ -391,7 +408,9 @@ async def test_get_current_user_valid_token(mock_db_session, create_test_user):
             mock_request.headers = {}
 
             # Appeler la fonction avec un token valide
-            result = await get_current_user(request=mock_request, token="valid_token", db=mock_db_session)
+            result = await get_current_user(
+                request=mock_request, token="valid_token", db=mock_db_session
+            )
 
             # Vérifier que l'utilisateur a été récupéré correctement
             assert result == test_user
@@ -432,7 +451,9 @@ async def test_get_current_user_invalid_token(mock_db_session):
 
         # Vérifier qu'une exception est levée avec un token invalide
         with pytest.raises(HTTPException) as exc_info:
-            await get_current_user(request=mock_request, token="invalid_token", db=mock_db_session)
+            await get_current_user(
+                request=mock_request, token="invalid_token", db=mock_db_session
+            )
 
         # Vérifier que l'exception a le bon statut HTTP (401 pour des identifiants invalides)
         assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
@@ -500,7 +521,9 @@ async def test_get_current_active_superuser_not_superuser(create_test_user):
 
 # Tests pour get_team_and_check_access
 @pytest.mark.asyncio
-async def test_get_team_and_check_access_owner(mock_db_session, create_test_user, create_test_team):
+async def test_get_team_and_check_access_owner(
+    mock_db_session, create_test_user, create_test_team
+):
     # Créer un utilisateur et une équipe
     test_user = create_test_user()
     test_team = create_test_team(owner_id=test_user.id)
@@ -560,11 +583,15 @@ async def test_get_team_and_check_access_owner(mock_db_session, create_test_user
 
 # Tests pour check_team_admin
 @pytest.mark.asyncio
-async def test_check_team_admin_success(mock_db_session, create_test_user, create_test_team):
+async def test_check_team_admin_success(
+    mock_db_session, create_test_user, create_test_team
+):
     """Teste la vérification d'un administrateur d'équipe valide."""
     # Créer un utilisateur et une équipe
     test_user = create_test_user()
-    test_team = create_test_team(owner_id=test_user.id)  # L'utilisateur est propriétaire
+    test_team = create_test_team(
+        owner_id=test_user.id
+    )  # L'utilisateur est propriétaire
 
     # Créer un mock pour get_team_and_check_access qui gère les arguments positionnels
     async def mock_get_team(*args, **kwargs):
@@ -585,7 +612,9 @@ async def test_check_team_admin_success(mock_db_session, create_test_user, creat
     # Patcher get_team_and_check_access pour retourner notre équipe de test
     with patch("app.api.deps.get_team_and_check_access", new=mock_get_team_func):
         # Tester la fonction avec des arguments nommés
-        result = await check_team_admin(team_id=test_team.id, db=mock_db_session, current_user=test_user)
+        result = await check_team_admin(
+            team_id=test_team.id, db=mock_db_session, current_user=test_user
+        )
 
         # Vérifier que l'équipe est retournée correctement
         assert result == test_team
@@ -613,23 +642,37 @@ async def test_check_team_admin_success(mock_db_session, create_test_user, creat
 
 @pytest.mark.asyncio
 @pytest.mark.asyncio
-async def test_check_team_admin_not_admin(mock_db_session, create_test_user, create_test_team):
+async def test_check_team_admin_not_admin(
+    mock_db_session, create_test_user, create_test_team
+):
     """Teste la vérification d'un utilisateur qui n'est pas administrateur de l'équipe."""
     # Créer un utilisateur et une équipe
     test_user = create_test_user()
-    other_user = create_test_user(user_id=2, email="other@example.com", username="otheruser")
-    test_team = create_test_team(owner_id=other_user.id)  # Un autre utilisateur est propriétaire
+    other_user = create_test_user(
+        user_id=2, email="other@example.com", username="otheruser"
+    )
+    test_team = create_test_team(
+        owner_id=other_user.id
+    )  # Un autre utilisateur est propriétaire
 
     # Configurer les mocks pour get_team_and_check_access
     async def get_team_mock(team_id, db, current_user):
         return test_team, False  # Retourne l'équipe mais is_admin=False
 
     # Patcher get_team_and_check_access pour retourner notre mock
-    with patch("app.api.deps.get_team_and_check_access", new=AsyncMock(side_effect=get_team_mock)):
+    with patch(
+        "app.api.deps.get_team_and_check_access",
+        new=AsyncMock(side_effect=get_team_mock),
+    ):
         # Tester la fonction et vérifier qu'elle lève une exception
         with pytest.raises(HTTPException) as exc_info:
-            await check_team_admin(team_id=test_team.id, db=mock_db_session, current_user=test_user)
+            await check_team_admin(
+                team_id=test_team.id, db=mock_db_session, current_user=test_user
+            )
 
         # Vérifier que l'exception a le bon statut HTTP et le bon message
         assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
-        assert "Vous devez être administrateur de l'équipe pour effectuer cette action" in str(exc_info.value.detail)
+        assert (
+            "Vous devez être administrateur de l'équipe pour effectuer cette action"
+            in str(exc_info.value.detail)
+        )

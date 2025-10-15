@@ -2,7 +2,16 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional, Dict, Any
 
-from sqlalchemy import Integer, String, Boolean, ForeignKey, DateTime, JSON, Text, Enum as SQLEnum
+from sqlalchemy import (
+    Integer,
+    String,
+    Boolean,
+    ForeignKey,
+    DateTime,
+    JSON,
+    Text,
+    Enum as SQLEnum,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -48,8 +57,12 @@ class Webhook(Base):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now()
+    )
 
     user: Mapped["User"] = relationship("User", back_populates="webhooks")
 
@@ -63,9 +76,13 @@ class WebhookEvent(Base):
     __tablename__ = "webhook_events"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    event_type: Mapped[WebhookEventType] = mapped_column(SQLEnum(WebhookEventType), nullable=False, index=True)
+    event_type: Mapped[WebhookEventType] = mapped_column(
+        SQLEnum(WebhookEventType), nullable=False, index=True
+    )
     payload: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
 
     # Relations
     deliveries: Mapped[List["WebhookDelivery"]] = relationship(
@@ -84,33 +101,52 @@ class WebhookDelivery(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     url: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[WebhookDeliveryStatus] = mapped_column(
-        SQLEnum(WebhookDeliveryStatus), default=WebhookDeliveryStatus.PENDING, nullable=False, index=True
+        SQLEnum(WebhookDeliveryStatus),
+        default=WebhookDeliveryStatus.PENDING,
+        nullable=False,
+        index=True,
     )
     response_status: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     response_body: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Timestamps
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), index=True)
-    last_attempt: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    next_retry: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    last_attempt: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    next_retry: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     # Clés étrangères
     webhook_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("webhooks.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("webhooks.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     event_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("webhook_events.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("webhook_events.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Relations
     webhook: Mapped[Webhook] = relationship("Webhook", back_populates="deliveries")
-    event: Mapped[WebhookEvent] = relationship("WebhookEvent", back_populates="deliveries")
+    event: Mapped[WebhookEvent] = relationship(
+        "WebhookEvent", back_populates="deliveries"
+    )
 
     def __repr__(self) -> str:
         return f"<WebhookDelivery(id={self.id}, status='{self.status}', webhook_id={self.webhook_id}')>"
 
 
 # Mise à jour de la relation dans le modèle Webhook
-Webhook.deliveries = relationship("WebhookDelivery", back_populates="webhook", cascade="all, delete-orphan")
+Webhook.deliveries = relationship(
+    "WebhookDelivery", back_populates="webhook", cascade="all, delete-orphan"
+)

@@ -19,8 +19,7 @@ from app.schemas.composition import CompositionOptimizationRequest
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 
 logger = logging.getLogger(__name__)
@@ -31,7 +30,7 @@ def test_zerg_optimization():
     logger.info("=" * 80)
     logger.info("Testing ZERG optimization (15 players)")
     logger.info("=" * 80)
-    
+
     request = CompositionOptimizationRequest(
         squad_size=15,
         game_mode="zerg",
@@ -50,29 +49,29 @@ def test_zerg_optimization():
             }
         ],
     )
-    
+
     result = optimize_composition(request)
-    
+
     logger.info(f"\n✓ Optimization completed!")
     logger.info(f"  Score: {result.score:.3f} ({result.score * 100:.1f}%)")
     logger.info(f"  Composition: {result.composition.name}")
     logger.info(f"\n  Role Distribution:")
     for role, count in result.role_distribution.items():
         logger.info(f"    - {role}: {count}")
-    
+
     logger.info(f"\n  Metrics:")
     for metric, value in result.metrics.items():
         logger.info(f"    - {metric}: {value:.2%}")
-    
+
     logger.info(f"\n  Boon Coverage:")
     for boon, coverage in result.boon_coverage.items():
         logger.info(f"    - {boon}: {coverage:.2%}")
-    
+
     if result.notes:
         logger.info(f"\n  Notes:")
         for note in result.notes:
             logger.info(f"    {note}")
-    
+
     return result
 
 
@@ -81,31 +80,31 @@ def test_roaming_optimization():
     logger.info("\n" + "=" * 80)
     logger.info("Testing ROAMING optimization (5 players)")
     logger.info("=" * 80)
-    
+
     request = CompositionOptimizationRequest(
         squad_size=5,
         game_mode="roaming",
         optimization_goals=["burst_damage", "mobility", "self_sustain"],
     )
-    
+
     result = optimize_composition(request)
-    
+
     logger.info(f"\n✓ Optimization completed!")
     logger.info(f"  Score: {result.score:.3f} ({result.score * 100:.1f}%)")
     logger.info(f"  Composition: {result.composition.name}")
     logger.info(f"\n  Role Distribution:")
     for role, count in result.role_distribution.items():
         logger.info(f"    - {role}: {count}")
-    
+
     logger.info(f"\n  Metrics:")
     for metric, value in result.metrics.items():
         logger.info(f"    - {metric}: {value:.2%}")
-    
+
     if result.notes:
         logger.info(f"\n  Notes:")
         for note in result.notes:
             logger.info(f"    {note}")
-    
+
     return result
 
 
@@ -114,7 +113,7 @@ def test_guild_raid_optimization():
     logger.info("\n" + "=" * 80)
     logger.info("Testing GUILD RAID optimization (25 players)")
     logger.info("=" * 80)
-    
+
     request = CompositionOptimizationRequest(
         squad_size=25,
         game_mode="guild_raid",
@@ -125,25 +124,25 @@ def test_guild_raid_optimization():
         },
         optimization_goals=["boon_uptime", "coordination", "damage"],
     )
-    
+
     result = optimize_composition(request)
-    
+
     logger.info(f"\n✓ Optimization completed!")
     logger.info(f"  Score: {result.score:.3f} ({result.score * 100:.1f}%)")
     logger.info(f"  Composition: {result.composition.name}")
     logger.info(f"\n  Role Distribution:")
     for role, count in result.role_distribution.items():
         logger.info(f"    - {role}: {count}")
-    
+
     logger.info(f"\n  Metrics:")
     for metric, value in result.metrics.items():
         logger.info(f"    - {metric}: {value:.2%}")
-    
+
     if result.notes:
         logger.info(f"\n  Notes:")
         for note in result.notes:
             logger.info(f"    {note}")
-    
+
     return result
 
 
@@ -152,7 +151,7 @@ def generate_example_payloads():
     logger.info("\n" + "=" * 80)
     logger.info("Generating example payloads")
     logger.info("=" * 80)
-    
+
     # Example request
     request = CompositionOptimizationRequest(
         squad_size=15,
@@ -172,24 +171,24 @@ def generate_example_payloads():
             }
         ],
     )
-    
+
     result = optimize_composition(request)
-    
+
     # Save example request
-    request_json = request.model_dump(mode='json')
-    with open('example_request.json', 'w') as f:
+    request_json = request.model_dump(mode="json")
+    with open("example_request.json", "w") as f:
         json.dump(request_json, f, indent=2)
     logger.info("✓ Saved example_request.json")
-    
+
     # Save example response
-    response_json = result.model_dump(mode='json')
-    with open('example_response.json', 'w') as f:
+    response_json = result.model_dump(mode="json")
+    with open("example_response.json", "w") as f:
         json.dump(response_json, f, indent=2)
     logger.info("✓ Saved example_response.json")
-    
+
     logger.info("\nExample Request:")
     print(json.dumps(request_json, indent=2))
-    
+
     logger.info("\nExample Response (truncated):")
     truncated = {
         "score": result.score,
@@ -208,14 +207,14 @@ def main():
         test_zerg_optimization()
         test_roaming_optimization()
         test_guild_raid_optimization()
-        
+
         # Generate example payloads
         generate_example_payloads()
-        
+
         logger.info("\n" + "=" * 80)
         logger.info("✓ All tests passed!")
         logger.info("=" * 80)
-        
+
     except Exception as e:
         logger.error(f"✗ Test failed: {e}", exc_info=True)
         sys.exit(1)

@@ -32,7 +32,9 @@ def async_test(
         @wraps(test_func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             loop = (loop_factory or asyncio.new_event_loop)()
-            return loop.run_until_complete(asyncio.wait_for(test_func(*args, **kwargs), timeout=timeout, loop=loop))
+            return loop.run_until_complete(
+                asyncio.wait_for(test_func(*args, **kwargs), timeout=timeout, loop=loop)
+            )
 
         return wrapper
 
@@ -116,12 +118,16 @@ async def assert_async_raises(
     except exception_type as e:
         return e
     except Exception as e:
-        raise AssertionError(f"Expected {exception_type.__name__}, but got {type(e).__name__}: {e}") from e
+        raise AssertionError(
+            f"Expected {exception_type.__name__}, but got {type(e).__name__}: {e}"
+        ) from e
     else:
         raise AssertionError(f"Expected {exception_type.__name__} was not raised")
 
 
-async def gather_with_concurrency(n: int, *tasks: Awaitable[T], return_exceptions: bool = False) -> list[T]:
+async def gather_with_concurrency(
+    n: int, *tasks: Awaitable[T], return_exceptions: bool = False
+) -> list[T]:
     """Run coroutines with limited concurrency.
 
     Args:
@@ -138,7 +144,9 @@ async def gather_with_concurrency(n: int, *tasks: Awaitable[T], return_exception
         async with semaphore:
             return await task
 
-    return await asyncio.gather(*(sem_task(task) for task in tasks), return_exceptions=return_exceptions)
+    return await asyncio.gather(
+        *(sem_task(task) for task in tasks), return_exceptions=return_exceptions
+    )
 
 
 async def run_in_threadpool(func: Callable[..., T], *args: Any, **kwargs: Any) -> T:
@@ -156,7 +164,9 @@ async def run_in_threadpool(func: Callable[..., T], *args: Any, **kwargs: Any) -
     return await loop.run_in_executor(None, lambda: func(*args, **kwargs))
 
 
-async def create_test_session(app: FastAPI, **override_dependencies: Any) -> AsyncSession:
+async def create_test_session(
+    app: FastAPI, **override_dependencies: Any
+) -> AsyncSession:
     """Create a test database session with overridden dependencies.
 
     Args:

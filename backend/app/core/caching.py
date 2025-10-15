@@ -185,7 +185,9 @@ def configure_sqlalchemy_caching() -> None:
 
     except ImportError as e:
         logger.warning(f"Failed to configure SQLAlchemy second level cache: {e}")
-        logger.warning("Falling back to no caching. Install 'sqlalchemy-redis' and 'dogpile.cache' to enable caching.")
+        logger.warning(
+            "Falling back to no caching. Install 'sqlalchemy-redis' and 'dogpile.cache' to enable caching."
+        )
 
 
 def cache_region(region_name: str = "default"):
@@ -207,7 +209,9 @@ def cache_region(region_name: str = "default"):
 
         region = make_region().configure(
             settings.CACHE_IMPLEMENTATION,
-            expiration_time=settings.CACHE_REGIONS.get(region_name, {}).get("expiration_time", 300),
+            expiration_time=settings.CACHE_REGIONS.get(region_name, {}).get(
+                "expiration_time", 300
+            ),
             arguments=(
                 {
                     "host": settings.REDIS_HOST,

@@ -15,7 +15,9 @@ from app.models import Composition
 class TestCompositionsAPI:
     """Test suite for Compositions API endpoints."""
 
-    async def test_create_composition(self, async_client: AsyncClient, db: AsyncSession, user_factory, auth_headers):
+    async def test_create_composition(
+        self, async_client: AsyncClient, db: AsyncSession, user_factory, auth_headers
+    ):
         """Test creating a new composition."""
         user = await user_factory(username="comp_creator")
         headers = await auth_headers(username=user.username, password="testpassword")
@@ -28,7 +30,9 @@ class TestCompositionsAPI:
         }
 
         response = await async_client.post(
-            f"{settings.API_V1_STR}/compositions/", json=composition_data, headers=headers
+            f"{settings.API_V1_STR}/compositions/",
+            json=composition_data,
+            headers=headers,
         )
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -41,14 +45,18 @@ class TestCompositionsAPI:
         assert comp is not None
         assert comp.name == "My WvW Zerg"
 
-    async def test_read_compositions(self, async_client: AsyncClient, composition_factory, user_factory, auth_headers):
+    async def test_read_compositions(
+        self, async_client: AsyncClient, composition_factory, user_factory, auth_headers
+    ):
         """Test reading a list of compositions."""
         user = await user_factory(username="comp_user")
         await composition_factory(name="Public Comp", is_public=True)
         await composition_factory(name="Private Comp", is_public=False, user=user)
 
         headers = await auth_headers(username=user.username, password="testpassword")
-        response = await async_client.get(f"{settings.API_V1_STR}/compositions/", headers=headers)
+        response = await async_client.get(
+            f"{settings.API_V1_STR}/compositions/", headers=headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -57,29 +65,39 @@ class TestCompositionsAPI:
         assert any(c["name"] == "Public Comp" for c in data)
         assert any(c["name"] == "Private Comp" for c in data)
 
-    async def test_read_composition(self, async_client: AsyncClient, composition_factory, auth_headers):
+    async def test_read_composition(
+        self, async_client: AsyncClient, composition_factory, auth_headers
+    ):
         """Test retrieving a single composition by ID."""
         comp = await composition_factory(name="Readable Comp")
         headers = await auth_headers(username="reader")
 
-        response = await async_client.get(f"{settings.API_V1_STR}/compositions/{comp.id}", headers=headers)
+        response = await async_client.get(
+            f"{settings.API_V1_STR}/compositions/{comp.id}", headers=headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["id"] == comp.id
         assert data["name"] == "Readable Comp"
 
-    async def test_read_nonexistent_composition(self, async_client: AsyncClient, auth_headers):
+    async def test_read_nonexistent_composition(
+        self, async_client: AsyncClient, auth_headers
+    ):
         """Test retrieving a non-existent composition by ID."""
         headers = await auth_headers()
-        response = await async_client.get(f"{settings.API_V1_STR}/compositions/999999", headers=headers)
+        response = await async_client.get(
+            f"{settings.API_V1_STR}/compositions/999999", headers=headers
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         error_data = response.json()
         assert "detail" in error_data
         assert "not found" in error_data["detail"].lower()
 
-    async def test_update_composition(self, async_client: AsyncClient, composition_factory, user_factory, auth_headers):
+    async def test_update_composition(
+        self, async_client: AsyncClient, composition_factory, user_factory, auth_headers
+    ):
         """Test updating an existing composition."""
         user = await user_factory(username="updater")
         comp = await composition_factory(user=user)
@@ -87,7 +105,9 @@ class TestCompositionsAPI:
 
         update_data = {"name": "Updated Name", "is_public": False}
         response = await async_client.put(
-            f"{settings.API_V1_STR}/compositions/{comp.id}", json=update_data, headers=headers
+            f"{settings.API_V1_STR}/compositions/{comp.id}",
+            json=update_data,
+            headers=headers,
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -95,26 +115,37 @@ class TestCompositionsAPI:
         assert data["name"] == "Updated Name"
         assert data["is_public"] is False
 
-    async def test_update_nonexistent_composition(self, async_client: AsyncClient, auth_headers):
+    async def test_update_nonexistent_composition(
+        self, async_client: AsyncClient, auth_headers
+    ):
         """Test updating a non-existent composition."""
         headers = await auth_headers()
         update_data = {"name": "This will fail"}
 
         response = await async_client.put(
-            f"{settings.API_V1_STR}/compositions/999999", json=update_data, headers=headers
+            f"{settings.API_V1_STR}/compositions/999999",
+            json=update_data,
+            headers=headers,
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_delete_composition(
-        self, async_client: AsyncClient, db: AsyncSession, composition_factory, user_factory, auth_headers
+        self,
+        async_client: AsyncClient,
+        db: AsyncSession,
+        composition_factory,
+        user_factory,
+        auth_headers,
     ):
         """Test deleting a composition."""
         user = await user_factory(username="deleter")
         comp = await composition_factory(user=user)
         headers = await auth_headers(username=user.username, password="testpassword")
 
-        response = await async_client.delete(f"{settings.API_V1_STR}/compositions/{comp.id}", headers=headers)
+        response = await async_client.delete(
+            f"{settings.API_V1_STR}/compositions/{comp.id}", headers=headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         assert "deleted successfully" in response.json()["detail"]
@@ -123,11 +154,15 @@ class TestCompositionsAPI:
         deleted_comp = await db.get(Composition, comp.id)
         assert deleted_comp is None
 
-    async def test_delete_nonexistent_composition(self, async_client: AsyncClient, auth_headers):
+    async def test_delete_nonexistent_composition(
+        self, async_client: AsyncClient, auth_headers
+    ):
         """Test deleting a non-existent composition."""
         headers = await auth_headers()
 
-        response = await async_client.delete(f"{settings.API_V1_STR}/compositions/999999", headers=headers)
+        response = await async_client.delete(
+            f"{settings.API_V1_STR}/compositions/999999", headers=headers
+        )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
         error_data = response.json()
@@ -141,11 +176,15 @@ class TestCompositionsAPI:
         other_user = await user_factory(username="other1")
         comp = await composition_factory(user=owner)
 
-        other_user_headers = await auth_headers(username=other_user.username, password="testpassword")
+        other_user_headers = await auth_headers(
+            username=other_user.username, password="testpassword"
+        )
 
         update_data = {"name": "Unauthorized Update"}
         response = await async_client.put(
-            f"{settings.API_V1_STR}/compositions/{comp.id}", json=update_data, headers=other_user_headers
+            f"{settings.API_V1_STR}/compositions/{comp.id}",
+            json=update_data,
+            headers=other_user_headers,
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -158,7 +197,9 @@ class TestCompositionsAPI:
         other_user = await user_factory(username="other2")
         comp = await composition_factory(user=owner)
 
-        other_user_headers = await auth_headers(username=other_user.username, password="testpassword")
+        other_user_headers = await auth_headers(
+            username=other_user.username, password="testpassword"
+        )
 
         response = await async_client.delete(
             f"{settings.API_V1_STR}/compositions/{comp.id}", headers=other_user_headers
@@ -174,10 +215,13 @@ class TestCompositionsAPI:
         other_user = await user_factory(username="other3")
         private_comp = await composition_factory(user=owner, is_public=False)
 
-        other_user_headers = await auth_headers(username=other_user.username, password="testpassword")
+        other_user_headers = await auth_headers(
+            username=other_user.username, password="testpassword"
+        )
 
         response = await async_client.get(
-            f"{settings.API_V1_STR}/compositions/{private_comp.id}", headers=other_user_headers
+            f"{settings.API_V1_STR}/compositions/{private_comp.id}",
+            headers=other_user_headers,
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -191,7 +235,9 @@ class TestCompositionsAPI:
         owner = await user_factory(username="owner_unauth")
         private_comp = await composition_factory(user=owner, is_public=False)
 
-        response = await async_client.get(f"{settings.API_V1_STR}/compositions/{private_comp.id}")
+        response = await async_client.get(
+            f"{settings.API_V1_STR}/compositions/{private_comp.id}"
+        )
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
@@ -202,10 +248,13 @@ class TestCompositionsAPI:
         owner = await user_factory(username="owner_admin_read")
         private_comp = await composition_factory(user=owner, is_public=False)
 
-        admin_headers = await auth_headers(username="admin_comp_reader", is_superuser=True)
+        admin_headers = await auth_headers(
+            username="admin_comp_reader", is_superuser=True
+        )
 
         response = await async_client.get(
-            f"{settings.API_V1_STR}/compositions/{private_comp.id}", headers=admin_headers
+            f"{settings.API_V1_STR}/compositions/{private_comp.id}",
+            headers=admin_headers,
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -221,10 +270,13 @@ class TestCompositionsAPI:
         owner = await user_factory(username="owner4")
         private_comp = await composition_factory(user=owner, is_public=False)
 
-        admin_headers = await auth_headers(username="admin", password="password", is_superuser=True)
+        admin_headers = await auth_headers(
+            username="admin", password="password", is_superuser=True
+        )
 
         response = await async_client.get(
-            f"{settings.API_V1_STR}/compositions/{private_comp.id}", headers=admin_headers
+            f"{settings.API_V1_STR}/compositions/{private_comp.id}",
+            headers=admin_headers,
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -251,7 +303,9 @@ class TestCompositionAPIEdgeCases:
         composition_data = {"name": name, "squad_size": 5}
 
         response = await async_client.post(
-            f"{settings.API_V1_STR}/compositions/", json=composition_data, headers=headers
+            f"{settings.API_V1_STR}/compositions/",
+            json=composition_data,
+            headers=headers,
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -278,7 +332,9 @@ class TestCompositionAPIEdgeCases:
         composition_data = {"name": "Invalid Size", "squad_size": size}
 
         response = await async_client.post(
-            f"{settings.API_V1_STR}/compositions/", json=composition_data, headers=headers
+            f"{settings.API_V1_STR}/compositions/",
+            json=composition_data,
+            headers=headers,
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -288,7 +344,9 @@ class TestCompositionAPIEdgeCases:
         ), f"Expected error containing '{error_part}' for squad_size={size}, got: {errors}"
 
     @pytest.mark.parametrize("size", [1, 50])
-    async def test_create_composition_valid_squad_size(self, async_client: AsyncClient, auth_headers, size):
+    async def test_create_composition_valid_squad_size(
+        self, async_client: AsyncClient, auth_headers, size
+    ):
         """Test creating a composition with valid boundary squad sizes."""
         headers = await auth_headers()
         composition_data = {
@@ -298,7 +356,9 @@ class TestCompositionAPIEdgeCases:
             "game_mode": "wvw",
         }
         response = await async_client.post(
-            f"{settings.API_V1_STR}/compositions/", json=composition_data, headers=headers
+            f"{settings.API_V1_STR}/compositions/",
+            json=composition_data,
+            headers=headers,
         )
         assert (
             response.status_code == status.HTTP_201_CREATED
@@ -310,11 +370,17 @@ class TestCompositionAPIEdgeCases:
     ):
         """Test creating a composition with a missing required field."""
         headers = await auth_headers()
-        composition_data = {"name": "Test Comp", "description": "This will fail", "squad_size": 5}
+        composition_data = {
+            "name": "Test Comp",
+            "description": "This will fail",
+            "squad_size": 5,
+        }
         del composition_data[missing_field]
 
         response = await async_client.post(
-            f"{settings.API_V1_STR}/compositions/", json=composition_data, headers=headers
+            f"{settings.API_V1_STR}/compositions/",
+            json=composition_data,
+            headers=headers,
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -339,7 +405,9 @@ class TestCompositionAPIEdgeCases:
         composition_data = {"name": "Valid Name", "squad_size": 5, field: value}
 
         response = await async_client.post(
-            f"{settings.API_V1_STR}/compositions/", json=composition_data, headers=headers
+            f"{settings.API_V1_STR}/compositions/",
+            json=composition_data,
+            headers=headers,
         )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

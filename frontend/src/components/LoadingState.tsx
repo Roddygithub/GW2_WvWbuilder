@@ -3,8 +3,8 @@
  * GW2-styled loading indicator with shimmer effect
  */
 
-import { motion } from 'framer-motion';
-import { cn } from '@/lib/utils';
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface LoadingStateProps {
   message?: string;
@@ -12,17 +12,19 @@ interface LoadingStateProps {
   fullScreen?: boolean;
 }
 
-export default function LoadingState({ 
-  message = 'Loading...', 
+export default function LoadingState({
+  message = "Loading...",
   className,
-  fullScreen = false 
+  fullScreen = false,
 }: LoadingStateProps) {
   const content = (
-    <div className={cn(
-      'flex flex-col items-center justify-center',
-      fullScreen ? 'min-h-screen' : 'py-12',
-      className
-    )}>
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center",
+        fullScreen ? "min-h-screen" : "py-12",
+        className,
+      )}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -32,7 +34,7 @@ export default function LoadingState({
         {/* Spinning Loader */}
         <motion.div
           animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
           className="relative"
         >
           <div className="w-16 h-16 rounded-full border-4 border-purple-500/20 border-t-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.5)]" />

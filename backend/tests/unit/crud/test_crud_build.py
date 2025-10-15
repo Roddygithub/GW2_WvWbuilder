@@ -38,7 +38,9 @@ def mock_build_create():
 
 @pytest.fixture
 def mock_build_update():
-    return BuildUpdate(name="Updated Build", description="Updated Description", is_public=False)
+    return BuildUpdate(
+        name="Updated Build", description="Updated Description", is_public=False
+    )
 
 
 # Helper function to create a mock result
@@ -81,11 +83,15 @@ class TestCRUDBuild:
         db.execute.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_update_build(self, mock_invalidate_cache, mock_build, mock_build_update):
+    async def test_update_build(
+        self, mock_invalidate_cache, mock_build, mock_build_update
+    ):
         """Test updating a build"""
         db = AsyncMock(spec=AsyncSession)
 
-        result = await build_crud.update(db, db_obj=mock_build, obj_in=mock_build_update)
+        result = await build_crud.update(
+            db, db_obj=mock_build, obj_in=mock_build_update
+        )
 
         assert result.name == "Updated Build"
         db.add.assert_called_once()
@@ -98,7 +104,9 @@ class TestCRUDBuild:
         """Test removing a build"""
         db = AsyncMock(spec=AsyncSession)
 
-        with patch.object(build_crud, "get", new_callable=AsyncMock, return_value=mock_build) as mock_get:
+        with patch.object(
+            build_crud, "get", new_callable=AsyncMock, return_value=mock_build
+        ) as mock_get:
             result = await build_crud.remove(db, id=1)
 
             assert result.name == "Test Build"

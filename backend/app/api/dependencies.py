@@ -167,7 +167,9 @@ def has_permission(required_permissions: List[str]):
         # Vérifier que l'utilisateur a toutes les permissions requises
         user_permissions = {p.name for p in current_user.permissions}
         if not all(perm in user_permissions for perm in required_permissions):
-            raise ForbiddenException(detail="You don't have permission to perform this action")
+            raise ForbiddenException(
+                detail="You don't have permission to perform this action"
+            )
 
         return current_user
 

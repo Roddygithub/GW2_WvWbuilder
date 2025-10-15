@@ -28,7 +28,10 @@ TEST_USER_ID = 1
 def test_user(db: Session):
     """Create a test user."""
     user = User(
-        email=TEST_USER_EMAIL, hashed_password=get_password_hash(TEST_PASSWORD), is_active=True, is_verified=True
+        email=TEST_USER_EMAIL,
+        hashed_password=get_password_hash(TEST_PASSWORD),
+        is_active=True,
+        is_verified=True,
     )
     db.add(user)
     db.commit()
@@ -48,7 +51,11 @@ class TestAuthFlow:
 
     def test_register_new_user(self, db: Session):
         """Test user registration with valid data."""
-        user_data = {"email": "newuser@example.com", "password": "NewUser123!", "full_name": "Test User"}
+        user_data = {
+            "email": "newuser@example.com",
+            "password": "NewUser123!",
+            "full_name": "Test User",
+        }
 
         response = client.post("/api/v1/auth/register", json=user_data)
 
@@ -68,7 +75,9 @@ class TestAuthFlow:
         login_data = {"username": TEST_USER_EMAIL, "password": TEST_PASSWORD}
 
         response = client.post(
-            "/api/v1/auth/login", data=login_data, headers={"Content-Type": "application/x-www-form-urlencoded"}
+            "/api/v1/auth/login",
+            data=login_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
 
         assert response.status_code == 200
@@ -82,7 +91,9 @@ class TestAuthFlow:
         login_data = {"username": TEST_USER_EMAIL, "password": "wrongpassword"}
 
         response = client.post(
-            "/api/v1/auth/login", data=login_data, headers={"Content-Type": "application/x-www-form-urlencoded"}
+            "/api/v1/auth/login",
+            data=login_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
 
         assert response.status_code == 401
@@ -94,12 +105,16 @@ class TestAuthFlow:
         login_data = {"username": TEST_USER_EMAIL, "password": TEST_PASSWORD}
 
         login_response = client.post(
-            "/api/v1/auth/login", data=login_data, headers={"Content-Type": "application/x-www-form-urlencoded"}
+            "/api/v1/auth/login",
+            data=login_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         refresh_token = login_response.json()["refresh_token"]
 
         # Refresh the token
-        refresh_response = client.post("/api/v1/auth/refresh-token", json={"refresh_token": refresh_token})
+        refresh_response = client.post(
+            "/api/v1/auth/refresh-token", json={"refresh_token": refresh_token}
+        )
 
         assert refresh_response.status_code == 200
         data = refresh_response.json()
@@ -117,12 +132,16 @@ class TestAuthFlow:
         login_data = {"username": TEST_USER_EMAIL, "password": TEST_PASSWORD}
 
         login_response = client.post(
-            "/api/v1/auth/login", data=login_data, headers={"Content-Type": "application/x-www-form-urlencoded"}
+            "/api/v1/auth/login",
+            data=login_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         access_token = login_response.json()["access_token"]
 
         # Access protected endpoint
-        response = client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {access_token}"})
+        response = client.get(
+            "/api/v1/users/me", headers={"Authorization": f"Bearer {access_token}"}
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -130,7 +149,9 @@ class TestAuthFlow:
 
     def test_protected_endpoint_invalid_token(self):
         """Test accessing a protected endpoint with invalid token."""
-        response = client.get("/api/v1/users/me", headers={"Authorization": "Bearer invalid_token"})
+        response = client.get(
+            "/api/v1/users/me", headers={"Authorization": "Bearer invalid_token"}
+        )
 
         assert response.status_code == 401
         assert "Could not validate credentials" in response.json()["detail"]
@@ -184,7 +205,9 @@ class TestKeyRotation:
         key_manager = KeyManager(key_file=temp_key_file)
 
         def rotate_in_thread():
-            with patch("app.core.security.jwt.get_key_manager", return_value=key_manager):
+            with patch(
+                "app.core.security.jwt.get_key_manager", return_value=key_manager
+            ):
                 return key_manager.rotate_keys()
 
         with patch("app.core.security.jwt.get_key_manager", return_value=key_manager):

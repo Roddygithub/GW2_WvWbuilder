@@ -19,7 +19,9 @@ TEST_ASYNC_DB_URL = "sqlite+aiosqlite:///:memory:"
 @pytest.fixture(scope="module")
 def sync_engine():
     """Create a synchronous SQLite in-memory database engine for testing."""
-    engine = create_engine(TEST_SYNC_DB_URL, connect_args={"check_same_thread": False}, echo=True)
+    engine = create_engine(
+        TEST_SYNC_DB_URL, connect_args={"check_same_thread": False}, echo=True
+    )
 
     # Create all tables
     ModelBase.metadata.create_all(bind=engine)
@@ -59,7 +61,9 @@ def db_session(sync_engine):
 @pytest_asyncio.fixture(scope="module")
 async def async_engine():
     """Create an asynchronous SQLite in-memory database engine for testing."""
-    engine = create_async_engine(TEST_ASYNC_DB_URL, connect_args={"check_same_thread": False}, echo=True)
+    engine = create_async_engine(
+        TEST_ASYNC_DB_URL, connect_args={"check_same_thread": False}, echo=True
+    )
 
     # Create all tables
     async with engine.begin() as conn:
@@ -77,7 +81,9 @@ async def async_engine():
 @pytest_asyncio.fixture
 async def async_db_session(async_engine):
     """Create an async database session for testing with automatic rollback."""
-    async with async_sessionmaker(bind=async_engine, expire_on_commit=False, class_=AsyncSession)() as session:
+    async with async_sessionmaker(
+        bind=async_engine, expire_on_commit=False, class_=AsyncSession
+    )() as session:
         # Begin a transaction
         await session.begin()
 

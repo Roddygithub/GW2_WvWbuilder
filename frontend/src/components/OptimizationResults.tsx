@@ -3,9 +3,9 @@
  * Displays synergies, suggestions, and squad analysis
  */
 
-import { motion } from 'framer-motion';
-import { TrendingUp, AlertTriangle, CheckCircle2, Zap } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { motion } from "framer-motion";
+import { TrendingUp, AlertTriangle, CheckCircle2, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SynergyData {
   boons: Record<string, number>;
@@ -24,14 +24,14 @@ interface OptimizationResultsProps {
 }
 
 const boonColors: Record<string, string> = {
-  might: '#FF6F00',
-  fury: '#D32F2F',
-  quickness: '#FFC107',
-  alacrity: '#9C27B0',
-  protection: '#2196F3',
-  stability: '#607D8B',
-  resolution: '#FFEB3B',
-  resistance: '#FF5722',
+  might: "#FF6F00",
+  fury: "#D32F2F",
+  quickness: "#FFC107",
+  alacrity: "#9C27B0",
+  protection: "#2196F3",
+  stability: "#607D8B",
+  resolution: "#FFEB3B",
+  resistance: "#FF5722",
 };
 
 export default function OptimizationResults({
@@ -42,19 +42,19 @@ export default function OptimizationResults({
   className,
 }: OptimizationResultsProps) {
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-400';
-    if (score >= 60) return 'text-yellow-400';
-    return 'text-red-400';
+    if (score >= 80) return "text-green-400";
+    if (score >= 60) return "text-yellow-400";
+    return "text-red-400";
   };
 
   const getScoreGradient = (score: number) => {
-    if (score >= 80) return 'from-green-500 to-emerald-600';
-    if (score >= 60) return 'from-yellow-500 to-amber-600';
-    return 'from-red-500 to-orange-600';
+    if (score >= 80) return "from-green-500 to-emerald-600";
+    if (score >= 60) return "from-yellow-500 to-amber-600";
+    return "from-red-500 to-orange-600";
   };
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn("space-y-6", className)}>
       {/* Score Card */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -67,30 +67,30 @@ export default function OptimizationResults({
               <TrendingUp className="w-6 h-6 text-purple-400" />
               <span>Optimization Score</span>
             </h3>
-            <div className={cn('text-4xl font-bold', getScoreColor(score))}>
+            <div className={cn("text-4xl font-bold", getScoreColor(score))}>
               {score}/100
             </div>
           </div>
-          
+
           {/* Progress Bar */}
           <div className="relative w-full h-3 bg-slate-700/50 rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${score}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
+              transition={{ duration: 1, ease: "easeOut" }}
               className={cn(
-                'h-full bg-gradient-to-r rounded-full shadow-lg',
-                getScoreGradient(score)
+                "h-full bg-gradient-to-r rounded-full shadow-lg",
+                getScoreGradient(score),
               )}
             />
           </div>
         </div>
 
         {/* Background Glow */}
-        <div 
+        <div
           className="absolute inset-0 opacity-20 blur-3xl"
           style={{
-            background: `radial-gradient(circle at 50% 50%, ${score >= 80 ? '#22c55e' : score >= 60 ? '#eab308' : '#ef4444'}, transparent 70%)`,
+            background: `radial-gradient(circle at 50% 50%, ${score >= 80 ? "#22c55e" : score >= 60 ? "#eab308" : "#ef4444"}, transparent 70%)`,
           }}
         />
       </motion.div>
@@ -111,7 +111,9 @@ export default function OptimizationResults({
             {Object.entries(synergy.boons).map(([boon, value]) => (
               <div key={boon} className="flex flex-col">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-slate-300 capitalize">{boon}</span>
+                  <span className="text-sm font-medium text-slate-300 capitalize">
+                    {boon}
+                  </span>
                   <span className="text-xs text-slate-400">{value}%</span>
                 </div>
                 <div className="w-full h-2 bg-slate-700/50 rounded-full overflow-hidden">
@@ -120,9 +122,9 @@ export default function OptimizationResults({
                     animate={{ width: `${value}%` }}
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="h-full rounded-full"
-                    style={{ 
-                      background: boonColors[boon] || '#A855F7',
-                      boxShadow: `0 0 10px ${boonColors[boon] || '#A855F7'}40`,
+                    style={{
+                      background: boonColors[boon] || "#A855F7",
+                      boxShadow: `0 0 10px ${boonColors[boon] || "#A855F7"}40`,
                     }}
                   />
                 </div>
@@ -141,10 +143,30 @@ export default function OptimizationResults({
           className="grid grid-cols-2 md:grid-cols-4 gap-4"
         >
           {[
-            { label: 'Damage', value: synergy.damage, color: 'text-red-400', bg: 'from-red-500/20 to-red-600/20' },
-            { label: 'Healing', value: synergy.healing, color: 'text-green-400', bg: 'from-green-500/20 to-green-600/20' },
-            { label: 'Survivability', value: synergy.survivability, color: 'text-blue-400', bg: 'from-blue-500/20 to-blue-600/20' },
-            { label: 'Crowd Control', value: synergy.crowdControl, color: 'text-purple-400', bg: 'from-purple-500/20 to-purple-600/20' },
+            {
+              label: "Damage",
+              value: synergy.damage,
+              color: "text-red-400",
+              bg: "from-red-500/20 to-red-600/20",
+            },
+            {
+              label: "Healing",
+              value: synergy.healing,
+              color: "text-green-400",
+              bg: "from-green-500/20 to-green-600/20",
+            },
+            {
+              label: "Survivability",
+              value: synergy.survivability,
+              color: "text-blue-400",
+              bg: "from-blue-500/20 to-blue-600/20",
+            },
+            {
+              label: "Crowd Control",
+              value: synergy.crowdControl,
+              color: "text-purple-400",
+              bg: "from-purple-500/20 to-purple-600/20",
+            },
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
@@ -152,12 +174,14 @@ export default function OptimizationResults({
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 + index * 0.05 }}
               className={cn(
-                'rounded-xl p-4 bg-gradient-to-br border border-slate-700',
-                stat.bg
+                "rounded-xl p-4 bg-gradient-to-br border border-slate-700",
+                stat.bg,
               )}
             >
               <p className="text-xs text-slate-400 mb-1">{stat.label}</p>
-              <p className={cn('text-2xl font-bold', stat.color)}>{stat.value}</p>
+              <p className={cn("text-2xl font-bold", stat.color)}>
+                {stat.value}
+              </p>
             </motion.div>
           ))}
         </motion.div>

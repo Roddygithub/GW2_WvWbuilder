@@ -3,11 +3,11 @@
  * Animated header with user info and logout
  */
 
-import { motion } from 'framer-motion';
-import { LogOut, Bell, User } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { motion } from "framer-motion";
+import { LogOut, Bell, User } from "lucide-react";
+import { useAuthStore } from "../store/authStore";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function Header() {
   const { user, logout } = useAuthStore();
@@ -15,22 +15,22 @@ export default function Header() {
 
   const handleLogout = () => {
     logout();
-    toast.success('Logged out successfully');
-    navigate('/login');
+    toast.success("Logged out successfully");
+    navigate("/login");
   };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return "Good morning";
+    if (hour < 18) return "Good afternoon";
+    return "Good evening";
   };
 
   return (
     <motion.header
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
       className="sticky top-0 z-40 bg-gradient-to-r from-slate-950/95 via-purple-950/95 to-slate-950/95 backdrop-blur-md border-b border-purple-500/20"
     >
       <div className="px-8 py-6">
@@ -43,7 +43,7 @@ export default function Header() {
               transition={{ delay: 0.2, duration: 0.5 }}
               className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-violet-300 to-purple-400"
             >
-              {getGreeting()}, {user?.username || 'Commander'}!
+              {getGreeting()}, {user?.username || "Commander"}!
             </motion.h2>
             <motion.p
               initial={{ x: -50, opacity: 0 }}
@@ -90,10 +90,10 @@ export default function Header() {
               </div>
               <div className="text-left">
                 <p className="text-sm font-medium text-slate-200 group-hover:text-purple-200">
-                  {user?.username || 'Commander'}
+                  {user?.username || "Commander"}
                 </p>
                 <p className="text-xs text-slate-400">
-                  {user?.is_superuser ? 'Admin' : 'Player'}
+                  {user?.is_superuser ? "Admin" : "Player"}
                 </p>
               </div>
             </motion.button>

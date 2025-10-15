@@ -14,8 +14,12 @@ from app.models.enums import TeamRole
 class TeamMemberBase(BaseModel):
     """Schéma de base pour un membre d'équipe."""
 
-    role: TeamRole = Field(default=TeamRole.MEMBER, description="Rôle du membre dans l'équipe")
-    is_admin: bool = Field(default=False, description="Indique si le membre est administrateur de l'équipe")
+    role: TeamRole = Field(
+        default=TeamRole.MEMBER, description="Rôle du membre dans l'équipe"
+    )
+    is_admin: bool = Field(
+        default=False, description="Indique si le membre est administrateur de l'équipe"
+    )
 
 
 class TeamMemberCreate(TeamMemberBase):
@@ -27,8 +31,12 @@ class TeamMemberCreate(TeamMemberBase):
 class TeamMemberUpdate(TeamMemberBase):
     """Schéma pour la mise à jour du rôle d'un membre."""
 
-    role: Optional[TeamRole] = Field(None, description="Nouveau rôle du membre dans l'équipe")
-    is_admin: Optional[bool] = Field(None, description="Indique si le membre est administrateur de l'équipe")
+    role: Optional[TeamRole] = Field(
+        None, description="Nouveau rôle du membre dans l'équipe"
+    )
+    is_admin: Optional[bool] = Field(
+        None, description="Indique si le membre est administrateur de l'équipe"
+    )
 
 
 class TeamMember(TeamMemberBase):

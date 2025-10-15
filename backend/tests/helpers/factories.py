@@ -256,7 +256,9 @@ def create_model_factory(model_class: Type[ModelType]) -> callable:
     def factory(**overrides):
         """Génère une instance du modèle avec des données aléatoires."""
         # Déterminer la classe de création appropriée
-        create_class = getattr(sys.modules[__name__], f"{model_class.__name__}Create", None)
+        create_class = getattr(
+            sys.modules[__name__], f"{model_class.__name__}Create", None
+        )
         if create_class is None:
             create_class = model_class
 
@@ -272,7 +274,10 @@ def create_model_factory(model_class: Type[ModelType]) -> callable:
                     data[field_name] = random_email()
                 elif field_name == "password":
                     data[field_name] = random_password()
-                elif field_name.endswith("_at") or field_name in ["created_at", "updated_at"]:
+                elif field_name.endswith("_at") or field_name in [
+                    "created_at",
+                    "updated_at",
+                ]:
                     data[field_name] = datetime.utcnow()
                 elif field_name.endswith("_id"):
                     # Pour les clés étrangères, on laisse None par défaut

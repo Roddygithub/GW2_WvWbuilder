@@ -32,15 +32,20 @@ class OptimizerConfig:
 
     def __init__(self, mode: str):
         self.mode = mode
-        config_path = Path(__file__).parent.parent.parent.parent / "config" / "optimizer" / f"wvw_{mode}.yml"
-        
+        config_path = (
+            Path(__file__).parent.parent.parent.parent
+            / "config"
+            / "optimizer"
+            / f"wvw_{mode}.yml"
+        )
+
         if not config_path.exists():
             logger.warning(f"Config file not found: {config_path}, using defaults")
             self.config = self._default_config()
         else:
             with open(config_path, "r") as f:
                 self.config = yaml.safe_load(f)
-        
+
         logger.info(f"Loaded optimizer config for mode: {mode}")
 
     def _default_config(self) -> Dict[str, Any]:
@@ -126,7 +131,9 @@ class OptimizerEngine:
         self.config = self._load_config(config_name)
         self.mode_effects = ModeEffectsManager(game_type)
         self.build_catalogue = self._initialize_catalogue()
-        logger.info(f"Initialized build catalogue with {len(self.build_catalogue)} templates for {game_type}/{game_mode}")
+        logger.info(
+            f"Initialized build catalogue with {len(self.build_catalogue)} templates for {game_type}/{game_mode}"
+        )
 
     def _load_config(self, config_name: str) -> OptimizerConfig:
         return OptimizerConfig(config_name)
@@ -134,12 +141,12 @@ class OptimizerEngine:
     def _initialize_catalogue(self) -> List[BuildTemplate]:
         """
         Initialize the build catalogue with profession/elite spec templates.
-        
+
         Applies mode-specific adjustments to capabilities based on game_type.
         In production, this would load from database or GW2 API.
         """
         catalogue = []
-        
+
         # Guardian - Firebrand (Healer)
         base_capabilities = {
             "healing": 0.95,
@@ -151,8 +158,10 @@ class OptimizerEngine:
             "cleanse": 0.85,
             "survivability": 0.80,
         }
-        adjusted_capabilities = apply_mode_adjustments(base_capabilities, 1, self.game_type)
-        
+        adjusted_capabilities = apply_mode_adjustments(
+            base_capabilities, 1, self.game_type
+        )
+
         catalogue.append(
             BuildTemplate(
                 profession_id=1,
@@ -161,7 +170,7 @@ class OptimizerEngine:
                 capabilities=adjusted_capabilities,
             )
         )
-        
+
         # Guardian - Willbender (DPS)
         catalogue.append(
             BuildTemplate(
@@ -177,7 +186,7 @@ class OptimizerEngine:
                 },
             )
         )
-        
+
         # Revenant - Herald (Boon Support)
         # Note: Herald gives Quickness in WvW, Alacrity in PvE (trait differences)
         base_capabilities = {
@@ -190,8 +199,10 @@ class OptimizerEngine:
             "damage": 0.60,
             "crowd_control": 0.65,
         }
-        adjusted_capabilities = apply_mode_adjustments(base_capabilities, 2, self.game_type)
-        
+        adjusted_capabilities = apply_mode_adjustments(
+            base_capabilities, 2, self.game_type
+        )
+
         catalogue.append(
             BuildTemplate(
                 profession_id=2,
@@ -200,7 +211,7 @@ class OptimizerEngine:
                 capabilities=adjusted_capabilities,
             )
         )
-        
+
         # Necromancer - Scourge (Support/Barrier)
         catalogue.append(
             BuildTemplate(
@@ -217,7 +228,7 @@ class OptimizerEngine:
                 },
             )
         )
-        
+
         # Warrior - Spellbreaker (DPS/Boon Rip)
         catalogue.append(
             BuildTemplate(
@@ -233,7 +244,7 @@ class OptimizerEngine:
                 },
             )
         )
-        
+
         # Elementalist - Tempest (Support/Auras)
         catalogue.append(
             BuildTemplate(
@@ -250,7 +261,7 @@ class OptimizerEngine:
                 },
             )
         )
-        
+
         # Engineer - Scrapper (Support/Superspeed)
         # Note: Scrapper gives Stability in WvW, Quickness in PvE
         base_capabilities = {
@@ -262,8 +273,10 @@ class OptimizerEngine:
             "survivability": 0.80,
             "crowd_control": 0.75,
         }
-        adjusted_capabilities = apply_mode_adjustments(base_capabilities, 6, self.game_type)
-        
+        adjusted_capabilities = apply_mode_adjustments(
+            base_capabilities, 6, self.game_type
+        )
+
         catalogue.append(
             BuildTemplate(
                 profession_id=6,
@@ -272,7 +285,7 @@ class OptimizerEngine:
                 capabilities=adjusted_capabilities,
             )
         )
-        
+
         # Engineer - Mechanist (Boon Support)
         # Note: Mechanist gives Might in WvW, Alacrity in PvE
         base_capabilities = {
@@ -283,8 +296,10 @@ class OptimizerEngine:
             "healing": 0.60,
             "survivability": 0.75,
         }
-        adjusted_capabilities = apply_mode_adjustments(base_capabilities, 6, self.game_type)
-        
+        adjusted_capabilities = apply_mode_adjustments(
+            base_capabilities, 6, self.game_type
+        )
+
         catalogue.append(
             BuildTemplate(
                 profession_id=6,
@@ -293,7 +308,7 @@ class OptimizerEngine:
                 capabilities=adjusted_capabilities,
             )
         )
-        
+
         # Ranger - Druid (Healer)
         catalogue.append(
             BuildTemplate(
@@ -310,7 +325,7 @@ class OptimizerEngine:
                 },
             )
         )
-        
+
         # Thief - Deadeye (DPS)
         catalogue.append(
             BuildTemplate(
@@ -326,7 +341,7 @@ class OptimizerEngine:
                 },
             )
         )
-        
+
         # Mesmer - Chronomancer (Utility)
         catalogue.append(
             BuildTemplate(
@@ -343,7 +358,7 @@ class OptimizerEngine:
                 },
             )
         )
-        
+
         logger.info(f"Initialized build catalogue with {len(catalogue)} templates")
         return catalogue
 
@@ -353,39 +368,40 @@ class OptimizerEngine:
     ) -> List[BuildTemplate]:
         """
         Generate initial solution using greedy algorithm.
-        
+
         Prioritizes critical boons and role distribution.
         """
         solution = []
         squad_size = request.squad_size
-        
+
         # Start with fixed professions if specified (engine chooses roles/specs)
         if request.fixed_professions:
             # Filter catalogue to only include fixed professions
             available_builds = [
-                b for b in self.build_catalogue
+                b
+                for b in self.build_catalogue
                 if b.profession_id in request.fixed_professions
             ]
         else:
             available_builds = self.build_catalogue
-        
+
         # Fill slots based on role distribution from config
         remaining = squad_size
         role_dist = self.config.role_distribution
-        
+
         # Calculate target counts for each role
         targets = {}
         for role, dist in role_dist.items():
             optimal = dist.get("optimal", dist.get("min", 1))
             targets[role] = max(0, int(squad_size * optimal / squad_size))
-        
+
         # Add builds to meet role targets
         for role_str, target in targets.items():
             try:
                 role_type = CompositionMemberRole(role_str)
             except ValueError:
                 continue
-                
+
             matching = [b for b in available_builds if b.role_type == role_type]
             if matching:
                 # Sort by overall capability score
@@ -394,7 +410,7 @@ class OptimizerEngine:
                     if remaining > 0:
                         solution.append(matching[0])
                         remaining -= 1
-        
+
         # Fill any remaining slots with DPS
         while len(solution) < squad_size:
             dps_builds = [b for b in self.build_catalogue if "damage" in b.capabilities]
@@ -402,7 +418,7 @@ class OptimizerEngine:
                 solution.append(random.choice(dps_builds))
             else:
                 solution.append(random.choice(self.build_catalogue))
-        
+
         return solution[:squad_size]
 
     def evaluate_solution(
@@ -416,44 +432,64 @@ class OptimizerEngine:
         metrics = {}
         boon_coverage = {}
         role_distribution = {}
-        
+
         # Calculate role distribution
         for build in solution:
             role_str = build.role_type.value
             role_distribution[role_str] = role_distribution.get(role_str, 0) + 1
-        
+
         # Calculate average capabilities
-        for key in ["healing", "damage", "crowd_control", "survivability", "boon_rip", "cleanse"]:
+        for key in [
+            "healing",
+            "damage",
+            "crowd_control",
+            "survivability",
+            "boon_rip",
+            "cleanse",
+        ]:
             values = [b.get_capability(key) for b in solution]
             metrics[key] = sum(values) / len(values) if values else 0.0
-        
+
         # Calculate boon coverage
-        for boon in ["might", "quickness", "alacrity", "stability", "protection", "fury", "aegis", "resolution"]:
+        for boon in [
+            "might",
+            "quickness",
+            "alacrity",
+            "stability",
+            "protection",
+            "fury",
+            "aegis",
+            "resolution",
+        ]:
             values = [b.get_capability(boon) for b in solution]
             boon_coverage[boon] = min(1.0, sum(values) / max(1, len(solution) * 0.5))
-        
+
         # Calculate boon uptime metric (average of critical boons)
         critical_boons = self.config.critical_boons
         if critical_boons:
             boon_scores = [boon_coverage.get(b, 0.0) for b in critical_boons.keys()]
-            metrics["boon_uptime"] = sum(boon_scores) / len(boon_scores) if boon_scores else 0.0
+            metrics["boon_uptime"] = (
+                sum(boon_scores) / len(boon_scores) if boon_scores else 0.0
+            )
         else:
             metrics["boon_uptime"] = 0.5
-        
+
         # Calculate weighted score
         weights = self.config.weights
         score = 0.0
         for key, weight in weights.items():
             score += metrics.get(key, 0.0) * weight
-        
+
         # Apply penalties
         penalties = self.config.penalties or {}
-        
+
         # Penalty for missing critical boons
         for boon, required in critical_boons.items():
             if boon_coverage.get(boon, 0.0) < required:
-                score -= penalties.get("missing_critical_boon", 0.2) * (required - boon_coverage.get(boon, 0.0))
-        
+                score -= penalties.get("missing_critical_boon", 0.2) * (
+                    required - boon_coverage.get(boon, 0.0)
+                )
+
         # Penalty for role imbalance
         role_dist_config = self.config.role_distribution
         for role, dist in role_dist_config.items():
@@ -461,10 +497,10 @@ class OptimizerEngine:
             optimal = dist.get("optimal", dist.get("min", 1))
             if actual < dist.get("min", 0) or actual > dist.get("max", 100):
                 score -= penalties.get("role_imbalance", 0.15)
-        
+
         # Ensure score is in [0, 1]
         score = max(0.0, min(1.0, score))
-        
+
         return score, metrics, boon_coverage, role_distribution
 
     def local_search(
@@ -475,23 +511,23 @@ class OptimizerEngine:
     ) -> List[BuildTemplate]:
         """
         Improve solution using local search with time budget.
-        
+
         Tries random swaps and keeps improvements.
         """
         start_time = time.time()
         best_solution = solution[:]
         best_score, _, _, _ = self.evaluate_solution(best_solution, request)
-        
+
         iterations = 0
         improvements = 0
-        
+
         while time.time() - start_time < time_budget:
             iterations += 1
-            
+
             # Try a random swap
             candidate = best_solution[:]
             idx = random.randint(0, len(candidate) - 1)
-            
+
             # Don't swap fixed roles
             if request.fixed_roles:
                 is_fixed = False
@@ -503,31 +539,33 @@ class OptimizerEngine:
                     else:
                         prof_id = fixed.profession_id
                         elite_id = fixed.elite_specialization_id
-                    
-                    if (candidate[idx].profession_id == prof_id and
-                        candidate[idx].elite_spec_id == elite_id):
+
+                    if (
+                        candidate[idx].profession_id == prof_id
+                        and candidate[idx].elite_spec_id == elite_id
+                    ):
                         is_fixed = True
                         break
                 if is_fixed:
                     continue
-            
+
             # Swap with a random build from catalogue
             new_build = random.choice(self.build_catalogue)
             candidate[idx] = new_build
-            
+
             # Evaluate candidate
             score, _, _, _ = self.evaluate_solution(candidate, request)
-            
+
             if score > best_score:
                 best_solution = candidate
                 best_score = score
                 improvements += 1
-        
+
         logger.info(
             f"Local search: {iterations} iterations, {improvements} improvements, "
             f"final score: {best_score:.3f}"
         )
-        
+
         return best_solution
 
     def optimize(
@@ -537,27 +575,31 @@ class OptimizerEngine:
     ) -> CompositionOptimizationResult:
         """
         Main optimization method.
-        
+
         Returns an optimized composition with metrics.
         """
         start_time = time.time()
-        
+
         # Generate initial solution
         solution = self.greedy_seed(request)
         logger.info(f"Generated initial solution with {len(solution)} builds")
-        
+
         # Improve with local search
         solution = self.local_search(solution, request, time_budget=time_budget * 0.8)
-        
+
         # Final evaluation
-        score, metrics, boon_coverage, role_distribution = self.evaluate_solution(solution, request)
-        
+        score, metrics, boon_coverage, role_distribution = self.evaluate_solution(
+            solution, request
+        )
+
         # Generate notes
-        notes = self._generate_notes(solution, metrics, boon_coverage, role_distribution, request)
-        
+        notes = self._generate_notes(
+            solution, metrics, boon_coverage, role_distribution, request
+        )
+
         # Create composition object
         from datetime import datetime as dt
-        
+
         composition_data = CompositionCreate(
             name=f"Optimized {request.game_type.upper()} {request.game_mode.upper()} Composition",
             description=f"Auto-generated {request.game_type} composition for {request.squad_size} players",
@@ -566,23 +608,40 @@ class OptimizerEngine:
             is_public=True,
             tags=[request.game_type, request.game_mode, "optimized", "auto-generated"],
         )
-        
+
         # Convert to Composition (mock for now - in production would save to DB)
         # Note: tags should be List[Dict] for Composition schema
-        tags_dicts = [{"id": i, "name": tag, "description": ""} for i, tag in enumerate(composition_data.tags or [])]
-        
+        tags_dicts = [
+            {"id": i, "name": tag, "description": ""}
+            for i, tag in enumerate(composition_data.tags or [])
+        ]
+
         # Generate members list from solution
         members = []
         profession_names = {
-            1: "Guardian", 2: "Revenant", 3: "Necromancer", 4: "Warrior",
-            5: "Elementalist", 6: "Engineer", 7: "Ranger", 8: "Thief", 9: "Mesmer"
+            1: "Guardian",
+            2: "Revenant",
+            3: "Necromancer",
+            4: "Warrior",
+            5: "Elementalist",
+            6: "Engineer",
+            7: "Ranger",
+            8: "Thief",
+            9: "Mesmer",
         }
         elite_names = {
-            3: "Firebrand", 4: "Willbender", 5: "Herald", 7: "Scourge",
-            9: "Spellbreaker", 11: "Tempest", 13: "Scrapper", 15: "Druid",
-            17: "Deadeye", 19: "Chronomancer"
+            3: "Firebrand",
+            4: "Willbender",
+            5: "Herald",
+            7: "Scourge",
+            9: "Spellbreaker",
+            11: "Tempest",
+            13: "Scrapper",
+            15: "Druid",
+            17: "Deadeye",
+            19: "Chronomancer",
         }
-        
+
         for i, build in enumerate(solution):
             member = {
                 "id": i + 1,
@@ -598,7 +657,7 @@ class OptimizerEngine:
                 "notes": f"{build.role_type.value.replace('_', ' ').title()}",
             }
             members.append(member)
-        
+
         composition = Composition(
             id=0,
             name=composition_data.name,
@@ -612,10 +671,10 @@ class OptimizerEngine:
             created_at=dt.now(),
             updated_at=dt.now(),
         )
-        
+
         elapsed = time.time() - start_time
         logger.info(f"Optimization completed in {elapsed:.2f}s with score {score:.3f}")
-        
+
         return CompositionOptimizationResult(
             composition=composition,
             score=score,
@@ -635,16 +694,18 @@ class OptimizerEngine:
     ) -> List[str]:
         """Generate human-readable notes about the composition."""
         notes = []
-        
+
         # Check boon coverage
         critical_boons = self.config.critical_boons
         for boon, required in critical_boons.items():
             actual = boon_coverage.get(boon, 0.0)
             if actual < required:
-                notes.append(f"⚠️ {boon.capitalize()} uptime is {actual:.0%} (target: {required:.0%})")
+                notes.append(
+                    f"⚠️ {boon.capitalize()} uptime is {actual:.0%} (target: {required:.0%})"
+                )
             elif actual >= required * 1.1:
                 notes.append(f"✓ Excellent {boon} coverage at {actual:.0%}")
-        
+
         # Check role distribution
         role_dist_config = self.config.role_distribution
         for role, dist in role_dist_config.items():
@@ -654,7 +715,7 @@ class OptimizerEngine:
                 notes.append(f"⚠️ Not enough {role}s: {actual} (minimum: {dist['min']})")
             elif actual > dist.get("max", 100):
                 notes.append(f"⚠️ Too many {role}s: {actual} (maximum: {dist['max']})")
-        
+
         # Overall assessment
         if metrics.get("boon_uptime", 0) >= 0.85:
             notes.append("✓ Strong boon coverage for sustained fights")
@@ -662,7 +723,7 @@ class OptimizerEngine:
             notes.append("✓ Good healing and sustain")
         if metrics.get("damage", 0) >= 0.75:
             notes.append("✓ Solid damage output")
-        
+
         return notes[:10]  # Limit to 10 notes
 
 
@@ -672,11 +733,11 @@ def optimize_composition(
 ) -> CompositionOptimizationResult:
     """
     Main entry point for composition optimization.
-    
+
     Args:
         request: Optimization request with constraints
         time_budget: Maximum time in seconds for optimization
-        
+
     Returns:
         Optimized composition with score and metrics
     """

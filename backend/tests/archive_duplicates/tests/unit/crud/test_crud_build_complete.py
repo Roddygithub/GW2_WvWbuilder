@@ -43,7 +43,9 @@ def test_user(db: Session):
 @pytest.fixture
 def test_profession(db: Session):
     """Create a test profession."""
-    profession = Profession(name="Guardian", description="A heavy armor profession", armor_type="Heavy")
+    profession = Profession(
+        name="Guardian", description="A heavy armor profession", armor_type="Heavy"
+    )
     db.add(profession)
     db.commit()
     db.refresh(profession)
@@ -59,10 +61,19 @@ def crud_build():
 class TestCRUDBuildCreate:
     """Test Build creation operations."""
 
-    def test_create_build_basic(self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+    def test_create_build_basic(
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
+    ):
         """Test creating a basic build."""
         build_data = BuildCreate(
-            name="Test Build", description="A test build description", profession_id=test_profession.id, is_public=True
+            name="Test Build",
+            description="A test build description",
+            profession_id=test_profession.id,
+            is_public=True,
         )
 
         build = crud_build.create(db, obj_in=build_data)
@@ -78,7 +89,11 @@ class TestCRUDBuildCreate:
         assert build.created_by_id == test_user.id
 
     def test_create_build_with_all_fields(
-        self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
     ):
         """Test creating a build with all optional fields."""
         build_data = BuildCreate(
@@ -110,11 +125,18 @@ class TestCRUDBuildCreate:
         assert build.is_public is True
 
     def test_create_build_private(
-        self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
     ):
         """Test creating a private build."""
         build_data = BuildCreate(
-            name="Private Build", description="A private build", profession_id=test_profession.id, is_public=False
+            name="Private Build",
+            description="A private build",
+            profession_id=test_profession.id,
+            is_public=False,
         )
 
         build = crud_build.create(db, obj_in=build_data)
@@ -128,7 +150,13 @@ class TestCRUDBuildCreate:
 class TestCRUDBuildRead:
     """Test Build read operations."""
 
-    def test_get_build_by_id(self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+    def test_get_build_by_id(
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
+    ):
         """Test getting a build by ID."""
         build_data = BuildCreate(name="Test Build", profession_id=test_profession.id)
         created_build = crud_build.create(db, obj_in=build_data)
@@ -146,10 +174,18 @@ class TestCRUDBuildRead:
         build = crud_build.get(db, id=99999)
         assert build is None
 
-    def test_get_multi_builds(self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+    def test_get_multi_builds(
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
+    ):
         """Test getting multiple builds."""
         for i in range(3):
-            build_data = BuildCreate(name=f"Build {i}", profession_id=test_profession.id)
+            build_data = BuildCreate(
+                name=f"Build {i}", profession_id=test_profession.id
+            )
             build = crud_build.create(db, obj_in=build_data)
             build.created_by_id = test_user.id
         db.commit()
@@ -158,10 +194,18 @@ class TestCRUDBuildRead:
 
         assert len(builds) >= 3
 
-    def test_get_multi_by_owner(self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+    def test_get_multi_by_owner(
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
+    ):
         """Test getting builds by owner."""
         for i in range(2):
-            build_data = BuildCreate(name=f"Owner Build {i}", profession_id=test_profession.id)
+            build_data = BuildCreate(
+                name=f"Owner Build {i}", profession_id=test_profession.id
+            )
             build = crud_build.create(db, obj_in=build_data)
             build.created_by_id = test_user.id
         db.commit()
@@ -176,7 +220,13 @@ class TestCRUDBuildRead:
 class TestCRUDBuildUpdate:
     """Test Build update operations."""
 
-    def test_update_build_name(self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+    def test_update_build_name(
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
+    ):
         """Test updating a build's name."""
         build_data = BuildCreate(name="Original Name", profession_id=test_profession.id)
         build = crud_build.create(db, obj_in=build_data)
@@ -189,17 +239,26 @@ class TestCRUDBuildUpdate:
         assert updated_build.name == "Updated Name"
 
     def test_update_build_multiple_fields(
-        self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
     ):
         """Test updating multiple fields."""
         build_data = BuildCreate(
-            name="Original", description="Original description", profession_id=test_profession.id, is_public=False
+            name="Original",
+            description="Original description",
+            profession_id=test_profession.id,
+            is_public=False,
         )
         build = crud_build.create(db, obj_in=build_data)
         build.created_by_id = test_user.id
         db.commit()
 
-        update_data = BuildUpdate(name="Updated", description="Updated description", is_public=True)
+        update_data = BuildUpdate(
+            name="Updated", description="Updated description", is_public=True
+        )
         updated_build = crud_build.update(db, db_obj=build, obj_in=update_data)
 
         assert updated_build.name == "Updated"
@@ -207,10 +266,18 @@ class TestCRUDBuildUpdate:
         assert updated_build.is_public is True
 
     def test_update_build_skills(
-        self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
     ):
         """Test updating build skills."""
-        build_data = BuildCreate(name="Skills Build", profession_id=test_profession.id, skills={"heal": "Shelter"})
+        build_data = BuildCreate(
+            name="Skills Build",
+            profession_id=test_profession.id,
+            skills={"heal": "Shelter"},
+        )
         build = crud_build.create(db, obj_in=build_data)
         build.created_by_id = test_user.id
         db.commit()
@@ -226,7 +293,13 @@ class TestCRUDBuildUpdate:
 class TestCRUDBuildDelete:
     """Test Build delete operations."""
 
-    def test_delete_build(self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+    def test_delete_build(
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
+    ):
         """Test deleting a build."""
         build_data = BuildCreate(name="To Delete", profession_id=test_profession.id)
         build = crud_build.create(db, obj_in=build_data)
@@ -249,11 +322,17 @@ class TestCRUDBuildFiltering:
     """Test Build filtering operations."""
 
     def test_filter_public_builds(
-        self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
     ):
         """Test filtering public builds."""
         for i, is_public in enumerate([True, False, True]):
-            build_data = BuildCreate(name=f"Build {i}", profession_id=test_profession.id, is_public=is_public)
+            build_data = BuildCreate(
+                name=f"Build {i}", profession_id=test_profession.id, is_public=is_public
+            )
             build = crud_build.create(db, obj_in=build_data)
             build.created_by_id = test_user.id
         db.commit()
@@ -265,11 +344,17 @@ class TestCRUDBuildFiltering:
             assert build.is_public is True
 
     def test_filter_by_profession(
-        self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
     ):
         """Test filtering builds by profession."""
         for i in range(2):
-            build_data = BuildCreate(name=f"Guardian Build {i}", profession_id=test_profession.id)
+            build_data = BuildCreate(
+                name=f"Guardian Build {i}", profession_id=test_profession.id
+            )
             build = crud_build.create(db, obj_in=build_data)
             build.created_by_id = test_user.id
         db.commit()
@@ -284,10 +369,18 @@ class TestCRUDBuildFiltering:
 class TestCRUDBuildPagination:
     """Test Build pagination."""
 
-    def test_pagination(self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession):
+    def test_pagination(
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
+    ):
         """Test pagination with skip and limit."""
         for i in range(5):
-            build_data = BuildCreate(name=f"Paginated Build {i}", profession_id=test_profession.id)
+            build_data = BuildCreate(
+                name=f"Paginated Build {i}", profession_id=test_profession.id
+            )
             build = crud_build.create(db, obj_in=build_data)
             build.created_by_id = test_user.id
         db.commit()
@@ -304,10 +397,16 @@ class TestCRUDBuildEdgeCases:
     """Test Build edge cases."""
 
     def test_create_build_without_description(
-        self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
     ):
         """Test creating a build without description."""
-        build_data = BuildCreate(name="No Description", profession_id=test_profession.id)
+        build_data = BuildCreate(
+            name="No Description", profession_id=test_profession.id
+        )
 
         build = crud_build.create(db, obj_in=build_data)
         build.created_by_id = test_user.id
@@ -316,7 +415,11 @@ class TestCRUDBuildEdgeCases:
         assert build.description is None or build.description == ""
 
     def test_update_with_empty_data(
-        self, db: Session, crud_build: CRUDBuild, test_user: User, test_profession: Profession
+        self,
+        db: Session,
+        crud_build: CRUDBuild,
+        test_user: User,
+        test_profession: Profession,
     ):
         """Test updating with empty data."""
         build_data = BuildCreate(name="Original", profession_id=test_profession.id)

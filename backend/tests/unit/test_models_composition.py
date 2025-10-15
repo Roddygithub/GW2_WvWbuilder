@@ -139,7 +139,9 @@ async def sample_composition(db: AsyncSession, sample_user: User, sample_build: 
 
 
 @pytest_asyncio.fixture
-async def sample_composition_async(db: AsyncSession, sample_user: User, sample_build: Build):
+async def sample_composition_async(
+    db: AsyncSession, sample_user: User, sample_build: Build
+):
     """Create a sample composition for async testing."""
     # Generate a unique name for the composition
     unique_name = f"{TEST_COMPOSITION_DATA['name']}_async_{uuid.uuid4().hex[:8]}"
@@ -167,7 +169,9 @@ class TestCompositionModel:
     """Test cases for the Composition model."""
 
     @pytest.mark.asyncio
-    async def test_composition_creation(self, db: AsyncSession, sample_user: User, sample_build: Build) -> None:
+    async def test_composition_creation(
+        self, db: AsyncSession, sample_user: User, sample_build: Build
+    ) -> None:
         """
         Test basic composition creation with valid data.
 
@@ -182,15 +186,21 @@ class TestCompositionModel:
                 # Afficher les informations de base
                 logger.debug(f"[TEST] Sample user: {sample_user}")
                 logger.debug(f"[TEST] Sample build: {sample_build}")
-                logger.debug(f"[TEST] Sample user ID: {getattr(sample_user, 'id', 'No ID')}")
-                logger.debug(f"[TEST] Sample build ID: {getattr(sample_build, 'id', 'No ID')}")
+                logger.debug(
+                    f"[TEST] Sample user ID: {getattr(sample_user, 'id', 'No ID')}"
+                )
+                logger.debug(
+                    f"[TEST] Sample build ID: {getattr(sample_build, 'id', 'No ID')}"
+                )
 
                 # Vérifier la connexion à la base de données
                 try:
                     result = await db.execute(text("SELECT 1"))
                     logger.debug("[TEST] Connexion à la base de données réussie")
                 except Exception as e:
-                    logger.error(f"[ERROR] Erreur de connexion à la base de données: {e}")
+                    logger.error(
+                        f"[ERROR] Erreur de connexion à la base de données: {e}"
+                    )
                     raise
 
                 # Vérifier que les IDs sont valides
@@ -207,24 +217,33 @@ class TestCompositionModel:
                 # Recharger l'utilisateur avec ses relations
                 user_result = await db.execute(
                     select(User)
-                    .options(selectinload(User.compositions), selectinload(User.created_compositions))
+                    .options(
+                        selectinload(User.compositions),
+                        selectinload(User.created_compositions),
+                    )
                     .filter(User.id == sample_user.id)
                 )
                 sample_user = user_result.scalar_one()
 
                 # Recharger le build avec ses relations
                 build_result = await db.execute(
-                    select(Build).options(selectinload(Build.compositions)).filter(Build.id == sample_build.id)
+                    select(Build)
+                    .options(selectinload(Build.compositions))
+                    .filter(Build.id == sample_build.id)
                 )
                 sample_build = build_result.scalar_one()
 
                 # Afficher l'état des relations avant création
                 logger.debug("[TEST] État des relations avant création:")
-                logger.debug(f"[TEST] sample_user.compositions: {getattr(sample_user, 'compositions', 'Non chargé')}")
+                logger.debug(
+                    f"[TEST] sample_user.compositions: {getattr(sample_user, 'compositions', 'Non chargé')}"
+                )
                 logger.debug(
                     f"[TEST] sample_user.created_compositions: {getattr(sample_user, 'created_compositions', 'Non chargé')}"
                 )
-                logger.debug(f"[TEST] sample_build.compositions: {getattr(sample_build, 'compositions', 'Non chargé')}")
+                logger.debug(
+                    f"[TEST] sample_build.compositions: {getattr(sample_build, 'compositions', 'Non chargé')}"
+                )
 
                 # Create a savepoint to rollback to in case of errors
                 savepoint = await db.begin_nested()
@@ -244,7 +263,9 @@ class TestCompositionModel:
                     )
                     logger.debug("[TEST] Objet Composition créé avec succès")
                 except Exception as e:
-                    logger.error(f"[ERROR] Erreur lors de la création de l'objet Composition: {e}")
+                    logger.error(
+                        f"[ERROR] Erreur lors de la création de l'objet Composition: {e}"
+                    )
                     logger.error(f"[ERROR] Type d'erreur: {type(e).__name__}")
                     logger.error(f"[ERROR] Traceback: {traceback.format_exc()}")
                     await savepoint.rollback()
@@ -265,24 +286,34 @@ class TestCompositionModel:
 
                     # Afficher l'état de la session avant le commit
                     logger.debug("[TEST] État de la session avant commit:")
-                    logger.debug(f"[TEST] Nouvelles instances dans la session: {db.new}")
+                    logger.debug(
+                        f"[TEST] Nouvelles instances dans la session: {db.new}"
+                    )
                     logger.debug(f"[TEST] Instances modifiées: {db.dirty}")
 
                     # Vérifier si la table compositions existe
                     try:
-                        logger.debug("[TEST] Vérification de la table 'compositions'...")
+                        logger.debug(
+                            "[TEST] Vérification de la table 'compositions'..."
+                        )
                         # Vérifier si la table existe
                         result = await db.execute(
-                            text("SELECT name FROM sqlite_master WHERE type='table' AND name='compositions'")
+                            text(
+                                "SELECT name FROM sqlite_master WHERE type='table' AND name='compositions'"
+                            )
                         )
                         table_row = result.fetchone()
                         table_exists = table_row is not None
-                        logger.debug(f"[TEST] La table 'compositions' existe: {table_exists}")
+                        logger.debug(
+                            f"[TEST] La table 'compositions' existe: {table_exists}"
+                        )
 
                         if table_exists:
                             # Récupérer la définition de la table
                             result = await db.execute(
-                                text("SELECT sql FROM sqlite_master WHERE type='table' AND name='compositions'")
+                                text(
+                                    "SELECT sql FROM sqlite_master WHERE type='table' AND name='compositions'"
+                                )
                             )
                             table_definition = result.fetchone()
                             logger.debug(
@@ -290,7 +321,9 @@ class TestCompositionModel:
                             )
 
                             # Afficher les colonnes de la table
-                            result = await db.execute(text("PRAGMA table_info(compositions)"))
+                            result = await db.execute(
+                                text("PRAGMA table_info(compositions)")
+                            )
                             columns = result.fetchall()
                             logger.debug("[TEST] Colonnes de la table 'compositions':")
                             if columns:
@@ -299,7 +332,9 @@ class TestCompositionModel:
                             else:
                                 logger.debug("  Aucune colonne trouvée")
                     except Exception as e:
-                        logger.error(f"[ERROR] Erreur lors de la vérification de la table: {e}")
+                        logger.error(
+                            f"[ERROR] Erreur lors de la vérification de la table: {e}"
+                        )
                         logger.error(f"[ERROR] Type d'erreur: {type(e).__name__}")
                         logger.error(f"[ERROR] Traceback: {traceback.format_exc()}")
                         await savepoint.rollback()
@@ -315,7 +350,9 @@ class TestCompositionModel:
                     try:
                         await db.refresh(composition)
                         logger.debug("Composition rafraîchie avec succès")
-                        logger.debug(f"Composition après rafraîchissement: {composition}")
+                        logger.debug(
+                            f"Composition après rafraîchissement: {composition}"
+                        )
                         logger.debug(
                             f"ID de la composition après rafraîchissement: {getattr(composition, 'id', 'Non défini')}"
                         )
@@ -344,11 +381,17 @@ class TestCompositionModel:
                         logger.debug(f"État de la composition: {composition.__dict__}")
                         # Essayer de récupérer toutes les compositions pour débogage
                         try:
-                            result = await db.execute(text("SELECT * FROM compositions"))
+                            result = await db.execute(
+                                text("SELECT * FROM compositions")
+                            )
                             all_compositions = result.fetchall()
-                            logger.debug(f"Compositions dans la base de données: {all_compositions}")
+                            logger.debug(
+                                f"Compositions dans la base de données: {all_compositions}"
+                            )
                         except Exception as query_err:
-                            logger.error(f"Erreur lors de la récupération des compositions: {query_err}")
+                            logger.error(
+                                f"Erreur lors de la récupération des compositions: {query_err}"
+                            )
                         raise
 
                     # Nettoyer
@@ -363,9 +406,7 @@ class TestCompositionModel:
                         raise
 
                 except Exception as e:
-                    error_msg = (
-                        f"[ERROR] Erreur lors du commit: {e}\nType: {type(e).__name__}\n{traceback.format_exc()}"
-                    )
+                    error_msg = f"[ERROR] Erreur lors du commit: {e}\nType: {type(e).__name__}\n{traceback.format_exc()}"
                     logger.error(error_msg)
                     await savepoint.rollback()
                     raise
@@ -383,7 +424,9 @@ class TestCompositionModel:
                     logger.debug(f"[DEBUG] État de la session (dirty): {db.dirty}")
                     logger.debug(f"[DEBUG] Nouveaux objets dans la session: {db.new}")
                 except Exception as session_err:
-                    logger.error(f"[ERROR] Impossible de lire l'état de la session: {session_err}")
+                    logger.error(
+                        f"[ERROR] Impossible de lire l'état de la session: {session_err}"
+                    )
 
                 await transaction.rollback()
                 raise
@@ -394,13 +437,21 @@ class TestCompositionModel:
 
             # Informations sur la connexion
             try:
-                db_url = db.bind.url if hasattr(db, "bind") and hasattr(db.bind, "url") else "Non disponible"
+                db_url = (
+                    db.bind.url
+                    if hasattr(db, "bind") and hasattr(db.bind, "url")
+                    else "Non disponible"
+                )
                 logger.debug(f"[DEBUG] URL de la base de données: {db_url}")
 
                 # Vérification des objets dans la session
                 logger.debug("\n[DEBUG] État des objets dans la session:")
-                logger.debug(f"- sample_user: {'Présent' if sample_user in db else 'Absent'}")
-                logger.debug(f"- sample_build: {'Présent' if sample_build in db else 'Absent'}")
+                logger.debug(
+                    f"- sample_user: {'Présent' if sample_user in db else 'Absent'}"
+                )
+                logger.debug(
+                    f"- sample_build: {'Présent' if sample_build in db else 'Absent'}"
+                )
 
                 # Détails des objets
                 logger.debug("\n[DEBUG] Détails des objets:")
@@ -430,10 +481,14 @@ class TestCompositionModel:
                 logger.debug(
                     f"- Compositions créées par l'utilisateur: {len(getattr(sample_user, 'created_compositions', []))} éléments"
                 )
-                logger.debug(f"- Compositions du build: {len(getattr(sample_build, 'compositions', []))} éléments")
+                logger.debug(
+                    f"- Compositions du build: {len(getattr(sample_build, 'compositions', []))} éléments"
+                )
 
             except Exception as e:
-                logger.error(f"[ERROR] Erreur lors de la vérification des relations: {e}")
+                logger.error(
+                    f"[ERROR] Erreur lors de la vérification des relations: {e}"
+                )
 
             # Informations supplémentaires sur les types d'objets
             logger.debug("\n[DEBUG] Types des objets:")
@@ -454,7 +509,9 @@ class TestCompositionModel:
 
         # Vérifier la connexion à la base de données
         print("\n[DEBUG] === Connexion à la base de données ===")
-        print(f"[DEBUG] URL de la base de données: {db.bind.url if hasattr(db, 'bind') else 'Pas de bind'}")
+        print(
+            f"[DEBUG] URL de la base de données: {db.bind.url if hasattr(db, 'bind') else 'Pas de bind'}"
+        )
 
         # Vérifier si les objets sont dans la session
         print("\n[DEBUG] === Vérification des objets dans la session ===")
@@ -462,7 +519,9 @@ class TestCompositionModel:
             print(f"[DEBUG] sample_user dans la session: {sample_user in db}")
             print(f"[DEBUG] sample_build dans la session: {sample_build in db}")
         except Exception as e:
-            print(f"[ERROR] Erreur lors de la vérification des objets dans la session: {e}")
+            print(
+                f"[ERROR] Erreur lors de la vérification des objets dans la session: {e}"
+            )
 
         # Afficher plus d'informations sur les objets
         print("\n[DEBUG] === Détails des objets ===")
@@ -472,11 +531,15 @@ class TestCompositionModel:
         # Vérifier les relations
         print("\n[DEBUG] === Vérification des relations ===")
         try:
-            print(f"[DEBUG] sample_user.compositions: {getattr(sample_user, 'compositions', 'Non chargé')}")
+            print(
+                f"[DEBUG] sample_user.compositions: {getattr(sample_user, 'compositions', 'Non chargé')}"
+            )
             print(
                 f"[DEBUG] sample_user.created_compositions: {getattr(sample_user, 'created_compositions', 'Non chargé')}"
             )
-            print(f"[DEBUG] sample_build.compositions: {getattr(sample_build, 'compositions', 'Non chargé')}")
+            print(
+                f"[DEBUG] sample_build.compositions: {getattr(sample_build, 'compositions', 'Non chargé')}"
+            )
         except Exception as e:
             print(f"[ERROR] Erreur lors de la vérification des relations: {e}")
 
@@ -495,7 +558,9 @@ class TestCompositionModel:
 
         # Vérifier la connexion à la base de données
         print("\n[DEBUG] === Connexion à la base de données ===")
-        print(f"[DEBUG] URL de la base de données: {db.bind.url if hasattr(db, 'bind') else 'Pas de bind'}")
+        print(
+            f"[DEBUG] URL de la base de données: {db.bind.url if hasattr(db, 'bind') else 'Pas de bind'}"
+        )
 
         # Vérifier si les objets sont dans la session
         print("\n[DEBUG] === Vérification des objets dans la session ===")
@@ -503,7 +568,9 @@ class TestCompositionModel:
             print(f"[DEBUG] sample_user dans la session: {sample_user in db}")
             print(f"[DEBUG] sample_build dans la session: {sample_build in db}")
         except Exception as e:
-            print(f"[ERROR] Erreur lors de la vérification des objets dans la session: {e}")
+            print(
+                f"[ERROR] Erreur lors de la vérification des objets dans la session: {e}"
+            )
 
         # Afficher plus d'informations sur les objets
         print("\n[DEBUG] === Détails des objets ===")
@@ -513,11 +580,15 @@ class TestCompositionModel:
         # Vérifier les relations
         print("\n[DEBUG] === Vérification des relations ===")
         try:
-            print(f"[DEBUG] sample_user.compositions: {getattr(sample_user, 'compositions', 'Non chargé')}")
+            print(
+                f"[DEBUG] sample_user.compositions: {getattr(sample_user, 'compositions', 'Non chargé')}"
+            )
             print(
                 f"[DEBUG] sample_user.created_compositions: {getattr(sample_user, 'created_compositions', 'Non chargé')}"
             )
-            print(f"[DEBUG] sample_build.compositions: {getattr(sample_build, 'compositions', 'Non chargé')}")
+            print(
+                f"[DEBUG] sample_build.compositions: {getattr(sample_build, 'compositions', 'Non chargé')}"
+            )
         except Exception as e:
             print(f"[ERROR] Erreur lors de la vérification des relations: {e}")
 
@@ -532,7 +603,9 @@ class TestCompositionModel:
         for attr in dir(sample_user):
             if not attr.startswith("_"):
                 try:
-                    print(f"[DEBUG] sample_user.{attr}: {getattr(sample_user, attr, 'N/A')}")
+                    print(
+                        f"[DEBUG] sample_user.{attr}: {getattr(sample_user, attr, 'N/A')}"
+                    )
                 except Exception as e:
                     print(f"[DEBUG] Erreur lors de l'accès à sample_user.{attr}: {e}")
 
@@ -541,7 +614,9 @@ class TestCompositionModel:
         for attr in dir(sample_build):
             if not attr.startswith("_"):
                 try:
-                    print(f"[DEBUG] sample_build.{attr}: {getattr(sample_build, attr, 'N/A')}")
+                    print(
+                        f"[DEBUG] sample_build.{attr}: {getattr(sample_build, attr, 'N/A')}"
+                    )
                 except Exception as e:
                     print(f"[DEBUG] Erreur lors de l'accès à sample_build.{attr}: {e}")
 
@@ -549,7 +624,9 @@ class TestCompositionModel:
         print("\n[DEBUG] === Vérification des clés étrangères ===")
         print(f"[DEBUG] sample_user.id: {getattr(sample_user, 'id', 'N/A')}")
         print(f"[DEBUG] sample_build.id: {getattr(sample_build, 'id', 'N/A')}")
-        print(f"[DEBUG] sample_build.created_by_id: {getattr(sample_build, 'created_by_id', 'N/A')}")
+        print(
+            f"[DEBUG] sample_build.created_by_id: {getattr(sample_build, 'created_by_id', 'N/A')}"
+        )
 
         # Arrange
         comp_data = {
@@ -579,7 +656,9 @@ class TestCompositionModel:
             # Verify the composition was created with correct data
             print("[TEST] Verifying composition data...")
             assert composition.id is not None, "Composition ID should not be None"
-            assert composition.name == unique_name, f"Expected name '{unique_name}', got '{composition.name}'"
+            assert (
+                composition.name == unique_name
+            ), f"Expected name '{unique_name}', got '{composition.name}'"
             assert composition.description == "A new test composition"
             assert composition.squad_size == 15
             assert composition.is_public is True
@@ -603,28 +682,42 @@ class TestCompositionModel:
             # Requête pour recharger la composition avec les relations
             result = await db.execute(
                 select(Composition)
-                .options(selectinload(Composition.creator), selectinload(Composition.build))
+                .options(
+                    selectinload(Composition.creator), selectinload(Composition.build)
+                )
                 .where(Composition.id == composition.id)
             )
             composition = result.scalar_one()
 
             # Debug relationship attributes
             print(f"[DEBUG] Composition attributes: {dir(composition)}")
-            print(f"[DEBUG] Composition creator: {getattr(composition, 'creator', 'Not loaded')}")
-            print(f"[DEBUG] Composition build: {getattr(composition, 'build', 'Not loaded')}")
+            print(
+                f"[DEBUG] Composition creator: {getattr(composition, 'creator', 'Not loaded')}"
+            )
+            print(
+                f"[DEBUG] Composition build: {getattr(composition, 'build', 'Not loaded')}"
+            )
 
             # Verify creator relationship
             print("[TEST] Verifying creator relationship...")
-            assert hasattr(composition, "creator"), "Composition should have 'creator' relationship"
-            assert composition.creator is not None, "Composition creator should not be None"
-            print(f"[DEBUG] Creator ID: {getattr(composition.creator, 'id', 'No ID')}, Expected: {sample_user.id}")
+            assert hasattr(
+                composition, "creator"
+            ), "Composition should have 'creator' relationship"
+            assert (
+                composition.creator is not None
+            ), "Composition creator should not be None"
+            print(
+                f"[DEBUG] Creator ID: {getattr(composition.creator, 'id', 'No ID')}, Expected: {sample_user.id}"
+            )
             assert (
                 composition.creator.id == sample_user.id
             ), f"Creator ID mismatch: expected {sample_user.id}, got {getattr(composition.creator, 'id', 'No ID')}"
 
             # Verify build relationship
             print("[TEST] Verifying build relationship...")
-            assert hasattr(composition, "build"), "Composition should have 'build' relationship"
+            assert hasattr(
+                composition, "build"
+            ), "Composition should have 'build' relationship"
             assert composition.build is not None, "Composition build should not be None"
             assert (
                 composition.build.id == sample_build.id
@@ -639,17 +732,25 @@ class TestCompositionModel:
 
             # Use a fresh query to get the user with their created_compositions
             user_result = await db.execute(
-                select(User).options(selectinload(User.created_compositions)).where(User.id == sample_user.id)
+                select(User)
+                .options(selectinload(User.created_compositions))
+                .where(User.id == sample_user.id)
             )
             user = user_result.scalar_one()
 
             # Access the relationship attribute directly (it's already loaded by selectinload)
             created_compositions = user.created_compositions
-            print(f"[DEBUG] User's created_compositions: {[c.id for c in created_compositions]}")
+            print(
+                f"[DEBUG] User's created_compositions: {[c.id for c in created_compositions]}"
+            )
 
             # Check if the composition is in the list
-            composition_found = any(c.id == composition.id for c in created_compositions)
-            assert composition_found, f"Composition {composition.id} not found in user's created_compositions"
+            composition_found = any(
+                c.id == composition.id for c in created_compositions
+            )
+            assert (
+                composition_found
+            ), f"Composition {composition.id} not found in user's created_compositions"
 
             # Verify the composition is in the build's compositions
             print("[TEST] Verifying build's compositions...")
@@ -660,7 +761,9 @@ class TestCompositionModel:
 
             # Use a fresh query to get the build with its compositions
             build_result = await db.execute(
-                select(Build).options(selectinload(Build.compositions)).where(Build.id == sample_build.id)
+                select(Build)
+                .options(selectinload(Build.compositions))
+                .where(Build.id == sample_build.id)
             )
             build = build_result.scalar_one()
 
@@ -669,8 +772,12 @@ class TestCompositionModel:
             print(f"[DEBUG] Build's compositions: {[c.id for c in build_compositions]}")
 
             # Check if the composition is in the list
-            composition_in_build = any(c.id == composition.id for c in build_compositions)
-            assert composition_in_build, f"Composition {composition.id} not found in build's compositions"
+            composition_in_build = any(
+                c.id == composition.id for c in build_compositions
+            )
+            assert (
+                composition_in_build
+            ), f"Composition {composition.id} not found in build's compositions"
 
             # Commit if all assertions pass
             print("[TEST] All assertions passed, committing transaction...")
@@ -699,7 +806,11 @@ class TestCompositionModel:
 
     @pytest.mark.asyncio
     async def test_composition_relationships(
-        self, db: AsyncSession, sample_composition, sample_user: User, sample_build: Build
+        self,
+        db: AsyncSession,
+        sample_composition,
+        sample_user: User,
+        sample_build: Build,
     ) -> None:
         """
         Test relationships with User and Build models.
@@ -713,9 +824,15 @@ class TestCompositionModel:
         async with db.begin() as transaction:
             try:
                 # Log test data for debugging
-                logger.debug(f"[TEST] Sample user ID: {getattr(sample_user, 'id', 'No ID')}")
-                logger.debug(f"[TEST] Sample build ID: {getattr(sample_build, 'id', 'No ID')}")
-                logger.debug(f"[TEST] Sample composition ID: {getattr(sample_composition, 'id', 'No ID')}")
+                logger.debug(
+                    f"[TEST] Sample user ID: {getattr(sample_user, 'id', 'No ID')}"
+                )
+                logger.debug(
+                    f"[TEST] Sample build ID: {getattr(sample_build, 'id', 'No ID')}"
+                )
+                logger.debug(
+                    f"[TEST] Sample composition ID: {getattr(sample_composition, 'id', 'No ID')}"
+                )
 
                 # Refresh the user and build to ensure relationships are loaded
                 logger.debug("[TEST] Refreshing sample_user and sample_build")
@@ -736,7 +853,9 @@ class TestCompositionModel:
                 assert (
                     sample_composition.build_id == sample_build.id
                 ), f"Build ID {sample_composition.build_id} does not match expected {sample_build.id}"
-                assert sample_composition in sample_build.compositions, "Composition not found in build's compositions"
+                assert (
+                    sample_composition in sample_build.compositions
+                ), "Composition not found in build's compositions"
 
                 # Test backref from User to Compositions with explicit loading
                 from sqlalchemy.future import select
@@ -746,7 +865,9 @@ class TestCompositionModel:
                 # Load user with created_compositions using selectinload
                 logger.debug("[TEST] Loading user with created_compositions")
                 result = await db.execute(
-                    select(User).options(selectinload(User.created_compositions)).where(User.id == sample_user.id)
+                    select(User)
+                    .options(selectinload(User.created_compositions))
+                    .where(User.id == sample_user.id)
                 )
                 user = result.scalar_one_or_none()
                 assert user is not None, "User not found in database"
@@ -759,7 +880,9 @@ class TestCompositionModel:
 
                 logger.debug("[TEST] Loading build with compositions")
                 result = await db.execute(
-                    select(Build).options(selectinload(Build.compositions)).filter(Build.id == sample_build.id)
+                    select(Build)
+                    .options(selectinload(Build.compositions))
+                    .filter(Build.id == sample_build.id)
                 )
                 build = result.scalar_one_or_none()
                 assert build is not None, "Build not found in database"
@@ -780,7 +903,12 @@ class TestCompositionModel:
 
     @pytest.mark.asyncio
     async def test_composition_members(
-        self, db: AsyncSession, sample_composition, sample_user: User, sample_role, sample_profession
+        self,
+        db: AsyncSession,
+        sample_composition,
+        sample_user: User,
+        sample_role,
+        sample_profession,
     ) -> None:
         """
         Test adding members to a composition.
@@ -799,10 +927,18 @@ class TestCompositionModel:
                 from sqlalchemy.orm import selectinload
 
                 # Log test data for debugging
-                logger.debug(f"[TEST] Sample user ID: {getattr(sample_user, 'id', 'No ID')}")
-                logger.debug(f"[TEST] Sample composition ID: {getattr(sample_composition, 'id', 'No ID')}")
-                logger.debug(f"[TEST] Sample role ID: {getattr(sample_role, 'id', 'No ID')}")
-                logger.debug(f"[TEST] Sample profession ID: {getattr(sample_profession, 'id', 'No ID')}")
+                logger.debug(
+                    f"[TEST] Sample user ID: {getattr(sample_user, 'id', 'No ID')}"
+                )
+                logger.debug(
+                    f"[TEST] Sample composition ID: {getattr(sample_composition, 'id', 'No ID')}"
+                )
+                logger.debug(
+                    f"[TEST] Sample role ID: {getattr(sample_role, 'id', 'No ID')}"
+                )
+                logger.debug(
+                    f"[TEST] Sample profession ID: {getattr(sample_profession, 'id', 'No ID')}"
+                )
 
                 # Add member to composition
                 logger.debug("[TEST] Adding member to composition")
@@ -831,12 +967,16 @@ class TestCompositionModel:
 
                 # Test the relationship
                 logger.debug("[TEST] Verifying member relationships")
-                assert len(composition.members) == 1, "Le nombre de membres ne correspond pas"
+                assert (
+                    len(composition.members) == 1
+                ), "Le nombre de membres ne correspond pas"
 
                 member = composition.members[0]
                 assert member.user_id == sample_user.id, "User ID mismatch"
                 assert member.role_id == sample_role.id, "Role ID mismatch"
-                assert member.profession_id == sample_profession.id, "Profession ID mismatch"
+                assert (
+                    member.profession_id == sample_profession.id
+                ), "Profession ID mismatch"
 
                 # Vérifier que l'utilisateur est bien associé à la composition
                 logger.debug("[TEST] Verifying user composition association")
@@ -876,14 +1016,20 @@ class TestCompositionModel:
 
         result = await db_session.execute(
             select(Composition)
-            .options(selectinload(Composition.composition_tags).selectinload(CompositionTag.tag))
+            .options(
+                selectinload(Composition.composition_tags).selectinload(
+                    CompositionTag.tag
+                )
+            )
             .filter(Composition.id == sample_composition.id)
         )
         composition = result.scalar_one_or_none()
         assert composition is not None, "La composition n'a pas été trouvée"
 
         # Test the relationship
-        assert len(composition.composition_tags) == 1, "Le nombre de tags ne correspond pas"
+        assert (
+            len(composition.composition_tags) == 1
+        ), "Le nombre de tags ne correspond pas"
         assert composition.composition_tags[0].tag.name == "Test Tag"
 
         # Test the tag details
@@ -892,7 +1038,9 @@ class TestCompositionModel:
         assert tag.category == "test"
 
     @pytest.mark.asyncio
-    async def test_composition_validation(self, db_session: AsyncSession, sample_user: User, sample_build: Build):
+    async def test_composition_validation(
+        self, db_session: AsyncSession, sample_user: User, sample_build: Build
+    ):
         """Test field validations and constraints."""
         from sqlalchemy.exc import IntegrityError
         from app.models.composition import Composition
@@ -1017,10 +1165,16 @@ class TestCompositionModel:
             await db_session.delete(comp1)
 
     @pytest.mark.asyncio
-    async def test_composition_default_values(self, db_session, sample_user, sample_build):
+    async def test_composition_default_values(
+        self, db_session, sample_user, sample_build
+    ):
         """Test default values for Composition model."""
         # Test with minimal required fields
-        composition = Composition(name="Test Default Values", created_by=sample_user.id, build_id=sample_build.id)
+        composition = Composition(
+            name="Test Default Values",
+            created_by=sample_user.id,
+            build_id=sample_build.id,
+        )
 
         # Verify default values
         assert composition.squad_size == 10, "Default squad_size should be 10"
@@ -1029,7 +1183,9 @@ class TestCompositionModel:
         assert composition.game_mode == "wvw", "Default game_mode should be 'wvw'"
         assert composition.description is None, "Default description should be None"
         assert composition.team_id is None, "Default team_id should be None"
-        assert composition.created_at is not None, "created_at should be set automatically"
+        assert (
+            composition.created_at is not None
+        ), "created_at should be set automatically"
         assert composition.updated_at is None, "updated_at should be None initially"
 
         # Test with all fields provided
@@ -1064,16 +1220,32 @@ class TestCompositionModel:
         composition_dict = sample_composition.to_dict()
 
         # Verify the dictionary structure and values
-        assert isinstance(composition_dict, dict), "to_dict() should return a dictionary"
+        assert isinstance(
+            composition_dict, dict
+        ), "to_dict() should return a dictionary"
         assert composition_dict["id"] == sample_composition.id, "ID should match"
         assert composition_dict["name"] == sample_composition.name, "Name should match"
-        assert composition_dict["description"] == sample_composition.description, "Description should match"
-        assert composition_dict["squad_size"] == sample_composition.squad_size, "Squad size should match"
-        assert composition_dict["is_public"] == sample_composition.is_public, "is_public should match"
-        assert composition_dict["status"] == sample_composition.status, "Status should match"
-        assert composition_dict["game_mode"] == sample_composition.game_mode, "Game mode should match"
-        assert composition_dict["created_by"] == sample_composition.created_by, "Created by should match"
-        assert composition_dict["build_id"] == sample_composition.build_id, "Build ID should match"
+        assert (
+            composition_dict["description"] == sample_composition.description
+        ), "Description should match"
+        assert (
+            composition_dict["squad_size"] == sample_composition.squad_size
+        ), "Squad size should match"
+        assert (
+            composition_dict["is_public"] == sample_composition.is_public
+        ), "is_public should match"
+        assert (
+            composition_dict["status"] == sample_composition.status
+        ), "Status should match"
+        assert (
+            composition_dict["game_mode"] == sample_composition.game_mode
+        ), "Game mode should match"
+        assert (
+            composition_dict["created_by"] == sample_composition.created_by
+        ), "Created by should match"
+        assert (
+            composition_dict["build_id"] == sample_composition.build_id
+        ), "Build ID should match"
 
         # Test datetime fields
         assert "created_at" in composition_dict, "created_at should be in the dict"
@@ -1083,7 +1255,9 @@ class TestCompositionModel:
         sample_composition.description = None
         sample_composition.build_id = None
         composition_dict = sample_composition.to_dict()
-        assert composition_dict["description"] is None, "None description should be preserved"
+        assert (
+            composition_dict["description"] is None
+        ), "None description should be preserved"
         assert composition_dict["build_id"] is None, "None build_id should be preserved"
 
         # Test with related objects
@@ -1110,7 +1284,11 @@ class TestCompositionModel:
 
         # Test with specific fields only
         composition_dict = composition.to_dict(fields=["id", "name", "status"])
-        assert set(composition_dict.keys()) == {"id", "name", "status"}, "Only specified fields should be included"
+        assert set(composition_dict.keys()) == {
+            "id",
+            "name",
+            "status",
+        }, "Only specified fields should be included"
         assert composition_dict["id"] == composition.id
         assert composition_dict["name"] == composition.name
         assert composition_dict["status"] == composition.status
@@ -1134,7 +1312,9 @@ class TestCompositionModel:
         await db.refresh(sample_composition)
 
         # Verify the timestamps after first update
-        assert sample_composition.updated_at is not None, "updated_at should be set after update"
+        assert (
+            sample_composition.updated_at is not None
+        ), "updated_at should be set after update"
         assert (
             sample_composition.updated_at > initial_updated_at
         ), "updated_at timestamp should be updated when composition is modified"
@@ -1155,11 +1335,15 @@ class TestCompositionModel:
         await db.refresh(sample_composition)
 
         # Verify the timestamps after second update
-        assert sample_composition.updated_at > first_updated_at, "updated_at should be updated on each modification"
+        assert (
+            sample_composition.updated_at > first_updated_at
+        ), "updated_at should be updated on each modification"
 
         # Test that saving without changes doesn't update the timestamp
         previous_updated_at = sample_composition.updated_at
-        sample_composition.updated_at = previous_updated_at  # Explicitly set to test if it changes
+        sample_composition.updated_at = (
+            previous_updated_at  # Explicitly set to test if it changes
+        )
         db.add(sample_composition)
         await db.commit()
         await db.refresh(sample_composition)
@@ -1169,7 +1353,9 @@ class TestCompositionModel:
         ), "updated_at should not change if no actual changes were made"
 
     @pytest.mark.asyncio
-    async def test_composition_relationships_details(self, db, sample_composition, sample_user, sample_build):
+    async def test_composition_relationships_details(
+        self, db, sample_composition, sample_user, sample_build
+    ):
         """Test relationships with related models."""
         # Test creator relationship
         assert sample_composition.creator.id == sample_user.id
@@ -1233,7 +1419,9 @@ class TestCompositionCRUD:
         }
 
         # Act
-        updated_comp = update_composition(db, composition_id=sample_composition.id, composition_data=update_data)
+        updated_comp = update_composition(
+            db, composition_id=sample_composition.id, composition_data=update_data
+        )
 
         # Assert
         assert updated_comp.name == "Updated Composition"
@@ -1306,7 +1494,9 @@ class TestCompositionEdgeCases:
 
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
-            update_composition(db, composition_id=999, composition_data={"name": "New Name"})
+            update_composition(
+                db, composition_id=999, composition_data={"name": "New Name"}
+            )
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
 
@@ -1345,10 +1535,14 @@ class TestCompositionEdgeCases:
 
         # Test deleting someone else's composition
         with pytest.raises(HTTPException) as exc_info:
-            delete_composition(db, composition_id=sample_composition.id, user_id=other_user.id)
+            delete_composition(
+                db, composition_id=sample_composition.id, user_id=other_user.id
+            )
         assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_composition_member_management(self, db, sample_composition, sample_user, sample_role, sample_profession):
+    def test_composition_member_management(
+        self, db, sample_composition, sample_user, sample_role, sample_profession
+    ):
         """Test adding and removing members from a composition."""
         from app.crud.composition import (
             add_composition_member,
@@ -1372,7 +1566,9 @@ class TestCompositionEdgeCases:
         assert members[0].id == sample_user.id
 
         # Test removing the member
-        remove_composition_member(db, composition_id=sample_composition.id, user_id=sample_user.id)
+        remove_composition_member(
+            db, composition_id=sample_composition.id, user_id=sample_user.id
+        )
 
         # Verify the member was removed
         members = get_composition_members(db, composition_id=sample_composition.id)
@@ -1421,13 +1617,19 @@ class TestCompositionEdgeCases:
                     logger.info("[INFO] Table 'tags' created")
 
                 if "composition_tags" not in tables:
-                    logger.warning("[WARN] Table 'composition_tags' not found, creating...")
-                    Base.metadata.create_all(bind=async_db.bind, tables=[CompositionTag.__table__])
+                    logger.warning(
+                        "[WARN] Table 'composition_tags' not found, creating..."
+                    )
+                    Base.metadata.create_all(
+                        bind=async_db.bind, tables=[CompositionTag.__table__]
+                    )
                     logger.info("[INFO] Table 'composition_tags' created")
 
                 # Verify the test composition exists
                 result = await async_db.execute(
-                    select(Composition).where(Composition.id == sample_composition_async.id)
+                    select(Composition).where(
+                        Composition.id == sample_composition_async.id
+                    )
                 )
                 db_comp = result.scalar_one_or_none()
                 assert db_comp is not None, "Test composition not found in database"
@@ -1466,7 +1668,9 @@ class TestCompositionEdgeCases:
                     logger.warning("[WARN] Tag association already exists")
                     comp_tag = existing_assoc
                 else:
-                    comp_tag = CompositionTag(composition_id=sample_composition_async.id, tag_id=tag.id)
+                    comp_tag = CompositionTag(
+                        composition_id=sample_composition_async.id, tag_id=tag.id
+                    )
 
                     try:
                         async_db.add(comp_tag)
@@ -1487,7 +1691,10 @@ class TestCompositionEdgeCases:
                 assert association is not None, "Tag association not found in database"
 
                 # Refresh and verify the relationship
-                await async_db.refresh(sample_composition_async, ["composition_tags", "composition_tags.tag"])
+                await async_db.refresh(
+                    sample_composition_async,
+                    ["composition_tags", "composition_tags.tag"],
+                )
                 assert (
                     len(sample_composition_async.composition_tags) == 1
                 ), f"Expected 1 tag, got {len(sample_composition_async.composition_tags)}"
@@ -1503,7 +1710,9 @@ class TestCompositionEdgeCases:
                     .where(CompositionTag.composition_id == sample_composition_async.id)
                     .where(CompositionTag.tag_id == tag.id)
                 )
-                assert result.scalar_one_or_none() is None, "Tag association was not removed"
+                assert (
+                    result.scalar_one_or_none() is None
+                ), "Tag association was not removed"
 
                 # Refresh and verify the relationship is gone
                 await async_db.refresh(sample_composition_async, ["composition_tags"])

@@ -24,7 +24,9 @@ F = TypeVar("F", bound=Callable[..., Any])
 class PerformanceMiddleware(BaseHTTPMiddleware):
     """Middleware pour mesurer et optimiser les performances des requêtes."""
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         start_time = time.time()
 
         # Ajouter des en-têtes de performance
@@ -75,7 +77,9 @@ def cache_response(ttl: int = 300) -> Callable[[F], F]:
     return decorator
 
 
-async def run_in_threadpool_if_needed(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+async def run_in_threadpool_if_needed(
+    func: Callable[..., Any], *args: Any, **kwargs: Any
+) -> Any:
     """Exécute une fonction de manière asynchrone ou dans un thread si nécessaire."""
     if not settings.TESTING and not settings.DEBUG:
         return await run_in_threadpool(func, *args, **kwargs)

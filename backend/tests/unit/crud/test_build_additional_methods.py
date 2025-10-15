@@ -62,7 +62,9 @@ class TestCRUDBuildAdditionalMethods:
         db.execute.return_value = mock_result
 
         # Execute
-        result = await crud_build.get_multi_by_owner_async(db, owner_id=owner_id, skip=skip, limit=limit)
+        result = await crud_build.get_multi_by_owner_async(
+            db, owner_id=owner_id, skip=skip, limit=limit
+        )
 
         # Assert
         assert len(result) == 1
@@ -132,7 +134,9 @@ class TestCRUDBuildAdditionalMethods:
                 mock_get_profession.return_value = profession_models[0]
 
                 # Execute
-                result = await crud_build.add_profession_async(db, build_id=build_id, profession_id=profession_id)
+                result = await crud_build.add_profession_async(
+                    db, build_id=build_id, profession_id=profession_id
+                )
 
                 # Assert
                 assert result is True
@@ -157,7 +161,9 @@ class TestCRUDBuildAdditionalMethods:
                 mock_get_profession.return_value = profession_models[0]
 
                 # Execute
-                result = await crud_build.remove_profession_async(db, build_id=build_id, profession_id=profession_id)
+                result = await crud_build.remove_profession_async(
+                    db, build_id=build_id, profession_id=profession_id
+                )
 
                 # Assert
                 assert result is True
@@ -178,7 +184,9 @@ class TestCRUDBuildAdditionalMethods:
             mock_get_build.return_value = None
 
             # Execute and assert
-            result = await crud_build.add_profession_async(db, build_id=build_id, profession_id=profession_id)
+            result = await crud_build.add_profession_async(
+                db, build_id=build_id, profession_id=profession_id
+            )
             assert result is False
 
     @pytest.mark.asyncio
@@ -194,5 +202,7 @@ class TestCRUDBuildAdditionalMethods:
             mock_get_build.return_value = None
 
             # Execute and assert
-            result = await crud_build.remove_profession_async(db, build_id=build_id, profession_id=profession_id)
+            result = await crud_build.remove_profession_async(
+                db, build_id=build_id, profession_id=profession_id
+            )
             assert result is False

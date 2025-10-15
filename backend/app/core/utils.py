@@ -40,7 +40,9 @@ def to_camel_case(snake_str: str) -> str:
 
 def to_snake_case(camel_str: str) -> str:
     """Convertit une chaîne camelCase en snake_case."""
-    return "".join(["_" + c.lower() if c.isupper() else c for c in camel_str]).lstrip("_")
+    return "".join(["_" + c.lower() if c.isupper() else c for c in camel_str]).lstrip(
+        "_"
+    )
 
 
 def get_pagination_links(
@@ -81,7 +83,10 @@ def get_pagination_links(
 
 
 def get_or_create(
-    db: Session, model: Type[ModelType], defaults: Optional[Dict[str, Any]] = None, **kwargs
+    db: Session,
+    model: Type[ModelType],
+    defaults: Optional[Dict[str, Any]] = None,
+    **kwargs,
 ) -> tuple[ModelType, bool]:
     """
     Récupère un objet ou le crée s'il n'existe pas.
@@ -109,7 +114,10 @@ def get_or_create(
 
 
 def log_error(
-    error: Exception, message: str = "An error occurred", extra: Optional[Dict[str, Any]] = None, level: str = "error"
+    error: Exception,
+    message: str = "An error occurred",
+    extra: Optional[Dict[str, Any]] = None,
+    level: str = "error",
 ) -> None:
     """
     Enregistre une erreur avec des informations de contexte.

@@ -34,7 +34,9 @@ def webhook_service(mock_db):
 def sample_webhook_data():
     """Sample webhook data for testing."""
     return WebhookCreate(
-        url="https://example.com/webhook", events=["build.created", "build.updated"], description="Test webhook"
+        url="https://example.com/webhook",
+        events=["build.created", "build.updated"],
+        description="Test webhook",
     )
 
 
@@ -53,7 +55,9 @@ class TestWebhookCreation:
     """Test webhook creation."""
 
     @pytest.mark.asyncio
-    async def test_create_webhook_basic(self, webhook_service, mock_db, sample_webhook_data):
+    async def test_create_webhook_basic(
+        self, webhook_service, mock_db, sample_webhook_data
+    ):
         """Test creating a basic webhook."""
         user_id = 1
 
@@ -64,7 +68,9 @@ class TestWebhookCreation:
         assert mock_db.commit.called
 
     @pytest.mark.asyncio
-    async def test_create_webhook_generates_secret(self, webhook_service, sample_webhook_data):
+    async def test_create_webhook_generates_secret(
+        self, webhook_service, sample_webhook_data
+    ):
         """Test that webhook creation generates a secret."""
         user_id = 1
 
@@ -122,7 +128,10 @@ class TestWebhookRetrieval:
     async def test_get_user_webhooks(self, webhook_service, mock_db):
         """Test getting all webhooks for a user."""
         user_id = 1
-        mock_webhooks = [Webhook(id=1, url="https://example.com/1"), Webhook(id=2, url="https://example.com/2")]
+        mock_webhooks = [
+            Webhook(id=1, url="https://example.com/1"),
+            Webhook(id=2, url="https://example.com/2"),
+        ]
 
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = mock_webhooks
@@ -206,14 +215,21 @@ class TestWebhookDelivery:
     @pytest.mark.asyncio
     async def test_send_webhook_success(self, webhook_service):
         """Test successful webhook delivery."""
-        webhook = Webhook(id=1, url="https://example.com/webhook", secret="test_secret", is_active=True)
+        webhook = Webhook(
+            id=1,
+            url="https://example.com/webhook",
+            secret="test_secret",
+            is_active=True,
+        )
         payload = {"event": "build.created", "data": {"id": 1}}
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.text = "OK"
-            mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(
+                return_value=mock_response
+            )
 
             result = await webhook_service.send_webhook(webhook, payload)
 
@@ -222,13 +238,20 @@ class TestWebhookDelivery:
     @pytest.mark.asyncio
     async def test_send_webhook_failure(self, webhook_service):
         """Test failed webhook delivery."""
-        webhook = Webhook(id=1, url="https://example.com/webhook", secret="test_secret", is_active=True)
+        webhook = Webhook(
+            id=1,
+            url="https://example.com/webhook",
+            secret="test_secret",
+            is_active=True,
+        )
         payload = {"event": "build.created"}
 
         with patch("httpx.AsyncClient") as mock_client:
             mock_response = MagicMock()
             mock_response.status_code = 500
-            mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(
+                return_value=mock_response
+            )
 
             result = await webhook_service.send_webhook(webhook, payload)
 
@@ -241,7 +264,9 @@ class TestWebhookDelivery:
         payload = {"event": "test"}
 
         with patch("httpx.AsyncClient") as mock_client:
-            mock_client.return_value.__aenter__.return_value.post = AsyncMock(side_effect=asyncio.TimeoutError())
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(
+                side_effect=asyncio.TimeoutError()
+            )
 
             result = await webhook_service.send_webhook(webhook, payload)
 
@@ -335,15 +360,27 @@ class TestWebhookEventProcessing:
         data = {"id": 1, "name": "Test Build"}
 
         mock_webhooks = [
-            Webhook(id=1, url="https://example.com/1", events=["build.created"], is_active=True),
-            Webhook(id=2, url="https://example.com/2", events=["build.updated"], is_active=True),
+            Webhook(
+                id=1,
+                url="https://example.com/1",
+                events=["build.created"],
+                is_active=True,
+            ),
+            Webhook(
+                id=2,
+                url="https://example.com/2",
+                events=["build.updated"],
+                is_active=True,
+            ),
         ]
 
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = mock_webhooks
         mock_db.execute.return_value = mock_result
 
-        with patch.object(webhook_service, "send_webhook", new=AsyncMock(return_value=True)):
+        with patch.object(
+            webhook_service, "send_webhook", new=AsyncMock(return_value=True)
+        ):
             await webhook_service.process_event(event_type, data)
 
             # Should only send to webhook 1 (has build.created event)
@@ -359,7 +396,9 @@ class TestWebhookEventProcessing:
         mock_result.scalars.return_value.all.return_value = []
         mock_db.execute.return_value = mock_result
 
-        with patch.object(webhook_service, "send_webhook", new=AsyncMock()) as mock_send:
+        with patch.object(
+            webhook_service, "send_webhook", new=AsyncMock()
+        ) as mock_send:
             await webhook_service.process_event(event_type, data)
 
             mock_send.assert_not_called()
@@ -374,13 +413,22 @@ class TestWebhookServiceEdgeCases:
         event_type = "build.created"
         data = {"id": 1}
 
-        mock_webhooks = [Webhook(id=1, url="https://example.com", events=["build.created"], is_active=False)]
+        mock_webhooks = [
+            Webhook(
+                id=1,
+                url="https://example.com",
+                events=["build.created"],
+                is_active=False,
+            )
+        ]
 
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = mock_webhooks
         mock_db.execute.return_value = mock_result
 
-        with patch.object(webhook_service, "send_webhook", new=AsyncMock()) as mock_send:
+        with patch.object(
+            webhook_service, "send_webhook", new=AsyncMock()
+        ) as mock_send:
             await webhook_service.process_event(event_type, data)
 
             mock_send.assert_not_called()
@@ -394,7 +442,9 @@ class TestWebhookServiceEdgeCases:
         with patch("httpx.AsyncClient") as mock_client:
             mock_response = MagicMock()
             mock_response.status_code = 200
-            mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(
+                return_value=mock_response
+            )
 
             result = await webhook_service.send_webhook(webhook, payload)
 
@@ -409,10 +459,17 @@ class TestWebhookServiceEdgeCases:
         with patch("httpx.AsyncClient") as mock_client:
             mock_response = MagicMock()
             mock_response.status_code = 500
-            mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(
+                return_value=mock_response
+            )
 
-            result = await webhook_service.send_webhook_with_retry(webhook, payload, max_retries=MAX_RETRIES)
+            result = await webhook_service.send_webhook_with_retry(
+                webhook, payload, max_retries=MAX_RETRIES
+            )
 
             # Should fail after max retries
             assert result is False
-            assert mock_client.return_value.__aenter__.return_value.post.call_count == MAX_RETRIES
+            assert (
+                mock_client.return_value.__aenter__.return_value.post.call_count
+                == MAX_RETRIES
+            )

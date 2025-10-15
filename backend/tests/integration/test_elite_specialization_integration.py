@@ -76,7 +76,10 @@ async def test_user(async_session: AsyncSession):
 
     # Create user
     user = User(
-        username="testuser", email="test@example.com", hashed_password=get_password_hash("testpassword"), is_active=True
+        username="testuser",
+        email="test@example.com",
+        hashed_password=get_password_hash("testpassword"),
+        is_active=True,
     )
     async_session.add(user)
     await async_session.commit()
@@ -95,10 +98,14 @@ async def test_user(async_session: AsyncSession):
 
 @pytest.mark.asyncio
 async def test_get_elite_specs_by_profession(
-    async_client: AsyncClient, test_profession: Profession, test_elite_specs: list[EliteSpecialization]
+    async_client: AsyncClient,
+    test_profession: Profession,
+    test_elite_specs: list[EliteSpecialization],
 ):
     """Test getting elite specs filtered by profession."""
-    response = await async_client.get(f"/api/v1/elite-specializations/by-profession/{test_profession.id}")
+    response = await async_client.get(
+        f"/api/v1/elite-specializations/by-profession/{test_profession.id}"
+    )
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
     assert len(data) == 2
@@ -106,7 +113,9 @@ async def test_get_elite_specs_by_profession(
 
 
 @pytest.mark.asyncio
-async def test_get_elite_specs_by_game_mode(async_client: AsyncClient, test_elite_specs: list[EliteSpecialization]):
+async def test_get_elite_specs_by_game_mode(
+    async_client: AsyncClient, test_elite_specs: list[EliteSpecialization]
+):
     """Test getting elite specs filtered by game mode."""
     # Test WVW mode (both specs should be returned)
     response = await async_client.get("/api/v1/elite-specializations/by-game-mode/WVW")
@@ -123,7 +132,10 @@ async def test_get_elite_specs_by_game_mode(async_client: AsyncClient, test_elit
 
 @pytest.mark.asyncio
 async def test_elite_spec_creation_with_build(
-    async_client: AsyncClient, async_session: AsyncSession, test_elite_specs: list[EliteSpecialization], test_user: User
+    async_client: AsyncClient,
+    async_session: AsyncSession,
+    test_elite_specs: list[EliteSpecialization],
+    test_user: User,
 ):
     """Test creating a build with an elite specialization."""
     # Get auth token
@@ -141,7 +153,9 @@ async def test_elite_spec_creation_with_build(
         "game_mode": "WVW",
     }
 
-    response = await async_client.post("/api/v1/builds/", json=build_data, headers=headers)
+    response = await async_client.post(
+        "/api/v1/builds/", json=build_data, headers=headers
+    )
     assert response.status_code == status.HTTP_201_CREATED
 
     # Verify the build was created with the correct elite spec
@@ -149,10 +163,15 @@ async def test_elite_spec_creation_with_build(
     assert build_data["elite_specialization_id"] == test_elite_specs[0].id
 
     # Verify the profession is correctly associated
-    response = await async_client.get(f"/api/v1/builds/{build_data['id']}", headers=headers)
+    response = await async_client.get(
+        f"/api/v1/builds/{build_data['id']}", headers=headers
+    )
     assert response.status_code == status.HTTP_200_OK
     build_data = response.json()
     assert "elite_specialization" in build_data
     assert build_data["elite_specialization"]["id"] == test_elite_specs[0].id
     assert "profession" in build_data["elite_specialization"]
-    assert build_data["elite_specialization"]["profession"]["id"] == test_elite_specs[0].profession_id
+    assert (
+        build_data["elite_specialization"]["profession"]["id"]
+        == test_elite_specs[0].profession_id
+    )

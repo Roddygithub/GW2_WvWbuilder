@@ -97,7 +97,9 @@ class TestBuildsAPIComprehensive:
     ):
         """Test creating a build associated with multiple professions."""
         # Create a second profession
-        prof2 = Profession(name="Test Profession 2", description="Another test profession")
+        prof2 = Profession(
+            name="Test Profession 2", description="Another test profession"
+        )
         db.add(prof2)
         await db.commit()
         await db.refresh(prof2)
@@ -118,7 +120,9 @@ class TestBuildsAPIComprehensive:
         assert test_profession.id in prof_ids
         assert prof2.id in prof_ids
 
-    async def test_create_build_with_invalid_profession(self, async_client: AsyncClient, test_user: User):
+    async def test_create_build_with_invalid_profession(
+        self, async_client: AsyncClient, test_user: User
+    ):
         """Test creating a build with a non-existent profession ID."""
         response = await async_client.post(
             f"{settings.API_V1_STR}/builds/",
@@ -316,7 +320,9 @@ class TestBuildsAPIComprehensive:
 
     # ========== Test Update Operations ==========
 
-    async def test_update_build_partial_data(self, async_client: AsyncClient, test_build: Build, test_user: User):
+    async def test_update_build_partial_data(
+        self, async_client: AsyncClient, test_build: Build, test_user: User
+    ):
         """Test updating a build with partial data (PATCH-like behavior)."""
         update_data = {"description": "Updated description only"}
 
@@ -343,7 +349,9 @@ class TestBuildsAPIComprehensive:
     ):
         """Test updating a build to change its associated professions."""
         # Create a new profession
-        new_prof = Profession(name="New Test Profession", description="New test profession")
+        new_prof = Profession(
+            name="New Test Profession", description="New test profession"
+        )
         db.add(new_prof)
         await db.commit()
         await db.refresh(new_prof)
@@ -364,13 +372,17 @@ class TestBuildsAPIComprehensive:
         from sqlalchemy.orm import selectinload
 
         result = await db.execute(
-            select(Build).options(selectinload(Build.professions)).where(Build.id == test_build.id)
+            select(Build)
+            .options(selectinload(Build.professions))
+            .where(Build.id == test_build.id)
         )
         updated_build = result.scalar_one()
         assert len(updated_build.professions) == 1
         assert updated_build.professions[0].id == new_prof.id
 
-    async def test_update_nonexistent_build(self, async_client: AsyncClient, test_user: User):
+    async def test_update_nonexistent_build(
+        self, async_client: AsyncClient, test_user: User
+    ):
         """Test updating a build that doesn't exist."""
         response = await async_client.put(
             f"{settings.API_V1_STR}/builds/999999",
@@ -380,7 +392,9 @@ class TestBuildsAPIComprehensive:
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    async def test_update_build_unauthorized(self, async_client: AsyncClient, test_build: Build, db: AsyncSession):
+    async def test_update_build_unauthorized(
+        self, async_client: AsyncClient, test_build: Build, db: AsyncSession
+    ):
         """Test that a user cannot update another user's build."""
         # Create a second user
         from app.crud.crud_user import user as crud_user
@@ -405,7 +419,9 @@ class TestBuildsAPIComprehensive:
 
     # ========== Test Delete Operations ==========
 
-    async def test_delete_build_unauthorized(self, async_client: AsyncClient, test_build: Build, db: AsyncSession):
+    async def test_delete_build_unauthorized(
+        self, async_client: AsyncClient, test_build: Build, db: AsyncSession
+    ):
         """Test that a user cannot delete another user's build."""
         # Create a second user
         from app.crud.crud_user import user as crud_user
@@ -481,7 +497,9 @@ class TestBuildsAPIComprehensive:
         )
         assert private_response.status_code == status.HTTP_200_OK
         private_builds = private_response.json()
-        assert len(private_builds) >= 2  # At least 2 private builds from the 5 we created
+        assert (
+            len(private_builds) >= 2
+        )  # At least 2 private builds from the 5 we created
         assert all(not build["is_public"] for build in private_builds)
 
     async def test_list_builds_pagination(

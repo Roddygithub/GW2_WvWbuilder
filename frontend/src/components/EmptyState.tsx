@@ -3,9 +3,9 @@
  * GW2-styled empty state with call-to-action
  */
 
-import { motion } from 'framer-motion';
-import { Plus, PackageOpen } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { motion } from "framer-motion";
+import { Plus, PackageOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {
   title?: string;
@@ -17,15 +17,20 @@ interface EmptyStateProps {
 }
 
 export default function EmptyState({
-  title = 'No items found',
-  message = 'Get started by creating your first item',
-  actionLabel = 'Create New',
+  title = "No items found",
+  message = "Get started by creating your first item",
+  actionLabel = "Create New",
   onAction,
   icon: Icon = PackageOpen,
   className,
 }: EmptyStateProps) {
   return (
-    <div className={cn('flex flex-col items-center justify-center py-16', className)}>
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center py-16",
+        className,
+      )}
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -36,7 +41,7 @@ export default function EmptyState({
         <motion.div
           initial={{ scale: 0.8 }}
           animate={{ scale: 1 }}
-          transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+          transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
           className="flex justify-center mb-6"
         >
           <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500/20 to-violet-600/20 border border-purple-500/30 flex items-center justify-center backdrop-blur-sm">

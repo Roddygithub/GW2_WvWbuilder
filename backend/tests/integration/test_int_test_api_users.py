@@ -19,8 +19,12 @@ from sqlalchemy.ext.asyncio import create_async_engine
 # Create test database
 SQLALCHEMY_DATABASE_URL = "sqlite+aiosqlite:///./test.db"
 
-engine = create_async_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
+engine = create_async_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+TestingSessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=engine, class_=AsyncSession
+)
 
 
 # Create tables
@@ -53,7 +57,9 @@ async def test_user() -> User:
     password = random_lower_string()
     username = email.split("@")[0]
 
-    user_in = UserCreate(email=email, password=password, username=username, full_name="Test User")
+    user_in = UserCreate(
+        email=email, password=password, username=username, full_name="Test User"
+    )
     user = User(
         email=email,
         hashed_password=get_password_hash(password),
@@ -89,7 +95,9 @@ async def test_superuser() -> User:
         return user
 
 
-def get_user_authentication_headers(client: TestClient, email: str, password: str) -> dict[str, str]:
+def get_user_authentication_headers(
+    client: TestClient, email: str, password: str
+) -> dict[str, str]:
     """Get authentication headers for a user."""
     login_data = {
         "username": email,
@@ -129,7 +137,9 @@ def test_create_user(client: TestClient) -> None:
 
 def test_read_user_me(client: TestClient, test_user: User) -> None:
     """Test reading the current user's profile."""
-    headers = get_user_authentication_headers(client, test_user.email, test_user.hashed_password)
+    headers = get_user_authentication_headers(
+        client, test_user.email, test_user.hashed_password
+    )
 
     r = client.get(
         f"{settings.API_V1_STR}/users/me",
@@ -146,7 +156,9 @@ def test_read_user_me(client: TestClient, test_user: User) -> None:
 
 def test_update_user_me(client: TestClient, test_user: User) -> None:
     """Test updating the current user's profile."""
-    headers = get_user_authentication_headers(client, test_user.email, test_user.hashed_password)
+    headers = get_user_authentication_headers(
+        client, test_user.email, test_user.hashed_password
+    )
 
     new_full_name = "Updated Name"
     data = {"full_name": new_full_name}
@@ -165,7 +177,9 @@ def test_update_user_me(client: TestClient, test_user: User) -> None:
 
 def test_read_users(client: TestClient, test_superuser: User) -> None:
     """Test reading all users (admin only)."""
-    headers = get_user_authentication_headers(client, test_superuser.email, test_superuser.hashed_password)
+    headers = get_user_authentication_headers(
+        client, test_superuser.email, test_superuser.hashed_password
+    )
 
     r = client.get(
         f"{settings.API_V1_STR}/users/",
@@ -179,9 +193,13 @@ def test_read_users(client: TestClient, test_superuser: User) -> None:
     assert any(user["email"] == test_superuser.email for user in users)
 
 
-def test_read_user_by_id(client: TestClient, test_superuser: User, test_user: User) -> None:
+def test_read_user_by_id(
+    client: TestClient, test_superuser: User, test_user: User
+) -> None:
     """Test reading a user by ID (admin only)."""
-    headers = get_user_authentication_headers(client, test_superuser.email, test_superuser.hashed_password)
+    headers = get_user_authentication_headers(
+        client, test_superuser.email, test_superuser.hashed_password
+    )
 
     r = client.get(
         f"{settings.API_V1_STR}/users/{test_user.id}",
@@ -198,7 +216,9 @@ def test_read_user_by_id(client: TestClient, test_superuser: User, test_user: Us
 
 def test_update_user(client: TestClient, test_superuser: User, test_user: User) -> None:
     """Test updating a user (admin only)."""
-    headers = get_user_authentication_headers(client, test_superuser.email, test_superuser.hashed_password)
+    headers = get_user_authentication_headers(
+        client, test_superuser.email, test_superuser.hashed_password
+    )
 
     new_email = f"updated_{test_user.email}"
     data = {"email": new_email}
@@ -217,14 +237,18 @@ def test_update_user(client: TestClient, test_superuser: User, test_user: User) 
 
 def test_delete_user(client: TestClient, test_superuser: User, test_user: User) -> None:
     """Test deleting a user (admin only)."""
-    headers = get_user_authentication_headers(client, test_superuser.email, test_superuser.hashed_password)
+    headers = get_user_authentication_headers(
+        client, test_superuser.email, test_superuser.hashed_password
+    )
 
     # First, create a copy of the user to delete
     email = random_email()
     password = random_lower_string()
     username = email.split("@")[0]
 
-    user_data = UserCreate(email=email, password=password, username=username, full_name="User to Delete")
+    user_data = UserCreate(
+        email=email, password=password, username=username, full_name="User to Delete"
+    )
 
     # Create the user in the database
     db = next(override_get_db())

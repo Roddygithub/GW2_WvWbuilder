@@ -3,7 +3,7 @@
  * Operations for squad optimization and building
  */
 
-import { apiPost, apiGet } from './client';
+import { apiPost, apiGet } from "./client";
 
 export interface BuilderRole {
   profession: string;
@@ -87,11 +87,11 @@ export interface Role {
  * Optimize squad composition based on criteria
  */
 export const optimizeComposition = async (
-  request: CompositionOptimizationRequest
+  request: CompositionOptimizationRequest,
 ): Promise<CompositionOptimizationResult> => {
   return apiPost<CompositionOptimizationResult, CompositionOptimizationRequest>(
-    '/builder/optimize',
-    request
+    "/builder/optimize",
+    request,
   );
 };
 
@@ -99,14 +99,14 @@ export const optimizeComposition = async (
  * Get available game modes
  */
 export const getGameModes = async (): Promise<{ modes: GameMode[] }> => {
-  return apiGet<{ modes: GameMode[] }>('/builder/modes');
+  return apiGet<{ modes: GameMode[] }>("/builder/modes");
 };
 
 /**
  * Get available roles
  */
 export const getAvailableRoles = async (): Promise<{ roles: Role[] }> => {
-  return apiGet<{ roles: Role[] }>('/builder/roles');
+  return apiGet<{ roles: Role[] }>("/builder/roles");
 };
 
 // Legacy exports for backward compatibility

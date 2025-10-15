@@ -47,7 +47,10 @@ def test_database_url(monkeypatch):
     monkeypatch.setenv("POSTGRES_DB", "testdb")
 
     settings = Settings()
-    assert settings.SQLALCHEMY_DATABASE_URI == "postgresql+asyncpg://testuser:testpass@localhost/testdb"
+    assert (
+        settings.SQLALCHEMY_DATABASE_URI
+        == "postgresql+asyncpg://testuser:testpass@localhost/testdb"
+    )
 
 
 def test_invalid_cors_origins():
@@ -60,8 +63,13 @@ def test_invalid_cors_origins():
     assert settings.BACKEND_CORS_ORIGINS == ["http://localhost:3000"]
 
     # Test with JSON array
-    settings = Settings(BACKEND_CORS_ORIGINS='["http://localhost:3000", "https://example.com"]')
-    assert settings.BACKEND_CORS_ORIGINS == ["http://localhost:3000", "https://example.com"]
+    settings = Settings(
+        BACKEND_CORS_ORIGINS='["http://localhost:3000", "https://example.com"]'
+    )
+    assert settings.BACKEND_CORS_ORIGINS == [
+        "http://localhost:3000",
+        "https://example.com",
+    ]
 
 
 def test_log_level_validation():

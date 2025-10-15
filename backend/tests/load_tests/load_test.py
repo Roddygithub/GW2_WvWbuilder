@@ -21,15 +21,25 @@ class ApiUser(HttpUser):
         """Called when a user starts the test."""
         # You can add login logic here if needed
         self.token = None
-        self.headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        self.headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
 
     @task(3)  # Higher weight = more frequent execution
     def get_public_endpoints(self):
         """Test public endpoints with GET requests."""
-        endpoints = ["/api/v1/health", "/api/v1/builds", "/api/v1/items", "/api/v1/skills"]
+        endpoints = [
+            "/api/v1/health",
+            "/api/v1/builds",
+            "/api/v1/items",
+            "/api/v1/skills",
+        ]
 
         for endpoint in endpoints:
-            with self.client.get(endpoint, headers=self.headers, catch_response=True) as response:
+            with self.client.get(
+                endpoint, headers=self.headers, catch_response=True
+            ) as response:
                 if response.status_code == 200:
                     response.success()
                 else:
@@ -42,9 +52,15 @@ class ApiUser(HttpUser):
         build_id = random.randint(1, 100)  # Adjust range based on your data
 
         with self.client.get(
-            f"/api/v1/builds/{build_id}", headers=self.headers, name="/api/v1/builds/[id]", catch_response=True
+            f"/api/v1/builds/{build_id}",
+            headers=self.headers,
+            name="/api/v1/builds/[id]",
+            catch_response=True,
         ) as response:
-            if response.status_code in [200, 404]:  # 404 is expected for non-existent IDs
+            if response.status_code in [
+                200,
+                404,
+            ]:  # 404 is expected for non-existent IDs
                 response.success()
             else:
                 response.failure(f"Unexpected status code: {response.status_code}")
@@ -75,23 +91,36 @@ class ApiUser(HttpUser):
                 "elite_skill": random.randint(1, 100),
             },
             "equipment": {
-                "weapons": [{"id": random.randint(1, 100), "sigils": [random.randint(1, 10)]}],
-                "armor": [{"id": random.randint(1, 100), "rune": random.randint(1, 10)} for _ in range(6)],
+                "weapons": [
+                    {"id": random.randint(1, 100), "sigils": [random.randint(1, 10)]}
+                ],
+                "armor": [
+                    {"id": random.randint(1, 100), "rune": random.randint(1, 10)}
+                    for _ in range(6)
+                ],
                 "accessories": [{"id": random.randint(1, 100)} for _ in range(5)],
             },
             "traits": {
                 "line1": random.randint(1, 3),
                 "line2": random.randint(1, 3),
                 "line3": random.randint(1, 3),
-                "selections": [random.randint(1, 3), random.randint(1, 3), random.randint(1, 3)],
+                "selections": [
+                    random.randint(1, 3),
+                    random.randint(1, 3),
+                    random.randint(1, 3),
+                ],
             },
         }
 
-        with self.client.post("/api/v1/builds", json=build_data, headers=self.headers, catch_response=True) as response:
+        with self.client.post(
+            "/api/v1/builds", json=build_data, headers=self.headers, catch_response=True
+        ) as response:
             if response.status_code == 201:
                 response.success()
             else:
-                response.failure(f"Failed to create build: {response.status_code} - {response.text}")
+                response.failure(
+                    f"Failed to create build: {response.status_code} - {response.text}"
+                )
 
 
 class AuthenticatedApiUser(ApiUser):
@@ -105,7 +134,10 @@ class AuthenticatedApiUser(ApiUser):
         login_data = {"username": "test_user", "password": "test_password"}
 
         with self.client.post(
-            "/api/v1/auth/login", json=login_data, headers=self.headers, catch_response=True
+            "/api/v1/auth/login",
+            json=login_data,
+            headers=self.headers,
+            catch_response=True,
         ) as response:
             if response.status_code == 200:
                 data = response.json()
@@ -121,7 +153,9 @@ class AuthenticatedApiUser(ApiUser):
         if not self.token:
             return  # Skip if not authenticated
 
-        with self.client.get("/api/v1/users/me", headers=self.headers, catch_response=True) as response:
+        with self.client.get(
+            "/api/v1/users/me", headers=self.headers, catch_response=True
+        ) as response:
             if response.status_code == 200:
                 response.success()
             else:

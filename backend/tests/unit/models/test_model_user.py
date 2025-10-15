@@ -122,7 +122,9 @@ class TestUserModel:
         # Simuler la méthode set_password qui n'existe pas dans le modèle
         original_hashed = user.hashed_password
         user.set_password = MagicMock()
-        user.set_password.side_effect = lambda p: setattr(user, "hashed_password", f"hashed_{p}")
+        user.set_password.side_effect = lambda p: setattr(
+            user, "hashed_password", f"hashed_{p}"
+        )
 
         user.set_password(new_password)
 
@@ -175,7 +177,9 @@ class TestUserModel:
 
         # Simuler la méthode has_permission qui n'existe pas dans le modèle
         user.has_permission = MagicMock()
-        user.has_permission.side_effect = lambda perm: any(role.permission_level >= perm for role in user.roles)
+        user.has_permission.side_effect = lambda perm: any(
+            role.permission_level >= perm for role in user.roles
+        )
 
         # Vérifier les permissions
         assert user.has_permission(PermissionLevel.READ) is True
@@ -202,7 +206,9 @@ class TestUserModel:
 
         # Verify timestamps were set
         assert user.created_at == now
-        assert user.updated_at is None  # updated_at ne devrait pas être défini à la création
+        assert (
+            user.updated_at is None
+        )  # updated_at ne devrait pas être défini à la création
 
         # Update user
         later = now + timedelta(hours=1)

@@ -3,12 +3,12 @@
  * Immersive activity feed with smooth Framer Motion animations
  */
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, FileText, Users, Tag, Layers } from 'lucide-react';
+import { motion, AnimatePresence } from "framer-motion";
+import { Clock, FileText, Users, Tag, Layers } from "lucide-react";
 
 export interface Activity {
   id: string;
-  type: 'composition' | 'build' | 'team' | 'tag';
+  type: "composition" | "build" | "team" | "tag";
   title: string;
   description: string;
   timestamp: string;
@@ -22,27 +22,27 @@ interface ActivityFeedRedesignedProps {
 const activityConfig = {
   composition: {
     icon: Layers,
-    gradient: 'from-emerald-500 to-emerald-600',
-    glow: 'shadow-[0_0_10px_rgba(16,185,129,0.4)]',
-    border: 'border-emerald-500/30',
+    gradient: "from-emerald-500 to-emerald-600",
+    glow: "shadow-[0_0_10px_rgba(16,185,129,0.4)]",
+    border: "border-emerald-500/30",
   },
   build: {
     icon: FileText,
-    gradient: 'from-blue-500 to-blue-600',
-    glow: 'shadow-[0_0_10px_rgba(59,130,246,0.4)]',
-    border: 'border-blue-500/30',
+    gradient: "from-blue-500 to-blue-600",
+    glow: "shadow-[0_0_10px_rgba(59,130,246,0.4)]",
+    border: "border-blue-500/30",
   },
   team: {
     icon: Users,
-    gradient: 'from-purple-500 to-purple-600',
-    glow: 'shadow-[0_0_10px_rgba(168,85,247,0.4)]',
-    border: 'border-purple-500/30',
+    gradient: "from-purple-500 to-purple-600",
+    glow: "shadow-[0_0_10px_rgba(168,85,247,0.4)]",
+    border: "border-purple-500/30",
   },
   tag: {
     icon: Tag,
-    gradient: 'from-amber-500 to-amber-600',
-    glow: 'shadow-[0_0_10px_rgba(245,158,11,0.4)]',
-    border: 'border-amber-500/30',
+    gradient: "from-amber-500 to-amber-600",
+    glow: "shadow-[0_0_10px_rgba(245,158,11,0.4)]",
+    border: "border-amber-500/30",
   },
 };
 
@@ -54,10 +54,10 @@ function formatTimestamp(timestamp: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return 'Just now';
+  if (diffMins < 1) return "Just now";
   if (diffMins < 60) return `${diffMins} min ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
 
   return date.toLocaleDateString();
 }

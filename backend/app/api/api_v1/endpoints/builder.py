@@ -123,11 +123,11 @@ async def optimize_composition_endpoint(
 ) -> CompositionOptimizationResult:
     """
     Optimize a squad composition based on the provided constraints.
-    
+
     This endpoint generates an optimized composition using a heuristic algorithm
     that balances multiple objectives (boons, healing, damage, etc.) based on
     the game mode and squad size.
-    
+
     The optimization is time-boxed to ensure fast response times.
     """
     try:
@@ -135,14 +135,14 @@ async def optimize_composition_endpoint(
             f"User {current_user.id} requested optimization: "
             f"mode={request.game_mode}, size={request.squad_size}"
         )
-        
+
         # Validate squad size
         if request.squad_size < 1 or request.squad_size > 50:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Squad size must be between 1 and 50",
             )
-        
+
         # Validate fixed roles don't exceed squad size
         if request.fixed_roles:
             total_fixed = sum(role.count for role in request.fixed_roles)
@@ -151,17 +151,17 @@ async def optimize_composition_endpoint(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"Fixed roles count ({total_fixed}) exceeds squad size ({request.squad_size})",
                 )
-        
+
         # Run optimization
         result = optimize_composition(request)
-        
+
         logger.info(
             f"Optimization completed: score={result.score:.3f}, "
             f"roles={result.role_distribution}"
         )
-        
+
         return result
-        
+
     except ValueError as e:
         logger.error(f"Validation error in optimization: {e}")
         raise HTTPException(
@@ -215,7 +215,7 @@ async def get_game_modes(
                     "squad_size_range": [15, 30],
                     "emphasis": ["coordination", "boon_uptime", "damage"],
                 },
-            ]
+            ],
         },
         "pve": {
             "name": "Player vs Environment (PvE)",
@@ -241,10 +241,10 @@ async def get_game_modes(
                     "squad_size_range": [10, 10],
                     "emphasis": ["damage", "boon_uptime", "healing"],
                 },
-            ]
-        }
+            ],
+        },
     }
-    
+
     return {"game_types": game_types}
 
 
@@ -273,7 +273,7 @@ async def get_available_professions(
         {"id": 8, "name": "Thief", "color": "gray"},
         {"id": 9, "name": "Mesmer", "color": "purple"},
     ]
-    
+
     return {"professions": professions}
 
 

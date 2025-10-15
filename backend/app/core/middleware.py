@@ -18,7 +18,9 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
     Middleware pour ajouter un ID unique à chaque requête.
     """
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         request_id = str(uuid.uuid4())
         request.state.request_id = request_id
 
@@ -32,7 +34,9 @@ class TimingMiddleware(BaseHTTPMiddleware):
     Middleware pour mesurer le temps de traitement des requêtes.
     """
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         start_time = time.time()
 
         response = await call_next(request)
@@ -60,7 +64,9 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     Middleware pour ajouter des en-têtes de sécurité HTTP.
     """
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         response = await call_next(request)
 
         # En-têtes de sécurité
@@ -130,9 +136,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.window = window
         self.requests = {}
 
-    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: RequestResponseEndpoint
+    ) -> Response:
         # Ne pas appliquer la limitation de taux pour certaines routes
-        if any(request.url.path.startswith(path) for path in ["/docs", "/redoc", "/openapi.json", "/metrics"]):
+        if any(
+            request.url.path.startswith(path)
+            for path in ["/docs", "/redoc", "/openapi.json", "/metrics"]
+        ):
             return await call_next(request)
 
         # Récupérer l'adresse IP du client
@@ -140,7 +151,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         current_time = int(time.time())
 
         # Nettoyer les anciennes entrées
-        self.requests[client_ip] = [t for t in self.requests.get(client_ip, []) if t > current_time - self.window]
+        self.requests[client_ip] = [
+            t
+            for t in self.requests.get(client_ip, [])
+            if t > current_time - self.window
+        ]
 
         # Vérifier si le taux est dépassé
         if len(self.requests.get(client_ip, [])) >= self.limit:
@@ -200,4 +215,6 @@ def setup_middlewares(app: ASGIApp) -> None:
 
     # Activation de la limitation de taux uniquement en production
     if not settings.DEBUG and not settings.TESTING:
-        app.add_middleware(RateLimitMiddleware, limit=100, window=60)  # 100 requêtes/minute par IP
+        app.add_middleware(
+            RateLimitMiddleware, limit=100, window=60
+        )  # 100 requêtes/minute par IP

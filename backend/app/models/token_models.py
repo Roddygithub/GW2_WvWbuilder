@@ -20,9 +20,13 @@ class Token(Base, TimeStampedMixin):
     __tablename__ = "tokens"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    token: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    token: Mapped[str] = mapped_column(
+        String(255), unique=True, index=True, nullable=False
+    )
     expires: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     # Les champs created_at et updated_at sont fournis par TimeStampedMixin
 

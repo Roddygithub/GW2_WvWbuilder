@@ -144,7 +144,10 @@ def setup_logging() -> None:
 
     # Désactive le logging des requêtes HTTP pour les endpoints de santé
     logging.getLogger("uvicorn.access").addFilter(
-        lambda record: not any(path in record.args[1] for path in ["/health", "/healthz", "/ready", "/metrics"])
+        lambda record: not any(
+            path in record.args[1]
+            for path in ["/health", "/healthz", "/ready", "/metrics"]
+        )
     )
 
     # Affiche la configuration de journalisation au démarrage

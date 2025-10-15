@@ -160,7 +160,9 @@ class TestKeyRotation:
     def test_check_rotation_needed(self, key_manager):
         """Test that rotation check rotates old key."""
         # Manually set key creation date to old date
-        old_date = (datetime.utcnow() - timedelta(days=KEY_ROTATION_DAYS + 1)).isoformat()
+        old_date = (
+            datetime.utcnow() - timedelta(days=KEY_ROTATION_DAYS + 1)
+        ).isoformat()
         key_manager.keys[key_manager.current_key_id]["created_at"] = old_date
 
         initial_key_id = key_manager.current_key_id
@@ -258,7 +260,12 @@ class TestKeyManagerEdgeCases:
     def test_missing_current_key_id(self, temp_key_file):
         """Test handling of missing current_key_id."""
         # Create file with keys but no current_key_id
-        test_keys = {"key_abc123": {"key": "test_secret", "created_at": datetime.utcnow().isoformat()}}
+        test_keys = {
+            "key_abc123": {
+                "key": "test_secret",
+                "created_at": datetime.utcnow().isoformat(),
+            }
+        }
         with open(temp_key_file, "w") as f:
             json.dump({"keys": test_keys, "current_key_id": None}, f)
 

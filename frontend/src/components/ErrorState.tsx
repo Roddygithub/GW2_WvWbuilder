@@ -3,9 +3,9 @@
  * GW2-styled error display with retry option
  */
 
-import { motion } from 'framer-motion';
-import { AlertCircle, RefreshCw } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { motion } from "framer-motion";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ErrorStateProps {
   message?: string;
@@ -15,17 +15,19 @@ interface ErrorStateProps {
 }
 
 export default function ErrorState({
-  message = 'Something went wrong',
+  message = "Something went wrong",
   onRetry,
   className,
   fullScreen = false,
 }: ErrorStateProps) {
   const content = (
-    <div className={cn(
-      'flex flex-col items-center justify-center',
-      fullScreen ? 'min-h-screen' : 'py-12',
-      className
-    )}>
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center",
+        fullScreen ? "min-h-screen" : "py-12",
+        className,
+      )}
+    >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -47,9 +49,7 @@ export default function ErrorState({
           </h3>
 
           {/* Message */}
-          <p className="text-red-200 text-center mb-6">
-            {message}
-          </p>
+          <p className="text-red-200 text-center mb-6">{message}</p>
 
           {/* Retry Button */}
           {onRetry && (
@@ -68,7 +68,8 @@ export default function ErrorState({
 
           {/* Help Text */}
           <p className="text-slate-400 text-xs text-center mt-4">
-            If the problem persists, please check your connection or contact support.
+            If the problem persists, please check your connection or contact
+            support.
           </p>
         </div>
       </motion.div>

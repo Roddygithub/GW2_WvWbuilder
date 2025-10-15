@@ -30,7 +30,9 @@ class User(Base, TimeStampedMixin):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    username: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    username: Mapped[str] = mapped_column(
+        String, unique=True, index=True, nullable=False
+    )
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     full_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
@@ -49,7 +51,10 @@ class User(Base, TimeStampedMixin):
 
     # Compositions créées par l'utilisateur
     created_compositions: Mapped[List["Composition"]] = relationship(
-        "Composition", back_populates="creator", foreign_keys="Composition.created_by", viewonly=True
+        "Composition",
+        back_populates="creator",
+        foreign_keys="Composition.created_by",
+        viewonly=True,
     )
 
     # Relations many-to-many avec les rôles via le modèle UserRole
@@ -60,15 +65,20 @@ class User(Base, TimeStampedMixin):
         back_populates="users",
         lazy="selectin",
         viewonly=True,
-        overlaps="role_associations"
+        overlaps="role_associations",
     )
 
     builds: Mapped[List["Build"]] = relationship("Build", back_populates="created_by")
-    tokens: Mapped[List["Token"]] = relationship("Token", back_populates="user", cascade="all, delete-orphan")
+    tokens: Mapped[List["Token"]] = relationship(
+        "Token", back_populates="user", cascade="all, delete-orphan"
+    )
 
     # Relations avec les équipes
     owned_teams: Mapped[List["Team"]] = relationship(
-        "Team", back_populates="owner", foreign_keys="Team.owner_id", cascade="all, delete-orphan"
+        "Team",
+        back_populates="owner",
+        foreign_keys="Team.owner_id",
+        cascade="all, delete-orphan",
     )
 
     # Relation avec les équipes via la table d'association TeamMember
@@ -83,11 +93,16 @@ class User(Base, TimeStampedMixin):
 
     # Relation avec les associations d'équipe (pour accéder aux détails de la relation)
     team_associations: Mapped[List["TeamMember"]] = relationship(
-        "TeamMember", back_populates="user", cascade="all, delete-orphan", overlaps="teams"
+        "TeamMember",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        overlaps="teams",
     )
 
     # Relation avec les webhooks
-    webhooks: Mapped[List["Webhook"]] = relationship("Webhook", back_populates="user", cascade="all, delete-orphan")
+    webhooks: Mapped[List["Webhook"]] = relationship(
+        "Webhook", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"

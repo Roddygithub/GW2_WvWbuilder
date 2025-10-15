@@ -23,17 +23,21 @@ class UserCreate(UserBase):
 
 class UserRegister(BaseModel):
     """Schema for user registration (public endpoint)"""
-    
+
     email: EmailStr = Field(..., examples=["user@example.com"])
     password: str = Field(..., min_length=8, examples=["securepassword123"])
-    username: Optional[str] = Field(None, min_length=3, max_length=50, examples=["john_doe"])
+    username: Optional[str] = Field(
+        None, min_length=3, max_length=50, examples=["john_doe"]
+    )
     full_name: Optional[str] = Field(None, max_length=100, examples=["John Doe"])
 
 
 class UserUpdate(BaseModel):
     """Schema for updating user data"""
 
-    username: Optional[str] = Field(None, min_length=3, max_length=50, examples=["new_username"])
+    username: Optional[str] = Field(
+        None, min_length=3, max_length=50, examples=["new_username"]
+    )
     email: Optional[EmailStr] = Field(None, examples=["new_email@example.com"])
     password: Optional[str] = Field(None, min_length=8, examples=["newpassword123"])
     is_active: Optional[bool] = Field(None, examples=[True])
@@ -74,7 +78,9 @@ class User(UserInDBBase):
 class UserInDB(UserInDBBase):
     """Schema for user data stored in database"""
 
-    hashed_password: str = Field(..., examples=["$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"])
+    hashed_password: str = Field(
+        ..., examples=["$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW"]
+    )
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -100,7 +106,9 @@ class Token(BaseModel):
 
     access_token: str = Field(..., examples=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."])
     token_type: str = "bearer"
-    refresh_token: str = Field(..., examples=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."])
+    refresh_token: str = Field(
+        ..., examples=["eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."]
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -120,4 +128,6 @@ class TokenData(BaseModel):
 
     username: Optional[str] = None
 
-    model_config = ConfigDict(json_schema_extra={"examples": [{"username": "john_doe"}]})
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"username": "john_doe"}]}
+    )

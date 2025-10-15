@@ -24,7 +24,9 @@ class BaseAPIException(HTTPException):
     status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
     detail: str = "An unexpected error occurred"
 
-    def __init__(self, detail: str | None = None, status_code: int | None = None, **kwargs) -> None:
+    def __init__(
+        self, detail: str | None = None, status_code: int | None = None, **kwargs
+    ) -> None:
         if status_code is not None:
             self.status_code = status_code
         if detail is not None:

@@ -21,7 +21,9 @@ from app.core.config import settings
 class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate]):
     """CRUD operations for Composition model with optimized loading and caching."""
 
-    async def create_with_owner(self, db: AsyncSession, *, obj_in: CompositionCreate, owner_id: int) -> Composition:
+    async def create_with_owner(
+        self, db: AsyncSession, *, obj_in: CompositionCreate, owner_id: int
+    ) -> Composition:
         """Create a new composition with an owner."""
         # Extraire les données de l'objet d'entrée
         data = obj_in.dict(exclude_unset=True, exclude={"members"})
@@ -44,7 +46,13 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
         return db_obj
 
     async def get_multi_by_owner(
-        self, db: AsyncSession, *, owner_id: int, skip: int = 0, limit: int = 100, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        owner_id: int,
+        skip: int = 0,
+        limit: int = 100,
+        load_relations: bool = False,
     ) -> List[Composition]:
         """
         Get multiple compositions by owner ID with optional relation loading.
@@ -94,7 +102,9 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
 
         return compositions
 
-    async def get(self, db: AsyncSession, id: Any, load_relations: bool = False) -> Optional[Composition]:
+    async def get(
+        self, db: AsyncSession, id: Any, load_relations: bool = False
+    ) -> Optional[Composition]:
         """
         Get a composition by ID with optional relation loading.
 
@@ -164,7 +174,9 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
 
         return composition
 
-    async def remove_member(self, db: AsyncSession, *, composition_id: int, user_id: int) -> Optional[Composition]:
+    async def remove_member(
+        self, db: AsyncSession, *, composition_id: int, user_id: int
+    ) -> Optional[Composition]:
         """Remove a member from a composition."""
         composition = await self.get(db, id=composition_id)
         if not composition:
@@ -183,7 +195,9 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
 
         return composition
 
-    async def add_build(self, db: AsyncSession, *, composition_id: int, build: Build) -> Optional[Composition]:
+    async def add_build(
+        self, db: AsyncSession, *, composition_id: int, build: Build
+    ) -> Optional[Composition]:
         """Add a build to a composition."""
         composition = await self.get(db, id=composition_id)
         if not composition:
@@ -194,7 +208,9 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
         await db.refresh(composition)
         return composition
 
-    async def remove_build(self, db: AsyncSession, *, composition_id: int) -> Optional[Composition]:
+    async def remove_build(
+        self, db: AsyncSession, *, composition_id: int
+    ) -> Optional[Composition]:
         """Remove a build from a composition."""
         composition = await self.get(db, id=composition_id)
         if not composition:
@@ -206,7 +222,12 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
         return composition
 
     async def get_multi_public(
-        self, db: AsyncSession, *, skip: int = 0, limit: int = 100, load_relations: bool = False
+        self,
+        db: AsyncSession,
+        *,
+        skip: int = 0,
+        limit: int = 100,
+        load_relations: bool = False,
     ) -> List[Composition]:
         """
         Get multiple public compositions with optional relation loading.
@@ -256,7 +277,9 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
 
         return compositions
 
-    async def add_tag(self, db: AsyncSession, *, composition_id: int, tag_id: int) -> bool:
+    async def add_tag(
+        self, db: AsyncSession, *, composition_id: int, tag_id: int
+    ) -> bool:
         """
         Add a tag to a composition and invalidate related caches.
 
@@ -270,14 +293,17 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
         """
         # Check if tag is already associated
         stmt = select(composition_tags).where(
-            (composition_tags.c.composition_id == composition_id) & (composition_tags.c.tag_id == tag_id)
+            (composition_tags.c.composition_id == composition_id)
+            & (composition_tags.c.tag_id == tag_id)
         )
         result = await db.execute(stmt)
         if result.first():
             return False  # Tag is already associated
 
         # Add tag to composition
-        stmt = composition_tags.insert().values(composition_id=composition_id, tag_id=tag_id)
+        stmt = composition_tags.insert().values(
+            composition_id=composition_id, tag_id=tag_id
+        )
         await db.execute(stmt)
 
         # Invalidate caches
@@ -286,7 +312,9 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
         await db.commit()
         return True
 
-    async def remove_tag(self, db: AsyncSession, *, composition_id: int, tag_id: int) -> bool:
+    async def remove_tag(
+        self, db: AsyncSession, *, composition_id: int, tag_id: int
+    ) -> bool:
         """
         Remove a tag from a composition and invalidate related caches.
 
@@ -300,7 +328,8 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
         """
         # Check if tag is associated
         stmt = select(composition_tags).where(
-            (composition_tags.c.composition_id == composition_id) & (composition_tags.c.tag_id == tag_id)
+            (composition_tags.c.composition_id == composition_id)
+            & (composition_tags.c.tag_id == tag_id)
         )
         result = await db.execute(stmt)
         if not result.first():
@@ -308,7 +337,8 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
 
         # Remove tag from composition
         stmt = composition_tags.delete().where(
-            (composition_tags.c.composition_id == composition_id) & (composition_tags.c.tag_id == tag_id)
+            (composition_tags.c.composition_id == composition_id)
+            & (composition_tags.c.tag_id == tag_id)
         )
         await db.execute(stmt)
 

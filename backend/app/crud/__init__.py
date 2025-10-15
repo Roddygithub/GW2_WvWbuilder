@@ -10,7 +10,10 @@ from .user import user as user_crud, CRUDUser
 from .crud_role import role as role_crud, CRUDRole
 from .crud_permission import permission as permission_crud
 from .crud_profession import profession as profession_crud, CRUDProfession
-from .crud_elite_specialization import elite_specialization as elite_spec_crud, CRUDEliteSpecialization
+from .crud_elite_specialization import (
+    elite_specialization as elite_spec_crud,
+    CRUDEliteSpecialization,
+)
 from .crud_build import build as build_crud, CRUDBuild
 from .crud_team import team as team_crud, CRUDTeam
 from .crud_team_member import team_member as team_member_crud, CRUDTeamMember

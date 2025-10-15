@@ -133,7 +133,10 @@ async def test_get_current_user_valid_token(mock_db_session, create_test_user):
     mock_request = MagicMock(spec=Request)
 
     # Mock pour user_crud.get
-    with patch("app.api.deps.user_crud.get") as mock_crud_get, patch("app.api.deps.jwt.decode") as mock_jwt_decode:
+    with (
+        patch("app.api.deps.user_crud.get") as mock_crud_get,
+        patch("app.api.deps.jwt.decode") as mock_jwt_decode,
+    ):
 
         # Configuration des mocks
         mock_crud_get.return_value = test_user
@@ -143,12 +146,17 @@ async def test_get_current_user_valid_token(mock_db_session, create_test_user):
         }
 
         # Appel de la fonction à tester
-        result = await get_current_user(request=mock_request, token=TEST_TOKEN, db=mock_db_session)
+        result = await get_current_user(
+            request=mock_request, token=TEST_TOKEN, db=mock_db_session
+        )
 
         # Vérifications
         assert result == test_user
         mock_jwt_decode.assert_called_once_with(
-            TEST_TOKEN, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM], options={"verify_aud": False}
+            TEST_TOKEN,
+            settings.SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+            options={"verify_aud": False},
         )
         mock_crud_get.assert_called_once_with(mock_db_session, id=TEST_USER_ID)
 
@@ -163,7 +171,9 @@ async def test_get_current_user_invalid_token(mock_db_session):
         mock_jwt_decode.side_effect = JWTError("Invalid token")
 
         with pytest.raises(CredentialsException) as exc_info:
-            await get_current_user(request=mock_request, token="invalid_token", db=mock_db_session)
+            await get_current_user(
+                request=mock_request, token="invalid_token", db=mock_db_session
+            )
 
         assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
         assert "Could not validate credentials" in str(exc_info.value.detail)
@@ -213,7 +223,9 @@ async def test_get_current_active_superuser_not_superuser(create_test_user):
 
 # Tests pour get_team_and_check_access
 @pytest.mark.asyncio
-async def test_get_team_and_check_access_owner(mock_db_session, create_test_user, create_test_team):
+async def test_get_team_and_check_access_owner(
+    mock_db_session, create_test_user, create_test_team
+):
     """Teste l'accès à une équipe dont l'utilisateur est propriétaire."""
     # Créer un utilisateur et une équipe
     user = create_test_user(user_id=1)
@@ -224,7 +236,9 @@ async def test_get_team_and_check_access_owner(mock_db_session, create_test_user
         mock_team_get.return_value = team
 
         # Appeler la fonction
-        result_team, is_admin = await get_team_and_check_access(team_id=team.id, db=mock_db_session, current_user=user)
+        result_team, is_admin = await get_team_and_check_access(
+            team_id=team.id, db=mock_db_session, current_user=user
+        )
 
         # Vérifications
         assert result_team == team
@@ -233,7 +247,9 @@ async def test_get_team_and_check_access_owner(mock_db_session, create_test_user
 
 
 @pytest.mark.asyncio
-async def test_get_team_and_check_access_team_member(mock_db_session, create_test_user, create_test_team):
+async def test_get_team_and_check_access_team_member(
+    mock_db_session, create_test_user, create_test_team
+):
     """Teste l'accès à une équipe dont l'utilisateur est membre."""
     # Créer un utilisateur, un propriétaire et une équipe
     owner = create_test_user(user_id=1)
@@ -256,17 +272,23 @@ async def test_get_team_and_check_access_team_member(mock_db_session, create_tes
         mock_get_member.return_value = team_member
 
         # Appeler la fonction
-        result_team, is_admin = await get_team_and_check_access(team_id=team.id, db=mock_db_session, current_user=user)
+        result_team, is_admin = await get_team_and_check_access(
+            team_id=team.id, db=mock_db_session, current_user=user
+        )
 
         # Vérifications
         assert result_team == team
         assert is_admin is False
         mock_team_get.assert_called_once_with(mock_db_session, id=team.id)
-        mock_get_member.assert_called_once_with(mock_db_session, user_id=user.id, team_id=team.id)
+        mock_get_member.assert_called_once_with(
+            mock_db_session, user_id=user.id, team_id=team.id
+        )
 
 
 @pytest.mark.asyncio
-async def test_check_team_admin_success(mock_db_session, create_test_user, create_test_team):
+async def test_check_team_admin_success(
+    mock_db_session, create_test_user, create_test_team
+):
     """Teste la vérification d'un administrateur d'équipe valide."""
     # Créer un utilisateur et une équipe
     user = create_test_user(user_id=1)
@@ -277,7 +299,9 @@ async def test_check_team_admin_success(mock_db_session, create_test_user, creat
         mock_team_get.return_value = team
 
         # Appeler la fonction
-        result_team = await check_team_admin(team_id=team.id, db=mock_db_session, current_user=user)
+        result_team = await check_team_admin(
+            team_id=team.id, db=mock_db_session, current_user=user
+        )
 
         # Vérifications
         assert result_team == team
@@ -295,7 +319,9 @@ async def test_check_team_admin_not_found(mock_db_session, create_test_user):
 
         # Appeler la fonction et vérifier qu'elle lève une exception
         with pytest.raises(HTTPException) as exc_info:
-            await check_team_admin(team_id=999, db=mock_db_session, current_user=user)  # ID qui n'existe pas
+            await check_team_admin(
+                team_id=999, db=mock_db_session, current_user=user
+            )  # ID qui n'existe pas
 
         # Vérifications
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
@@ -315,7 +341,9 @@ async def test_get_team_and_check_access_not_found(mock_db_session, create_test_
 
         # Appeler la fonction et vérifier qu'elle lève une exception
         with pytest.raises(HTTPException) as exc_info:
-            await get_team_and_check_access(team_id=999, db=mock_db_session, current_user=user)  # ID qui n'existe pas
+            await get_team_and_check_access(
+                team_id=999, db=mock_db_session, current_user=user
+            )  # ID qui n'existe pas
 
         # Vérifications
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
@@ -324,7 +352,9 @@ async def test_get_team_and_check_access_not_found(mock_db_session, create_test_
 
 
 @pytest.mark.asyncio
-async def test_get_team_and_check_access_not_member(mock_db_session, create_test_user, create_test_team):
+async def test_get_team_and_check_access_not_member(
+    mock_db_session, create_test_user, create_test_team
+):
     """Teste l'accès à une équipe dont l'utilisateur n'est pas membre."""
     # Créer un utilisateur, un propriétaire et une équipe
     owner = create_test_user(user_id=1)
@@ -342,10 +372,14 @@ async def test_get_team_and_check_access_not_member(mock_db_session, create_test
 
         # Appeler la fonction et vérifier qu'elle lève une exception
         with pytest.raises(ForbiddenException) as exc_info:
-            await get_team_and_check_access(team_id=team.id, db=mock_db_session, current_user=user)
+            await get_team_and_check_access(
+                team_id=team.id, db=mock_db_session, current_user=user
+            )
 
         # Vérifications
         assert exc_info.value.status_code == status.HTTP_403_FORBIDDEN
         assert "Not enough permissions" in str(exc_info.value.detail)
         mock_team_get.assert_called_once_with(mock_db_session, id=team.id)
-        mock_get_member.assert_called_once_with(mock_db_session, user_id=user.id, team_id=team.id)
+        mock_get_member.assert_called_once_with(
+            mock_db_session, user_id=user.id, team_id=team.id
+        )

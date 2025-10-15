@@ -1,43 +1,40 @@
-import { useForm, useFormContext } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useNavigate } from "react-router-dom"
-import { Loader2 } from "lucide-react"
-import * as React from "react"
+import { useForm, useFormContext } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { ProfessionSelect } from "./ProfessionSelect"
+} from "@/components/ui/select";
+import { ProfessionSelect } from "./ProfessionSelect";
 import {
   compositionFormSchema,
   type CompositionFormValues,
   playstyleOptions,
-} from "@/schemas/composition.schema"
+} from "@/schemas/composition.schema";
 
 // Composants de formulaire personnalisés
 interface FormFieldProps {
-  name: keyof CompositionFormValues
-  children: (props: { field: any }) => React.ReactNode
+  name: keyof CompositionFormValues;
+  children: (props: { field: any }) => React.ReactNode;
 }
 
-const FormField = ({ 
-  name, 
-  children 
-}: FormFieldProps) => {
-  const { register } = useFormContext<CompositionFormValues>()
-  return <>{children({ field: { ...register(name) } })}</>
-}
+const FormField = ({ name, children }: FormFieldProps) => {
+  const { register } = useFormContext<CompositionFormValues>();
+  return <>{children({ field: { ...register(name) } })}</>;
+};
 
 const FormItem = ({ children }: { children: React.ReactNode }) => (
   <div className="space-y-2">{children}</div>
-)
+);
 
 const FormLabel = ({
   children,
@@ -50,7 +47,7 @@ const FormLabel = ({
   >
     {children}
   </label>
-)
+);
 
 const FormControl = ({
   children,
@@ -60,7 +57,7 @@ const FormControl = ({
   <div className={className} {...props}>
     {children}
   </div>
-)
+);
 
 const FormDescription = ({
   children,
@@ -70,7 +67,7 @@ const FormDescription = ({
   <p className={`text-sm text-muted-foreground ${className}`} {...props}>
     {children}
   </p>
-)
+);
 
 const FormMessage = ({
   children,
@@ -80,15 +77,14 @@ const FormMessage = ({
   <p className={`text-sm font-medium text-destructive ${className}`} {...props}>
     {children}
   </p>
-)
-
+);
 
 interface CompositionFormProps {
-  defaultValues?: Partial<CompositionFormValues>
-  onSubmit: (data: CompositionFormValues) => Promise<void>
-  isSubmitting?: boolean
-  submitLabel?: string
-  className?: string
+  defaultValues?: Partial<CompositionFormValues>;
+  onSubmit: (data: CompositionFormValues) => Promise<void>;
+  isSubmitting?: boolean;
+  submitLabel?: string;
+  className?: string;
 }
 
 export function CompositionForm({
@@ -98,7 +94,7 @@ export function CompositionForm({
   submitLabel = "Enregistrer",
   className,
 }: CompositionFormProps) {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const form = useForm<CompositionFormValues>({
     resolver: zodResolver(compositionFormSchema),
@@ -110,18 +106,18 @@ export function CompositionForm({
       professions: [],
       ...defaultValues,
     },
-  })
+  });
 
   const handleSubmit = async (data: CompositionFormValues) => {
     try {
-      await onSubmit(data)
-      navigate("/compositions")
+      await onSubmit(data);
+      navigate("/compositions");
     } catch (error) {
       console.error(
-        error instanceof Error ? error.message : "Une erreur est survenue"
-      )
+        error instanceof Error ? error.message : "Une erreur est survenue",
+      );
     }
-  }
+  };
 
   return (
     <form
@@ -247,12 +243,10 @@ export function CompositionForm({
           Annuler
         </Button>
         <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting && (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          )}
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {submitLabel}
         </Button>
       </div>
     </form>
-  )
+  );
 }

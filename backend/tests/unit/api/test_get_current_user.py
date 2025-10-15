@@ -26,7 +26,10 @@ async def test_get_current_user_valid_token():
     mock_user.is_superuser = False
 
     # Mock the JWT decode function and user_crud.get
-    with patch("app.api.deps.jwt.decode") as mock_jwt_decode, patch("app.crud.user_crud.get") as mock_user_get:
+    with (
+        patch("app.api.deps.jwt.decode") as mock_jwt_decode,
+        patch("app.crud.user_crud.get") as mock_user_get,
+    ):
 
         # Configure the mocks
         mock_jwt_decode.return_value = {"sub": str(TEST_USER_ID)}
@@ -48,7 +51,10 @@ async def test_get_current_user_valid_token():
         # Assertions
         assert result == mock_user
         mock_jwt_decode.assert_called_once_with(
-            TEST_TOKEN, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM], options={"verify_aud": False}
+            TEST_TOKEN,
+            settings.SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+            options={"verify_aud": False},
         )
         mock_user_get.assert_called_once_with(db=mock_db, id=TEST_USER_ID)
 
@@ -61,7 +67,10 @@ async def test_get_current_user_invalid_token():
     mock_db = AsyncMock()
 
     # Mock the JWT decode function to raise an error
-    with patch("app.api.deps.jwt.decode") as mock_jwt_decode, patch("app.crud.user_crud.get"):
+    with (
+        patch("app.api.deps.jwt.decode") as mock_jwt_decode,
+        patch("app.crud.user_crud.get"),
+    ):
         mock_jwt_decode.side_effect = JWTError("Invalid token")
 
         # Import the function to test

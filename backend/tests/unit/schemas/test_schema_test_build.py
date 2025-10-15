@@ -49,7 +49,9 @@ class TestBuildSchemas:
         """Test BuildBase with empty name raises validation error."""
         invalid_data = SAMPLE_BUILD_DATA.copy()
         invalid_data["name"] = ""
-        with pytest.raises(ValueError, match="String should have at least 3 characters"):
+        with pytest.raises(
+            ValueError, match="String should have at least 3 characters"
+        ):
             BuildBase(**invalid_data)
 
     def test_build_base_whitespace_name(self):
@@ -64,7 +66,9 @@ class TestBuildSchemas:
         """Test BuildBase with invalid team size raises validation error."""
         invalid_data = SAMPLE_BUILD_DATA.copy()
         invalid_data["team_size"] = 0
-        with pytest.raises(ValueError, match="Input should be greater than or equal to 1"):
+        with pytest.raises(
+            ValueError, match="Input should be greater than or equal to 1"
+        ):
             BuildBase(**invalid_data)
 
     def test_build_base_invalid_game_mode(self):
@@ -100,12 +104,16 @@ class TestBuildSchemas:
 
     def test_build_update_empty_name(self):
         """Test BuildUpdate with empty name raises validation error."""
-        with pytest.raises(ValueError, match="String should have at least 3 characters"):
+        with pytest.raises(
+            ValueError, match="String should have at least 3 characters"
+        ):
             BuildUpdate(name="")
 
     def test_build_update_invalid_team_size(self):
         """Test BuildUpdate with invalid team size raises validation error."""
-        with pytest.raises(ValueError, match="Input should be greater than or equal to 1"):
+        with pytest.raises(
+            ValueError, match="Input should be greater than or equal to 1"
+        ):
             BuildUpdate(team_size=0)
 
     def test_build_in_db(self):
@@ -136,7 +144,9 @@ class TestBuildSchemas:
     def test_build_in_db_missing_required(self):
         """Test BuildInDB with missing required fields raises validation error."""
         with pytest.raises(ValueError):
-            BuildInDB(id=1, **SAMPLE_BUILD_DATA)  # Missing created_by_id, created_at, updated_at
+            BuildInDB(
+                id=1, **SAMPLE_BUILD_DATA
+            )  # Missing created_by_id, created_at, updated_at
 
 
 class TestBuildGeneration:

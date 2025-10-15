@@ -85,7 +85,9 @@ class TestGW2APIIntegration:
         # Configuration du mock
         mock_response = MagicMock()
         mock_response.json.return_value = ["Guardian", "Warrior", "Elementalist"]
-        mock_httpx_client.return_value.__aenter__.return_value.get.return_value = mock_response
+        mock_httpx_client.return_value.__aenter__.return_value.get.return_value = (
+            mock_response
+        )
 
         # Appel de la méthode à tester
         result = await gw2_service.fetch_professions()
@@ -105,7 +107,9 @@ class TestGW2APIIntegration:
         # Configuration du mock
         mock_response = MagicMock()
         mock_response.json.return_value = MOCK_PROFESSIONS["Guardian"]
-        mock_httpx_client.return_value.__aenter__.return_value.get.return_value = mock_response
+        mock_httpx_client.return_value.__aenter__.return_value.get.return_value = (
+            mock_response
+        )
 
         # Appel de la méthode à tester
         result = await gw2_service.fetch_profession_details("Guardian")
@@ -121,7 +125,9 @@ class TestGW2APIIntegration:
         # Configuration du mock
         mock_response = MagicMock()
         mock_response.json.return_value = [10185, 10186, 10187]  # IDs de compétences
-        mock_httpx_client.return_value.__aenter__.return_value.get.return_value = mock_response
+        mock_httpx_client.return_value.__aenter__.return_value.get.return_value = (
+            mock_response
+        )
 
         # Appel de la méthode à tester
         result = await gw2_service.fetch_skills([10185, 10186, 10187])
@@ -135,7 +141,9 @@ class TestGW2APIIntegration:
         # Configuration du mock
         mock_response = MagicMock()
         mock_response.json.return_value = [632, 633, 634]  # IDs de traits
-        mock_httpx_client.return_value.__aenter__.return_value.get.return_value = mock_response
+        mock_httpx_client.return_value.__aenter__.return_value.get.return_value = (
+            mock_response
+        )
 
         # Appel de la méthode à tester
         result = await gw2_service.fetch_traits([632, 633, 634])
@@ -154,7 +162,9 @@ class TestGW2APIIntegration:
         mock_details_response = MagicMock()
         mock_details_response.json.side_effect = [
             MOCK_PROFESSIONS["Guardian"],
-            MOCK_PROFESSIONS["Guardian"],  # Simuler deux fois le même métier pour le test
+            MOCK_PROFESSIONS[
+                "Guardian"
+            ],  # Simuler deux fois le même métier pour le test
         ]
 
         # Configuration du mock pour les appels HTTP
@@ -184,14 +194,19 @@ class TestGW2APIIntegration:
         mock_response = MagicMock()
         mock_response.status_code = 429
         mock_response.headers = {"Retry-After": "5"}
-        mock_httpx_client.return_value.__aenter__.return_value.get.return_value = mock_response
+        mock_httpx_client.return_value.__aenter__.return_value.get.return_value = (
+            mock_response
+        )
 
         # Configuration du mock pour simuler un succès après un certain temps
         success_response = MagicMock()
         success_response.json.return_value = ["Guardian", "Warrior"]
 
         # Configurer le mock pour échouer une fois puis réussir
-        mock_httpx_client.return_value.__aenter__.return_value.get.side_effect = [mock_response, success_response]
+        mock_httpx_client.return_value.__aenter__.return_value.get.side_effect = [
+            mock_response,
+            success_response,
+        ]
 
         # Appel de la méthode à tester avec gestion du rate limiting
         result = await gw2_service.fetch_professions()
@@ -201,13 +216,15 @@ class TestGW2APIIntegration:
         assert len(result) == 2
 
         # Vérifier que le nombre d'appels est correct (2 appels : 1 échec + 1 succès)
-        assert mock_httpx_client.return_value.__aenter__.return_value.get.call_count == 2
+        assert (
+            mock_httpx_client.return_value.__aenter__.return_value.get.call_count == 2
+        )
 
     async def test_error_handling(self, gw2_service, mock_httpx_client):
         """Teste la gestion des erreurs lors des appels à l'API."""
         # Configuration du mock pour simuler une erreur de connexion
-        mock_httpx_client.return_value.__aenter__.return_value.get.side_effect = httpx.RequestError(
-            "Erreur de connexion"
+        mock_httpx_client.return_value.__aenter__.return_value.get.side_effect = (
+            httpx.RequestError("Erreur de connexion")
         )
 
         # Appel de la méthode à tester et vérification qu'une exception est levée

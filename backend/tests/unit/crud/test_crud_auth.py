@@ -17,7 +17,9 @@ user_crud = CRUDUser(User)
 class CRUDAuth:
     """Compatibility layer for auth operations."""
 
-    async def authenticate(self, db: AsyncSession, *, email: str, password: str) -> Optional[User]:
+    async def authenticate(
+        self, db: AsyncSession, *, email: str, password: str
+    ) -> Optional[User]:
         """Authenticate a user."""
         user = await user_crud.get_by_email(db, email=email)
         if not user:
@@ -33,11 +35,15 @@ class CRUDAuth:
         # This is a simplified version - in a real app, you'd use a proper JWT library
         from app.core.security import create_access_token
 
-        return create_access_token(data={"sub": str(user_id)}, expires_delta=expires_delta)
+        return create_access_token(
+            data={"sub": str(user_id)}, expires_delta=expires_delta
+        )
 
     async def get_token(self, db: AsyncSession, token: str) -> Optional[Token]:
         """Get a token by its value."""
-        return await db.execute(Token.select().where(Token.token == token)).scalar_one_or_none()
+        return await db.execute(
+            Token.select().where(Token.token == token)
+        ).scalar_one_or_none()
 
     async def revoke_token(self, db: AsyncSession, token: str) -> None:
         """Revoke a token."""
@@ -61,7 +67,9 @@ def mock_user():
         id=1,
         username="testuser",
         email="test@example.com",
-        hashed_password=get_password_hash("password123"[:72]),  # Truncate to avoid bcrypt limit
+        hashed_password=get_password_hash(
+            "password123"[:72]
+        ),  # Truncate to avoid bcrypt limit
         is_active=True,
         role_id=1,
     )
@@ -84,10 +92,14 @@ class TestCRUDAuth:
         """Test successful user authentication"""
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = MagicMock(
-            scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=mock_user)))
+            scalars=MagicMock(
+                return_value=MagicMock(first=MagicMock(return_value=mock_user))
+            )
         )
 
-        result = await auth_crud.authenticate(db, username="testuser", password="password123")
+        result = await auth_crud.authenticate(
+            db, username="testuser", password="password123"
+        )
 
         assert result is not None
         assert result.username == "testuser"
@@ -98,10 +110,14 @@ class TestCRUDAuth:
         """Test authentication with wrong password"""
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = MagicMock(
-            scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=mock_user)))
+            scalars=MagicMock(
+                return_value=MagicMock(first=MagicMock(return_value=mock_user))
+            )
         )
 
-        result = await auth_crud.authenticate(db, username="testuser", password="wrongpassword")
+        result = await auth_crud.authenticate(
+            db, username="testuser", password="wrongpassword"
+        )
 
         assert result is None
 
@@ -110,7 +126,9 @@ class TestCRUDAuth:
         """Test creating an access token"""
         db = AsyncMock(spec=AsyncSession)
 
-        token = await auth_crud.create_access_token(db, user_id=1, expires_delta=timedelta(days=1))
+        token = await auth_crud.create_access_token(
+            db, user_id=1, expires_delta=timedelta(days=1)
+        )
 
         assert token is not None
         assert hasattr(token, "token")
@@ -124,7 +142,9 @@ class TestCRUDAuth:
         """Test retrieving a token"""
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = MagicMock(
-            scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=mock_token)))
+            scalars=MagicMock(
+                return_value=MagicMock(first=MagicMock(return_value=mock_token))
+            )
         )
 
         result = await auth_crud.get_token(db, token="test_token")
@@ -138,7 +158,9 @@ class TestCRUDAuth:
         """Test revoking a token"""
         db = AsyncMock(spec=AsyncSession)
         db.execute.return_value = MagicMock(
-            scalars=MagicMock(return_value=MagicMock(first=MagicMock(return_value=mock_token)))
+            scalars=MagicMock(
+                return_value=MagicMock(first=MagicMock(return_value=mock_token))
+            )
         )
 
         await auth_crud.revoke_token(db, token="test_token")

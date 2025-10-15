@@ -3,10 +3,10 @@
  * Interactive card for assigning class, build, and role to a team slot
  */
 
-import { motion } from 'framer-motion';
-import { User, Trash2, Edit2 } from 'lucide-react';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { motion } from "framer-motion";
+import { User, Trash2, Edit2 } from "lucide-react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface TeamSlotCardProps {
   slotNumber: number;
@@ -21,15 +21,15 @@ interface TeamSlotCardProps {
 }
 
 const professionColors: Record<string, string> = {
-  Guardian: '#72C1D9',
-  Warrior: '#FFD166',
-  Engineer: '#D09C59',
-  Ranger: '#8CDC82',
-  Thief: '#C08F95',
-  Elementalist: '#F68A87',
-  Mesmer: '#B679D5',
-  Necromancer: '#52A76F',
-  Revenant: '#D16E5A',
+  Guardian: "#72C1D9",
+  Warrior: "#FFD166",
+  Engineer: "#D09C59",
+  Ranger: "#8CDC82",
+  Thief: "#C08F95",
+  Elementalist: "#F68A87",
+  Mesmer: "#B679D5",
+  Necromancer: "#52A76F",
+  Revenant: "#D16E5A",
 };
 
 export default function TeamSlotCard({
@@ -45,7 +45,9 @@ export default function TeamSlotCard({
 }: TeamSlotCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
-  const professionColor = profession ? professionColors[profession] || '#A855F7' : '#64748b';
+  const professionColor = profession
+    ? professionColors[profession] || "#A855F7"
+    : "#64748b";
 
   return (
     <motion.div
@@ -57,20 +59,20 @@ export default function TeamSlotCard({
       onHoverEnd={() => setIsHovered(false)}
       onClick={onClick}
       className={cn(
-        'relative rounded-xl p-4 backdrop-blur-sm cursor-pointer transition-all duration-300',
+        "relative rounded-xl p-4 backdrop-blur-sm cursor-pointer transition-all duration-300",
         isEmpty
-          ? 'bg-slate-800/40 border-2 border-dashed border-slate-600/50 hover:border-purple-500/50 hover:bg-slate-800/60'
-          : 'bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-2 border-solid hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]'
+          ? "bg-slate-800/40 border-2 border-dashed border-slate-600/50 hover:border-purple-500/50 hover:bg-slate-800/60"
+          : "bg-gradient-to-br from-slate-800/80 to-slate-900/80 border-2 border-solid hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]",
       )}
       style={{
         borderColor: !isEmpty ? `${professionColor}50` : undefined,
       }}
     >
       {/* Slot Number Badge */}
-      <div 
+      <div
         className="absolute -top-3 -left-3 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg"
         style={{
-          background: isEmpty ? '#64748b' : professionColor,
+          background: isEmpty ? "#64748b" : professionColor,
           boxShadow: isEmpty ? undefined : `0 0 15px ${professionColor}80`,
         }}
       >
@@ -90,14 +92,14 @@ export default function TeamSlotCard({
           {/* Profession Header */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
-              <div 
+              <div
                 className="w-3 h-3 rounded-full shadow-lg"
                 style={{
                   background: professionColor,
                   boxShadow: `0 0 10px ${professionColor}`,
                 }}
               />
-              <h3 
+              <h3
                 className="font-bold text-lg"
                 style={{ color: professionColor }}
               >

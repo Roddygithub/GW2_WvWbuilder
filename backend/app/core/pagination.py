@@ -44,7 +44,9 @@ class PaginatedResponse(GenericModel, Generic[ModelType]):
         orm_mode = True
 
 
-def paginate(query: SQLAlchemyQuery[ModelType], pagination: PaginationParams) -> SQLAlchemyQuery[ModelType]:
+def paginate(
+    query: SQLAlchemyQuery[ModelType], pagination: PaginationParams
+) -> SQLAlchemyQuery[ModelType]:
     """
     Applique la pagination à une requête SQLAlchemy.
 
@@ -58,7 +60,9 @@ def paginate(query: SQLAlchemyQuery[ModelType], pagination: PaginationParams) ->
     return query.offset(pagination.offset).limit(pagination.limit)
 
 
-def create_paginated_response(items: List[ModelType], total: int, pagination: PaginationParams) -> Dict[str, Any]:
+def create_paginated_response(
+    items: List[ModelType], total: int, pagination: PaginationParams
+) -> Dict[str, Any]:
     """
     Crée une réponse paginée standardisée.
 

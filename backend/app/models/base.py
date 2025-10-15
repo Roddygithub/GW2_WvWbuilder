@@ -41,7 +41,9 @@ class BaseUUIDModel(Base, UUIDMixin):
     __abstract__ = True
 
     id = None  # On désactive l'id auto-incrémenté
-    uuid: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    uuid: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True
+    )
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.uuid}>"
@@ -52,8 +54,12 @@ class BaseTimeStampedModel(Base):
 
     __abstract__ = True
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now(), nullable=True
+    )
 
 
 class BaseUUIDTimeStampedModel(BaseUUIDModel, TimeStampedMixin):

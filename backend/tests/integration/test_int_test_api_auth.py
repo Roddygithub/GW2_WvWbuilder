@@ -65,7 +65,9 @@ def test_user() -> User:
 
     # Use the same hashing method as in the application
     hashed_password = get_password_hash(password)
-    logger.debug(f"Creating test user with email: {email}, password: {password}, hashed: {hashed_password}")
+    logger.debug(
+        f"Creating test user with email: {email}, password: {password}, hashed: {hashed_password}"
+    )
 
     user = User(
         email=email,
@@ -80,7 +82,9 @@ def test_user() -> User:
     db.refresh(user)
 
     # Verify the password can be verified
-    assert verify_password(password, user.hashed_password), "Password verification failed after user creation"
+    assert verify_password(
+        password, user.hashed_password
+    ), "Password verification failed after user creation"
 
     # Store the password in plaintext for testing
     user.plain_password = password
@@ -92,12 +96,16 @@ def test_authenticate_directly(test_user: User) -> None:
     db = TestingSessionLocal()
     try:
         # Test with correct credentials
-        user = crud_user.authenticate(db, email=test_user.email, password=test_user.plain_password)
+        user = crud_user.authenticate(
+            db, email=test_user.email, password=test_user.plain_password
+        )
         assert user is not None, "Authentication with correct credentials failed"
         assert user.email == test_user.email, "Authenticated user email doesn't match"
 
         # Test with incorrect password
-        user = crud_user.authenticate(db, email=test_user.email, password="wrongpassword")
+        user = crud_user.authenticate(
+            db, email=test_user.email, password="wrongpassword"
+        )
         assert user is None, "Authentication with wrong password should fail"
 
     finally:
@@ -137,10 +145,14 @@ def test_login_access_token(client: TestClient, db_session) -> None:
         # Verify the user is in the database
         user_in_db = db_session.query(User).filter(User.id == test_user.id).first()
         assert user_in_db is not None, "Test user was not created in the database"
-        logger.debug(f"User in DB: ID={user_in_db.id}, Email={user_in_db.email}, Active={user_in_db.is_active}")
+        logger.debug(
+            f"User in DB: ID={user_in_db.id}, Email={user_in_db.email}, Active={user_in_db.is_active}"
+        )
 
         # Verify the password
-        is_password_correct = verify_password(test_user.plain_password, user_in_db.hashed_password)
+        is_password_correct = verify_password(
+            test_user.plain_password, user_in_db.hashed_password
+        )
         logger.debug(f"Password verification: {is_password_correct}")
         assert is_password_correct, "Password verification failed for test user"
 
@@ -165,10 +177,14 @@ def test_login_access_token(client: TestClient, db_session) -> None:
         if r.status_code != 200:
             # If login failed, check the database state
             users = db_session.query(User).all()
-            logger.error(f"Users in database after failed login: {[u.email for u in users]}")
+            logger.error(
+                f"Users in database after failed login: {[u.email for u in users]}"
+            )
 
             # Try to authenticate directly to verify the password
-            auth_user = crud_user.authenticate(db_session, email=test_user.email, password=test_user.plain_password)
+            auth_user = crud_user.authenticate(
+                db_session, email=test_user.email, password=test_user.plain_password
+            )
             logger.error(f"Direct authentication result: {auth_user}")
 
             # Check if the password hash is what we expect
@@ -176,14 +192,20 @@ def test_login_access_token(client: TestClient, db_session) -> None:
             if user:
                 logger.error(f"Stored password hash: {user.hashed_password}")
                 logger.error(f"Expected to verify with: {test_user.plain_password}")
-                logger.error(f"Verify result: {verify_password(test_user.plain_password, user.hashed_password)}")
+                logger.error(
+                    f"Verify result: {verify_password(test_user.plain_password, user.hashed_password)}"
+                )
 
-        assert r.status_code == 200, f"Login failed with status {r.status_code}: {r.text}"
+        assert (
+            r.status_code == 200
+        ), f"Login failed with status {r.status_code}: {r.text}"
 
         tokens = r.json()
         assert "access_token" in tokens, "No access token in response"
         assert "token_type" in tokens, "No token type in response"
-        assert tokens["token_type"].lower() == "bearer", f"Unexpected token type: {tokens['token_type']}"
+        assert (
+            tokens["token_type"].lower() == "bearer"
+        ), f"Unexpected token type: {tokens['token_type']}"
         assert len(tokens["access_token"]) > 0, "Access token is empty"
 
     except Exception as e:
@@ -347,27 +369,39 @@ def test_use_access_token(client: TestClient, db_session) -> None:
 
     # Debug output if login fails
     if login_response.status_code != 200:
-        logger.error(f"Login failed: {login_response.status_code} - {login_response.text}")
+        logger.error(
+            f"Login failed: {login_response.status_code} - {login_response.text}"
+        )
         # Check if user exists and is active
-        user = db_session.query(type(test_user)).filter(type(test_user).email == test_user.email).first()
+        user = (
+            db_session.query(type(test_user))
+            .filter(type(test_user).email == test_user.email)
+            .first()
+        )
         logger.error(f"User in DB: {user}")
         if user:
             logger.error(f"User active: {user.is_active}")
-            logger.error(f"Password matches: {verify_password(password, user.hashed_password)}")
+            logger.error(
+                f"Password matches: {verify_password(password, user.hashed_password)}"
+            )
 
     assert login_response.status_code == 200, f"Login failed: {login_response.text}"
 
     tokens = login_response.json()
     assert "access_token" in tokens, "No access token in response"
     assert "token_type" in tokens, "No token type in response"
-    assert tokens["token_type"].lower() == "bearer", f"Unexpected token type: {tokens['token_type']}"
+    assert (
+        tokens["token_type"].lower() == "bearer"
+    ), f"Unexpected token type: {tokens['token_type']}"
 
     # Use the token to access a protected endpoint
     response = client.get(
         f"{settings.API_V1_STR}/users/me",
         headers={"Authorization": f"Bearer {tokens['access_token']}"},
     )
-    assert response.status_code == 200, f"Failed to access protected endpoint: {response.text}"
+    assert (
+        response.status_code == 200
+    ), f"Failed to access protected endpoint: {response.text}"
     user_data = response.json()
     assert "email" in user_data, "Email not in user data"
     assert isinstance(user_data["email"], str), "Email should be a string"
@@ -426,7 +460,9 @@ def test_login_inactive_user(client: TestClient) -> None:
         headers={"Content-Type": "application/x-www-form-urlencoded"},
     )
 
-    assert r.status_code == 400, f"Expected status code 400, got {r.status_code}: {r.text}"
+    assert (
+        r.status_code == 400
+    ), f"Expected status code 400, got {r.status_code}: {r.text}"
     response_data = r.json()
     assert "detail" in response_data, f"No 'detail' in response: {response_data}"
     # The API should return a generic error message for inactive users to prevent user enumeration

@@ -33,7 +33,9 @@ engine = create_async_engine(
 )
 
 # Session de test asynchrone
-TestingSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=AsyncSession)
+TestingSessionLocal = async_sessionmaker(
+    autocommit=False, autoflush=False, bind=engine, class_=AsyncSession
+)
 
 
 # Surcharge de la dépendance de la base de données
@@ -96,7 +98,9 @@ async def app() -> FastAPI:
             await session.refresh(role)
 
         # Créer un utilisateur de test
-        user = await session.execute("SELECT * FROM user WHERE email = 'test@example.com'")
+        user = await session.execute(
+            "SELECT * FROM user WHERE email = 'test@example.com'"
+        )
         user = user.scalar_one_or_none()
 
         if not user:
@@ -136,7 +140,10 @@ def client(app: FastAPI) -> TestClient:
     from datetime import datetime, timedelta
 
     # Créer un token JWT pour les tests
-    to_encode = {"sub": "1", "exp": datetime.utcnow() + timedelta(minutes=30)}  # ID de l'utilisateur de test
+    to_encode = {
+        "sub": "1",
+        "exp": datetime.utcnow() + timedelta(minutes=30),
+    }  # ID de l'utilisateur de test
     token = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
 
     # Créer le client de test avec le token d'authentification

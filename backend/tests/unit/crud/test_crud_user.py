@@ -64,7 +64,9 @@ class TestCRUDUser:
         db = AsyncMock(spec=AsyncSession)
 
         # Mock the check for existing email to return None (user does not exist)
-        with patch.object(user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=None):
+        with patch.object(
+            user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=None
+        ):
             created_user = await user_crud.create_async(db, obj_in=mock_user_create)
 
             mock_get_password_hash.assert_called_once_with("new_password")
@@ -80,7 +82,12 @@ class TestCRUDUser:
         db = AsyncMock(spec=AsyncSession)
 
         # Mock the check for existing email to return a user
-        with patch.object(user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=mock_user):
+        with patch.object(
+            user_crud,
+            "get_by_email_async",
+            new_callable=AsyncMock,
+            return_value=mock_user,
+        ):
             with pytest.raises(ValueError, match="Email already registered"):
                 await user_crud.create_async(db, obj_in=mock_user_create)
 
@@ -89,19 +96,28 @@ class TestCRUDUser:
     async def test_authenticate_async_success(self, mock_verify_password, mock_user):
         """Test successful user authentication."""
         db = AsyncMock(spec=AsyncSession)
-        with patch.object(user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=mock_user):
+        with patch.object(
+            user_crud,
+            "get_by_email_async",
+            new_callable=AsyncMock,
+            return_value=mock_user,
+        ):
             authenticated_user = await user_crud.authenticate_async(
                 db, email="test@example.com", password="correct_password"
             )
 
-            mock_verify_password.assert_called_once_with("correct_password", mock_user.hashed_password)
+            mock_verify_password.assert_called_once_with(
+                "correct_password", mock_user.hashed_password
+            )
             assert authenticated_user == mock_user
 
     @pytest.mark.asyncio
     async def test_authenticate_async_user_not_found(self):
         """Test authentication failure when user does not exist."""
         db = AsyncMock(spec=AsyncSession)
-        with patch.object(user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=None):
+        with patch.object(
+            user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=None
+        ):
             authenticated_user = await user_crud.authenticate_async(
                 db, email="nonexistent@example.com", password="any_password"
             )
@@ -109,23 +125,34 @@ class TestCRUDUser:
 
     @pytest.mark.asyncio
     @patch("app.core.security.verify_password", return_value=False)
-    async def test_authenticate_async_wrong_password(self, mock_verify_password, mock_user):
+    async def test_authenticate_async_wrong_password(
+        self, mock_verify_password, mock_user
+    ):
         """Test authentication failure with wrong password."""
         db = AsyncMock(spec=AsyncSession)
-        with patch.object(user_crud, "get_by_email_async", new_callable=AsyncMock, return_value=mock_user):
+        with patch.object(
+            user_crud,
+            "get_by_email_async",
+            new_callable=AsyncMock,
+            return_value=mock_user,
+        ):
             authenticated_user = await user_crud.authenticate_async(
                 db, email="test@example.com", password="wrong_password"
             )
             assert authenticated_user is None
 
     @pytest.mark.asyncio
-    @patch("app.core.security.get_password_hash", return_value="hashed_updated_password")
+    @patch(
+        "app.core.security.get_password_hash", return_value="hashed_updated_password"
+    )
     async def test_update_async_with_password(self, mock_get_password_hash, mock_user):
         """Test updating a user, including their password."""
         db = AsyncMock(spec=AsyncSession)
         update_data = UserUpdate(password="updated_password")
 
-        updated_user = await user_crud.update_async(db, db_obj=mock_user, obj_in=update_data)
+        updated_user = await user_crud.update_async(
+            db, db_obj=mock_user, obj_in=update_data
+        )
 
         mock_get_password_hash.assert_called_once_with("updated_password")
         assert updated_user.hashed_password == "hashed_updated_password"

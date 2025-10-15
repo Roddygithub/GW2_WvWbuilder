@@ -1,5 +1,5 @@
-import { z } from "zod"
-import type { Composition } from "@/types/squad"
+import { z } from "zod";
+import type { Composition } from "@/types/squad";
 
 export const playstyleOptions = [
   "balanced",
@@ -7,7 +7,7 @@ export const playstyleOptions = [
   "defensive",
   "zerg",
   "havoc",
-] as const
+] as const;
 
 export const compositionFormSchema = z.object({
   name: z.string().min(1, "Le nom est requis").max(100, "Le nom est trop long"),
@@ -24,9 +24,9 @@ export const compositionFormSchema = z.object({
     .array(z.string())
     .min(1, "Au moins une profession est requise")
     .max(50, "Trop de professions"),
-})
+});
 
-export type CompositionFormValues = z.infer<typeof compositionFormSchema>
+export type CompositionFormValues = z.infer<typeof compositionFormSchema>;
 
 export const defaultValues: Partial<CompositionFormValues> = {
   name: "",
@@ -34,7 +34,7 @@ export const defaultValues: Partial<CompositionFormValues> = {
   playstyle: "balanced",
   squad_size: 10,
   professions: [],
-}
+};
 
 export function toFormValues(composition: Composition): CompositionFormValues {
   return {
@@ -43,12 +43,12 @@ export function toFormValues(composition: Composition): CompositionFormValues {
     playstyle: composition.playstyle,
     squad_size: composition.squad_size,
     professions: [...composition.professions],
-  }
+  };
 }
 
 export function toComposition(
   data: CompositionFormValues,
-  id?: number
+  id?: number,
 ): Omit<Composition, "id" | "created_at" | "updated_at"> & { id?: number } {
   return {
     ...(id && { id }),
@@ -57,5 +57,5 @@ export function toComposition(
     playstyle: data.playstyle,
     squad_size: data.squad_size,
     professions: [...data.professions],
-  }
+  };
 }

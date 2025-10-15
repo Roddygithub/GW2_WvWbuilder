@@ -16,13 +16,18 @@ if TYPE_CHECKING:
 
 # Simple association table without ORM mapping
 user_roles_table = Table(
-    'user_roles',
+    "user_roles",
     Base.metadata,
-    Column('user_id', Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True),
-    Column('role_id', Integer, ForeignKey('roles.id', ondelete='CASCADE'), primary_key=True),
-    Column('created_at', DateTime(timezone=True), server_default=func.now()),
-    extend_existing=True
+    Column(
+        "user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    ),
+    Column(
+        "role_id", Integer, ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True
+    ),
+    Column("created_at", DateTime(timezone=True), server_default=func.now()),
+    extend_existing=True,
 )
+
 
 # Use Base's registry directly without inheriting to avoid automatic columns
 @Base.registry.mapped
@@ -31,7 +36,7 @@ class UserRole:
 
     __table__ = user_roles_table
     __mapper_args__ = {
-        'primary_key': [user_roles_table.c.user_id, user_roles_table.c.role_id]
+        "primary_key": [user_roles_table.c.user_id, user_roles_table.c.role_id]
     }
 
     # Relations

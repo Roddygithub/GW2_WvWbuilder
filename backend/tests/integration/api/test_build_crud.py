@@ -9,7 +9,9 @@ from sqlalchemy.orm import Session, sessionmaker
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", stream=sys.stdout
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    stream=sys.stdout,
 )
 logger = logging.getLogger(__name__)
 
@@ -23,7 +25,11 @@ from app.models.user import User
 from app.models.profession import Profession
 
 # Import test utilities
-from tests.integration.fixtures.factories import BuildFactory, UserFactory, ProfessionFactory
+from tests.integration.fixtures.factories import (
+    BuildFactory,
+    UserFactory,
+    ProfessionFactory,
+)
 
 # Import CRUD operations
 from app.crud.build import build as build_crud
@@ -113,7 +119,9 @@ async def test_create_build(async_client, async_session) -> None:
             await db.refresh(prof)
             professions.append(prof)
 
-        logger.info(f"Created {len(professions)} test professions with IDs: {[p.id for p in professions]}")
+        logger.info(
+            f"Created {len(professions)} test professions with IDs: {[p.id for p in professions]}"
+        )
 
         # Create test build data with the profession IDs
         profession_ids = [p.id for p in professions]
@@ -152,7 +160,9 @@ async def test_create_build(async_client, async_session) -> None:
 
         # Send the request to create a new build
         logger.info("Sending POST request to /api/v1/builds/")
-        response = await async_client.post("/api/v1/builds/", json=build_data, headers=headers)
+        response = await async_client.post(
+            "/api/v1/builds/", json=build_data, headers=headers
+        )
 
         # Check the response
         logger.info(f"Response status code: {response.status_code}")
@@ -178,7 +188,9 @@ async def test_create_build(async_client, async_session) -> None:
         assert len(created_build["professions"]) == len(profession_ids)
         created_profession_ids = [str(p["id"]) for p in created_build["professions"]]
         for pid in profession_ids:
-            assert str(pid) in created_profession_ids, f"Profession {pid} not found in created build"
+            assert (
+                str(pid) in created_profession_ids
+            ), f"Profession {pid} not found in created build"
 
         logger.info("=== Test test_create_build completed successfully ===")
 
@@ -191,7 +203,9 @@ async def test_create_build(async_client, async_session) -> None:
         try:
             # Delete test build if it was created
             if "created_build" in locals():
-                await async_client.delete(f"/api/v1/builds/{created_build['id']}", headers=headers)
+                await async_client.delete(
+                    f"/api/v1/builds/{created_build['id']}", headers=headers
+                )
 
             # Delete test professions
             for prof in professions:
@@ -214,12 +228,16 @@ async def test_create_build(async_client, async_session) -> None:
             response_data = response.json()
             logger.info("=== Build Creation Response ===")
             logger.info(f"Status code: {response.status_code}")
-            logger.info(f"Response body: {json.dumps(response_data, indent=2, default=str)}")
+            logger.info(
+                f"Response body: {json.dumps(response_data, indent=2, default=str)}"
+            )
 
             # If the response is an error, log more details
             if response.status_code >= 400:
                 logger.error(f"Request failed with status {response.status_code}")
-                raise AssertionError(f"API request failed with status {response.status_code}: {response.text}")
+                raise AssertionError(
+                    f"API request failed with status {response.status_code}: {response.text}"
+                )
 
         except Exception as e:
             logger.error("\n=== Error during request ===")
@@ -240,18 +258,31 @@ async def test_create_build(async_client, async_session) -> None:
         logger.info("\n=== Verifying response structure ===")
 
         # Basic response validation
-        required_fields = ["id", "name", "description", "is_public", "created_by", "professions"]
+        required_fields = [
+            "id",
+            "name",
+            "description",
+            "is_public",
+            "created_by",
+            "professions",
+        ]
         for field in required_fields:
             assert field in content, f"Missing required field: {field}"
 
         # Verify build data matches request
         assert content["name"] == build_data["name"], "Build name mismatch"
-        assert content["description"] == build_data["description"], "Build description mismatch"
-        assert content["is_public"] == build_data["is_public"], "Build visibility mismatch"
+        assert (
+            content["description"] == build_data["description"]
+        ), "Build description mismatch"
+        assert (
+            content["is_public"] == build_data["is_public"]
+        ), "Build visibility mismatch"
 
         # Verify creator information
         assert content["created_by"]["id"] == str(test_user.id), "Creator ID mismatch"
-        assert content["created_by"]["email"] == test_user.email, "Creator email mismatch"
+        assert (
+            content["created_by"]["email"] == test_user.email
+        ), "Creator email mismatch"
 
         # Verify professions
         response_professions = content.get("professions", [])
@@ -271,7 +302,9 @@ async def test_create_build(async_client, async_session) -> None:
             db_build = (
                 db.query(models.Build)
                 .options(
-                    joinedload(models.Build.build_professions).joinedload(models.BuildProfession.profession),
+                    joinedload(models.Build.build_professions).joinedload(
+                        models.BuildProfession.profession
+                    ),
                     joinedload(models.Build.professions),
                 )
                 .filter(models.Build.id == content["id"])
@@ -279,7 +312,9 @@ async def test_create_build(async_client, async_session) -> None:
             )
 
             assert db_build is not None, "Build was not created in the database"
-            assert db_build.name == build_data["name"], f"Expected name {build_data['name']}, got {db_build.name}"
+            assert (
+                db_build.name == build_data["name"]
+            ), f"Expected name {build_data['name']}, got {db_build.name}"
             assert (
                 db_build.created_by_id == test_user.id
             ), f"Expected created_by_id {test_user.id}, got {db_build.created_by_id}"
@@ -288,16 +323,24 @@ async def test_create_build(async_client, async_session) -> None:
             logger.info(f"Build from DB: id={db_build.id}, name={db_build.name}")
 
             # Verify build_professions
-            assert hasattr(db_build, "build_professions"), "Build has no build_professions attribute"
+            assert hasattr(
+                db_build, "build_professions"
+            ), "Build has no build_professions attribute"
             logger.info(f"Found {len(db_build.build_professions)} build_professions")
 
             for bp in db_build.build_professions:
-                logger.info(f"  - BuildProfession: build_id={bp.build_id}, profession_id={bp.profession_id}")
+                logger.info(
+                    f"  - BuildProfession: build_id={bp.build_id}, profession_id={bp.profession_id}"
+                )
                 if hasattr(bp, "profession") and bp.profession:
-                    logger.info(f"    - Profession: id={bp.profession.id}, name={bp.profession.name}")
+                    logger.info(
+                        f"    - Profession: id={bp.profession.id}, name={bp.profession.name}"
+                    )
 
             # Verify professions
-            assert hasattr(db_build, "professions"), "Build has no professions attribute"
+            assert hasattr(
+                db_build, "professions"
+            ), "Build has no professions attribute"
             logger.info(f"Found {len(db_build.professions)} professions")
 
             for p in db_build.professions:
@@ -348,7 +391,9 @@ def test_get_build(client: TestClient, db: Session) -> None:
         ), f"Expected status code 200, got {response.status_code}. Response: {response.text}"
         content = response.json()
         assert content["id"] == build.id
-        assert content["owner_id"] == test_user.id, f"Expected owner_id {test_user.id}, got {content.get('owner_id')}"
+        assert (
+            content["owner_id"] == test_user.id
+        ), f"Expected owner_id {test_user.id}, got {content.get('owner_id')}"
 
     except Exception as e:
         print(f"Error in test_get_build: {str(e)}")
@@ -386,7 +431,9 @@ def test_list_builds(client: TestClient, db: Session) -> None:
 
         assert public_build.id in build_ids, "User should see their own public builds"
         assert private_build.id in build_ids, "User should see their own private builds"
-        assert other_public_build.id in build_ids, "User should see public builds from other users"
+        assert (
+            other_public_build.id in build_ids
+        ), "User should see public builds from other users"
 
         # Test as anonymous user - should only see public builds
         client.clear_auth()
@@ -399,9 +446,15 @@ def test_list_builds(client: TestClient, db: Session) -> None:
         builds = response.json()
         build_ids = {b["id"] for b in builds}
 
-        assert public_build.id in build_ids, "Public builds should be visible to anonymous users"
-        assert private_build.id not in build_ids, "Private builds should not be visible to anonymous users"
-        assert other_public_build.id in build_ids, "Public builds from other users should be visible to anonymous users"
+        assert (
+            public_build.id in build_ids
+        ), "Public builds should be visible to anonymous users"
+        assert (
+            private_build.id not in build_ids
+        ), "Private builds should not be visible to anonymous users"
+        assert (
+            other_public_build.id in build_ids
+        ), "Public builds from other users should be visible to anonymous users"
 
     except Exception as e:
         print(f"Error in test_list_builds: {str(e)}")
@@ -440,7 +493,9 @@ def test_update_build(client: TestClient, db: Session) -> None:
         }
 
         # Test update
-        response = client.put(f"{settings.API_V1_STR}/builds/{build.id}", json=update_data)
+        response = client.put(
+            f"{settings.API_V1_STR}/builds/{build.id}", json=update_data
+        )
 
         # Verify response
         assert (
@@ -508,7 +563,9 @@ def test_delete_build(client: TestClient, db: Session) -> None:
             response.status_code == 200
         ), f"Expected status code 200, got {response.status_code}. Response: {response.text}"
         builds = response.json()
-        assert all(b["id"] != build.id for b in builds), "Deleted build should not appear in list"
+        assert all(
+            b["id"] != build.id for b in builds
+        ), "Deleted build should not appear in list"
 
     except Exception as e:
         print(f"Error in test_delete_build: {str(e)}")
@@ -532,38 +589,60 @@ def test_unauthorized_access(client: TestClient, db: Session) -> None:
         # Test 1: Other user cannot access private build
         client.set_current_user(other_user)
         response = client.get(f"{settings.API_V1_STR}/builds/{build.id}")
-        assert response.status_code == 403, "Other users should not be able to access private builds"
+        assert (
+            response.status_code == 403
+        ), "Other users should not be able to access private builds"
 
         # Test 2: Other user cannot update build
-        response = client.put(f"{settings.API_V1_STR}/builds/{build.id}", json={"name": "Unauthorized Update"})
-        assert response.status_code == 403, "Other users should not be able to update builds"
+        response = client.put(
+            f"{settings.API_V1_STR}/builds/{build.id}",
+            json={"name": "Unauthorized Update"},
+        )
+        assert (
+            response.status_code == 403
+        ), "Other users should not be able to update builds"
 
         # Test 3: Other user cannot delete build
         response = client.delete(f"{settings.API_V1_STR}/builds/{build.id}")
-        assert response.status_code == 403, "Other users should not be able to delete builds"
+        assert (
+            response.status_code == 403
+        ), "Other users should not be able to delete builds"
 
         # Test 4: Anonymous user cannot access private build
         client.clear_auth()
         response = client.get(f"{settings.API_V1_STR}/builds/{build.id}")
-        assert response.status_code in [401, 403], "Anonymous users should not be able to access private builds"
+        assert response.status_code in [
+            401,
+            403,
+        ], "Anonymous users should not be able to access private builds"
 
         # Test 5: Owner can access their private build
         client.set_current_user(owner)
         response = client.get(f"{settings.API_V1_STR}/builds/{build.id}")
-        assert response.status_code == 200, "Owners should be able to access their private builds"
+        assert (
+            response.status_code == 200
+        ), "Owners should be able to access their private builds"
 
         # Test 6: Owner can update their build
         update_data = {"name": "Authorized Update"}
-        response = client.put(f"{settings.API_V1_STR}/builds/{build.id}", json=update_data)
-        assert response.status_code == 200, "Owners should be able to update their builds"
+        response = client.put(
+            f"{settings.API_V1_STR}/builds/{build.id}", json=update_data
+        )
+        assert (
+            response.status_code == 200
+        ), "Owners should be able to update their builds"
 
         # Test 7: Owner can delete their build
         response = client.delete(f"{settings.API_V1_STR}/builds/{build.id}")
-        assert response.status_code == 200, "Owners should be able to delete their builds"
+        assert (
+            response.status_code == 200
+        ), "Owners should be able to delete their builds"
 
         # Verify build was actually deleted
         db_build = build_crud.get(db, id=build.id)
-        assert db_build is None or db_build.is_deleted is True, "Build should be deleted or marked as deleted"
+        assert (
+            db_build is None or db_build.is_deleted is True
+        ), "Build should be deleted or marked as deleted"
 
     except Exception as e:
         print(f"Error in test_unauthorized_access: {str(e)}")
@@ -571,12 +650,17 @@ def test_unauthorized_access(client: TestClient, db: Session) -> None:
             print(f"Response status: {response.status_code}")
             print(f"Response content: {response.text}")
         raise  # Re-raise the exception to fail the test
-    assert response.status_code in [401, 403], "Anonymous users should not be able to access private builds"
+    assert response.status_code in [
+        401,
+        403,
+    ], "Anonymous users should not be able to access private builds"
 
     # Test 5: Owner can access their private build
     client.set_current_user(owner)
     response = client.get(f"{settings.API_V1_STR}/builds/{build.id}")
-    assert response.status_code == 200, "Owners should be able to access their private builds"
+    assert (
+        response.status_code == 200
+    ), "Owners should be able to access their private builds"
 
     # Test 6: Owner can update their build
     update_data = {"name": "Authorized Update"}

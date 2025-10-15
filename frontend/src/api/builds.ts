@@ -3,7 +3,7 @@
  * CRUD operations for character builds
  */
 
-import { apiGet, apiPost, apiPut, apiDelete } from './client';
+import { apiGet, apiPost, apiPut, apiDelete } from "./client";
 
 export interface Build {
   id: number;
@@ -36,20 +36,22 @@ export interface CreateBuildPayload {
 export interface UpdateBuildPayload extends Partial<CreateBuildPayload> {}
 
 export const getBuilds = async (): Promise<Build[]> => {
-  return apiGet<Build[]>('/builds');
+  return apiGet<Build[]>("/builds");
 };
 
 export const getBuildById = async (id: string | number): Promise<Build> => {
   return apiGet<Build>(`/builds/${id}`);
 };
 
-export const createBuild = async (payload: CreateBuildPayload): Promise<Build> => {
-  return apiPost<Build, CreateBuildPayload>('/builds', payload);
+export const createBuild = async (
+  payload: CreateBuildPayload,
+): Promise<Build> => {
+  return apiPost<Build, CreateBuildPayload>("/builds", payload);
 };
 
 export const updateBuild = async (
   id: number | string,
-  payload: UpdateBuildPayload
+  payload: UpdateBuildPayload,
 ): Promise<Build> => {
   return apiPut<Build, UpdateBuildPayload>(`/builds/${id}`, payload);
 };

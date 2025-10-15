@@ -99,7 +99,9 @@ async def db(engine):
     connection = await engine.connect()
     transaction = await connection.begin()
 
-    session_factory = async_sessionmaker(bind=connection, expire_on_commit=False, class_=AsyncSession)
+    session_factory = async_sessionmaker(
+        bind=connection, expire_on_commit=False, class_=AsyncSession
+    )
     session = session_factory()
 
     try:

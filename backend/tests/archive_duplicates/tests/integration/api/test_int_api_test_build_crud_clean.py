@@ -37,7 +37,9 @@ def test_create_build(client: TestClient, db: Session, test_user: User) -> None:
         # Commit to make sure the professions are visible to the API
         db.commit()
 
-        logger.info(f"Created {len(professions)} test professions with IDs: {[p.id for p in professions]}")
+        logger.info(
+            f"Created {len(professions)} test professions with IDs: {[p.id for p in professions]}"
+        )
 
         # Set the current user in the test client using the user ID as the token
         logger.info("Setting current user in test client...")
@@ -59,7 +61,9 @@ def test_create_build(client: TestClient, db: Session, test_user: User) -> None:
 
         logger.info(f"Sending request with data: {build_data}")
         response = client.post(
-            f"{settings.API_V1_STR}/builds/", json=build_data, headers={"Authorization": f"Bearer {test_user_token}"}
+            f"{settings.API_V1_STR}/builds/",
+            json=build_data,
+            headers={"Authorization": f"Bearer {test_user_token}"},
         )
 
         logger.info(f"Response status: {response.status_code}")
@@ -79,7 +83,12 @@ def test_create_build(client: TestClient, db: Session, test_user: User) -> None:
 
         # Verify profession associations were created
         db.refresh(test_user)
-        build_in_db = db.query(Build).options(joinedload(Build.professions)).filter(Build.id == data["id"]).first()
+        build_in_db = (
+            db.query(Build)
+            .options(joinedload(Build.professions))
+            .filter(Build.id == data["id"])
+            .first()
+        )
 
         assert build_in_db is not None, "Build not found in database"
         assert len(build_in_db.professions) == len(

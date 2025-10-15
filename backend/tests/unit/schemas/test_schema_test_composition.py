@@ -56,7 +56,9 @@ class TestCompositionMemberSchemas:
         assert member.notes == "Focus on healing the frontline"
         assert member.is_commander is True
         assert member.is_secondary_commander is False
-        assert member.custom_build_url == "https://snowcrows.com/builds/guardian/firebrand"
+        assert (
+            member.custom_build_url == "https://snowcrows.com/builds/guardian/firebrand"
+        )
         assert member.priority == 1
 
 
@@ -67,7 +69,10 @@ class TestCompositionSchemas:
         """Test CompositionBase schema."""
         comp = CompositionBase(**SAMPLE_COMPOSITION_DATA)
         assert comp.name == "WvW Zerg Frontline"
-        assert comp.description == "Balanced frontline composition with strong healing and boon support"
+        assert (
+            comp.description
+            == "Balanced frontline composition with strong healing and boon support"
+        )
         assert comp.squad_size == 10
         assert comp.is_public is True
         assert comp.tags == ["zerg", "frontline", "meta"]

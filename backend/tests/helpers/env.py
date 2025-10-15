@@ -6,7 +6,9 @@ from typing import Any, Dict, Iterator, Optional, Union
 
 
 @contextlib.contextmanager
-def env_vars(updates: Dict[str, Optional[Union[str, int, float, bool]]], clear: bool = False) -> Iterator[None]:
+def env_vars(
+    updates: Dict[str, Optional[Union[str, int, float, bool]]], clear: bool = False
+) -> Iterator[None]:
     """Temporarily set environment variables in the test environment.
 
     Args:
@@ -50,7 +52,9 @@ def set_env_var(key: str, value: Optional[Union[str, int, float, bool]]) -> None
         os.environ[key] = str(value)
 
 
-def get_env_var(key: str, default: Optional[Union[str, int, float, bool]] = None, type_: type = str) -> Any:
+def get_env_var(
+    key: str, default: Optional[Union[str, int, float, bool]] = None, type_: type = str
+) -> Any:
     """Get an environment variable with type conversion.
 
     Args:
@@ -79,7 +83,9 @@ class MockEnv:
     """Context manager for mocking environment variables."""
 
     def __init__(
-        self, updates: Optional[Dict[str, Optional[Union[str, int, float, bool]]]] = None, clear: bool = False
+        self,
+        updates: Optional[Dict[str, Optional[Union[str, int, float, bool]]]] = None,
+        clear: bool = False,
     ):
         """Initialize the mock environment.
 

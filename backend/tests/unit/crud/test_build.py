@@ -111,7 +111,9 @@ def test_generate_build_success(db: Session) -> None:
 
     # Generate build
     crud = CRUDBuild(Build)
-    result = crud.generate_build(db=db, generation_request=request_data, owner_id=user.id)
+    result = crud.generate_build(
+        db=db, generation_request=request_data, owner_id=user.id
+    )
 
     # Verify the result
     assert result.success is True
@@ -143,7 +145,9 @@ def test_generate_build_no_professions(db: Session) -> None:
 
     # Generate build
     crud = CRUDBuild(Build)
-    result = crud.generate_build(db=db, generation_request=request_data, owner_id=user.id)
+    result = crud.generate_build(
+        db=db, generation_request=request_data, owner_id=user.id
+    )
 
     # Verify the result indicates failure
     assert result.success is False
@@ -176,7 +180,9 @@ def test_get_multi_by_owner(db: Session) -> None:
     # Test getting builds for user1
     crud = CRUDBuild(Build)
     user1_builds = crud.get_multi_by_owner(db, owner_id=user1.id)
-    assert len(user1_builds) == 3  # Should get all builds for user1 regardless of visibility
+    assert (
+        len(user1_builds) == 3
+    )  # Should get all builds for user1 regardless of visibility
 
     # Test getting builds with limit and skip
     limited_builds = crud.get_multi_by_owner(db, owner_id=user1.id, skip=1, limit=2)

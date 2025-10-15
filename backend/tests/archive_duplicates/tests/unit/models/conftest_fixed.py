@@ -58,7 +58,9 @@ async def engine() -> AsyncEngine:
 
     # Log all tables for debugging
     async with engine.connect() as conn:
-        result = await conn.execute(text("SELECT name FROM sqlite_master WHERE type='table'"))
+        result = await conn.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table'")
+        )
         tables = [row[0] for row in result.fetchall()]
         logger.info(f"Created tables: {tables}")
 

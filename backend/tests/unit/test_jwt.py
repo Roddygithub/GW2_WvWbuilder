@@ -43,15 +43,21 @@ def setup_jwt_for_tests(monkeypatch):
     }
 
     # Set secure test values with proper encoding
-    test_secret_key = "test_secret_key_that_is_long_enough_for_hs256_algorithm_1234567890"
-    test_refresh_key = "test_refresh_secret_key_that_is_long_enough_for_hs256_algorithm_1234567890"
+    test_secret_key = (
+        "test_secret_key_that_is_long_enough_for_hs256_algorithm_1234567890"
+    )
+    test_refresh_key = (
+        "test_refresh_secret_key_that_is_long_enough_for_hs256_algorithm_1234567890"
+    )
 
     # Update settings with test values
     monkeypatch.setattr(settings, "JWT_SECRET_KEY", test_secret_key)
     monkeypatch.setattr(settings, "JWT_REFRESH_SECRET_KEY", test_refresh_key)
     monkeypatch.setattr(settings, "JWT_ALGORITHM", "HS256")
     monkeypatch.setattr(settings, "JWT_ACCESS_TOKEN_EXPIRE_MINUTES", 30)
-    monkeypatch.setattr(settings, "JWT_REFRESH_TOKEN_EXPIRE_MINUTES", 10080)  # 7 days in minutes
+    monkeypatch.setattr(
+        settings, "JWT_REFRESH_TOKEN_EXPIRE_MINUTES", 10080
+    )  # 7 days in minutes
     monkeypatch.setattr(settings, "JWT_ISSUER", "test_issuer")
     monkeypatch.setattr(settings, "JWT_AUDIENCE", "test_audience")
     monkeypatch.setattr(settings, "JWT_TOKEN_PREFIX", "Bearer")
@@ -61,10 +67,16 @@ def setup_jwt_for_tests(monkeypatch):
     print(f"JWT_SECRET_KEY: {settings.JWT_SECRET_KEY}")
     print(f"JWT_SECRET_KEY type: {type(settings.JWT_SECRET_KEY).__name__}")
     print(f"JWT_REFRESH_SECRET_KEY: {settings.JWT_REFRESH_SECRET_KEY}")
-    print(f"JWT_REFRESH_SECRET_KEY type: {type(settings.JWT_REFRESH_SECRET_KEY).__name__}")
+    print(
+        f"JWT_REFRESH_SECRET_KEY type: {type(settings.JWT_REFRESH_SECRET_KEY).__name__}"
+    )
     print(f"JWT_ALGORITHM: {settings.JWT_ALGORITHM}")
-    print(f"JWT_ACCESS_TOKEN_EXPIRE_MINUTES: {settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES}")
-    print(f"JWT_REFRESH_TOKEN_EXPIRE_MINUTES: {settings.JWT_REFRESH_TOKEN_EXPIRE_MINUTES}")
+    print(
+        f"JWT_ACCESS_TOKEN_EXPIRE_MINUTES: {settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES}"
+    )
+    print(
+        f"JWT_REFRESH_TOKEN_EXPIRE_MINUTES: {settings.JWT_REFRESH_TOKEN_EXPIRE_MINUTES}"
+    )
     print(f"JWT_ISSUER: {settings.JWT_ISSUER}")
     print(f"JWT_AUDIENCE: {settings.JWT_AUDIENCE}")
     print(f"JWT_TOKEN_PREFIX: {settings.JWT_TOKEN_PREFIX}")
@@ -98,7 +110,11 @@ def setup_jwt_for_tests(monkeypatch):
     print("\n=== Tentative de création du token ===")
     try:
         print("Avant l'appel à create_token...")
-        token = create_token(subject=TEST_USER_ID, token_type=TOKEN_TYPE_ACCESS, expires_delta=timedelta(minutes=30))
+        token = create_token(
+            subject=TEST_USER_ID,
+            token_type=TOKEN_TYPE_ACCESS,
+            expires_delta=timedelta(minutes=30),
+        )
         print(f"Token créé avec succès: {token[:50]}...")
     except Exception as e:
         import traceback
@@ -117,7 +133,9 @@ def setup_jwt_for_tests(monkeypatch):
 
         # Vérifier si c'est une erreur liée à la clé secrète
         if "secret" in str(e).lower() or "key" in str(e).lower():
-            print("\nERREUR: Problème potentiel avec la clé secrète JWT", file=sys.stderr)
+            print(
+                "\nERREUR: Problème potentiel avec la clé secrète JWT", file=sys.stderr
+            )
 
         raise
     assert isinstance(token, str)
@@ -125,7 +143,9 @@ def setup_jwt_for_tests(monkeypatch):
 
     # Test with custom expiration
     expires_delta = timedelta(minutes=15)
-    token = create_token(subject=TEST_USER_ID, token_type=TOKEN_TYPE_ACCESS, expires_delta=expires_delta)
+    token = create_token(
+        subject=TEST_USER_ID, token_type=TOKEN_TYPE_ACCESS, expires_delta=expires_delta
+    )
     assert isinstance(token, str)
 
 
@@ -182,7 +202,9 @@ def test_create_access_token():
     with freeze_time("2023-01-01 12:00:00"):
         # Create token with custom data
         token = create_access_token(
-            subject=TEST_USER_ID, custom_data={"role": "admin"}, expires_delta=timedelta(minutes=30)
+            subject=TEST_USER_ID,
+            custom_data={"role": "admin"},
+            expires_delta=timedelta(minutes=30),
         )
 
         # Decode and verify
@@ -198,7 +220,11 @@ def test_create_refresh_token():
     with freeze_time("2023-01-01 12:00:00"):
         # Create refresh token with custom data
         custom_data = {"session_id": "test_session_123"}
-        token = create_refresh_token(subject=TEST_USER_ID, custom_data=custom_data, expires_delta=timedelta(days=7))
+        token = create_refresh_token(
+            subject=TEST_USER_ID,
+            custom_data=custom_data,
+            expires_delta=timedelta(days=7),
+        )
 
         # Decode and verify
         payload = decode_token(token, token_type=TOKEN_TYPE_REFRESH)
@@ -226,12 +252,18 @@ def test_token_with_issuer_and_audience():
             mock_settings.JWT_AUDIENCE = test_audience
             mock_settings.JWT_ALGORITHM = "HS256"
             mock_settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 30
-            mock_settings.JWT_SECRET_KEY = "test_secret_key_that_is_long_enough_for_hs256"
-            mock_settings.JWT_REFRESH_SECRET_KEY = "test_refresh_secret_key_that_is_long_enough"
+            mock_settings.JWT_SECRET_KEY = (
+                "test_secret_key_that_is_long_enough_for_hs256"
+            )
+            mock_settings.JWT_REFRESH_SECRET_KEY = (
+                "test_refresh_secret_key_that_is_long_enough"
+            )
 
             # Create token with issuer and audience
             token = create_token(
-                subject=TEST_USER_ID, token_type=TOKEN_TYPE_ACCESS, expires_delta=timedelta(minutes=30)
+                subject=TEST_USER_ID,
+                token_type=TOKEN_TYPE_ACCESS,
+                expires_delta=timedelta(minutes=30),
             )
 
             # Decode with correct issuer and audience

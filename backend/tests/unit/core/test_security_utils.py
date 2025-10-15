@@ -20,8 +20,14 @@ TEST_USER_ID = 1
 def test_verify_token_valid():
     """Teste la vérification d'un token JWT valide."""
     # Créer un token valide
-    token_data = {"sub": str(TEST_USER_ID), "exp": datetime.now(timezone.utc) + timedelta(minutes=30), "type": "access"}
-    token = jwt.encode(token_data, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    token_data = {
+        "sub": str(TEST_USER_ID),
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
+        "type": "access",
+    }
+    token = jwt.encode(
+        token_data, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
 
     # Tester la vérification
     with patch("app.core.security.jwt.jwt.decode") as mock_decode:
@@ -40,8 +46,14 @@ def test_verify_token_valid():
 def test_verify_token_expired():
     """Teste la vérification d'un token JWT expiré."""
     # Créer un token expiré
-    token_data = {"sub": str(TEST_USER_ID), "exp": datetime.now(timezone.utc) - timedelta(minutes=30), "type": "access"}
-    token = jwt.encode(token_data, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    token_data = {
+        "sub": str(TEST_USER_ID),
+        "exp": datetime.now(timezone.utc) - timedelta(minutes=30),
+        "type": "access",
+    }
+    token = jwt.encode(
+        token_data, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
 
     # Tester que l'exception est levée
     with pytest.raises(JWTExpiredSignatureError):
@@ -51,8 +63,13 @@ def test_verify_token_expired():
 def test_verify_token_missing_sub():
     """Teste la vérification d'un token JWT sans champ 'sub'."""
     # Créer un token sans 'sub'
-    token_data = {"exp": datetime.now(timezone.utc) + timedelta(minutes=30), "type": "access"}
-    token = jwt.encode(token_data, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    token_data = {
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
+        "type": "access",
+    }
+    token = jwt.encode(
+        token_data, settings.SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
 
     # Tester que l'exception est levée
     with pytest.raises(JWTError):
@@ -62,7 +79,11 @@ def test_verify_token_missing_sub():
 def test_verify_token_invalid_signature():
     """Teste la vérification d'un token avec une signature invalide."""
     # Créer un token avec une clé secrète différente
-    token_data = {"sub": str(TEST_USER_ID), "exp": datetime.now(timezone.utc) + timedelta(minutes=30), "type": "access"}
+    token_data = {
+        "sub": str(TEST_USER_ID),
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=30),
+        "type": "access",
+    }
     token = jwt.encode(token_data, "wrong-secret-key", algorithm=settings.ALGORITHM)
 
     # Tester que l'exception est levée

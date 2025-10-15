@@ -77,7 +77,11 @@ async def add_team_member(
 
     # Vérifier que l'utilisateur n'est pas déjà membre de l'équipe
     stmt = select(TeamMember).where(
-        and_(TeamMember.team_id == team_id, TeamMember.user_id == user_id, TeamMember.is_active == True)  # noqa: E712
+        and_(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+            TeamMember.is_active == True,
+        )  # noqa: E712
     )
     result = await db.execute(stmt)
     if result.scalar_one_or_none():
@@ -87,7 +91,9 @@ async def add_team_member(
         )
 
     # Ajouter l'utilisateur à l'équipe
-    team_member = TeamMember(team_id=team_id, user_id=user_id, is_admin=False, is_active=True)
+    team_member = TeamMember(
+        team_id=team_id, user_id=user_id, is_admin=False, is_active=True
+    )
     db.add(team_member)
     await db.commit()
     await db.refresh(team_member)
@@ -138,7 +144,11 @@ async def update_team_member(
 
     # Vérifier que l'utilisateur cible est bien membre de l'équipe
     stmt = select(TeamMember).where(
-        and_(TeamMember.team_id == team_id, TeamMember.user_id == user_id, TeamMember.is_active == True)  # noqa: E712
+        and_(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+            TeamMember.is_active == True,
+        )  # noqa: E712
     )
     result = await db.execute(stmt)
     member = result.scalar_one_or_none()
@@ -203,7 +213,11 @@ async def remove_team_member(
 
     # Vérifier que l'utilisateur cible est bien membre de l'équipe
     stmt = select(TeamMember).where(
-        and_(TeamMember.team_id == team_id, TeamMember.user_id == user_id, TeamMember.is_active == True)  # noqa: E712
+        and_(
+            TeamMember.team_id == team_id,
+            TeamMember.user_id == user_id,
+            TeamMember.is_active == True,
+        )  # noqa: E712
     )
     result = await db.execute(stmt)
     member = result.scalar_one_or_none()

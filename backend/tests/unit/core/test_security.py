@@ -17,7 +17,11 @@ from app.core.security import (
     verify_password,
     verify_refresh_token,
 )
-from app.core.security.jwt import JWTError, JWTInvalidTokenError, JWTExpiredSignatureError
+from app.core.security.jwt import (
+    JWTError,
+    JWTInvalidTokenError,
+    JWTExpiredSignatureError,
+)
 from app.models.user import User
 from app.models.role import Role
 
@@ -153,7 +157,9 @@ def test_create_access_token():
             try:
                 print("Appel à create_access_token...")
                 token = create_access_token(TEST_USER_ID)
-                print(f"Token généré: {token[:50]}...")  # Afficher les 50 premiers caractères du token
+                print(
+                    f"Token généré: {token[:50]}..."
+                )  # Afficher les 50 premiers caractères du token
                 assert isinstance(token, str)
                 assert len(token) > 0
             except Exception as e:
@@ -170,7 +176,10 @@ def test_create_access_token():
                 print(f"Token généré: {token[:50]}...")
                 assert isinstance(token, str)
             except Exception as e:
-                print(f"ERREUR lors de la création du token avec expiration personnalisée: {e}", file=sys.stderr)
+                print(
+                    f"ERREUR lors de la création du token avec expiration personnalisée: {e}",
+                    file=sys.stderr,
+                )
                 raise
 
             # Test with additional data
@@ -180,7 +189,10 @@ def test_create_access_token():
                 print(f"Token généré: {token[:50]}...")
                 assert isinstance(token, str)
             except Exception as e:
-                print(f"ERREUR lors de la création du token avec données supplémentaires: {e}", file=sys.stderr)
+                print(
+                    f"ERREUR lors de la création du token avec données supplémentaires: {e}",
+                    file=sys.stderr,
+                )
                 raise
 
             # Test with None subject (user_id)
@@ -231,6 +243,7 @@ async def test_get_current_user():
         get_current_user,
         TOKEN_TYPE_ACCESS,
     )
+
     # Create a test payload for the token
     test_payload = {
         "sub": str(TEST_USER_ID),
@@ -246,13 +259,17 @@ async def test_get_current_user():
     mock_credentials.credentials = "valid.token.here"
 
     # Test with valid token
-    with patch("app.core.security.jwt.decode_token", return_value=test_payload) as mock_decode_token:
+    with patch(
+        "app.core.security.jwt.decode_token", return_value=test_payload
+    ) as mock_decode_token:
         # Call the function with the mock credentials
         result = await get_current_user(mock_credentials)
 
         # Verify the result
         assert result == test_payload
-        mock_decode_token.assert_called_once_with("valid.token.here", token_type=TOKEN_TYPE_ACCESS)
+        mock_decode_token.assert_called_once_with(
+            "valid.token.here", token_type=TOKEN_TYPE_ACCESS
+        )
 
     # Test with missing token
     mock_credentials.credentials = ""
@@ -276,7 +293,8 @@ async def test_get_current_user():
 
     # Test with expired token
     with patch(
-        "app.core.security.jwt.decode_token", side_effect=JWTExpiredSignatureError("Token expired")
+        "app.core.security.jwt.decode_token",
+        side_effect=JWTExpiredSignatureError("Token expired"),
     ) as mock_decode_token:
         with pytest.raises(HTTPException) as exc_info:
             await get_current_user(mock_credentials)
@@ -285,7 +303,8 @@ async def test_get_current_user():
 
     # Test with invalid token
     with patch(
-        "app.core.security.jwt.decode_token", side_effect=JWTInvalidTokenError("Invalid token")
+        "app.core.security.jwt.decode_token",
+        side_effect=JWTInvalidTokenError("Invalid token"),
     ) as mock_decode_token:
         with pytest.raises(HTTPException) as exc_info:
             await get_current_user(mock_credentials)
@@ -366,14 +385,18 @@ async def test_get_current_user_not_found():
         "scopes": ["authenticated"],
     }
 
-    with patch("app.core.security.jwt.decode_token", return_value=test_payload) as mock_decode_token:
+    with patch(
+        "app.core.security.jwt.decode_token", return_value=test_payload
+    ) as mock_decode_token:
         # The function should still work even if the user doesn't exist in the database
         # because we're just testing the JWT validation here, not the database lookup
         result = await get_current_user(mock_credentials)
 
         # Verify the result contains the expected payload
         assert result == test_payload
-        mock_decode_token.assert_called_once_with("valid.token.here", token_type=TOKEN_TYPE_ACCESS)
+        mock_decode_token.assert_called_once_with(
+            "valid.token.here", token_type=TOKEN_TYPE_ACCESS
+        )
 
 
 @pytest.mark.asyncio
@@ -506,7 +529,9 @@ async def test_verify_refresh_token():
         assert payload["type"] == TOKEN_TYPE_REFRESH
 
         # Verify decode_token was called with the correct arguments
-        mock_decode_token.assert_called_once_with(refresh_token, token_type=TOKEN_TYPE_REFRESH)
+        mock_decode_token.assert_called_once_with(
+            refresh_token, token_type=TOKEN_TYPE_REFRESH
+        )
 
     # Test with invalid token
     with patch("app.core.security.jwt.decode_token") as mock_decode_token:

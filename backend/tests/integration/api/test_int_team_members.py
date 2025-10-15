@@ -75,13 +75,22 @@ class TestTeamMembersAPI:
 
     @pytest.mark.asyncio
     async def test_add_team_member(
-        self, async_client: AsyncClient, test_user: User, test_team: Team, test_member_user: User, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_user: User,
+        test_team: Team,
+        test_member_user: User,
+        db: AsyncSession,
     ) -> None:
         """Test adding a team member."""
         # Add the test member to the team
         user = await test_user if hasattr(test_user, "__await__") else test_user
         team = await test_team if hasattr(test_team, "__await__") else test_team
-        member_user = await test_member_user if hasattr(test_member_user, "__await__") else test_member_user
+        member_user = (
+            await test_member_user
+            if hasattr(test_member_user, "__await__")
+            else test_member_user
+        )
 
         access_token = create_access_token(subject=str(user.id))
         response = await async_client.post(
@@ -100,7 +109,9 @@ class TestTeamMembersAPI:
 
         # Verify the member was added to the database
         result = await db.execute(
-            select(TeamMember).where((TeamMember.team_id == team.id) & (TeamMember.user_id == member_user.id))
+            select(TeamMember).where(
+                (TeamMember.team_id == team.id) & (TeamMember.user_id == member_user.id)
+            )
         )
         member = result.scalar_one_or_none()
         assert member is not None
@@ -110,12 +121,21 @@ class TestTeamMembersAPI:
 
     @pytest.mark.asyncio
     async def test_get_team_member(
-        self, async_client: AsyncClient, test_user: User, test_team: Team, test_member_user: User, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_user: User,
+        test_team: Team,
+        test_member_user: User,
+        db: AsyncSession,
     ) -> None:
         """Test getting a team member."""
         # Get the team and user objects
         team = await test_team if hasattr(test_team, "__await__") else test_team
-        member_user = await test_member_user if hasattr(test_member_user, "__await__") else test_member_user
+        member_user = (
+            await test_member_user
+            if hasattr(test_member_user, "__await__")
+            else test_member_user
+        )
 
         # Add the test member to the team
         team_member = TeamMember(
@@ -133,11 +153,16 @@ class TestTeamMembersAPI:
         # Get the team member
         user = await test_user if hasattr(test_user, "__await__") else test_user
         team = await test_team if hasattr(test_team, "__await__") else test_team
-        member_user = await test_member_user if hasattr(test_member_user, "__await__") else test_member_user
+        member_user = (
+            await test_member_user
+            if hasattr(test_member_user, "__await__")
+            else test_member_user
+        )
 
         access_token = create_access_token(subject=str(user.id))
         response = await async_client.get(
-            f"/api/v1/teams/{team.id}/members/{member_user.id}", headers={"Authorization": f"Bearer {access_token}"}
+            f"/api/v1/teams/{team.id}/members/{member_user.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -150,12 +175,21 @@ class TestTeamMembersAPI:
 
     @pytest.mark.asyncio
     async def test_update_team_member(
-        self, async_client: AsyncClient, test_user: User, test_team: Team, test_member_user: User, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_user: User,
+        test_team: Team,
+        test_member_user: User,
+        db: AsyncSession,
     ) -> None:
         """Test updating a team member."""
         # Get the team and user objects
         team = await test_team if hasattr(test_team, "__await__") else test_team
-        member_user = await test_member_user if hasattr(test_member_user, "__await__") else test_member_user
+        member_user = (
+            await test_member_user
+            if hasattr(test_member_user, "__await__")
+            else test_member_user
+        )
 
         # Add the test member to the team
         team_member = TeamMember(
@@ -173,7 +207,11 @@ class TestTeamMembersAPI:
         # Update the team member
         user = await test_user if hasattr(test_user, "__await__") else test_user
         team = await test_team if hasattr(test_team, "__await__") else test_team
-        member_user = await test_member_user if hasattr(test_member_user, "__await__") else test_member_user
+        member_user = (
+            await test_member_user
+            if hasattr(test_member_user, "__await__")
+            else test_member_user
+        )
 
         update_data = {"role": "officer", "is_admin": True}
         access_token = create_access_token(subject=str(user.id))
@@ -196,12 +234,21 @@ class TestTeamMembersAPI:
 
     @pytest.mark.asyncio
     async def test_remove_team_member(
-        self, async_client: AsyncClient, test_user: User, test_team: Team, test_member_user: User, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_user: User,
+        test_team: Team,
+        test_member_user: User,
+        db: AsyncSession,
     ) -> None:
         """Test removing a team member."""
         # Get the team and user objects
         team = await test_team if hasattr(test_team, "__await__") else test_team
-        member_user = await test_member_user if hasattr(test_member_user, "__await__") else test_member_user
+        member_user = (
+            await test_member_user
+            if hasattr(test_member_user, "__await__")
+            else test_member_user
+        )
         user = await test_user if hasattr(test_user, "__await__") else test_user
 
         # Add the test member to the team
@@ -219,21 +266,28 @@ class TestTeamMembersAPI:
 
         access_token = create_access_token(subject=str(user.id))
         response = await async_client.delete(
-            f"/api/v1/teams/{team.id}/members/{member_user.id}", headers={"Authorization": f"Bearer {access_token}"}
+            f"/api/v1/teams/{team.id}/members/{member_user.id}",
+            headers={"Authorization": f"Bearer {access_token}"},
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Verify the member was removed from the database
         result = await db.execute(
-            select(TeamMember).where((TeamMember.team_id == team.id) & (TeamMember.user_id == member_user.id))
+            select(TeamMember).where(
+                (TeamMember.team_id == team.id) & (TeamMember.user_id == member_user.id)
+            )
         )
         member = result.scalar_one_or_none()
         assert member is None or member.is_active is False
 
     @pytest.mark.asyncio
     async def test_unauthorized_access(
-        self, async_client: AsyncClient, test_team: Team, test_user: User, db: AsyncSession
+        self,
+        async_client: AsyncClient,
+        test_team: Team,
+        test_user: User,
+        db: AsyncSession,
     ) -> None:
         """Test unauthorized access to team member endpoints."""
         # Get the team and user objects

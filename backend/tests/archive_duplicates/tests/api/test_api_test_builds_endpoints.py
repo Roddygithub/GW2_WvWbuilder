@@ -57,7 +57,9 @@ def app(monkeypatch):
 
     jwt_module.JWT_SECRET_KEY = settings.JWT_SECRET_KEY
     jwt_module.JWT_ALGORITHM = settings.JWT_ALGORITHM
-    jwt_module.JWT_ACCESS_TOKEN_EXPIRE_MINUTES = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+    jwt_module.JWT_ACCESS_TOKEN_EXPIRE_MINUTES = (
+        settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+    )
     jwt_module.JWT_REFRESH_SECRET_KEY = "test-jwt-refresh-secret-key"
     jwt_module.JWT_REFRESH_TOKEN_EXPIRE_MINUTES = 1440
 
@@ -123,7 +125,9 @@ async def test_create_build(async_client: AsyncClient, async_session):
 
         # Associate the build with the profession
         print(f"Associating build {build.id} with profession {profession.id}...")
-        stmt = insert(build_profession).values(build_id=build.id, profession_id=profession.id)
+        stmt = insert(build_profession).values(
+            build_id=build.id, profession_id=profession.id
+        )
         await session.execute(stmt)
         await session.commit()
         print("Association created successfully")
@@ -157,7 +161,9 @@ async def test_create_build(async_client: AsyncClient, async_session):
         association = result.first()
 
         print(f"Retrieved association: {association}")
-        assert association is not None, "No association found between build and profession"
+        assert (
+            association is not None
+        ), "No association found between build and profession"
         print(f"Association profession_id: {association.profession_id}")
         assert association.profession_id == profession.id
         print("Association verification successful")
@@ -210,7 +216,8 @@ async def test_list_builds(async_client: AsyncClient, async_session):
 
         # Créer un jeton d'authentification
         auth_token = create_access_token(
-            subject=str(user.id), expires_delta=timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+            subject=str(user.id),
+            expires_delta=timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
         )
 
         # Créer un build de test
@@ -230,7 +237,9 @@ async def test_list_builds(async_client: AsyncClient, async_session):
         await session.commit()
 
         # Ajouter l'association de profession
-        stmt = build_profession.insert().values(build_id=build.id, profession_id=profession.id)
+        stmt = build_profession.insert().values(
+            build_id=build.id, profession_id=profession.id
+        )
         await session.execute(stmt)
 
         # Créer un autre build pour tester le filtrage
@@ -248,12 +257,16 @@ async def test_list_builds(async_client: AsyncClient, async_session):
         await session.commit()
 
         # Ajouter l'association de profession
-        stmt = build_profession.insert().values(build_id=build2.id, profession_id=profession.id)
+        stmt = build_profession.insert().values(
+            build_id=build2.id, profession_id=profession.id
+        )
         await session.execute(stmt)
         await session.commit()
 
         # Tester la liste non filtrée
-        response = await async_client.get("/api/v1/builds/", headers={"Authorization": f"Bearer {auth_token}"})
+        response = await async_client.get(
+            "/api/v1/builds/", headers={"Authorization": f"Bearer {auth_token}"}
+        )
         assert (
             response.status_code == status.HTTP_200_OK
         ), f"Failed to fetch builds. Status: {response.status_code}, Response: {response.text}"
@@ -330,10 +343,12 @@ async def test_unauthorized_access(async_client: AsyncClient, async_session):
 
         # Créer des jetons d'authentification
         owner_token = create_access_token(
-            subject=str(owner.id), expires_delta=timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+            subject=str(owner.id),
+            expires_delta=timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
         )
         other_user_token = create_access_token(
-            subject=str(other_user.id), expires_delta=timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+            subject=str(other_user.id),
+            expires_delta=timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES),
         )
 
         # 1. Tenter de récupérer le build en tant qu'utilisateur non autorisé (doit échouer)
@@ -348,7 +363,10 @@ async def test_unauthorized_access(async_client: AsyncClient, async_session):
         ), f"L'accès non autorisé à un build privé devrait échouer. Code: {response.status_code}"
 
         # 2. Tenter de mettre à jour le build en tant qu'utilisateur non autorisé
-        update_data = {"name": "Updated Build Name", "description": "Updated description"}
+        update_data = {
+            "name": "Updated Build Name",
+            "description": "Updated description",
+        }
         response = await async_client.put(
             f"/api/v1/builds/{build.id}",
             json=update_data,
@@ -372,7 +390,9 @@ async def test_unauthorized_access(async_client: AsyncClient, async_session):
             f"/api/v1/builds/{build.id}",
             headers={"Authorization": f"Bearer {owner_token}"},
         )
-        assert response.status_code == status.HTTP_200_OK, "Le propriétaire devrait pouvoir accéder à son build"
+        assert (
+            response.status_code == status.HTTP_200_OK
+        ), "Le propriétaire devrait pouvoir accéder à son build"
 
         # Vérifier que le build n'a pas été modifié par les tentatives non autorisées
         response = await async_client.get(
@@ -380,7 +400,9 @@ async def test_unauthorized_access(async_client: AsyncClient, async_session):
             headers={"Authorization": f"Bearer {owner_token}"},
         )
         data = response.json()
-        assert data["name"] == "Test Unauthorized Build", "Le nom du build ne devrait pas avoir été modifié"
+        assert (
+            data["name"] == "Test Unauthorized Build"
+        ), "Le nom du build ne devrait pas avoir été modifié"
 
     except Exception as e:
         await session.rollback()

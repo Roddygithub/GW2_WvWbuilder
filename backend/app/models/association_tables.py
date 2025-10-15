@@ -4,7 +4,16 @@ Module pour les tables d'association many-to-many.
 Ce module contient les définitions de tables de jonction utilisées pour les relations many-to-many.
 """
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Table, Text, func, UniqueConstraint
+from sqlalchemy import (
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    Table,
+    Text,
+    func,
+    UniqueConstraint,
+)
 
 from .base import Base
 
@@ -21,10 +30,27 @@ composition_members = Table(
         index=True,
     ),
     Column(
-        "user_id", Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, nullable=False, index=True
+        "user_id",
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+        index=True,
     ),
-    Column("role_id", Integer, ForeignKey("roles.id", ondelete="SET NULL"), nullable=True, index=True),
-    Column("profession_id", Integer, ForeignKey("professions.id", ondelete="SET NULL"), nullable=True, index=True),
+    Column(
+        "role_id",
+        Integer,
+        ForeignKey("roles.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    ),
+    Column(
+        "profession_id",
+        Integer,
+        ForeignKey("professions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    ),
     Column(
         "elite_specialization_id",
         Integer,
@@ -33,7 +59,9 @@ composition_members = Table(
         index=True,
     ),
     Column("notes", Text, nullable=True),
-    Column("created_at", DateTime(timezone=True), server_default=func.now(), nullable=False),
+    Column(
+        "created_at", DateTime(timezone=True), server_default=func.now(), nullable=False
+    ),
     Column("updated_at", DateTime(timezone=True), onupdate=func.now()),
     # Ajout d'une contrainte d'unicité pour éviter les doublons
     UniqueConstraint("composition_id", "user_id", name="uq_composition_member"),
@@ -48,8 +76,15 @@ composition_members = Table(
 role_permissions = Table(
     "role_permissions",
     Base.metadata,
-    Column("role_id", Integer, ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True),
-    Column("permission_id", Integer, ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True),
+    Column(
+        "role_id", Integer, ForeignKey("roles.id", ondelete="CASCADE"), primary_key=True
+    ),
+    Column(
+        "permission_id",
+        Integer,
+        ForeignKey("permissions.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
     Column("created_at", DateTime(timezone=True), server_default=func.now()),
 )
 
@@ -58,9 +93,23 @@ build_profession = Table(
     "build_professions",
     Base.metadata,
     Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("build_id", Integer, ForeignKey("builds.id", ondelete="CASCADE"), nullable=False, index=True),
-    Column("profession_id", Integer, ForeignKey("professions.id", ondelete="CASCADE"), nullable=False, index=True),
-    Column("created_at", DateTime(timezone=True), server_default=func.now(), nullable=False),
+    Column(
+        "build_id",
+        Integer,
+        ForeignKey("builds.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column(
+        "profession_id",
+        Integer,
+        ForeignKey("professions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    ),
+    Column(
+        "created_at", DateTime(timezone=True), server_default=func.now(), nullable=False
+    ),
     Column("updated_at", DateTime(timezone=True), onupdate=func.now()),
     UniqueConstraint("build_id", "profession_id", name="uq_build_profession"),
 )

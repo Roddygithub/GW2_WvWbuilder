@@ -19,7 +19,9 @@ pytestmark = pytest.mark.asyncio
 class TestAuthAPI:
     """Test suite for Authentication API endpoints."""
 
-    async def test_login_success(self, async_client: AsyncClient, test_user: User, test_password: str):
+    async def test_login_success(
+        self, async_client: AsyncClient, test_user: User, test_password: str
+    ):
         """Test successful user login."""
         # Afficher les détails de l'utilisateur de test
         print("\n=== Détails de l'utilisateur de test ===")
@@ -72,7 +74,9 @@ class TestAuthAPI:
             print("et que le mot de passe est correctement haché.")
             print("===============================\n")
 
-        assert response.status_code == status.HTTP_200_OK, f"Login failed: {response.text}"
+        assert (
+            response.status_code == status.HTTP_200_OK
+        ), f"Login failed: {response.text}"
 
         data = response.json()
         assert "access_token" in data, "No access token in response"
@@ -92,9 +96,15 @@ class TestAuthAPI:
         except Exception as e:
             pytest.fail(f"Token validation failed: {str(e)}")
 
-    async def test_login_wrong_password(self, async_client: AsyncClient, test_user: User):
+    async def test_login_wrong_password(
+        self, async_client: AsyncClient, test_user: User
+    ):
         """Test login with wrong password."""
-        login_data = {"username": test_user.email, "password": "wrongpassword", "grant_type": "password"}
+        login_data = {
+            "username": test_user.email,
+            "password": "wrongpassword",
+            "grant_type": "password",
+        }
 
         response = await async_client.post(
             f"{settings.API_V1_STR}/auth/login",
@@ -105,7 +115,9 @@ class TestAuthAPI:
         assert (
             response.status_code == status.HTTP_400_BAD_REQUEST
         ), f"Expected status 400, got {response.status_code}: {response.text}"
-        assert "Incorrect email or password" in response.text, f"Expected error message not found in: {response.text}"
+        assert (
+            "Incorrect email or password" in response.text
+        ), f"Expected error message not found in: {response.text}"
 
     async def test_login_nonexistent_user(self, async_client: AsyncClient, caplog):
         """Test login with non-existent user."""
@@ -121,7 +133,9 @@ class TestAuthAPI:
         print(f"Request data: {login_data}")
 
         try:
-            response = await async_client.post(f"{settings.API_V1_STR}/auth/login", data=login_data)
+            response = await async_client.post(
+                f"{settings.API_V1_STR}/auth/login", data=login_data
+            )
 
             # Log the response
             print(f"Response status: {response.status_code}")
@@ -154,10 +168,16 @@ class TestAuthAPI:
             traceback.print_exc()
             raise
 
-    async def test_use_access_token(self, async_client: AsyncClient, test_user: User, test_password: str):
+    async def test_use_access_token(
+        self, async_client: AsyncClient, test_user: User, test_password: str
+    ):
         """Test using the access token to access a protected endpoint."""
         # 1. Obtenir un token d'accès
-        login_data = {"username": test_user.email, "password": test_password, "grant_type": "password"}
+        login_data = {
+            "username": test_user.email,
+            "password": test_password,
+            "grant_type": "password",
+        }
 
         # 2. Effectuer la requête de connexion
         token_response = await async_client.post(
@@ -167,10 +187,14 @@ class TestAuthAPI:
         )
 
         # 3. Vérifier que la connexion a réussi
-        assert token_response.status_code == status.HTTP_200_OK, f"Login failed: {token_response.text}"
+        assert (
+            token_response.status_code == status.HTTP_200_OK
+        ), f"Login failed: {token_response.text}"
 
         token_data = token_response.json()
-        assert "access_token" in token_data, f"No access_token in response: {token_data}"
+        assert (
+            "access_token" in token_data
+        ), f"No access_token in response: {token_data}"
 
         access_token = token_data["access_token"]
 
@@ -181,7 +205,9 @@ class TestAuthAPI:
         )
 
         # 5. Vérifier que l'accès est autorisé
-        assert response.status_code == status.HTTP_200_OK, f"Failed to access protected endpoint: {response.text}"
+        assert (
+            response.status_code == status.HTTP_200_OK
+        ), f"Failed to access protected endpoint: {response.text}"
 
         data = response.json()
         assert data["email"] == test_user.email, f"Unexpected user data: {data}"
@@ -191,11 +217,17 @@ class TestAuthAPI:
             f"{settings.API_V1_STR}/users/me",
             headers={"Authorization": "Bearer invalid_token"},
         )
-        assert response.status_code in [401, 403], f"Expected 401/403 with invalid token, got {response.status_code}"
+        assert response.status_code in [
+            401,
+            403,
+        ], f"Expected 401/403 with invalid token, got {response.status_code}"
 
         # 7. Tester sans token
         response = await async_client.get(f"{settings.API_V1_STR}/users/me")
-        assert response.status_code in [401, 403], f"Expected 401/403 without token, got {response.status_code}"
+        assert response.status_code in [
+            401,
+            403,
+        ], f"Expected 401/403 without token, got {response.status_code}"
 
     @pytest.mark.skip(reason="Refresh token endpoint not yet implemented")
     async def test_refresh_token(self, async_client: AsyncClient, test_user: User):
@@ -209,7 +241,9 @@ class TestAuthAPI:
         # This test is skipped as password reset endpoints are not yet implemented
         pass
 
-    async def test_register_user(self, async_client: AsyncClient, async_db: AsyncSession):
+    async def test_register_user(
+        self, async_client: AsyncClient, async_db: AsyncSession
+    ):
         """Test user registration with proper transaction handling."""
         # Generate unique test data
         unique_id = str(uuid.uuid4())[:8]
@@ -225,9 +259,13 @@ class TestAuthAPI:
         }
 
         # Test 1: Inscription réussie
-        response = await async_client.post(f"{settings.API_V1_STR}/auth/register", json=user_data)
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/auth/register", json=user_data
+        )
 
-        assert response.status_code == status.HTTP_201_CREATED, f"Registration failed: {response.text}"
+        assert (
+            response.status_code == status.HTTP_201_CREATED
+        ), f"Registration failed: {response.text}"
 
         data = response.json()
         assert data["email"] == user_data["email"]
@@ -241,10 +279,14 @@ class TestAuthAPI:
         assert db_user is not None, "User was not created in the database"
         assert db_user.email == test_email
         assert db_user.username == test_username
-        assert verify_password(test_password, db_user.hashed_password), "Password was not hashed correctly"
+        assert verify_password(
+            test_password, db_user.hashed_password
+        ), "Password was not hashed correctly"
 
         # Test 2: Tentative d'inscription avec un email déjà utilisé
-        response = await async_client.post(f"{settings.API_V1_STR}/auth/register", json=user_data)
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/auth/register", json=user_data
+        )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "already registered" in response.text.lower()
@@ -252,6 +294,8 @@ class TestAuthAPI:
         # Test 3: Données d'inscription invalides
         invalid_data = {"email": "not-an-email", "username": "", "password": "123"}
 
-        response = await async_client.post(f"{settings.API_V1_STR}/auth/register", json=invalid_data)
+        response = await async_client.post(
+            f"{settings.API_V1_STR}/auth/register", json=invalid_data
+        )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

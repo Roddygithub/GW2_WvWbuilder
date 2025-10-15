@@ -12,7 +12,9 @@ class TagBase(BaseModel):
     """Schéma de base pour un tag."""
 
     name: str = Field(..., max_length=50, description="Nom du tag")
-    description: Optional[str] = Field(None, max_length=255, description="Description du tag")
+    description: Optional[str] = Field(
+        None, max_length=255, description="Description du tag"
+    )
 
 
 class TagCreate(TagBase):
@@ -25,7 +27,9 @@ class TagUpdate(TagBase):
     """Schéma pour la mise à jour d'un tag."""
 
     name: Optional[str] = Field(None, max_length=50, description="Nom du tag")
-    description: Optional[str] = Field(None, max_length=255, description="Description du tag")
+    description: Optional[str] = Field(
+        None, max_length=255, description="Description du tag"
+    )
 
 
 class TagInDBBase(TagBase):

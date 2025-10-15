@@ -3,7 +3,7 @@
  * Handles communication with Guild Wars 2 API via backend proxy
  */
 
-import { apiGet } from './client';
+import { apiGet } from "./client";
 
 // Types
 export interface GW2Profession {
@@ -75,13 +75,15 @@ export interface GW2AccountInfo {
  * Get list of all professions
  */
 export const getProfessions = async (): Promise<string[]> => {
-  return apiGet<string[]>('/gw2/professions');
+  return apiGet<string[]>("/gw2/professions");
 };
 
 /**
  * Get detailed information about a specific profession
  */
-export const getProfessionDetails = async (professionId: string): Promise<GW2Profession> => {
+export const getProfessionDetails = async (
+  professionId: string,
+): Promise<GW2Profession> => {
   return apiGet<GW2Profession>(`/gw2/professions/${professionId}`);
 };
 
@@ -91,7 +93,7 @@ export const getProfessionDetails = async (professionId: string): Promise<GW2Pro
 export const getAllProfessionsDetails = async (): Promise<GW2Profession[]> => {
   const professionIds = await getProfessions();
   const professions = await Promise.all(
-    professionIds.map(id => getProfessionDetails(id))
+    professionIds.map((id) => getProfessionDetails(id)),
   );
   return professions;
 };
@@ -100,20 +102,22 @@ export const getAllProfessionsDetails = async (): Promise<GW2Profession[]> => {
  * Get account information (requires GW2 API key)
  */
 export const getAccountInfo = async (): Promise<GW2AccountInfo> => {
-  return apiGet<GW2AccountInfo>('/gw2/account');
+  return apiGet<GW2AccountInfo>("/gw2/account");
 };
 
 /**
  * Get list of characters (requires GW2 API key)
  */
 export const getCharacters = async (): Promise<string[]> => {
-  return apiGet<string[]>('/gw2/characters');
+  return apiGet<string[]>("/gw2/characters");
 };
 
 /**
  * Get detailed information about a character (requires GW2 API key)
  */
-export const getCharacterDetails = async (characterName: string): Promise<GW2Character> => {
+export const getCharacterDetails = async (
+  characterName: string,
+): Promise<GW2Character> => {
   return apiGet<GW2Character>(`/gw2/characters/${characterName}`);
 };
 
@@ -132,7 +136,7 @@ export const checkGW2APIAvailability = async (): Promise<boolean> => {
     await getProfessions();
     return true;
   } catch (error) {
-    console.error('GW2 API not available:', error);
+    console.error("GW2 API not available:", error);
     return false;
   }
 };

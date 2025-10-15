@@ -46,10 +46,15 @@ class WebhookUser(HttpUser):
         }
 
         with self.client.post(
-            url, json=payload, headers={"Content-Type": "application/json"}, name="/api/v1/webhooks/[id]"
+            url,
+            json=payload,
+            headers={"Content-Type": "application/json"},
+            name="/api/v1/webhooks/[id]",
         ) as response:
             if response.status_code >= 400:
-                logger.error(f"Erreur lors du déclenchement du webhook: {response.text}")
+                logger.error(
+                    f"Erreur lors du déclenchement du webhook: {response.text}"
+                )
 
     @tag("webhook_create")
     @task(1)
@@ -63,7 +68,9 @@ class WebhookUser(HttpUser):
             "secret": "test_secret",
         }
 
-        with self.client.post("/api/v1/webhooks", json=webhook_data, name="/api/v1/webhooks [POST]") as response:
+        with self.client.post(
+            "/api/v1/webhooks", json=webhook_data, name="/api/v1/webhooks [POST]"
+        ) as response:
             if response.status_code == 201:
                 try:
                     webhook = response.json()

@@ -60,7 +60,12 @@ def test_user(db: Session):
         db.commit()
 
         # Get a fresh copy of the user with all relationships loaded
-        refreshed_user = db.query(User).options(joinedload(User.roles)).filter(User.id == user.id).first()
+        refreshed_user = (
+            db.query(User)
+            .options(joinedload(User.roles))
+            .filter(User.id == user.id)
+            .first()
+        )
 
         # Verify the user was created with the role
         assert refreshed_user is not None, "Failed to create test user"
@@ -110,7 +115,11 @@ def test_professions(db: Session):
 
     # Try to reset sequences if they exist
     try:
-        db.execute(text("DELETE FROM sqlite_sequence WHERE name IN ('professions', 'elite_specializations')"))
+        db.execute(
+            text(
+                "DELETE FROM sqlite_sequence WHERE name IN ('professions', 'elite_specializations')"
+            )
+        )
         db.commit()
     except Exception:
         # Ignore if sqlite_sequence table doesn't exist
@@ -182,7 +191,9 @@ def test_create_build(
         logger.info(f"Test build data: {test_build_data}")
 
         # Make request to create build
-        response = client.post("/api/v1/builds/", json=test_build_data, headers=auth_header)
+        response = client.post(
+            "/api/v1/builds/", json=test_build_data, headers=auth_header
+        )
 
         # Log response
         logger.info(f"Response status code: {response.status_code}")
@@ -203,7 +214,12 @@ def test_create_build(
         # Check if professions are associated
         build_id = data["id"]
         # Use joinedload to ensure relationships are loaded in the same session
-        build = db.query(Build).options(joinedload(Build.professions)).filter(Build.id == build_id).first()
+        build = (
+            db.query(Build)
+            .options(joinedload(Build.professions))
+            .filter(Build.id == build_id)
+            .first()
+        )
         assert build is not None, "Build not found in database"
 
         # Check profession associations using the relationship
@@ -215,14 +231,18 @@ def test_create_build(
 
         associated_profession_ids = {p.id for p in build_profs}
         for pid in profession_ids:
-            assert pid in associated_profession_ids, f"Profession {pid} not associated with build"
+            assert (
+                pid in associated_profession_ids
+            ), f"Profession {pid} not associated with build"
 
     except Exception as e:
         logger.error(f"Test failed with error: {str(e)}", exc_info=True)
         raise
 
 
-def test_get_build(client: TestClient, db: Session, test_user: User, test_professions: tuple) -> None:
+def test_get_build(
+    client: TestClient, db: Session, test_user: User, test_professions: tuple
+) -> None:
     """Test retrieving a build by ID."""
     try:
         # Unpack the test_professions tuple
@@ -257,7 +277,9 @@ def test_get_build(client: TestClient, db: Session, test_user: User, test_profes
         response = client.post("/api/v1/builds/", json=test_data, headers=auth_header)
         logger.info(f"Create build response: {response.status_code}, {response.text}")
 
-        assert response.status_code == status.HTTP_201_CREATED, f"Failed to create build: {response.text}"
+        assert (
+            response.status_code == status.HTTP_201_CREATED
+        ), f"Failed to create build: {response.text}"
         build_data = response.json()
         build_id = build_data["id"]
 
@@ -265,7 +287,12 @@ def test_get_build(client: TestClient, db: Session, test_user: User, test_profes
         from app.models import Build
 
         # Get the build with its professions using a fresh query
-        build = db.query(Build).options(joinedload(Build.professions)).filter(Build.id == build_id).first()
+        build = (
+            db.query(Build)
+            .options(joinedload(Build.professions))
+            .filter(Build.id == build_id)
+            .first()
+        )
 
         assert build is not None, "Build not found in database"
         assert len(build.professions) == 1, "Expected 1 profession"

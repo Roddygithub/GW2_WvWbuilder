@@ -28,16 +28,26 @@ class EliteSpecialization(Base, TimeStampedMixin):
     """
 
     __tablename__ = "elite_specializations"
-    __table_args__ = ({"comment": "Spécialisations d'élite disponibles pour chaque profession dans GW2"},)
+    __table_args__ = (
+        {
+            "comment": "Spécialisations d'élite disponibles pour chaque profession dans GW2"
+        },
+    )
 
     # Identifiant unique de la spécialisation d'élite
     id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True, comment="Identifiant unique de la spécialisation d'élite"
+        Integer,
+        primary_key=True,
+        index=True,
+        comment="Identifiant unique de la spécialisation d'élite",
     )
 
     # Nom de la spécialisation d'élite (ex: "Berserker", "Dragonhunter")
     name: Mapped[str] = mapped_column(
-        String(50), index=True, nullable=False, comment="Nom de la spécialisation d'élite"
+        String(50),
+        index=True,
+        nullable=False,
+        comment="Nom de la spécialisation d'élite",
     )
 
     # Clé étrangère vers la profession parente
@@ -52,12 +62,16 @@ class EliteSpecialization(Base, TimeStampedMixin):
 
     # URL de l'icône de la spécialisation
     icon_url: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True, comment="URL de l'icône représentant la spécialisation"
+        String(255),
+        nullable=True,
+        comment="URL de l'icône représentant la spécialisation",
     )
 
     # Description détaillée de la spécialisation
     description: Mapped[Optional[str]] = mapped_column(
-        Text, nullable=True, comment="Description détaillée de la spécialisation et de ses mécaniques"
+        Text,
+        nullable=True,
+        comment="Description détaillée de la spécialisation et de ses mécaniques",
     )
 
     # Type d'arme ajouté par cette spécialisation
@@ -67,20 +81,28 @@ class EliteSpecialization(Base, TimeStampedMixin):
 
     # URL de l'image de fond de la spécialisation
     background_url: Mapped[Optional[str]] = mapped_column(
-        String(255), nullable=True, comment="URL de l'image de fond de la spécialisation"
+        String(255),
+        nullable=True,
+        comment="URL de l'image de fond de la spécialisation",
     )
 
     # Indique si la spécialisation est active dans le jeu
     is_active: Mapped[bool] = mapped_column(
-        default=True, nullable=False, comment="Indique si la spécialisation est actuellement disponible dans le jeu"
+        default=True,
+        nullable=False,
+        comment="Indique si la spécialisation est actuellement disponible dans le jeu",
     )
 
     # Horodatages de création et de mise à jour
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), comment="Date et heure de création de l'enregistrement"
+        DateTime(timezone=True),
+        server_default=func.now(),
+        comment="Date et heure de création de l'enregistrement",
     )
     updated_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), onupdate=func.now(), comment="Date et heure de la dernière mise à jour"
+        DateTime(timezone=True),
+        onupdate=func.now(),
+        comment="Date et heure de la dernière mise à jour",
     )
 
     # Relations
@@ -118,7 +140,9 @@ class EliteSpecialization(Base, TimeStampedMixin):
         }
 
         if include_related:
-            result["profession"] = self.profession.to_dict() if self.profession else None
+            result["profession"] = (
+                self.profession.to_dict() if self.profession else None
+            )
             result["builds"] = [build.to_dict() for build in self.builds]
 
         return result

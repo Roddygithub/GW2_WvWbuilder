@@ -3,29 +3,29 @@
  * Complete dashboard with sidebar, header, stats, charts, and activity feed
  */
 
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { toast, Toaster } from 'sonner';
-import { useAuthStore } from '../store/authStore';
-import { useDashboardStats, useRecentActivities } from '../hooks/useDashboard';
-import { Activity } from '../components/ActivityFeedRedesigned';
-import { useLiveRefresh } from '../hooks/useLiveRefresh';
-import { isAuthenticated as tokenAuthenticated } from '../api/auth';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { toast, Toaster } from "sonner";
+import { useAuthStore } from "../store/authStore";
+import { useDashboardStats, useRecentActivities } from "../hooks/useDashboard";
+import { Activity } from "../components/ActivityFeedRedesigned";
+import { useLiveRefresh } from "../hooks/useLiveRefresh";
+import { isAuthenticated as tokenAuthenticated } from "../api/auth";
 
 // Components
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
-import StatCardRedesigned from '../components/StatCardRedesigned';
-import ActivityChart from '../components/ActivityChart';
-import ActivityFeedRedesigned from '../components/ActivityFeedRedesigned';
-import QuickActions from '../components/QuickActions';
-import LiveRefreshIndicator from '../components/LiveRefreshIndicator';
-import LoadingState from '../components/LoadingState';
-import ErrorState from '../components/ErrorState';
+import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
+import StatCardRedesigned from "../components/StatCardRedesigned";
+import ActivityChart from "../components/ActivityChart";
+import ActivityFeedRedesigned from "../components/ActivityFeedRedesigned";
+import QuickActions from "../components/QuickActions";
+import LiveRefreshIndicator from "../components/LiveRefreshIndicator";
+import LoadingState from "../components/LoadingState";
+import ErrorState from "../components/ErrorState";
 
 // Icons
-import { Layers, FileText, Users, TrendingUp } from 'lucide-react';
+import { Layers, FileText, Users, TrendingUp } from "lucide-react";
 
 export default function DashboardRedesigned() {
   const navigate = useNavigate();
@@ -35,7 +35,13 @@ export default function DashboardRedesigned() {
   const isAuthed = isAuthenticated || tokenAuthenticated();
 
   // Fetch dashboard statistics using custom hook
-  const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErrorData, refetch: refetchStats } = useDashboardStats();
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError: statsError,
+    error: statsErrorData,
+    refetch: refetchStats,
+  } = useDashboardStats();
 
   // Fetch recent activities using custom hook
   const { data: recentActivities } = useRecentActivities(10);
@@ -43,17 +49,17 @@ export default function DashboardRedesigned() {
   // Live refresh hook
   const { refresh, isRefreshing, lastRefresh } = useLiveRefresh({
     interval: 30000, // 30 seconds
-    queryKeys: [['dashboard-stats'], ['recent-activities']],
+    queryKeys: [["dashboard-stats"], ["recent-activities"]],
     enabled: liveRefreshEnabled && isAuthed,
     showToast: false,
     onRefresh: () => {
-      console.log('Dashboard data refreshed');
+      console.log("Dashboard data refreshed");
     },
   });
 
   useEffect(() => {
     if (!isAuthed) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
@@ -73,7 +79,10 @@ export default function DashboardRedesigned() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
         <Sidebar />
-        <div className="ml-[280px] transition-all duration-300" data-testid="main-content">
+        <div
+          className="ml-[280px] transition-all duration-300"
+          data-testid="main-content"
+        >
           <LoadingState message="Loading dashboard..." />
         </div>
       </div>
@@ -85,9 +94,16 @@ export default function DashboardRedesigned() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
         <Sidebar />
-        <div className="ml-[280px] transition-all duration-300" data-testid="main-content">
+        <div
+          className="ml-[280px] transition-all duration-300"
+          data-testid="main-content"
+        >
           <ErrorState
-            message={statsErrorData instanceof Error ? statsErrorData.message : 'Failed to load dashboard'}
+            message={
+              statsErrorData instanceof Error
+                ? statsErrorData.message
+                : "Failed to load dashboard"
+            }
             onRetry={() => refetchStats()}
           />
         </div>
@@ -102,9 +118,9 @@ export default function DashboardRedesigned() {
         position="top-right"
         toastOptions={{
           style: {
-            background: '#1e293b',
-            border: '1px solid rgba(168, 85, 247, 0.3)',
-            color: '#e2e8f0',
+            background: "#1e293b",
+            border: "1px solid rgba(168, 85, 247, 0.3)",
+            color: "#e2e8f0",
           },
         }}
       />
@@ -113,7 +129,10 @@ export default function DashboardRedesigned() {
       <Sidebar />
 
       {/* Main Content Area */}
-      <div className="ml-[280px] transition-all duration-300" data-testid="main-content">
+      <div
+        className="ml-[280px] transition-all duration-300"
+        data-testid="main-content"
+      >
         {/* Header with Live Refresh */}
         <div className="sticky top-0 z-10 bg-gradient-to-r from-slate-900/95 to-slate-800/95 backdrop-blur-md border-b border-slate-700/50">
           <div className="flex items-center justify-between px-8 py-4">
@@ -125,13 +144,15 @@ export default function DashboardRedesigned() {
               onToggle={() => {
                 setLiveRefreshEnabled(!liveRefreshEnabled);
                 toast.success(
-                  liveRefreshEnabled ? 'Live refresh disabled' : 'Live refresh enabled',
-                  { duration: 2000 }
+                  liveRefreshEnabled
+                    ? "Live refresh disabled"
+                    : "Live refresh enabled",
+                  { duration: 2000 },
                 );
               }}
               onManualRefresh={() => {
                 refresh();
-                toast.info('Refreshing dashboard...', { duration: 1000 });
+                toast.info("Refreshing dashboard...", { duration: 1000 });
               }}
             />
           </div>
@@ -143,7 +164,7 @@ export default function DashboardRedesigned() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCardRedesigned
               title="Compositions"
-              value={statsLoading ? '...' : stats?.total_compositions || 0}
+              value={statsLoading ? "..." : stats?.total_compositions || 0}
               icon={Layers}
               color="emerald"
               subtitle="Total created"
@@ -151,7 +172,7 @@ export default function DashboardRedesigned() {
             />
             <StatCardRedesigned
               title="Builds"
-              value={statsLoading ? '...' : stats?.total_builds || 0}
+              value={statsLoading ? "..." : stats?.total_builds || 0}
               icon={FileText}
               color="blue"
               subtitle="Total created"
@@ -159,7 +180,7 @@ export default function DashboardRedesigned() {
             />
             <StatCardRedesigned
               title="Teams"
-              value={statsLoading ? '...' : stats?.total_teams || 0}
+              value={statsLoading ? "..." : stats?.total_teams || 0}
               icon={Users}
               color="purple"
               subtitle="Total managed"
@@ -167,7 +188,7 @@ export default function DashboardRedesigned() {
             />
             <StatCardRedesigned
               title="Recent Activity"
-              value={statsLoading ? '...' : stats?.recent_activity_count || 0}
+              value={statsLoading ? "..." : stats?.recent_activity_count || 0}
               icon={TrendingUp}
               color="amber"
               subtitle="Last 30 days"
@@ -198,11 +219,31 @@ export default function DashboardRedesigned() {
               </h3>
               <div className="space-y-4">
                 {[
-                  { label: 'Backend API', status: 'operational', color: 'emerald' },
-                  { label: 'Authentication', status: 'operational', color: 'emerald' },
-                  { label: 'Dashboard API', status: 'operational', color: 'emerald' },
-                  { label: 'Tags API', status: 'operational', color: 'emerald' },
-                  { label: 'Builds API', status: 'development', color: 'amber' },
+                  {
+                    label: "Backend API",
+                    status: "operational",
+                    color: "emerald",
+                  },
+                  {
+                    label: "Authentication",
+                    status: "operational",
+                    color: "emerald",
+                  },
+                  {
+                    label: "Dashboard API",
+                    status: "operational",
+                    color: "emerald",
+                  },
+                  {
+                    label: "Tags API",
+                    status: "operational",
+                    color: "emerald",
+                  },
+                  {
+                    label: "Builds API",
+                    status: "development",
+                    color: "amber",
+                  },
                 ].map((item, index) => (
                   <motion.div
                     key={item.label}
@@ -221,22 +262,24 @@ export default function DashboardRedesigned() {
                         transition={{
                           duration: 2,
                           repeat: Infinity,
-                          ease: 'easeInOut',
+                          ease: "easeInOut",
                         }}
                         className={`w-2 h-2 rounded-full ${
-                          item.color === 'emerald'
-                            ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]'
-                            : 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]'
+                          item.color === "emerald"
+                            ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"
+                            : "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]"
                         }`}
                       />
                       <span
                         className={`text-xs font-medium ${
-                          item.color === 'emerald'
-                            ? 'text-emerald-400'
-                            : 'text-amber-400'
+                          item.color === "emerald"
+                            ? "text-emerald-400"
+                            : "text-amber-400"
                         }`}
                       >
-                        {item.status === 'operational' ? 'Operational' : 'In Development'}
+                        {item.status === "operational"
+                          ? "Operational"
+                          : "In Development"}
                       </span>
                     </div>
                   </motion.div>
@@ -254,7 +297,9 @@ export default function DashboardRedesigned() {
                     <p className="text-2xl font-bold text-emerald-400">
                       {activities.length}
                     </p>
-                    <p className="text-xs text-slate-400 mt-1">Active Sessions</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Active Sessions
+                    </p>
                   </div>
                 </div>
               </div>
@@ -269,8 +314,10 @@ export default function DashboardRedesigned() {
             className="text-center text-sm text-slate-500 py-8"
           >
             <p>
-              Powered by{' '}
-              <span className="text-purple-400 font-semibold">GW2 WvW Builder</span>
+              Powered by{" "}
+              <span className="text-purple-400 font-semibold">
+                GW2 WvW Builder
+              </span>
             </p>
             <p className="mt-1">© 2025 All rights reserved</p>
           </motion.div>

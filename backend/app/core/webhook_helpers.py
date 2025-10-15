@@ -15,6 +15,10 @@ def generate_webhook_signature(secret: str, payload: Dict[str, Any]) -> str:
     Returns:
         La signature hexadécimale.
     """
-    payload_bytes = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
-    signature = hmac.new(secret.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
+    payload_bytes = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode(
+        "utf-8"
+    )
+    signature = hmac.new(
+        secret.encode("utf-8"), payload_bytes, hashlib.sha256
+    ).hexdigest()
     return f"sha256={signature}"

@@ -133,7 +133,9 @@ def test_cleanup_old_keys(temp_key_file):
         "expires_at": (datetime.utcnow() - timedelta(days=40)).isoformat(),
         "last_rotated": (datetime.utcnow() - timedelta(days=100)).isoformat(),
         "is_active": False,
-        "deactivated_at": (datetime.utcnow() - timedelta(days=91)).isoformat(),  # Older than 90 days
+        "deactivated_at": (
+            datetime.utcnow() - timedelta(days=91)
+        ).isoformat(),  # Older than 90 days
     }
 
     # Add a recently deactivated key (should be kept)
@@ -144,7 +146,9 @@ def test_cleanup_old_keys(temp_key_file):
         "expires_at": (datetime.utcnow() + timedelta(days=50)).isoformat(),
         "last_rotated": (datetime.utcnow() - timedelta(days=10)).isoformat(),
         "is_active": False,
-        "deactivated_at": (datetime.utcnow() - timedelta(days=5)).isoformat(),  # Less than 90 days
+        "deactivated_at": (
+            datetime.utcnow() - timedelta(days=5)
+        ).isoformat(),  # Less than 90 days
     }
 
     # Force cleanup

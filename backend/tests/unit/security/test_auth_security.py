@@ -60,7 +60,9 @@ def test_create_access_token():
     token = create_access_token(data={"sub": str(user_id)}, expires_delta=expires_delta)
 
     # Verify token
-    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+    payload = jwt.decode(
+        token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+    )
 
     # Check claims
     assert payload["sub"] == str(user_id)

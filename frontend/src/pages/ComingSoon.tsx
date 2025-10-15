@@ -3,8 +3,8 @@
  * Placeholder for pages under development
  */
 
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Wrench } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Wrench } from "lucide-react";
 
 interface ComingSoonProps {
   pageName: string;
@@ -12,7 +12,11 @@ interface ComingSoonProps {
   features?: string[];
 }
 
-export default function ComingSoon({ pageName, description, features }: ComingSoonProps) {
+export default function ComingSoon({
+  pageName,
+  description,
+  features,
+}: ComingSoonProps) {
   const navigate = useNavigate();
 
   return (
@@ -54,7 +58,10 @@ export default function ComingSoon({ pageName, description, features }: ComingSo
               </h2>
               <ul className="space-y-3">
                 {features.map((feature, index) => (
-                  <li key={index} className="flex items-start gap-3 text-gray-300">
+                  <li
+                    key={index}
+                    className="flex items-start gap-3 text-gray-300"
+                  >
                     <span className="text-purple-400 mt-1">▸</span>
                     <span>{feature}</span>
                   </li>
@@ -66,21 +73,22 @@ export default function ComingSoon({ pageName, description, features }: ComingSo
           {/* Info Box */}
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-8">
             <p className="text-blue-300 text-sm">
-              💡 <strong>Info:</strong> Cette page est en cours de développement. 
-              Les fonctionnalités seront ajoutées progressivement dans les prochaines versions.
+              💡 <strong>Info:</strong> Cette page est en cours de
+              développement. Les fonctionnalités seront ajoutées progressivement
+              dans les prochaines versions.
             </p>
           </div>
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate("/dashboard")}
               className="flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors font-medium"
             >
               <ArrowLeft className="w-5 h-5" />
               Retour au Dashboard
             </button>
-            
+
             <button
               onClick={() => navigate(-1)}
               className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors font-medium"

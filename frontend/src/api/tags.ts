@@ -4,7 +4,7 @@
  * Status: Production-ready (78% tested)
  */
 
-import { apiDelete, apiGet, apiPost, apiPut } from './client';
+import { apiDelete, apiGet, apiPost, apiPut } from "./client";
 
 export interface Tag {
   id: number;
@@ -31,7 +31,7 @@ export interface UpdateTagRequest {
  * Get all tags
  */
 export async function getTags(): Promise<Tag[]> {
-  return apiGet<Tag[]>('/tags/');
+  return apiGet<Tag[]>("/tags/");
 }
 
 /**
@@ -45,13 +45,16 @@ export async function getTag(id: number): Promise<Tag> {
  * Create new tag (admin only)
  */
 export async function createTag(data: CreateTagRequest): Promise<Tag> {
-  return apiPost<Tag, CreateTagRequest>('/tags/', data);
+  return apiPost<Tag, CreateTagRequest>("/tags/", data);
 }
 
 /**
  * Update tag (admin only)
  */
-export async function updateTag(id: number, data: UpdateTagRequest): Promise<Tag> {
+export async function updateTag(
+  id: number,
+  data: UpdateTagRequest,
+): Promise<Tag> {
   return apiPut<Tag, UpdateTagRequest>(`/tags/${id}`, data);
 }
 
@@ -59,7 +62,9 @@ export async function updateTag(id: number, data: UpdateTagRequest): Promise<Tag
  * Delete tag (admin only)
  * Note: Backend returns {msg} instead of {detail}
  */
-export async function deleteTag(id: number): Promise<{ msg?: string; detail?: string }> {
+export async function deleteTag(
+  id: number,
+): Promise<{ msg?: string; detail?: string }> {
   return apiDelete<{ msg?: string; detail?: string }>(`/tags/${id}`);
 }
 

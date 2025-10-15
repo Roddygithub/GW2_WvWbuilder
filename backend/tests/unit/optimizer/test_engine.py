@@ -1,4 +1,5 @@
 """Unit tests for optimizer engine."""
+
 import pytest
 from unittest.mock import Mock, patch
 from datetime import datetime
@@ -22,7 +23,7 @@ class TestOptimizerConfig:
     def test_load_wvw_zerg_config(self):
         """Test loading WvW zerg configuration."""
         config = OptimizerConfig("zerg")
-        
+
         assert config.mode == "zerg"
         assert "quickness" in config.critical_boons
         assert "alacrity" in config.critical_boons
@@ -32,7 +33,7 @@ class TestOptimizerConfig:
     def test_load_pve_fractale_config(self):
         """Test loading PvE fractale configuration."""
         config = OptimizerConfig("fractale")
-        
+
         assert config.mode == "fractale"
         assert "quickness" in config.critical_boons
         assert "alacrity" in config.critical_boons
@@ -59,9 +60,9 @@ class TestBuildTemplate:
                 "healing": 0.95,
                 "boon_uptime": 0.90,
                 "quickness": 0.95,
-            }
+            },
         )
-        
+
         assert template.profession_id == 1
         assert template.elite_spec_id == 3
         assert template.role_type == CompositionMemberRole.HEALER
@@ -118,19 +119,22 @@ class TestOptimizerEngine:
     def test_greedy_seed_generates_valid_solution(self, engine_wvw, request_wvw):
         """Test that greedy seed generates a valid solution."""
         solution = engine_wvw.greedy_seed(request_wvw)
-        
+
         assert len(solution) == request_wvw.squad_size
         assert all(isinstance(template, BuildTemplate) for template in solution)
-        
+
         # Check that roles are distributed
         roles = [t.role_type for t in solution]
-        assert CompositionMemberRole.HEALER in roles or CompositionMemberRole.SUPPORT in roles
+        assert (
+            CompositionMemberRole.HEALER in roles
+            or CompositionMemberRole.SUPPORT in roles
+        )
 
     def test_evaluate_solution_returns_score(self, engine_wvw, request_wvw):
         """Test that evaluate_solution returns a valid score."""
         solution = engine_wvw.greedy_seed(request_wvw)
         score, details = engine_wvw.evaluate_solution(solution, request_wvw)
-        
+
         assert isinstance(score, float)
         assert 0.0 <= score <= 1.0
         assert "boon_coverage" in details
@@ -140,7 +144,7 @@ class TestOptimizerEngine:
         """Test that evaluate_solution calculates boon coverage correctly."""
         solution = engine_pve.greedy_seed(request_pve)
         score, details = engine_pve.evaluate_solution(solution, request_pve)
-        
+
         boon_coverage = details["boon_coverage"]
         assert "quickness" in boon_coverage
         assert "alacrity" in boon_coverage
@@ -150,14 +154,11 @@ class TestOptimizerEngine:
         """Test that local search improves or maintains score."""
         initial_solution = engine_wvw.greedy_seed(request_wvw)
         initial_score, _ = engine_wvw.evaluate_solution(initial_solution, request_wvw)
-        
+
         improved_solution, improved_score = engine_wvw.local_search(
-            initial_solution, 
-            initial_score, 
-            request_wvw,
-            time_budget=1.0
+            initial_solution, initial_score, request_wvw, time_budget=1.0
         )
-        
+
         # Local search should not make solution worse
         assert improved_score >= initial_score - 0.01  # Allow small float errors
         assert len(improved_solution) == len(initial_solution)
@@ -165,12 +166,12 @@ class TestOptimizerEngine:
     def test_optimize_respects_time_budget(self, engine_wvw, request_wvw):
         """Test that optimize respects time budget."""
         import time
-        
+
         time_budget = 2.0
         start_time = time.time()
         result = engine_wvw.optimize(request_wvw, time_budget=time_budget)
         elapsed_time = time.time() - start_time
-        
+
         # Should complete within time budget + some overhead (20%)
         assert elapsed_time < time_budget * 1.2
         assert result is not None
@@ -178,7 +179,7 @@ class TestOptimizerEngine:
     def test_optimize_returns_valid_result(self, engine_pve, request_pve):
         """Test that optimize returns a valid result."""
         result = engine_pve.optimize(request_pve, time_budget=2.0)
-        
+
         assert isinstance(result, CompositionOptimizationResult)
         assert result.composition is not None
         assert result.global_score > 0
@@ -193,9 +194,9 @@ class TestOptimizerEngine:
             game_mode="fractale",
             fixed_professions=[1, 1, 2],  # 2 Guardians, 1 Revenant
         )
-        
+
         result = engine_pve.optimize(request, time_budget=2.0)
-        
+
         # Check that fixed professions are respected
         professions = [m.profession_id for m in result.composition.members]
         assert professions.count(1) >= 2  # At least 2 Guardians
@@ -204,7 +205,7 @@ class TestOptimizerEngine:
     def test_optimize_pve_fractale_composition(self, engine_pve, request_pve):
         """Test optimizing a PvE fractale composition."""
         result = engine_pve.optimize(request_pve, time_budget=2.0)
-        
+
         # PvE fractale should have good boon coverage
         assert result.metrics["boon_coverage"]["quickness"] > 0.5
         assert result.metrics["boon_coverage"]["alacrity"] > 0.5
@@ -213,7 +214,7 @@ class TestOptimizerEngine:
     def test_optimize_wvw_zerg_composition(self, engine_wvw, request_wvw):
         """Test optimizing a WvW zerg composition."""
         result = engine_wvw.optimize(request_wvw, time_budget=3.0)
-        
+
         # WvW should prioritize stability and healing
         assert result.metrics["boon_coverage"].get("stability", 0) > 0.3
         assert result.metrics.get("healing", 0) > 0.5
@@ -225,11 +226,11 @@ class TestOptimizerEngine:
             squad_size=5,
             game_type="pve",
             game_mode="fractale",
-            min_boon_uptime={"quickness": 0.9, "alacrity": 0.9}
+            min_boon_uptime={"quickness": 0.9, "alacrity": 0.9},
         )
-        
+
         result = engine_pve.optimize(request, time_budget=2.0)
-        
+
         # Should meet minimum requirements (or get close)
         assert result.metrics["boon_coverage"]["quickness"] >= 0.8
         assert result.metrics["boon_coverage"]["alacrity"] >= 0.8
@@ -245,9 +246,9 @@ class TestOptimizeCompositionFunction:
             game_type="wvw",
             game_mode="roaming",
         )
-        
+
         result = optimize_composition(request, time_budget=2.0)
-        
+
         assert isinstance(result, CompositionOptimizationResult)
         assert result.composition.squad_size == 10
         assert len(result.composition.members) == 10
@@ -259,9 +260,9 @@ class TestOptimizeCompositionFunction:
             game_type="pve",
             game_mode="fractale",
         )
-        
+
         result = optimize_composition(request, time_budget=2.0)
-        
+
         assert isinstance(result, CompositionOptimizationResult)
         assert result.composition.squad_size == 5
         assert len(result.composition.members) == 5
@@ -273,16 +274,16 @@ class TestOptimizeCompositionFunction:
             game_type="wvw",
             game_mode="zerg",
         )
-        
+
         request_pve = CompositionOptimizationRequest(
             squad_size=10,
             game_type="pve",
             game_mode="raid",
         )
-        
+
         result_wvw = optimize_composition(request_wvw, time_budget=2.0)
         result_pve = optimize_composition(request_pve, time_budget=2.0)
-        
+
         # Results should be different due to mode-specific effects
         # WvW and PvE have different trait behaviors (e.g., Herald)
         assert result_wvw.composition.name != result_pve.composition.name
@@ -299,9 +300,9 @@ class TestEdgeCases:
             game_type="pve",
             game_mode="openworld",
         )
-        
+
         result = engine.optimize(request, time_budget=1.0)
-        
+
         assert len(result.composition.members) == 1
         assert result.global_score > 0
 
@@ -313,10 +314,10 @@ class TestEdgeCases:
             game_type="wvw",
             game_mode="zerg",
         )
-        
+
         # Should complete even with large squad
         result = engine.optimize(request, time_budget=5.0)
-        
+
         assert len(result.composition.members) == 50
         assert result.global_score > 0
 
@@ -329,8 +330,8 @@ class TestEdgeCases:
             game_mode="fractale",
             fixed_professions=[],
         )
-        
+
         result = engine.optimize(request, time_budget=2.0)
-        
+
         assert len(result.composition.members) == 5
         assert result.global_score > 0
