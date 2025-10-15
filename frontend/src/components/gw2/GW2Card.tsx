@@ -31,9 +31,9 @@ export const GW2Card = ({
     <motion.div
       className={cn(
         'relative rounded-lg border backdrop-blur-sm',
-        'bg-gradient-to-br from-gw2-fractal-dark/90 to-gw2-fractal/80',
-        'border-gw2-gold/20',
-        glowing && 'shadow-[0_0_20px_rgba(255,193,7,0.3)]',
+        'bg-gradient-to-br from-slate-900/90 to-slate-800/80',
+        'border-purple-500/20',
+        glowing && 'shadow-[0_0_20px_rgba(168,85,247,0.3)]',
         onClick && 'cursor-pointer',
         className
       )}
@@ -42,8 +42,8 @@ export const GW2Card = ({
       transition={{ duration: 0.3, ease: 'easeOut' }}
       onClick={onClick}
     >
-      {/* Gold accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-gw2-gold to-transparent opacity-50" />
+      {/* Purple accent line */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-50" />
       
       {/* Content */}
       <div className="relative z-10 p-6">
@@ -51,7 +51,7 @@ export const GW2Card = ({
       </div>
       
       {/* Bottom accent */}
-      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-gw2-gold/30 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
     </motion.div>
   );
 };
