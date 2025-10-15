@@ -1,14 +1,55 @@
-# Contributing to GW2 Team Builder (Backend)
+# 🤝 Contributing to GW2 WvW Builder
 
-Thank you for your interest in contributing! This document explains how to set up your environment, run tests, interpret coverage, and follow our conventions.
+Thank you for your interest in contributing! This guide explains how to set up your environment, follow our conventions, and submit high-quality contributions.
 
-## Introduction
-The backend is a FastAPI application using SQLAlchemy 2.0 and Pydantic v2. Tests are run with pytest and Poetry manages dependencies.
+## 📋 Table of Contents
 
-## Prerequisites
-- Python 3.13
-- Poetry installed (https://python-poetry.org/)
-- Access to this repository
+- [Code of Conduct](#code-of-conduct)
+- [Getting Started](#getting-started)
+- [Development Workflow](#development-workflow)
+- [Commit Convention](#commit-convention)
+- [Testing Guidelines](#testing-guidelines)
+- [Code Quality](#code-quality)
+- [Pull Request Process](#pull-request-process)
+
+## 📜 Code of Conduct
+
+This project follows the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/). By participating, you agree to uphold this code.
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Python** 3.10, 3.11, or 3.12
+- **Node.js** 20+
+- **Poetry** 1.7+ (Python dependency management)
+- **npm** (JavaScript dependency management)
+- **Git** for version control
+
+### Initial Setup
+
+1. **Fork and clone the repository**:
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/GW2_WvWbuilder.git
+   cd GW2_WvWbuilder
+   ```
+
+2. **Install backend dependencies**:
+   ```bash
+   cd backend
+   poetry install
+   ```
+
+3. **Install frontend dependencies**:
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+4. **Set up pre-commit hooks** (optional but recommended):
+   ```bash
+   poetry run pre-commit install
+   ```
 
 ## Installation
 ```bash
@@ -16,12 +57,144 @@ cd backend
 poetry install
 ```
 
-## Running Tests and Coverage
+## 🔄 Development Workflow
+
+### 1. Create a Feature Branch
+
+Always create a new branch for your work:
+
 ```bash
-poetry run pytest --cov=app --cov-report=term-missing
+git checkout -b feature/my-awesome-feature
+# or
+git checkout -b fix/bug-description
 ```
-- A summary shows which lines are not covered per module ("Missing").
-- Target coverage: ≥ 90% overall. Please add tests if your change reduces coverage.
+
+**Branch naming convention**:
+- `feature/` - New features
+- `fix/` - Bug fixes
+- `docs/` - Documentation only
+- `refactor/` - Code refactoring
+- `test/` - Adding tests
+- `chore/` - Maintenance tasks
+
+### 2. Make Your Changes
+
+Write clean, well-documented code following our conventions (see [Code Quality](#code-quality)).
+
+### 3. Test Your Changes
+
+Run tests locally before committing:
+
+```bash
+# Backend tests
+cd backend
+poetry run pytest --cov=app --cov-report=term-missing
+
+# Frontend tests
+cd frontend
+npm run test
+npm run lint
+```
+
+### 4. Commit Your Changes
+
+Follow our [commit convention](#commit-convention).
+
+## 📝 Commit Convention
+
+We use **Conventional Commits** for clear and semantic commit messages.
+
+### Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### Types
+
+- **feat**: New feature
+- **fix**: Bug fix
+- **docs**: Documentation changes
+- **style**: Code style changes (formatting, no logic change)
+- **refactor**: Code refactoring
+- **test**: Adding or updating tests
+- **chore**: Maintenance tasks (dependencies, configs)
+- **perf**: Performance improvements
+- **ci**: CI/CD changes
+
+### Examples
+
+```bash
+feat(backend): add build optimizer endpoint
+
+Implements the build optimization algorithm that suggests
+the best team composition based on constraints.
+
+Closes #123
+```
+
+```bash
+fix(frontend): resolve navigation menu overflow on mobile
+
+The navigation menu was overflowing on small screens.
+Added responsive breakpoints to fix the layout.
+```
+
+```bash
+docs(readme): update installation instructions
+
+Added clarity to Python version requirements and
+installation steps for Poetry.
+```
+
+## 🧪 Testing Guidelines
+
+### Backend Testing
+
+**Test Coverage Target**: ≥28% (current), ≥50% (ideal)
+
+Run all backend tests:
+```bash
+cd backend
+poetry run pytest --cov=app --cov-report=term-missing --cov-report=html
+```
+
+Open coverage report:
+```bash
+open htmlcov/index.html  # macOS
+xdg-open htmlcov/index.html  # Linux
+```
+
+### Test Structure
+
+```python
+# tests/unit/test_example.py
+import pytest
+from app.module import function
+
+def test_function_success():
+    """Test successful case."""
+    result = function(valid_input)
+    assert result == expected_output
+
+def test_function_error():
+    """Test error handling."""
+    with pytest.raises(ValueError):
+        function(invalid_input)
+```
+
+### Frontend Testing
+
+Run frontend tests:
+```bash
+cd frontend
+npm run test        # Unit tests (Vitest)
+npm run test:e2e    # E2E tests (Cypress)
+```
 
 ### Warnings & Filtering
 - Gzip-related `PytestUnraisableExceptionWarning` are filtered globally via pytest `addopts`.
@@ -50,14 +223,85 @@ client.app.dependency_overrides[deps.get_current_active_user] = lambda: normal_u
 ```
 Tip: keep overrides minimal and restore them after each test if needed to avoid cross-test interference.
 
-## Code Conventions
-- Pydantic v2:
-  - Use `ConfigDict(from_attributes=True)` for ORM models.
-  - Use `json_schema_extra={"example": ...}` instead of `example=` in `Field(...)`.
-- SQLAlchemy 2.0:
-  - Use the modern Declarative mapping. Relationships are defined in `app/models/models.py`.
-  - Many-to-many examples: `composition_members` and `user_roles` association tables.
-- Linting/formatting: prefer Black and isort.
+## ✨ Code Quality
+
+### Backend Standards
+
+**Linting and Formatting**:
+```bash
+cd backend
+
+# Format code with Black
+poetry run black app/ tests/
+
+# Sort imports with isort
+poetry run isort app/ tests/
+
+# Lint with Ruff
+poetry run ruff check app/ tests/
+
+# Type checking with MyPy
+poetry run mypy app/ --ignore-missing-imports
+```
+
+**Code Conventions**:
+
+1. **Pydantic v2**:
+   ```python
+   from pydantic import BaseModel, Field, ConfigDict
+   
+   class MyModel(BaseModel):
+       name: str = Field(..., description="Name")
+       
+       model_config = ConfigDict(
+           from_attributes=True,
+           json_schema_extra={"example": {"name": "Example"}}
+       )
+   ```
+
+2. **SQLAlchemy 2.0**:
+   ```python
+   from sqlalchemy import select
+   from sqlalchemy.orm import selectinload
+   
+   # Modern query syntax
+   stmt = select(Model).where(Model.id == 1).options(
+       selectinload(Model.relations)
+   )
+   result = await db.execute(stmt)
+   ```
+
+3. **Type Hints**:
+   ```python
+   from typing import Optional, List
+   
+   def get_items(db: Session, skip: int = 0) -> List[Item]:
+       """Get items with proper type hints."""
+       pass
+   ```
+
+### Frontend Standards
+
+**Linting and Formatting**:
+```bash
+cd frontend
+
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+
+# Type checking
+npm run type-check
+```
+
+**Code Conventions**:
+
+1. **TypeScript**: Use strict typing
+2. **Components**: Functional components with hooks
+3. **Styling**: TailwindCSS utility classes
+4. **State**: React Query for server state
 
 ## Running the Backend Locally (optional)
 
@@ -83,21 +327,112 @@ poetry run uvicorn app.main:app --reload
 ```
 Visit: http://127.0.0.1:8000/docs
 
-## Contribution Process
-1. Create a feature branch: `git checkout -b feature/my-change` (or `fix/...`).
-2. Make changes with clear, small commits.
-3. Ensure tests pass locally and coverage stays ≥ 90%.
-4. Open a Pull Request to `develop` or `main` with:
-   - Description of changes
-   - Test plan and coverage
-5. CI will run tests and coverage on your PR.
+## 🔀 Pull Request Process
 
-## CI & Coverage
+### Before Submitting
 
-### Workflow GitHub Actions
-Le workflow CI/CD est configuré dans `.github/workflows/test-and-coverage.yml` et s'exécute sur :
-- Push et pull requests vers les branches `main` et `develop`
-- Modification des fichiers du backend ou de la configuration CI
+1. ✅ **Tests pass locally**:
+   ```bash
+   cd backend && poetry run pytest
+   cd frontend && npm run test
+   ```
+
+2. ✅ **Code is properly formatted**:
+   ```bash
+   cd backend && poetry run black app/ tests/
+   cd frontend && npm run format
+   ```
+
+3. ✅ **Linting passes**:
+   ```bash
+   cd backend && poetry run ruff check app/ tests/
+   cd frontend && npm run lint
+   ```
+
+4. ✅ **Coverage maintained or improved**
+   - Backend: Check coverage report
+   - Frontend: Check test results
+
+### Submitting a PR
+
+1. **Push your branch**:
+   ```bash
+   git push origin feature/my-awesome-feature
+   ```
+
+2. **Open a Pull Request** on GitHub with:
+
+   **Title**: Follow commit convention
+   ```
+   feat(backend): add build optimizer endpoint
+   ```
+
+   **Description**: Use this template
+   ```markdown
+   ## Description
+   Brief description of changes
+   
+   ## Type of Change
+   - [ ] Bug fix
+   - [ ] New feature
+   - [ ] Breaking change
+   - [ ] Documentation update
+   
+   ## Testing
+   - [ ] Unit tests added/updated
+   - [ ] Integration tests added/updated
+   - [ ] Manual testing performed
+   
+   ## Checklist
+   - [ ] Code follows project conventions
+   - [ ] Tests pass locally
+   - [ ] Documentation updated
+   - [ ] No new warnings introduced
+   
+   ## Related Issues
+   Closes #123
+   ```
+
+3. **Wait for CI/CD**:
+   - All tests must pass
+   - Coverage must not decrease significantly
+   - Code quality checks must pass
+
+4. **Address Review Comments**:
+   - Respond to all feedback
+   - Make requested changes
+   - Push updates to the same branch
+
+### Review Process
+
+- **Approval**: At least 1 reviewer approval required
+- **CI/CD**: All checks must pass (97%+ PASS rate)
+- **Merge**: Squash and merge into target branch
+
+## 🤖 CI/CD Pipeline
+
+### GitHub Actions Workflows
+
+Our CI/CD pipeline runs automatically on:
+- **Push** to `main`, `develop`, or `release/*` branches
+- **Pull Requests** targeting these branches
+
+**Workflows**:
+- `ci-cd-modern.yml`: Modern CI/CD with Python 3.10-3.12 matrix
+- `ci-cd-complete.yml`: Complete validation suite
+- `deploy-staging.yml`: Automated staging deployment
+
+**What Gets Tested**:
+- ✅ Backend: Unit tests, integration tests, linting, security
+- ✅ Frontend: Unit tests, E2E tests, linting, build
+- ✅ Code quality: Coverage, type checking, formatting
+- ✅ Security: Dependency scanning, vulnerability checks
+
+### Coverage Requirements
+
+- **Backend**: ≥28% (current requirement)
+- **Frontend**: ≥80% (current requirement)
+- **Target**: Gradual improvement toward 50%+ backend coverage
 
 ### Fonctionnalités du workflow
 - **Tests automatisés** : Exécution des tests unitaires et d'intégration
@@ -138,3 +473,81 @@ Les rapports de couverture sont disponibles :
 Open an issue with steps to reproduce, expected behavior, and any logs or screenshots.
 
 Thanks for contributing!
+
+## 📚 Additional Resources
+
+### Documentation
+
+- **API Documentation**: http://localhost:8000/docs (when running locally)
+- **Project Docs**: [/docs](./docs/) folder
+- **Coverage Reports**: [/docs/BACKEND_COVERAGE_FINAL.md](./docs/BACKEND_COVERAGE_FINAL.md)
+- **MyPy Report**: [/docs/MYPY_CLEANUP_REPORT.md](./docs/MYPY_CLEANUP_REPORT.md)
+
+### Useful Commands
+
+**Backend**:
+```bash
+# Run specific test file
+poetry run pytest tests/unit/test_example.py -v
+
+# Run with coverage
+poetry run pytest --cov=app --cov-report=html
+
+# Run only failed tests
+poetry run pytest --lf
+
+# Run with debugging
+poetry run pytest -s tests/unit/test_example.py::test_function
+```
+
+**Frontend**:
+```bash
+# Run specific test
+npm run test -- CompositionsPage
+
+# Run with coverage
+npm run test:coverage
+
+# Watch mode
+npm run test:watch
+```
+
+### Getting Help
+
+- 📖 Check [existing issues](https://github.com/Roddygithub/GW2_WvWbuilder/issues)
+- 💬 Ask questions in [Discussions](https://github.com/Roddygithub/GW2_WvWbuilder/discussions)
+- 🐛 Report bugs with detailed reproduction steps
+
+## 🎯 Areas Needing Contribution
+
+High-priority areas for contribution:
+
+1. **Test Coverage** (Backend):
+   - API endpoint integration tests
+   - Service layer unit tests
+   - Error handling edge cases
+
+2. **Documentation**:
+   - API endpoint examples
+   - Architecture diagrams
+   - User guides
+
+3. **Frontend**:
+   - UI/UX improvements
+   - Accessibility enhancements
+   - Mobile responsiveness
+
+4. **Features**:
+   - Build optimizer improvements
+   - Advanced filtering
+   - Performance optimizations
+
+## �� License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+---
+
+**Thank you for contributing to GW2 WvW Builder! 🎉**
+
+*Last updated: 2025-10-15 | Version: v3.2.0*

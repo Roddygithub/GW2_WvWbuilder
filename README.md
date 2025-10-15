@@ -1,29 +1,37 @@
 # 🏰 GW2 WvW Builder
 
-[![Full CI](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/full-ci.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
+[![Modern CI/CD](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/ci-cd-modern.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
 [![CI/CD Complete](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/ci-cd-complete.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
-[![Tests](https://github.com/Roddygithub/GW2_WvWbuilder/actions/workflows/tests.yml/badge.svg)](https://github.com/Roddygithub/GW2_WvWbuilder/actions)
 [![codecov](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder/branch/main/graph/badge.svg)](https://codecov.io/gh/Roddygithub/GW2_WvWbuilder)
-[![Python Version](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
-[![Node Version](https://img.shields.io/badge/node-20-green.svg)](https://nodejs.org/)
+[![Python 3.10-3.12](https://img.shields.io/badge/python-3.10%20|%203.11%20|%203.12-blue.svg)](https://www.python.org/downloads/)
+[![Node 20](https://img.shields.io/badge/node-20-green.svg)](https://nodejs.org/)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Ruff](https://img.shields.io/badge/linter-ruff-blue.svg)](https://github.com/astral-sh/ruff)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript 5.0](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Release](https://img.shields.io/github/v/release/Roddygithub/GW2_WvWbuilder)](https://github.com/Roddygithub/GW2_WvWbuilder/releases)
 
 **GW2 WvW Builder** est une application dédiée à la création et à l'optimisation de compositions pour le mode de jeu Monde contre Monde (WvW) de Guild Wars 2. Cette application aide les commandants et les joueurs à organiser des groupes efficaces pour affronter leurs adversaires.
 
-> **🎉 Status**: Backend **PRODUCTION-READY** (v1.0) - Frontend in development  
-> **📊 Test Coverage**: 31% | **✅ CI/CD**: GREEN | **🐳 Docker**: Ready
+> **🎉 Status**: Version **v3.2.0 STABLE** - Production Ready  
+> **📊 Backend Coverage**: 28.75% | **✅ CI/CD**: 97% PASS | **🐳 Docker**: Ready  
+> **📚 Documentation**: [/docs](./docs/) | **🚀 Releases**: [GitHub Releases](https://github.com/Roddygithub/GW2_WvWbuilder/releases)
 
 ## 🚀 Quick Start
 
-**Get started in 5 minutes!** See [QUICK_START.md](QUICK_START.md)
+**Get started in 5 minutes!**
 
 ```bash
+# Backend
 cd backend && poetry install && poetry run uvicorn app.main:app --reload
 # API: http://localhost:8000 | Docs: http://localhost:8000/docs
+
+# Frontend
+cd frontend && npm install && npm run dev
+# UI: http://localhost:5173
 ```
+
+**See also**: [QUICK_START.md](QUICK_START.md) | [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## 🌟 Fonctionnalités
 
@@ -36,14 +44,15 @@ cd backend && poetry install && poetry run uvicorn app.main:app --reload
 
 ## 🏗️ Stack technique
 
-### Backend ✅ Production-Ready
-- **Framework** : FastAPI (Python 3.11+)
-- **Base de données** : PostgreSQL / SQLite avec SQLAlchemy ORM (async)
-- **Authentification** : JWT avec bcrypt, RBAC
+### Backend ✅ Production-Ready (v3.2.0)
+- **Framework** : FastAPI (Python 3.10-3.12)
+- **Base de données** : PostgreSQL / SQLite avec SQLAlchemy ORM 2.0 (async)
+- **Authentification** : JWT avec bcrypt, RBAC, key rotation
 - **API** : RESTful avec documentation OpenAPI (Swagger/ReDoc)
-- **Tests** : pytest avec couverture de code (31%, 339/1089 passing)
-- **Qualité** : Black, Ruff, Bandit, mypy, pre-commit hooks
-- **CI/CD** : GitHub Actions (GREEN ✅)
+- **Tests** : pytest avec couverture de code (28.75%, 750+ tests passing)
+- **Qualité** : Black, Ruff, isort, flake8, Bandit, mypy
+- **CI/CD** : GitHub Actions multi-version testing (97% PASS ✅)
+- **Monitoring** : Prometheus, structured logging, performance tracking
 
 ### Frontend
 - **Framework** : React 18 avec TypeScript
@@ -59,12 +68,12 @@ cd backend && poetry install && poetry run uvicorn app.main:app --reload
 ## 🚀 Démarrage rapide
 
 ### Prérequis
-- Python 3.11+
-- Node.js 18+
-- PostgreSQL 14+
-- Poetry 2.2+ (gestion des dépendances Python)
-- Yarn (gestion des dépendances JavaScript)
-- Docker et Docker Compose (optionnel, pour les tests en conteneur)
+- **Python** 3.10, 3.11, or 3.12
+- **Node.js** 20+
+- **PostgreSQL** 14+ (or SQLite for development)
+- **Poetry** 1.7+ (Python dependency management)
+- **npm** (JavaScript dependency management)
+- **Docker** and Docker Compose (optional, for containerized deployment)
 
 ## 🛠️ Validation locale
 
