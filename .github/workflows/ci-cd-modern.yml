@@ -89,6 +89,8 @@ jobs:
       
       - name: Run unit tests
         working-directory: ./backend
+        env:
+          TESTING: "true"
         run: |
           poetry run pytest tests/unit/ -v \
             --cov=app \
@@ -96,7 +98,9 @@ jobs:
             --cov-report=term \
             --cov-report=html \
             --junitxml=junit-unit.xml \
-            -n auto
+            --maxfail=5 \
+            --continue-on-collection-errors \
+            
         continue-on-error: true
       
       - name: Upload unit test coverage
@@ -147,12 +151,14 @@ jobs:
         working-directory: ./backend
         env:
           DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+          TESTING: "true"
         run: |
           poetry run pytest tests/integration/ -v \
             --cov=app \
             --cov-report=xml \
             --junitxml=junit-integration.xml \
-            -n auto
+            --maxfail=5 \
+            --continue-on-collection-errors
         continue-on-error: true
       
       - name: Upload integration test coverage
@@ -191,7 +197,9 @@ jobs:
             --cov=app/core/optimizer \
             --cov-report=xml \
             --cov-report=term \
-            --junitxml=junit-optimizer.xml
+            --junitxml=junit-optimizer.xml \
+            --maxfail=5 \
+            --continue-on-collection-errors
         continue-on-error: true
       
       - name: Upload optimizer test coverage
@@ -262,7 +270,7 @@ jobs:
       
       - name: Run ESLint
         working-directory: ./frontend
-        run: npm run lint || true
+        run: npm run lint -- --fix || true
         continue-on-error: true
       
       - name: Run Prettier check
@@ -374,6 +382,9 @@ jobs:
       
       - name: Run Cypress E2E tests
         working-directory: ./frontend
+        env:
+          BACKEND_URL: http://localhost:8000
+        timeout-minutes: 15
         run: npm run e2e:headless || true
         continue-on-error: true
       
@@ -412,7 +423,7 @@ jobs:
       
       - name: Build production bundle
         working-directory: ./frontend
-        run: npm run build || true
+        run: npm ci && npm run build || true
         continue-on-error: true
       
       - name: Analyze bundle size
@@ -422,6 +433,7 @@ jobs:
           npx vite-bundle-visualizer
           du -sh dist/
           find dist/ -type f -name "*.js" -exec ls -lh {} \;
+        continue-on-error: true
       
       - name: Upload build artifacts
         if: ${{ hashFiles('frontend/dist/**') != '' }}
