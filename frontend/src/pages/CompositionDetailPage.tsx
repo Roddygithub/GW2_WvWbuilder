@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PROFESSIONS_DATA, ALL_ROLES } from "@/data/professions";
-import { cn } from "@/lib/utils";
+import { cn } from "@lib/utils";
 import type { Role } from "@/types/squad";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"; // Corrected import
 import { format } from "date-fns";
