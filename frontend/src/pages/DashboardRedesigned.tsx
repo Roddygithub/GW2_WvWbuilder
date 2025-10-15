@@ -5,11 +5,10 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import { useAuthStore } from '../store/authStore';
-import { getDashboardStats, getRecentActivities } from '../api/dashboard';
+import { useDashboardStats, useRecentActivities } from '../hooks/useDashboard';
 import { Activity } from '../components/ActivityFeedRedesigned';
 import { useLiveRefresh } from '../hooks/useLiveRefresh';
 import { isAuthenticated as tokenAuthenticated } from '../api/auth';
@@ -22,6 +21,8 @@ import ActivityChart from '../components/ActivityChart';
 import ActivityFeedRedesigned from '../components/ActivityFeedRedesigned';
 import QuickActions from '../components/QuickActions';
 import LiveRefreshIndicator from '../components/LiveRefreshIndicator';
+import LoadingState from '../components/LoadingState';
+import ErrorState from '../components/ErrorState';
 
 // Icons
 import { Layers, FileText, Users, TrendingUp } from 'lucide-react';
@@ -33,21 +34,11 @@ export default function DashboardRedesigned() {
   const [liveRefreshEnabled, setLiveRefreshEnabled] = useState(true);
   const isAuthed = isAuthenticated || tokenAuthenticated();
 
-  // Fetch dashboard statistics
-  const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErrorData } = useQuery({
-    queryKey: ['dashboard-stats'],
-    queryFn: getDashboardStats,
-    enabled: isAuthed,
-    retry: 1,
-  });
+  // Fetch dashboard statistics using custom hook
+  const { data: stats, isLoading: statsLoading, isError: statsError, error: statsErrorData, refetch: refetchStats } = useDashboardStats();
 
-  // Fetch recent activities
-  const { data: recentActivities } = useQuery({
-    queryKey: ['recent-activities'],
-    queryFn: () => getRecentActivities(10),
-    enabled: isAuthed,
-    retry: 1,
-  });
+  // Fetch recent activities using custom hook
+  const { data: recentActivities } = useRecentActivities(10);
 
   // Live refresh hook
   const { refresh, isRefreshing, lastRefresh } = useLiveRefresh({
@@ -77,24 +68,13 @@ export default function DashboardRedesigned() {
     }
   }, [recentActivities]);
 
-  // Note: Do not block rendering while user profile loads; use fallbacks in UI.
-
   // Show loading indicator while stats are loading or refreshing
   if (statsLoading || isRefreshing) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
         <Sidebar />
         <div className="ml-[280px] transition-all duration-300" data-testid="main-content">
-          <div className="flex items-center justify-center min-h-screen">
-            <div data-testid="loading" className="p-6 rounded-md text-center">
-              <div className="animate-pulse space-y-4">
-                <div className="h-8 w-48 bg-purple-500/30 rounded mx-auto" />
-                <div className="h-4 w-32 bg-purple-400/20 rounded mx-auto" />
-                <div className="h-4 w-40 bg-purple-400/20 rounded mx-auto" />
-              </div>
-              <p className="text-slate-300 mt-4 text-sm">Loading dashboard...</p>
-            </div>
-          </div>
+          <LoadingState message="Loading dashboard..." />
         </div>
       </div>
     );
@@ -106,23 +86,10 @@ export default function DashboardRedesigned() {
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
         <Sidebar />
         <div className="ml-[280px] transition-all duration-300" data-testid="main-content">
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="p-6 rounded-md bg-red-500/10 border border-red-500/50 max-w-md">
-              <h2 className="text-xl font-bold text-red-400 mb-2">Error Loading Dashboard</h2>
-              <p className="text-slate-300 text-sm">
-                Unable to load dashboard data. The service is temporarily unavailable.
-              </p>
-              <p className="text-slate-400 text-xs mt-2">
-                {statsErrorData instanceof Error ? statsErrorData.message : 'Failed to fetch dashboard statistics'}
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-md text-sm"
-              >
-                Retry
-              </button>
-            </div>
-          </div>
+          <ErrorState
+            message={statsErrorData instanceof Error ? statsErrorData.message : 'Failed to load dashboard'}
+            onRetry={() => refetchStats()}
+          />
         </div>
       </div>
     );
