@@ -58,7 +58,10 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: formData.toString(),
-      signal: AbortSignal.timeout(5000), // 5 second timeout
+      mode: 'cors',
+      credentials: 'include',
+      // Remove timeout for debugging
+      // signal: AbortSignal.timeout(5000),
     });
 
     console.log('[AUTH] Response received:', response.status, response.statusText);
