@@ -104,13 +104,13 @@ def get_rate_limiter(times: int = 100, seconds: int = 60) -> Callable:
         or not settings.CACHE_ENABLED
     ):
         # Retourner une fonction vide qui ne fait rien
-        async def noop_rate_limiter():
+        async def noop_rate_limiter() -> None:
             return None
 
         return noop_rate_limiter
 
     # Create a rate limiter with the specified limits
-    async def rate_limiter(request: Request):
+    async def rate_limiter(request: Request) -> None:
         # Use the remote ID as the key for rate limiting
         key = f"rate_limit:{await get_remote_id(request)}"
 

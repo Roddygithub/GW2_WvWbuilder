@@ -7,7 +7,7 @@ utilisées dans l'application, notamment pour les tokens JWT et le chiffrement.
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Iterator, Tuple, Optional
 
 import jwt
 from fastapi import HTTPException, status
@@ -25,7 +25,7 @@ class KeyRotationService:
     facilitant ainsi la rotation sécurisée des clés sans interruption de service.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialise le service avec les clés actuelles et historiques."""
         self.current_key_id = "key_1"
         self.keys: Dict[str, str] = {}
@@ -35,7 +35,7 @@ class KeyRotationService:
         self.last_rotation_date = datetime.now(timezone.utc)
         self._initialize_keys()
 
-    def _initialize_keys(self):
+    def _initialize_keys(self) -> None:
         """Initialise les clés à partir des variables d'environnement."""
         # Clé principale (obligatoire)
         main_key = settings.SECRET_KEY
@@ -106,7 +106,7 @@ class KeyRotationService:
             logger.error(f"Échec de la rotation des clés: {str(e)}", exc_info=True)
             return False
 
-    def _cleanup_old_keys(self):
+    def _cleanup_old_keys(self) -> None:
         """Nettoie les anciennes clés, ne garde que les plus récentes."""
         # Trier les clés par numéro (du plus ancien au plus récent)
         sorted_keys = sorted(
@@ -196,11 +196,11 @@ class KeyRotationService:
             to_encode, self.keys[self.current_key_id], algorithm=settings.JWT_ALGORITHM
         )
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Tuple[str, str]]:
         """Permet d'itérer sur les paires (key_id, key_value)."""
         return iter(self.keys.items())
 
-    def items(self):
+    def items(self) -> Any:
         """Retourne les paires (key_id, key_value)."""
         return self.keys.items()
 

@@ -61,13 +61,13 @@ class GW2Client:
         self._rate_limit_remaining = 300  # Default rate limit
         self._rate_limit_reset = 0
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> "GW2Client":
         """Async context manager entry."""
         if self._session is None:
             self._session = aiohttp.ClientSession(timeout=self.DEFAULT_TIMEOUT)
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Async context manager exit."""
         if self._session and not self._session.closed:
             await self._session.close()

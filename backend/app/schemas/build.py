@@ -389,7 +389,7 @@ class BuildInDBBase(BaseModel):
 
     @model_validator(mode="wrap")
     @classmethod
-    def handle_professions(cls, data: Any, handler) -> Any:
+    def handle_professions(cls, data: Any, handler: Any) -> Any:
         if isinstance(data, dict):
             # Handle case where data is a dict (from_orm or direct dict)
             if "professions" not in data:

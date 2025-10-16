@@ -3,7 +3,7 @@ Schémas Pydantic pour la gestion des équipes.
 """
 
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import BaseModel, Field, model_validator, ConfigDict
 
@@ -35,7 +35,7 @@ class TeamCreate(TeamBase):
     pass
 
 
-class TeamUpdate(TeamBase):
+class TeamUpdate(BaseModel):
     """Schéma pour la mise à jour d'une équipe."""
 
     name: Optional[str] = Field(None, max_length=100, description="Nom de l'équipe")
@@ -97,11 +97,11 @@ class Team(TeamInDBBase):
     member_count: int = Field(0, description="Nombre de membres dans l'équipe")
 
     @model_validator(mode="before")
-    def set_member_count(cls, values):
+    def set_member_count(cls, values: Any) -> Any:
         """Calcule automatiquement le nombre de membres."""
         if "members" in values and values["members"] is not None:
-            return len(values["members"])
-        return v or 0
+            values["member_count"] = len(values["members"])
+        return values
 
 
 # Schéma pour la réponse de l'API

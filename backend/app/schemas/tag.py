@@ -23,7 +23,7 @@ class TagCreate(TagBase):
     pass
 
 
-class TagUpdate(TagBase):
+class TagUpdate(BaseModel):
     """Schéma pour la mise à jour d'un tag."""
 
     name: Optional[str] = Field(None, max_length=50, description="Nom du tag")

@@ -106,30 +106,5 @@ class TestBuildsErrorHandling:
         errors = response.json()["detail"]
         assert any("constraints" in str(error.get("loc", [])) for error in errors)
 
-    async def test_list_builds_with_invalid_pagination(
-        self, async_client: AsyncClient, test_user: Dict[str, Any]
-    ):
-        """Test listing builds with invalid pagination parameters."""
-        # Test with negative skip
-        response = await async_client.get(
-            f"{settings.API_V1_STR}/builds/",
-            params={"skip": -1},
-            headers={"Authorization": f"Bearer {test_user['access_token']}"},
-        )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-        # Test with zero limit
-        response = await async_client.get(
-            f"{settings.API_V1_STR}/builds/",
-            params={"limit": 0},
-            headers={"Authorization": f"Bearer {test_user['access_token']}"},
-        )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-        # Test with non-integer values
-        response = await async_client.get(
-            f"{settings.API_V1_STR}/builds/",
-            params={"skip": "not_an_integer", "limit": "also_not_an_integer"},
-            headers={"Authorization": f"Bearer {test_user['access_token']}"},
-        )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    # NOTE: test_list_builds_with_invalid_pagination moved to tests/test_builds_pagination.py
+    # because it requires the top-level conftest fixtures that properly initialize the database

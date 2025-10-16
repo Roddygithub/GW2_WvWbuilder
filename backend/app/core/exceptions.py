@@ -1,5 +1,6 @@
 """Custom exceptions for the application."""
 
+from typing import Any
 from fastapi import status
 from fastapi.exceptions import HTTPException
 
@@ -11,7 +12,7 @@ class CustomException(Exception):
         self,
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
         detail: str = "An unexpected error occurred",
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         self.status_code = status_code
         self.detail = detail
@@ -25,7 +26,7 @@ class BaseAPIException(HTTPException):
     detail: str = "An unexpected error occurred"
 
     def __init__(
-        self, detail: str | None = None, status_code: int | None = None, **kwargs
+        self, detail: str | None = None, status_code: int | None = None, **kwargs: Any
     ) -> None:
         if status_code is not None:
             self.status_code = status_code

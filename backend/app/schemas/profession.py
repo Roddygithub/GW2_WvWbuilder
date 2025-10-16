@@ -1,3 +1,4 @@
+from __future__ import annotations
 from datetime import datetime, date
 from pydantic import BaseModel, Field, ConfigDict, HttpUrl, model_validator
 from typing import Optional, List, Dict
@@ -139,7 +140,6 @@ class ProfessionUpdate(BaseModel):
     game_modes: Optional[List[GameMode]] = Field(
         default=None,
         description="Nouvelle liste des modes de jeu supportés (doit être une liste non vide si fournie)",
-        min_length=1,
         examples=[["WvW", "PvE"]],
         json_schema_extra={"x-example": ["WvW", "PvE"]},
     )
@@ -259,7 +259,7 @@ class Profession(ProfessionInDBBase):
     """
 
     # Relations avec d'autres modèles
-    elite_specializations: List["EliteSpecialization"] = Field(
+    elite_specializations: List["EliteSpecializationInDB"] = Field(
         default_factory=list,
         description="Liste complète des spécialisations d'élite disponibles pour cette profession",
     )
@@ -278,24 +278,24 @@ class Profession(ProfessionInDBBase):
 
     def get_elite_specialization_by_id(
         self, spec_id: int
-    ) -> Optional["EliteSpecialization"]:
+    ) -> Optional["EliteSpecializationInDB"]:
         """Récupère une spécialisation d'élite par son identifiant.
 
         Args:
             spec_id: L'identifiant de la spécialisation d'élite à récupérer
 
         Returns:
-            Optional[EliteSpecialization]: La spécialisation d'élite si trouvée, None sinon
+            Optional[EliteSpecializationInDB]: La spécialisation d'élite si trouvée, None sinon
         """
         return next(
             (spec for spec in self.elite_specializations if spec.id == spec_id), None
         )
 
-    def get_active_elite_specializations(self) -> List["EliteSpecialization"]:
+    def get_active_elite_specializations(self) -> List["EliteSpecializationInDB"]:
         """Récupère la liste des spécialisations d'élite actives.
 
         Returns:
-            List[EliteSpecialization]: Liste des spécialisations d'élite actives
+            List[EliteSpecializationInDB]: Liste des spécialisations d'élite actives
         """
         return [spec for spec in self.elite_specializations if spec.is_active]
 
@@ -779,3 +779,7 @@ class EliteSpecializationInDB(EliteSpecializationInDBBase):
     """
 
     pass
+
+# Ensure forward references between Profession and EliteSpecialization are resolved
+Profession.model_rebuild()
+EliteSpecialization.model_rebuild()

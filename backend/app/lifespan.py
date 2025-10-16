@@ -37,7 +37,7 @@ class AppLifespan:
 
         # Enregistrer les gestionnaires d'arrêt
         @self.app.on_event("shutdown")
-        async def shutdown_event():
+        async def shutdown_event() -> None:
             await self.shutdown()
 
     async def shutdown(self) -> None:

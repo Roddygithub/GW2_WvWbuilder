@@ -28,7 +28,7 @@ class TeamMemberCreate(TeamMemberBase):
     user_id: int = Field(..., description="ID de l'utilisateur à ajouter")
 
 
-class TeamMemberUpdate(TeamMemberBase):
+class TeamMemberUpdate(BaseModel):
     """Schéma pour la mise à jour du rôle d'un membre."""
 
     role: Optional[TeamRole] = Field(

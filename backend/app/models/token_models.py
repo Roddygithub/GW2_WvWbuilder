@@ -5,13 +5,16 @@ Ce module contient les modèles pour la gestion des jetons d'authentification.
 """
 
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from pydantic import BaseModel as PydanticBaseModel
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base, TimeStampedMixin
+
+if TYPE_CHECKING:
+    from .user import User
 
 
 class Token(Base, TimeStampedMixin):
@@ -33,8 +36,8 @@ class Token(Base, TimeStampedMixin):
     # Relations
     user: Mapped["User"] = relationship("User", back_populates="tokens")
 
-    def __repr__(self):
-        return f"<Token {self.token[:10]}...>"
+    def __repr__(self) -> str:
+        return f"<Token {self.token[:10]}..."
 
     def is_expired(self) -> bool:
         """Vérifie si le jeton est expiré."""
@@ -60,5 +63,5 @@ class TokenPayload(PydanticBaseModel):
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat() if v else None}
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<TokenPayload sub={self.sub} exp={self.exp} scopes={self.scopes}>"

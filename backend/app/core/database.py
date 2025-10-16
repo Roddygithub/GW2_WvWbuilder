@@ -6,10 +6,10 @@ pour les performances en production et en développement.
 """
 
 import logging
-from typing import AsyncGenerator, Dict, Any
-
+from typing import Any, AsyncGenerator, Dict, Optional
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
+    AsyncSessionTransaction,
     async_sessionmaker,
     create_async_engine,
     AsyncEngine,
@@ -21,7 +21,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-def setup_sqlite_pragmas(dbapi_connection, connection_record):
+def setup_sqlite_pragmas(dbapi_connection: Any, connection_record: Any) -> None:
     """Configure les pragmas SQLite pour de meilleures performances."""
     if "sqlite" in str(dbapi_connection):
         cursor = dbapi_connection.cursor()
@@ -49,7 +49,7 @@ def setup_sqlite_pragmas(dbapi_connection, connection_record):
             cursor.close()
 
 
-def create_db_engine(url: str, **kwargs) -> AsyncEngine:
+def create_db_engine(url: str, **kwargs: Any) -> AsyncEngine:
     """Crée un moteur de base de données asynchrone avec une configuration optimisée.
 
     Args:
@@ -103,7 +103,7 @@ def create_db_engine(url: str, **kwargs) -> AsyncEngine:
     if is_sqlite:
 
         @event.listens_for(engine.sync_engine, "connect")
-        def configure_sqlite(dbapi_connection, connection_record):
+        def configure_sqlite(dbapi_connection: Any, connection_record: Any) -> None:
             setup_sqlite_pragmas(dbapi_connection, connection_record)
 
     return engine
@@ -147,13 +147,13 @@ class Transaction:
 
     def __init__(self, session: AsyncSession):
         self.session = session
-        self.transaction = None
+        self.transaction: Optional[AsyncSessionTransaction] = None
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> AsyncSession:
         self.transaction = await self.session.begin()
         return self.session
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         if exc_type is not None:
             await self.transaction.rollback()
             logger.error(

@@ -29,6 +29,7 @@ class Role(Base, TimeStampedMixin):
     description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     permission_level: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     # Les champs created_at et updated_at sont fournis par TimeStampedMixin
 
     # Relations many-to-many avec les utilisateurs via le modèle UserRole

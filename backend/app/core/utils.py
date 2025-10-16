@@ -3,7 +3,7 @@ Utilitaires généraux pour l'application.
 """
 
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Type, TypeVar
 
 from fastapi import Request
@@ -86,7 +86,7 @@ def get_or_create(
     db: Session,
     model: Type[ModelType],
     defaults: Optional[Dict[str, Any]] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> tuple[ModelType, bool]:
     """
     Récupère un objet ou le crée s'il n'existe pas.

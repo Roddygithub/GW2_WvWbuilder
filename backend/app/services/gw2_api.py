@@ -300,7 +300,7 @@ class GW2APIService:
 
     # Méthodes de synchronisation
 
-    async def sync_professions(self, db) -> List[GW2Profession]:
+    async def sync_professions(self, db: Any) -> List[GW2Profession]:
         """
         Synchronise les métiers GW2 avec la base de données.
 

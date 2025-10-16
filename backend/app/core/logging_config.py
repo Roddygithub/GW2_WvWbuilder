@@ -2,6 +2,7 @@ import logging
 import logging.config
 from pathlib import Path
 import sys
+from typing import Any
 from app.core.config import settings
 
 
@@ -106,7 +107,7 @@ def setup_logging() -> None:
     logger.info("Logging is configured")
 
     # Log unhandled exceptions
-    def handle_exception(exc_type, exc_value, exc_traceback):
+    def handle_exception(exc_type: Any, exc_value: Any, exc_traceback: Any) -> None:
         """Log unhandled exceptions"""
         if issubclass(exc_type, KeyboardInterrupt):
             # Call the default excepthook when keyboard interrupt is raised

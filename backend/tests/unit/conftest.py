@@ -10,6 +10,7 @@ import sqlite3
 import uuid
 import os
 import sys
+from datetime import timedelta
 from typing import AsyncGenerator, Callable
 
 import pytest
@@ -481,7 +482,7 @@ async def auth_headers(test_user: User, client: AsyncClient):
     """
 
     access_token = create_access_token(
-        data={"sub": test_user.email}, expires_delta=timedelta(minutes=15)
+        subject=str(test_user.id), expires_delta=timedelta(minutes=15)
     )
 
     return {"Authorization": f"Bearer {access_token}"}
@@ -501,7 +502,7 @@ async def admin_auth_headers(admin_user: User, client: AsyncClient):
     """
 
     access_token = create_access_token(
-        data={"sub": admin_user.email}, expires_delta=timedelta(minutes=15)
+        subject=str(admin_user.id), expires_delta=timedelta(minutes=15)
     )
 
     return {"Authorization": f"Bearer {access_token}"}

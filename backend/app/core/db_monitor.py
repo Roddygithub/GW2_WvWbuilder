@@ -78,7 +78,7 @@ class DatabaseMonitor:
         self._last_check: Optional[datetime] = None
         self._last_metrics: Dict = {}
 
-    async def close(self):
+    async def close(self) -> None:
         """Ferme le moteur de base de données s'il a été créé par cette instance."""
         if (
             hasattr(self, "_is_engine_temporary")
@@ -337,7 +337,7 @@ class DatabaseMonitor:
 
         return issues
 
-    async def start_monitoring(self, interval: int = 300):
+    async def start_monitoring(self, interval: int = 300) -> None:
         """Démarre la surveillance continue de la base de données."""
         logger.info(
             f"Démarrage de la surveillance de la base de données (intervalle: {interval}s)"

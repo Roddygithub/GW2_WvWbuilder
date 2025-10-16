@@ -139,7 +139,10 @@ class CompositionCreate(CompositionBase):
         json_schema_extra={
             "examples": [
                 {
-                    **CompositionBase.model_config["json_schema_extra"]["examples"][0],
+                    "name": "Zerg Frontline",
+                    "description": "Composition pour le frontline en zerg",
+                    "squad_size": 50,
+                    "is_public": True,
                     "members": [
                         {
                             "user_id": 1,
@@ -203,30 +206,48 @@ class CompositionInDBBase(CompositionBase):
             "examples": [
                 {
                     "id": 1,
+                    "name": "Zerg Frontline",
+                    "description": "Composition pour le frontline en zerg",
+                    "squad_size": 50,
+                    "is_public": True,
                     "created_by": 1,
                     "created_at": "2023-01-01T00:00:00",
                     "updated_at": "2023-01-01T00:00:00",
-                    **CompositionBase.model_config["json_schema_extra"]["examples"][0],
                 }
             ]
         },
     )
 
 
-class Composition(CompositionInDBBase):
+class Composition(BaseModel):
     """Schema for composition data returned by API"""
 
+    id: int
+    name: str
+    description: Optional[str] = None
+    squad_size: int
+    is_public: bool
+    created_by: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
     members: List[Dict[str, Any]] = Field(default_factory=list)
     tags: List[Dict[str, Any]] = Field(default_factory=list)
     created_by_username: Optional[str] = Field(None, examples=["john_doe"])
 
     model_config = ConfigDict(
+        from_attributes=True,
         json_schema_extra={
             "examples": [
                 {
-                    **CompositionInDBBase.model_config["json_schema_extra"]["examples"][
-                        0
-                    ],
+                    "id": 1,
+                    "name": "Zerg Frontline",
+                    "description": "Composition pour le frontline en zerg",
+                    "squad_size": 50,
+                    "is_public": True,
+                    "created_by": 1,
+                    "created_at": "2023-01-01T00:00:00",
+                    "updated_at": "2023-01-01T00:00:00",
+                    "created_by_username": "john_doe",
                     "members": [
                         {
                             "id": 1,
@@ -525,9 +546,11 @@ class CompositionOptimizationResult(BaseModel):
         json_schema_extra={
             "examples": [
                 {
-                    "composition": Composition.model_config["json_schema_extra"][
-                        "examples"
-                    ][0],
+                    "composition": {
+                        "id": 1,
+                        "name": "Zerg Frontline",
+                        "squad_size": 50,
+                    },
                     "score": 0.85,
                     "metrics": {
                         "boon_uptime": 0.9,

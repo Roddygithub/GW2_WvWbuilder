@@ -58,7 +58,7 @@ JWT_TOKEN_PREFIX = "Bearer"
 
 
 # Debug: Afficher les valeurs des variables d'environnement et de configuration
-def log_jwt_config():
+def log_jwt_config() -> None:
     print("=== Configuration JWT ===")
     print(f"JWT_ALGORITHM: {settings.JWT_ALGORITHM}")
     print(

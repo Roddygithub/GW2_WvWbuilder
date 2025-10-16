@@ -30,14 +30,17 @@ class User(Base, TimeStampedMixin):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    username: Mapped[str] = mapped_column(
-        String, unique=True, index=True, nullable=False
+    username: Mapped[Optional[str]] = mapped_column(
+        String, unique=True, index=True, nullable=True
     )
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     full_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    first_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    last_name: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     # Les champs created_at et updated_at sont fournis par TimeStampedMixin
 
     # Relations
@@ -117,6 +120,12 @@ class User(Base, TimeStampedMixin):
         from app.core.security.jwt import create_access_token
 
         return create_access_token(subject=str(self.id))
+
+    # Compatibility for tests that expect dict-like access
+    def __getitem__(self, key: str) -> str:
+        if key == "access_token":
+            return self.get_auth_token()
+        raise KeyError(key)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, User):

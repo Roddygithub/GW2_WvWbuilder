@@ -29,7 +29,7 @@ class PermissionCreate(PermissionBase):
 
 
 # Properties to receive on permission update
-class PermissionUpdate(PermissionBase):
+class PermissionUpdate(BaseModel):
     """Model for updating an existing permission."""
 
     name: Optional[str] = Field(

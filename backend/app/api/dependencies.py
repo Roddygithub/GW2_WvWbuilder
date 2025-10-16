@@ -146,7 +146,7 @@ def get_authorization_header(
     return token
 
 
-def has_permission(required_permissions: List[str]):
+def has_permission(required_permissions: List[str]) -> Callable[..., User]:
     """
     Vérifie que l'utilisateur a les permissions requises.
 

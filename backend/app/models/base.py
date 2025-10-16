@@ -40,7 +40,7 @@ class BaseUUIDModel(Base, UUIDMixin):
 
     __abstract__ = True
 
-    id = None  # On désactive l'id auto-incrémenté
+    id: Any = None  # type: ignore[assignment]  # On désactive l'id auto-incrémenté
     uuid: Mapped[str] = mapped_column(
         String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True
     )
@@ -76,11 +76,11 @@ class BaseModel(PydanticBaseModel):
         json_encoders = {datetime: lambda v: v.isoformat()}
         populate_by_name = True
 
-    def dict(self, **kwargs) -> Dict[str, Any]:
+    def dict(self, **kwargs: Any) -> Dict[str, Any]:
         """Override dict method to handle datetime serialization."""
         return super().model_dump(by_alias=True, **kwargs)
 
     @classmethod
-    def from_orm(cls, obj):
+    def from_orm(cls, obj: Any) -> "BaseSchema":
         """Convert SQLAlchemy model to Pydantic model."""
         return cls.model_validate(obj)

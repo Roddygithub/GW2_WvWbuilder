@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 MAX_RETRIES = 5
 
 
-async def send_webhook(ctx, webhook_id: int, event_type: str, payload: Dict[str, Any]):
+async def send_webhook(ctx: Dict[str, Any], webhook_id: int, event_type: str, payload: Dict[str, Any]) -> None:
     """
     Envoie un payload de webhook à une URL de destination.
 
@@ -71,7 +71,7 @@ async def send_webhook(ctx, webhook_id: int, event_type: str, payload: Dict[str,
         await db.close()
 
 
-async def dispatch_webhook_event(event_type: str, payload: Dict[str, Any]):
+async def dispatch_webhook_event(event_type: str, payload: Dict[str, Any]) -> None:
     """
     Récupère les webhooks abonnés à un événement et met en file d'attente les tâches d'envoi.
 
@@ -88,7 +88,7 @@ async def dispatch_webhook_event(event_type: str, payload: Dict[str, Any]):
         await db.close()
 
 
-def get_redis_settings():
+def get_redis_settings() -> RedisSettings:
     """Retourne les paramètres Redis en fonction de l'environnement."""
     if settings.TESTING:
         # Utilise une base de données Redis différente pour les tests
@@ -126,11 +126,11 @@ class WorkerSettings:
 arq_pool = None
 
 
-async def startup(ctx):
+async def startup(ctx: Dict[str, Any]) -> None:
     global arq_pool
     arq_pool = await create_pool(WorkerSettings)
 
 
-async def shutdown(ctx):
+async def shutdown(ctx: Dict[str, Any]) -> None:
     if arq_pool:
         await arq_pool.close()

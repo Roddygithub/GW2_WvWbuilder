@@ -20,7 +20,7 @@ router = APIRouter()
 
 
 @router.get("/account", response_model=Dict[str, Any])
-async def get_account_info(gw2_client: GW2Client = Depends(get_gw2_client)):
+async def get_account_info(gw2_client: GW2Client = Depends(get_gw2_client)) -> Dict[str, Any]:
     """
     Get the account information for the authenticated user.
 
@@ -42,7 +42,7 @@ async def get_account_info(gw2_client: GW2Client = Depends(get_gw2_client)):
 
 
 @router.get("/characters", response_model=List[str])
-async def list_characters(gw2_client: GW2Client = Depends(get_gw2_client)):
+async def list_characters(gw2_client: GW2Client = Depends(get_gw2_client)) -> List[str]:
     """
     Get the list of character names for the authenticated account.
 
@@ -66,7 +66,7 @@ async def list_characters(gw2_client: GW2Client = Depends(get_gw2_client)):
 @router.get("/characters/{character_name}", response_model=Dict[str, Any])
 async def get_character(
     character_name: str, gw2_client: GW2Client = Depends(get_gw2_client)
-):
+) -> Dict[str, Any]:
     """
     Get detailed information about a specific character.
 
@@ -96,7 +96,7 @@ async def get_character(
 
 
 @router.get("/items/{item_id}", response_model=Dict[str, Any])
-async def get_item(item_id: int, gw2_client: GW2Client = Depends(get_gw2_client)):
+async def get_item(item_id: int, gw2_client: GW2Client = Depends(get_gw2_client)) -> Dict[str, Any]:
     """
     Get information about an item by its ID.
 
@@ -119,7 +119,7 @@ async def get_item(item_id: int, gw2_client: GW2Client = Depends(get_gw2_client)
 
 
 @router.get("/professions", response_model=List[str])
-async def list_professions(gw2_client: GW2Client = Depends(get_gw2_client)):
+async def list_professions(gw2_client: GW2Client = Depends(get_gw2_client)) -> List[str]:
     """Get a list of all profession IDs."""
     try:
         professions = await gw2_client.get_professions()
@@ -134,7 +134,7 @@ async def list_professions(gw2_client: GW2Client = Depends(get_gw2_client)):
 @router.get("/professions/{profession_id}", response_model=Dict[str, Any])
 async def get_profession(
     profession_id: str, gw2_client: GW2Client = Depends(get_gw2_client)
-):
+) -> Dict[str, Any]:
     """
     Get detailed information about a profession.
 

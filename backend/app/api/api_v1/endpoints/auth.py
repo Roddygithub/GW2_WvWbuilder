@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any
+from typing import Any, Dict
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -236,13 +236,13 @@ async def refresh_token(
 
 
 @router.post("/test-simple")
-async def test_simple():
+async def test_simple() -> Dict[str, str]:
     """Simple test endpoint without dependencies."""
     return {"status": "ok", "message": "Auth endpoint working"}
 
 
 @router.post("/test-login-minimal")
-async def test_login_minimal(form_data: OAuth2PasswordRequestForm = Depends()):
+async def test_login_minimal(form_data: OAuth2PasswordRequestForm = Depends()) -> Dict[str, str]:
     """Minimal login test without database."""
     return {
         "status": "received",

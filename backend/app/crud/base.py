@@ -34,7 +34,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
 
     # --- Synchronous methods ---
 
-    def get(self, db: Session, id: Any, **kwargs) -> Optional[ModelType]:
+    def get(self, db: Session, id: Any, **kwargs: Any) -> Optional[ModelType]:
         """Get a single object by ID.
 
         Args:
@@ -51,7 +51,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db.scalars(stmt).first()
 
     def get_multi(
-        self, db: Session, *, skip: int = 0, limit: int = 100, **filters
+        self, db: Session, *, skip: int = 0, limit: int = 100, **filters: Any
     ) -> List[ModelType]:
         """Get multiple objects with optional filtering and pagination.
 
@@ -149,7 +149,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     # --- Asynchronous methods ---
 
     async def get_async(
-        self, db: AsyncSession, id: Any, **kwargs
+        self, db: AsyncSession, id: Any, **kwargs: Any
     ) -> Optional[ModelType]:
         """Asynchronously get a single object by ID.
 
@@ -168,7 +168,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return result.scalars().first()
 
     async def get_multi_async(
-        self, db: AsyncSession, *, skip: int = 0, limit: int = 100, **filters
+        self, db: AsyncSession, *, skip: int = 0, limit: int = 100, **filters: Any
     ) -> List[ModelType]:
         """Asynchronously get multiple objects with optional filtering and pagination.
 

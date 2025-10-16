@@ -66,7 +66,7 @@ def rotate_keys() -> bool:
         return False
 
 
-def update_environment_keys():
+def update_environment_keys() -> None:
     """Met à jour les variables d'environnement avec les clés actuelles."""
     try:
         # Mettre à jour le fichier .env si nécessaire
@@ -117,14 +117,14 @@ def update_environment_keys():
         # Ne pas échouer si la mise à jour du fichier échoue
 
 
-def schedule_key_rotation():
+def schedule_key_rotation() -> None:
     """Planifie la prochaine rotation des clés."""
     try:
         import schedule
         import time
         from threading import Thread
 
-        def run_scheduler():
+        def run_scheduler() -> None:
             # Planifier la rotation quotidienne
             schedule.every().day.at("03:00").do(rotate_keys)
 

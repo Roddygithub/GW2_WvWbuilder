@@ -3,6 +3,7 @@ Base model definitions for SQLAlchemy models.
 This module is separated to avoid circular imports.
 """
 
+import uuid
 from datetime import datetime
 from typing import Any, Type, TypeVar, Optional, Dict
 from pydantic import BaseModel as PydanticBaseModel
@@ -66,7 +67,7 @@ class BaseUUIDModel(Base):
     """Base model with UUID as primary key."""
 
     __abstract__ = True
-    id = None  # Remove the default id column
+    id: Any = None  # type: ignore[assignment]  # Remove the default id column
     uuid: Mapped[str] = mapped_column(
         String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True
     )
@@ -100,7 +101,7 @@ class BaseModel(PydanticBaseModel):
             datetime: lambda v: v.isoformat() if v else None,
         }
 
-    def dict(self, **kwargs):
+    def dict(self, **kwargs: Any) -> Dict[str, Any]:
         """Override dict method to handle datetime serialization."""
         data = super().model_dump(**kwargs)
         for key, value in data.items():
@@ -109,6 +110,6 @@ class BaseModel(PydanticBaseModel):
         return data
 
     @classmethod
-    def from_orm(cls, obj):
+    def from_orm(cls, obj: Any) -> "BaseModel":
         """Convert SQLAlchemy model to Pydantic model."""
         return cls.model_validate(obj)

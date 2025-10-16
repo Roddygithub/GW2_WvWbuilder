@@ -5,13 +5,13 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.exceptions import RequestValidationError, HTTPException
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 from contextlib import asynccontextmanager
 
 import os
 import logging
 import asyncio
-from typing import Dict, AsyncIterator
+from typing import Any, Dict, AsyncIterator
 
 from app.core.config import settings
 from app.api.api_v1.api import api_router
@@ -137,7 +137,7 @@ def create_application() -> FastAPI:
 
     # Add security headers middleware
     @application.middleware("http")
-    async def add_security_headers(request: Request, call_next):
+    async def add_security_headers(request: Request, call_next: Any) -> Response:
         """Ajoute des en-têtes de sécurité de base aux réponses."""
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"

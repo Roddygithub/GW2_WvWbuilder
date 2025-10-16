@@ -83,7 +83,7 @@ async def _composition_to_schema(
 
 async def _validate_member_refs(
     db: AsyncSession, m: schemas.CompositionMemberBase | dict
-):
+) -> dict:
     """
     Validate that all foreign key references in a member exist.
     Returns a dict of the validated member data.

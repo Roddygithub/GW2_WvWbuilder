@@ -4,7 +4,7 @@ Module de composition pour l'application GW2 WvW Builder.
 Ce module définit le modèle Composition pour la gestion des compositions d'équipe WvW.
 """
 
-from typing import List, Optional, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, Integer, String, Text, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -104,7 +104,7 @@ class Composition(Base, TimeStampedMixin):
             "team_id": self.team_id,
         }
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         # Valider squad_size avant l'initialisation
         if "squad_size" in kwargs and kwargs["squad_size"] <= 0:
             raise ValueError("squad_size must be greater than 0")

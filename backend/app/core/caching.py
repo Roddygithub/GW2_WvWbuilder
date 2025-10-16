@@ -2,7 +2,7 @@
 Configuration du cache de second niveau SQLAlchemy avec Redis.
 """
 
-from typing import Any, TypeVar
+from typing import Any, Callable, Iterator, TypeVar
 
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.session import Session as SessionType
@@ -72,13 +72,13 @@ def configure_sqlalchemy_caching() -> None:
             Query personnalisé qui prend en charge le cache de second niveau.
             """
 
-            def __init__(self, *args, **kwargs):
+            def __init__(self, *args: Any, **kwargs: Any) -> None:
                 self.cache_region = regions["default"]
                 self.cache_key = None
                 self.cache_invalidate = False
                 super().__init__(*args, **kwargs)
 
-            def get(self, ident, **kwargs):
+            def get(self, ident: Any, **kwargs: Any) -> Any:
                 """
                 Récupère un objet par sa clé primaire avec mise en cache.
                 """
@@ -98,7 +98,7 @@ def configure_sqlalchemy_caching() -> None:
 
                 return result
 
-            def __iter__(self):
+            def __iter__(self) -> Iterator[Any]:
                 """
                 Exécute la requête et met en cache le résultat si nécessaire.
                 """
@@ -160,7 +160,7 @@ def configure_sqlalchemy_caching() -> None:
 
         # Configuration du cache pour les relations
         @event.listens_for(Mapper, "after_configured")
-        def setup_cache_listeners():
+        def setup_cache_listeners() -> None:
             """
             Configure les écouteurs d'événements pour le cache des relations.
             """
@@ -173,7 +173,7 @@ def configure_sqlalchemy_caching() -> None:
                         if hasattr(prop, "mapper"):
 
                             @event.listens_for(mapper.class_, "refresh")
-                            def receive_refresh(target, context, attrs):
+                            def receive_refresh(target: Any, context: Any, attrs: Any) -> None:
                                 if hasattr(target, "_cache_namespace"):
                                     cache_key = f"{target._cache_namespace}:{target.id}"
                                     regions["default"].delete(cache_key)
@@ -190,7 +190,7 @@ def configure_sqlalchemy_caching() -> None:
         )
 
 
-def cache_region(region_name: str = "default"):
+def cache_region(region_name: str = "default") -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """
     Décorateur pour mettre en cache le résultat d'une fonction.
 
@@ -201,7 +201,7 @@ def cache_region(region_name: str = "default"):
         Le décorateur de fonction
     """
 
-    def decorator(func):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         if not settings.CACHE_ENABLED:
             return func
 
@@ -224,7 +224,7 @@ def cache_region(region_name: str = "default"):
             ),
         )
 
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Générer une clé de cache unique basée sur les arguments
             cache_key = f"{func.__module__}.{func.__name__}:{str(args)}:{str(kwargs)}"
 

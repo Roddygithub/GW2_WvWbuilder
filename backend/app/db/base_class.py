@@ -44,7 +44,7 @@ class Base:
         db.refresh(self)
 
 
-def setup_database_events():
+def setup_database_events() -> None:
     """Configure les événements de base de données."""
     from sqlalchemy.engine import Engine
 
