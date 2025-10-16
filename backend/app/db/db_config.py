@@ -21,7 +21,7 @@ else:
     ASYNC_SQLALCHEMY_DATABASE_URI = settings.ASYNC_SQLALCHEMY_DATABASE_URI
 
 
-def get_engine_kwargs(is_async: bool = False):
+def get_engine_kwargs(is_async: bool = False) -> dict:
     """
     Obtient la configuration du moteur en fonction du type de base de données.
     """
@@ -70,14 +70,14 @@ async_engine = create_async_engine(
 )
 
 
-def init_db():
+def init_db() -> None:
     """Initialise la base de données en créant toutes les tables."""
     from app.db.base import Base
 
     Base.metadata.create_all(bind=engine)
 
 
-async def init_async_db():
+async def init_async_db() -> None:
     """Initialise la base de données de manière asynchrone en créant toutes les tables."""
     from app.db.base import Base
 
