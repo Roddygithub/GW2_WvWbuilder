@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict, List, Optional, Union
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.sql import func
 
 from datetime import datetime, timezone
