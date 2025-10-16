@@ -23,6 +23,16 @@ from .crud_webhook import webhook as webhook_crud, CRUDWebhook
 
 # For backward compatibility
 auth = user_crud  # Alias for auth operations
+profession = profession_crud  # Alias for endpoints compatibility
+elite_specialization = elite_spec_crud  # Alias for endpoints compatibility
+build = build_crud  # Alias for endpoints compatibility
+composition = composition_crud  # Alias for endpoints compatibility
+team = team_crud  # Alias for endpoints compatibility
+team_member = team_member_crud  # Alias for endpoints compatibility
+tag = tag_crud  # Alias for endpoints compatibility
+webhook = webhook_crud  # Alias for endpoints compatibility
+role = role_crud  # Alias for endpoints compatibility
+permission = permission_crud  # Alias for endpoints compatibility
 
 # Export all CRUD operations
 __all__ = [
@@ -57,4 +67,15 @@ __all__ = [
     # Webhooks
     "CRUDWebhook",
     "webhook_crud",
+    # Aliases for endpoints compatibility
+    "profession",
+    "elite_specialization",
+    "build",
+    "composition",
+    "team",
+    "team_member",
+    "tag",
+    "webhook",
+    "role",
+    "permission",
 ]
