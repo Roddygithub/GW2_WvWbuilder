@@ -2,58 +2,148 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 
+ * GUILD WARS 2 THEME
+ * Inspired by the official GW2 UI aesthetic
+ * Dark fractal backgrounds with golden accents
+ */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    /* Light theme - GW2 Tyria style (clean parchment) */
+    --background: 40 20% 96%;
+    --foreground: 0 0% 10%;
+    --card: 40 20% 98%;
+    --card-foreground: 0 0% 10%;
+    --popover: 40 20% 98%;
+    --popover-foreground: 0 0% 10%;
+    
+    /* Primary - GW2 Gold (iconic color) */
+    --primary: 45 100% 51%;
+    --primary-foreground: 0 0% 10%;
+    
+    /* Secondary - Bronze/Copper tones */
+    --secondary: 30 50% 60%;
+    --secondary-foreground: 0 0% 10%;
+    
+    /* Muted - Soft gray */
+    --muted: 40 10% 90%;
+    --muted-foreground: 0 0% 40%;
+    
+    /* Accent - Light gold glow */
+    --accent: 45 100% 70%;
+    --accent-foreground: 0 0% 10%;
+    
+    /* Destructive - GW2 Red */
+    --destructive: 0 84% 40%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders & Inputs */
+    --border: 40 30% 80%;
+    --input: 40 30% 85%;
+    --ring: 45 100% 51%;
+    
+    --radius: 0.375rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    /* Dark theme - GW2 Fractal/Mists style (dark with gold) */
+    --background: 210 15% 8%;
+    --foreground: 45 20% 90%;
+    --card: 210 15% 10%;
+    --card-foreground: 45 20% 90%;
+    --popover: 210 15% 10%;
+    --popover-foreground: 45 20% 90%;
+    
+    /* Primary - GW2 Gold (brighter in dark) */
+    --primary: 45 100% 58%;
+    --primary-foreground: 0 0% 10%;
+    
+    /* Secondary - Dark bronze */
+    --secondary: 30 30% 30%;
+    --secondary-foreground: 45 20% 90%;
+    
+    /* Muted - Dark gray with slight blue (fractal) */
+    --muted: 210 15% 18%;
+    --muted-foreground: 45 10% 60%;
+    
+    /* Accent - Glowing gold */
+    --accent: 45 100% 55%;
+    --accent-foreground: 0 0% 10%;
+    
+    /* Destructive - Bright red */
+    --destructive: 0 80% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders & Inputs - Subtle with gold tint */
+    --border: 210 20% 20%;
+    --input: 210 20% 15%;
+    --ring: 45 100% 58%;
   }
+}
+
+/* FORCE GW2 THEME - Override everything */
+* {
+  @apply border-border;
+}
+
+html,
+body,
+#root {
+  @apply bg-background text-foreground;
+  background: #0D1117 !important; /* Force fractal dark */
+  color: #e8dfc4 !important; /* Force light gold text */
 }
 
 @layer base {
   * {
     @apply border-border;
   }
+  
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  }
+  
+  /* GW2 Gold text for headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-primary font-semibold;
+  }
+  
+  /* Subtle glow on interactive elements */
+  button:hover, a:hover {
+    transition: all 0.2s ease;
+  }
+}
+
+/* GW2-specific utility classes */
+@layer utilities {
+  .gw2-gold-glow {
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+  }
+  
+  .gw2-card {
+    @apply bg-card border border-border rounded-lg shadow-lg;
+    background-image: linear-gradient(135deg, rgba(255, 193, 7, 0.02) 0%, transparent 50%);
+  }
+  
+  .gw2-button {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+    @apply font-semibold rounded shadow-md transition-all duration-200;
+    @apply hover:shadow-lg hover:scale-105;
+  }
+  
+  .gw2-button-secondary {
+    @apply bg-secondary text-secondary-foreground hover:bg-secondary/90;
+    @apply font-medium rounded shadow transition-all duration-200;
+  }
+  
+  .gw2-fractal-bg {
+    background: linear-gradient(135deg, #0D1117 0%, #1a1f2e 50%, #0D1117 100%);
+  }
+  
+  .gw2-tyria-pattern {
+    background-image: 
+      repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255, 193, 7, 0.03) 35px, rgba(255, 193, 7, 0.03) 70px);
   }
 }

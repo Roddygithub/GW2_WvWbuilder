@@ -25,8 +25,8 @@ class CRUDComposition(CRUDBase[Composition, CompositionCreate, CompositionUpdate
         self, db: AsyncSession, *, obj_in: CompositionCreate, owner_id: int
     ) -> Composition:
         """Create a new composition with an owner."""
-        # Extraire les données de l'objet d'entrée
-        data = obj_in.dict(exclude_unset=True, exclude={"members"})
+        # Extraire les données de l'objet d'entrée, exclure created_by pour l'ajouter après
+        data = obj_in.dict(exclude_unset=True, exclude={"members", "created_by"})
 
         # S'assurer que les champs status et game_mode sont correctement définis
         if "status" not in data:

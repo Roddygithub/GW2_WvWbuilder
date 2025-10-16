@@ -15,7 +15,7 @@ module.exports = {
     },
     extend: {
       colors: {
-        // Shadcn UI colors
+        // GW2 Theme - Override defaults
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -49,7 +49,34 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // GW2 Theme Colors
+        // Override Tailwind defaults with GW2 theme
+        slate: {
+          50: '#fafaf9',
+          100: '#f5f5f4',
+          200: '#e7e5e4',
+          300: '#d6d3d1',
+          400: '#a8a29e',
+          500: '#78716c',
+          600: '#57534e',
+          700: '#44403c',
+          800: '#292524',
+          900: '#1c1917',
+          950: '#0D1117', // GW2 fractal dark
+        },
+        purple: {
+          50: '#faf5ff',
+          100: '#f3e8ff',
+          200: '#e9d5ff',
+          300: '#d8b4fe',
+          400: '#c084fc',
+          500: '#FFC107', // GW2 gold
+          600: '#FF8F00', // GW2 gold dark
+          700: '#7e22ce',
+          800: '#6b21a8',
+          900: '#581c87',
+          950: '#3b0764',
+        },
+        // GW2 Direct Colors
         gw2: {
           gold: {
             DEFAULT: '#FFC107',

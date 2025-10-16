@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import DashboardRedesigned from "./pages/DashboardRedesigned";
+import DashboardGW2 from "./pages/DashboardGW2";
 import TagsManager from "./pages/TagsManager";
 import GW2Test from "./pages/GW2Test";
 import BuilderV2Page from "./pages/BuilderV2";
@@ -28,7 +28,7 @@ function App() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <DashboardRedesigned />
+            <DashboardGW2 />
           </ProtectedRoute>
         }
       />
