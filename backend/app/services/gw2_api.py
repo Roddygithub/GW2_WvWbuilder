@@ -184,6 +184,7 @@ class GW2APIService:
             except httpx.RequestError as e:
                 last_error = f"Erreur de requête: {str(e)}"
                 logger.error(last_error)
+                raise
 
             except Exception as e:
                 last_error = f"Erreur inattendue: {str(e)}"

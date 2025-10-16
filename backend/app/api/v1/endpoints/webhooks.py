@@ -19,7 +19,7 @@ async def create_webhook(
     webhook_in: WebhookCreate,
     current_user: User = Depends(deps.get_current_active_user),
     webhook_service: deps.WebhookService = Depends(deps.get_webhook_service),
-):
+) -> Webhook:
     """
     Crée un webhook pour recevoir des notifications sur des événements spécifiques.
     Le secret du webhook sera généré automatiquement et ne sera visible qu'une seule fois.
@@ -41,7 +41,7 @@ async def read_webhooks(
     webhook_service: deps.WebhookService = Depends(deps.get_webhook_service),
     skip: int = 0,
     limit: int = 100,
-):
+) -> List[Webhook]:
     """
     Récupère les webhooks de l'utilisateur.
     """
@@ -61,7 +61,7 @@ async def read_webhook(
     webhook_id: int,
     current_user: User = Depends(deps.get_current_active_user),
     webhook_service: deps.WebhookService = Depends(deps.get_webhook_service),
-):
+) -> Webhook:
     """
     Récupère un webhook par son ID.
     L'utilisateur doit être le propriétaire du webhook.
@@ -87,7 +87,7 @@ async def update_webhook(
     webhook_in: WebhookUpdate,
     current_user: User = Depends(deps.get_current_active_user),
     webhook_service: deps.WebhookService = Depends(deps.get_webhook_service),
-):
+) -> Webhook:
     """
     Met à jour un webhook existant.
     Seuls les champs fournis dans le corps de la requête seront mis à jour.
@@ -103,7 +103,7 @@ async def update_webhook(
 
     # Update the webhook
     updated_webhook = await webhook_service.update_webhook(
-        webhook_id=webhook_id, webhook_in=webhook_in, user_id=current_user.id
+        webhook_id=webhook_id, webhook_in=webhook_in
     )
 
     if not updated_webhook:
@@ -124,7 +124,7 @@ async def delete_webhook(
     webhook_id: int,
     current_user: User = Depends(deps.get_current_active_user),
     webhook_service: deps.WebhookService = Depends(deps.get_webhook_service),
-):
+) -> bool:
     """
     Supprime un webhook.
     L'utilisateur doit être le propriétaire du webhook pour le supprimer.
@@ -140,7 +140,7 @@ async def delete_webhook(
 
     # Delete the webhook
     deleted_webhook = await webhook_service.delete_webhook(
-        webhook_id=webhook_id, user_id=current_user.id
+        webhook_id=webhook_id
     )
 
     if not deleted_webhook:

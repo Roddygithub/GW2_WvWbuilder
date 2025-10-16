@@ -1,5 +1,5 @@
 import os
-from typing import Optional
+from typing import Optional, Any, cast
 from pydantic_settings import BaseSettings
 import redis.asyncio as redis
 from dotenv import load_dotenv
@@ -104,21 +104,21 @@ class Settings(BaseSettings):
 
     # Redis client for rate limiting
     @property
-    def redis_client(self):
+    def redis_client(self) -> Any:
         if not self.REDIS_URL:
             # Retourne un client factice si REDIS_URL est vide (pour les tests)
             class MockRedis:
-                async def get(self, *args, **kwargs):
+                async def get(self, *args: Any, **kwargs: Any) -> Any:
                     return None
 
-                async def set(self, *args, **kwargs):
+                async def set(self, *args: Any, **kwargs: Any) -> bool:
                     return True
 
-                async def close(self, *args, **kwargs):
+                async def close(self, *args: Any, **kwargs: Any) -> None:
                     pass
 
             return MockRedis()
-        return redis.from_url(self.REDIS_URL, encoding="utf-8", decode_responses=True)
+        return cast(Any, redis.from_url(self.REDIS_URL, encoding="utf-8", decode_responses=True))
 
     class Config:
         case_sensitive = True

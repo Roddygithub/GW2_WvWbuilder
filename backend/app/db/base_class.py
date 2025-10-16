@@ -34,7 +34,7 @@ class Base:
         """Convertit le modèle en dictionnaire."""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}  # type: ignore
 
-    def update(self, db: Session, **kwargs) -> None:
+    def update(self, db: Session, **kwargs: Any) -> None:
         """Met à jour les champs du modèle."""
         for key, value in kwargs.items():
             if hasattr(self, key):
@@ -52,8 +52,13 @@ def setup_database_events():
         # Active le logging des requêtes SQL en mode debug
         @event.listens_for(Engine, "before_cursor_execute")
         def before_cursor_execute(
-            conn, cursor, statement, params, context, executemany
-        ):
+            conn: Any,
+            cursor: Any,
+            statement: str,
+            params: Any,
+            context: Any,
+            executemany: Any,
+        ) -> None:
             conn.info.setdefault("query_start_time", []).append(time.time())
 
     # Configuration des contraintes de clé étrangère pour SQLite
@@ -61,7 +66,7 @@ def setup_database_events():
         from sqlalchemy.engine import Engine
 
         @event.listens_for(Engine, "connect")
-        def set_sqlite_pragma(dbapi_connection, connection_record):
+        def set_sqlite_pragma(dbapi_connection: Any, connection_record: Any) -> None:
             cursor = dbapi_connection.cursor()
             cursor.execute("PRAGMA foreign_keys=ON")
             cursor.close()

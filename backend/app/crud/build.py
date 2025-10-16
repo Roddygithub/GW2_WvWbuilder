@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict, List, Optional, Union
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 from sqlalchemy.sql import func
 
 from datetime import datetime, timezone
@@ -185,22 +185,13 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
 
             # Verify all professions exist before starting the transaction
             if profession_ids:
-                stmt = select(func.count(Profession.id)).where(
-                    Profession.id.in_(profession_ids)
-                )
+                stmt = select(Profession.id).where(Profession.id.in_(profession_ids))
                 result = await db.execute(stmt)
-                count = result.scalar_one()
-                if count != len(set(profession_ids)):
-                    # Find which ones are missing for a better error message
-                    existing_stmt = select(Profession.id).where(
-                        Profession.id.in_(profession_ids)
-                    )
-                    existing_result = await db.execute(existing_stmt)
-                    existing_ids = {r[0] for r in existing_result}
-                    missing_ids = set(profession_ids) - existing_ids
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=f"Professions not found: {missing_ids}",
+                existing_ids = {row[0] for row in result.all()}
+                missing_ids = set(profession_ids) - existing_ids
+                if missing_ids:
+                    raise ValueError(
+                        f"The following profession IDs do not exist: {missing_ids}"
                     )
 
             # Add required fields
@@ -211,119 +202,27 @@ class CRUDBuild(CRUDBase[Build, schemas.BuildCreate, schemas.BuildUpdate]):
             build_data.setdefault("config", {})
             build_data.setdefault("constraints", {})
 
-            # Ensure we have at least one profession
-            if not profession_ids:
-                logger.warning("No professions available for build generation")
-                return schemas.BuildGenerationResponse(
-                    success=False,
-                    message="No valid professions available for build generation",
-                    build=None,
-                    suggested_composition=[],
-                )
+            # Create build
+            db_obj = Build(**build_data)
+            db.add(db_obj)
+            await db.flush()
 
-            # Simple round-robin assignment as a starting point
-            # Replace this with actual build generation logic
-            selected_professions = []
-            for i in range(generation_request.team_size):
-                selected_professions.append(professions[i % len(professions)])
+            # Add profession associations if any
+            if profession_ids:
+                for prof_id in profession_ids:
+                    stmt = build_profession.insert().values(
+                        build_id=db_obj.id, profession_id=prof_id
+                    )
+                    await db.execute(stmt)
 
-            # Prepare constraints as a dictionary if they exist
-            constraints_dict = (
-                generation_request.constraints.dict()
-                if hasattr(generation_request.constraints, "dict")
-                else {}
-            )
+            await db.commit()
+            await db.refresh(db_obj)
+            return db_obj
 
-            # Create a new build with the generated composition
-            build_in = schemas.BuildCreate(
-                name=f"Generated Build - {generation_request.team_size} players",
-                description=f"Automatically generated build for {generation_request.team_size} players",
-                game_mode="wvw",  # Default to WvW for generated builds
-                team_size=generation_request.team_size,
-                is_public=False,
-                config={"generated": True, "constraints": constraints_dict},
-                constraints=constraints_dict,
-                profession_ids=[p.id for p in selected_professions],
-            )
-
-            build = self.create_with_owner(db, obj_in=build_in, owner_id=owner_id)
-
-            # Convert build to dict and update with profession details
-            build_dict = {
-                "id": build.id,
-                "name": build.name,
-                "description": build.description,
-                "game_mode": build.game_mode,
-                "team_size": build.team_size,
-                "is_public": build.is_public,
-                "owner_id": owner_id,  # Add owner_id to match the schema
-                "created_by_id": build.created_by_id,
-                "created_at": build.created_at.isoformat(),
-                "updated_at": build.updated_at.isoformat(),
-                "profession_ids": [p.id for p in selected_professions],
-                "professions": [
-                    {"id": p.id, "name": p.name, "description": p.description or ""}
-                    for p in selected_professions
-                ],
-                "config": build.config or {},
-                "constraints": build.constraints or {},
-            }
-
-            # Prepare suggested composition - ensure this is always a list, even if empty
-            suggested_composition = []
-            for i, prof in enumerate(selected_professions):
-                # Determine role based on position or other logic
-                role = "DPS"  # Default role
-                if i == 0 and generation_request.team_size > 1:
-                    role = "Healer"
-                elif i == 1 and generation_request.team_size > 2:
-                    role = "Support"
-
-                suggested_composition.append(
-                    {
-                        "position": i + 1,
-                        "profession": prof.name,
-                        "role": role,
-                        "build": f"{prof.name} - {role}",
-                        "required_boons": ["Might", "Fury"],
-                        "required_utilities": ["CC", "Cleanse"],
-                    }
-                )
-
-            # Prepare metrics
-            metrics = {
-                "boon_coverage": {
-                    "might": 100.0,
-                    "fury": 100.0,
-                    "quickness": 50.0,
-                    "alacrity": 0.0,
-                },
-                "role_distribution": {
-                    "healer": 1,
-                    "support": 1,
-                    "dps": (
-                        generation_request.team_size - 2
-                        if generation_request.team_size > 2
-                        else 1
-                    ),
-                },
-                "profession_distribution": {p.name: 1 for p in selected_professions},
-            }
-
-            return schemas.BuildGenerationResponse(
-                success=True,
-                message="Build generated successfully",
-                build=build_dict,
-                suggested_composition=suggested_composition,
-                metrics=metrics,
-            )
         except Exception as e:
-            return schemas.BuildGenerationResponse(
-                success=False,
-                message=f"Error generating build: {str(e)}",
-                build=None,
-                suggested_composition=[],
-            )
+            await db.rollback()
+            logger.error(f"Error in create_with_owner_async: {str(e)}", exc_info=True)
+            raise ValueError(f"Failed to create build: {str(e)}") from e
 
     def get_with_professions(
         self, db: Session, *, id: int, user_id: Optional[int] = None

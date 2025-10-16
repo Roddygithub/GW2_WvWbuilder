@@ -4,8 +4,9 @@ Start: 2025-10-16 07:35 UTC+2
 Mode: Honest Automation (≤90 min per round)
 
 ## Baseline
-- To be captured from pytest-cov (term, json)
-- Low-coverage modules list (statements > 10, coverage < 30%)
+- Unit tests quick run: 28.20% (Required 20% reached)
+- Command: `pytest tests/unit -q --maxfail=1 --cov=app --cov-report=term --cov-report=json`
+- Note: One unit test failed (see `docs/BLOCKERS_v3.4.x.md`), coverage still generated.
 
 ## Round 2 (v3.4.2)
 - Target: +2% global coverage

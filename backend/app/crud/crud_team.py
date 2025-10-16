@@ -10,6 +10,7 @@ from sqlalchemy.orm import selectinload
 
 from app.crud.base import CRUDBase
 from app.models import Team, User, TeamMember, Composition, CompositionTag
+from app.models.association_tables import team_members
 from app.schemas.team import TeamCreate, TeamUpdate
 from app.core.cache import cache
 from app.core.config import settings

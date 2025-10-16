@@ -122,8 +122,8 @@ class BuildBase(BaseModel):
             "example": [1, 2],
             "notes": "Référez-vous à /api/v1/professions pour les IDs valides. Les combinaisons interdites sont définies dans la configuration du backend.",
         },
-        min_length=1,
-        max_length=3,
+        min_items=1,
+        max_items=3,
     )
 
     @field_validator("profession_ids")
@@ -143,7 +143,9 @@ class BuildBase(BaseModel):
         """
         # Exemple de combinaisons interdites (IDs de professions)
         logger = logging.getLogger(__name__)
-        forbidden_combinations = settings.FORBIDDEN_PROFESSION_COMBINATIONS
+        forbidden_combinations: List[set[int]] = getattr(
+            settings, "FORBIDDEN_PROFESSION_COMBINATIONS", []
+        )
 
         profession_set = set(v)
         for combo in forbidden_combinations:
@@ -293,7 +295,7 @@ class BuildUpdate(BaseModel):
     )
 
     profession_ids: Optional[List[int]] = Field(
-        default=None, min_length=1, max_length=3, examples=[[1, 2, 3]]
+        default=None, min_items=1, max_items=3, examples=[[1, 2, 3]]
     )
 
     @field_validator("name")
@@ -387,7 +389,7 @@ class BuildInDBBase(BaseModel):
 
     @model_validator(mode="wrap")
     @classmethod
-    def handle_professions(cls, data: Any, handler):
+    def handle_professions(cls, data: Any, handler) -> Any:
         if isinstance(data, dict):
             # Handle case where data is a dict (from_orm or direct dict)
             if "professions" not in data:

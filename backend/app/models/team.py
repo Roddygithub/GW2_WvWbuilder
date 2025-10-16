@@ -12,6 +12,7 @@ from sqlalchemy.sql import func
 
 from .base_model import Base, TimeStampedMixin
 from .enums import TeamRole, TeamStatus
+from .team_member import TeamMember
 
 if TYPE_CHECKING:
     from .build import Build
@@ -132,9 +133,9 @@ class Team(Base, TimeStampedMixin):
 
             db = SessionLocal()
             try:
-                stmt = delete(team_members).where(
-                    (team_members.c.team_id == self.id)
-                    & (team_members.c.user_id == user.id)
+                stmt = delete(TeamMember.__table__).where(
+                    (TeamMember.__table__.c.team_id == self.id)
+                    & (TeamMember.__table__.c.user_id == user.id)
                 )
                 db.execute(stmt)
                 db.commit()
@@ -155,10 +156,10 @@ class Team(Base, TimeStampedMixin):
             db = SessionLocal()
             try:
                 stmt = (
-                    update(team_members)
+                    update(TeamMember.__table__)
                     .where(
-                        (team_members.c.team_id == self.id)
-                        & (team_members.c.user_id == user.id)
+                        (TeamMember.__table__.c.team_id == self.id)
+                        & (TeamMember.__table__.c.user_id == user.id)
                     )
                     .values(role=new_role, updated_at=func.now())
                 )

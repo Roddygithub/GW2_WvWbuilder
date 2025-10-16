@@ -552,7 +552,7 @@ async def delete_build(
 async def read_builds(
     db: AsyncSession = Depends(get_async_db),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(100, le=100, description="Maximum number of records to return"),
+    limit: int = Query(100, ge=1, le=100, description="Maximum number of records to return"),
     current_user: models.User = Depends(get_current_user),
 ) -> Any:
     """
