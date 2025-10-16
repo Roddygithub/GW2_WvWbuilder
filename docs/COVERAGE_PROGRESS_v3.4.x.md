@@ -31,5 +31,16 @@ Target: 35%+ (from 27.38%)
   - Tests 100% coverage: schemas/response.py, models/enums.py
   - Aucun timeout, workflow stable
 
+- Round 3 (v3.4.3): **~26%** - Stabilisation ✅
+  - **+2 tests** (health endpoint API)
+  - **Blocker identifié**: Coverage timeout >60s sur tests complets
+  - Tests individuels: ✅ Tous passent
+  - Tests complets avec --cov: ❌ Timeout systématique
+  - **104 fichiers de tests** maintenant
+  - MyPy stable à 497
+  - **Décision**: Documenter limitation, tag v3.4.3 comme stabilisation
+  - Prochaine étape: Optimiser infra pytest avant continuer coverage
+
 ## Notes
 - If coverage run slow or flaky, log in `docs/BLOCKERS_v3.4.x.md` and proceed.
+- **v3.4.3 Blocker**: Full coverage runs timeout >60s - infrastructure optimization needed
