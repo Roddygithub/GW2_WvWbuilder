@@ -1,0 +1,191 @@
+/**
+ * GW2Optimizer - Global Theme Styles
+ * Couleurs et styles personnalisés Guild Wars 2
+ */
+
+@layer base {
+  :root {
+    /* GW2 Theme Variables */
+    --gw2-red: #b02c2c;
+    --gw2-gold: #d4af37;
+    --gw2-dark: #1f1f1f;
+    --gw2-card-bg: #2c2c2c;
+    --gw2-border: #3a3a3a;
+    --gw2-text: #ffffff;
+    --gw2-text-secondary: #aaaaaa;
+    
+    /* Semantic Colors */
+    --success: #4caf50;
+    --warning: #ff9800;
+    --danger: #f44336;
+    
+    /* shadcn/ui compatibility */
+    --background: 220 10% 12%;
+    --foreground: 0 0% 100%;
+    --card: 220 10% 17%;
+    --card-foreground: 0 0% 100%;
+    --popover: 220 10% 17%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 60% 44%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 45 80% 52%;
+    --secondary-foreground: 0 0% 12%;
+    --muted: 220 10% 23%;
+    --muted-foreground: 0 0% 67%;
+    --accent: 45 80% 52%;
+    --accent-foreground: 0 0% 12%;
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 10% 23%;
+    --input: 220 10% 23%;
+    --ring: 0 60% 44%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-gw2-dark text-gw2-text font-sans antialiased;
+    background-image: 
+      radial-gradient(circle at 20% 50%, rgba(176, 44, 44, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.03) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+/* GW2 Scrollbar */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gw2-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gw2-card-bg);
+  border: 2px solid var(--gw2-dark);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gw2-border);
+}
+
+/* GW2 Custom Classes */
+@layer utilities {
+  .gw2-card {
+    @apply bg-gw2-cardBg border border-gw2-border rounded-card p-md;
+  }
+  
+  .gw2-card-hover {
+    @apply gw2-card transition-all duration-200 hover:border-gw2-gold hover:shadow-lg hover:shadow-gw2-gold/20;
+  }
+  
+  .gw2-button-primary {
+    @apply bg-gw2-red hover:bg-gw2-red/90 text-white font-semibold px-4 py-2 rounded-md transition-all duration-200;
+  }
+  
+  .gw2-button-secondary {
+    @apply bg-gw2-cardBg hover:bg-gw2-border border border-gw2-border text-gw2-text font-semibold px-4 py-2 rounded-md transition-all duration-200;
+  }
+  
+  .gw2-badge {
+    @apply inline-flex items-center px-2 py-1 text-xs font-semibold rounded-md;
+  }
+  
+  .gw2-badge-buff {
+    @apply gw2-badge bg-success/20 text-success border border-success/50;
+  }
+  
+  .gw2-badge-nerf {
+    @apply gw2-badge bg-danger/20 text-danger border border-danger/50;
+  }
+  
+  .gw2-badge-neutral {
+    @apply gw2-badge bg-warning/20 text-warning border border-warning/50;
+  }
+  
+  .gw2-input {
+    @apply bg-gw2-dark border border-gw2-border text-gw2-text rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gw2-gold focus:border-transparent transition-all;
+  }
+  
+  .gw2-gradient-text {
+    @apply bg-gradient-to-r from-gw2-red via-gw2-gold to-gw2-red bg-clip-text text-transparent;
+  }
+  
+  .gw2-divider {
+    @apply border-t border-gw2-border my-4;
+  }
+  
+  .gw2-shimmer {
+    @apply relative overflow-hidden;
+  }
+  
+  .gw2-shimmer::after {
+    content: "";
+    @apply absolute top-0 right-0 bottom-0 left-0;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+    animation: shimmer 2s infinite;
+  }
+}
+
+/* Animations personnalisées */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-gold {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(212, 175, 55, 0);
+  }
+}
+
+.pulse-gold {
+  animation: pulse-gold 2s infinite;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  @apply font-bold;
+}
+
+h1 {
+  @apply text-4xl text-gw2-gold;
+}
+
+h2 {
+  @apply text-2xl text-gw2-text;
+}
+
+h3 {
+  @apply text-xl text-gw2-text;
+}
+
+/* Loading States */
+.loading-skeleton {
+  @apply gw2-card gw2-shimmer h-20;
+}
+
+/* Tooltips */
+.gw2-tooltip {
+  @apply absolute z-50 bg-gw2-cardBg border border-gw2-gold text-gw2-text text-sm px-3 py-2 rounded-md shadow-lg;
+}
+
+/* Focus visible states */
+*:focus-visible {
+  @apply outline-none ring-2 ring-gw2-gold ring-offset-2 ring-offset-gw2-dark;
+}
