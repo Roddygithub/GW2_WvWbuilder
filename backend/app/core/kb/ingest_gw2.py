@@ -36,7 +36,7 @@ def fetch_professions() -> List[Dict[str, Any]]:
 
 def fetch_specializations() -> List[Dict[str, Any]]:
     """Fetch all specializations (core + elite) from GW2 API.
-    
+
     Each specialization has:
     - id: int
     - name: str
@@ -53,7 +53,9 @@ def fetch_specializations() -> List[Dict[str, Any]]:
         data = fetch_json(f"{GW2_API_BASE}/specializations/{sid}")
         if data:
             specs.append(data)
-    logger.info(f"Fetched {len(specs)} specializations ({len([s for s in specs if s.get('elite')])} elite, {len([s for s in specs if not s.get('elite')])} core)")
+    logger.info(
+        f"Fetched {len(specs)} specializations ({len([s for s in specs if s.get('elite')])} elite, {len([s for s in specs if not s.get('elite')])} core)"
+    )
     return specs
 
 
@@ -65,12 +67,12 @@ def fetch_skills(skill_ids: Optional[List[int]] = None) -> List[Dict[str, Any]]:
             return []
         # Limit to first 500 for performance (can batch later)
         skill_ids = ids[:500]
-    
+
     skills = []
     # Batch fetch (API supports ?ids=1,2,3...)
     batch_size = 200
     for i in range(0, len(skill_ids), batch_size):
-        batch = skill_ids[i:i+batch_size]
+        batch = skill_ids[i : i + batch_size]
         ids_str = ",".join(str(x) for x in batch)
         data = fetch_json(f"{GW2_API_BASE}/skills?ids={ids_str}")
         if data:
@@ -85,11 +87,11 @@ def fetch_traits(trait_ids: Optional[List[int]] = None) -> List[Dict[str, Any]]:
         if not ids:
             return []
         trait_ids = ids[:500]
-    
+
     traits = []
     batch_size = 200
     for i in range(0, len(trait_ids), batch_size):
-        batch = trait_ids[i:i+batch_size]
+        batch = trait_ids[i : i + batch_size]
         ids_str = ",".join(str(x) for x in batch)
         data = fetch_json(f"{GW2_API_BASE}/traits?ids={ids_str}")
         if data:
@@ -113,7 +115,7 @@ def fetch_items_stats() -> Dict[str, Any]:
 def ingest_all() -> Dict[str, Any]:
     """Ingest all GW2 data and return structured dict."""
     logger.info("Starting GW2 API ingestion...")
-    
+
     data = {
         "professions": fetch_professions(),
         "specializations": fetch_specializations(),
@@ -121,10 +123,12 @@ def ingest_all() -> Dict[str, Any]:
         "traits": fetch_traits(),
         "itemstats": fetch_items_stats(),
     }
-    
-    logger.info(f"Ingested {len(data['professions'])} professions, "
-                f"{len(data['specializations'])} specializations, "
-                f"{len(data['skills'])} skills, "
-                f"{len(data['traits'])} traits")
-    
+
+    logger.info(
+        f"Ingested {len(data['professions'])} professions, "
+        f"{len(data['specializations'])} specializations, "
+        f"{len(data['skills'])} skills, "
+        f"{len(data['traits'])} traits"
+    )
+
     return data

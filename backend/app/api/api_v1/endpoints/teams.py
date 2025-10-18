@@ -14,7 +14,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app import models, schemas
-from app.api import deps
+from app.api import dependencies as deps
 from app.db.session import get_db
 from app.models.team import Team
 from app.schemas.team import TeamCreate, TeamUpdate, Team as TeamSchema

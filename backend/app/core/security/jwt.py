@@ -24,7 +24,7 @@ else:
 # Importer les autres dépendances
 try:
     from fastapi import Depends, HTTPException, Request, status
-    from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+    from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2PasswordBearer
     from jose import JWTError as JoseJWTError
     from jose import jwt as jose_jwt
     from jose.exceptions import ExpiredSignatureError, JWTClaimsError
@@ -42,6 +42,9 @@ logger = logging.getLogger(__name__)
 
 # JWT Bearer token scheme
 security = HTTPBearer()
+
+# OAuth2 Password Bearer scheme for compatibility
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login")
 
 # Token types
 TOKEN_TYPE_ACCESS = "access"

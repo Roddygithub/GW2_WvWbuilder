@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models
-from app.api import deps
+from app.api import dependencies as deps
 
 router = APIRouter()
 

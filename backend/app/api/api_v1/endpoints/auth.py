@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.crud.user import user as user_crud
-from app.api.deps import get_async_db
+from app.api.dependencies import get_async_db
 from app.core import security
 from app.core.config import settings
 from app.core.limiter import get_rate_limiter
@@ -242,7 +242,9 @@ async def test_simple() -> Dict[str, str]:
 
 
 @router.post("/test-login-minimal")
-async def test_login_minimal(form_data: OAuth2PasswordRequestForm = Depends()) -> Dict[str, str]:
+async def test_login_minimal(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+) -> Dict[str, str]:
     """Minimal login test without database."""
     return {
         "status": "received",

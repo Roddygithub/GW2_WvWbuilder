@@ -10,7 +10,11 @@ from app.schemas.mode_splits import ModeSplits
 router = APIRouter()
 
 
-@router.get("/", response_model=Dict[str, Any], summary="Get WvW/PvE mode split data (read-only)")
+@router.get(
+    "/",
+    response_model=Dict[str, Any],
+    summary="Get WvW/PvE mode split data (read-only)",
+)
 async def get_mode_splits() -> Dict[str, Any]:
     """Return validated mode-split data (versioned JSON)."""
     try:

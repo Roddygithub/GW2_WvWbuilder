@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app import crud, models, schemas
-from app.api import deps
+from app.api import dependencies as deps
 from app.core.security import get_current_active_user
 
 router = APIRouter()

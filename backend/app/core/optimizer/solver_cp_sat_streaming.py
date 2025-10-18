@@ -91,12 +91,21 @@ def solve_cp_sat_streaming(
 
     u = {}
     for k in range(group_count):
-        for boon in ["quickness", "alacrity", "stability", "resistance", "protection", "fury"]:
+        for boon in [
+            "quickness",
+            "alacrity",
+            "stability",
+            "resistance",
+            "protection",
+            "fury",
+        ]:
             u[(k, boon)] = model.NewIntVar(0, 1000, f"u_{k}_{boon}")
             terms = []
             idx = key_idx[boon]
             for i in range(n):
-                elig = [bid for bid in players[i].eligible_build_ids if bid in build_index]
+                elig = [
+                    bid for bid in players[i].eligible_build_ids if bid in build_index
+                ]
                 if not elig:
                     elig = [builds[0].id]
                 for bid in elig:
@@ -185,7 +194,9 @@ def solve_cp_sat_streaming(
     # Threshold: allow 1 of the same build per group before penalties
     group_dup_threshold = 1
     dup_penalty_group_w = iw(w.get("dup_penalty_group", 0.2))  # default mild penalty
-    diversity_reward_w = iw(w.get("diversity_reward", 0.03))   # small reward per unique spec
+    diversity_reward_w = iw(
+        w.get("diversity_reward", 0.03)
+    )  # small reward per unique spec
 
     # We need per-group per-build counts: s_kj in [0,5]
     s_kj = {}
@@ -247,7 +258,7 @@ def solve_cp_sat_streaming(
     ]
     # Build actual (j1,j2,mult) list from current builds
     synergy_pairs_j = []
-    for (a, b, mult) in spec_synergies:
+    for a, b, mult in spec_synergies:
         js_a = [j for j, name in spec_by_j.items() if name == a]
         js_b = [j for j, name in spec_by_j.items() if name == b]
         for j1 in js_a:
@@ -261,7 +272,7 @@ def solve_cp_sat_streaming(
     synergy_w = iw(w.get("synergy", 0.05))
     pair_present = {}
     for k in range(group_count):
-        for (j1, j2, mult) in synergy_pairs_j:
+        for j1, j2, mult in synergy_pairs_j:
             var = model.NewBoolVar(f"syn_{k}_{j1}_{j2}")
             # var == 1 iff both present in group k
             model.Add(var <= present[(k, j1)])
@@ -295,8 +306,10 @@ def solve_cp_sat_streaming(
         # Synergy rewards
         if synergy_pairs_j:
             obj_terms.append(
-                sum(int(mult * synergy_w) * pair_present[(k, j1, j2)][0]
-                    for (j1, j2, mult) in synergy_pairs_j)
+                sum(
+                    int(mult * synergy_w) * pair_present[(k, j1, j2)][0]
+                    for (j1, j2, mult) in synergy_pairs_j
+                )
             )
 
     # Global duplicate penalties
@@ -366,14 +379,23 @@ def solve_cp_sat_streaming(
 
     for k in range(group_count):
         groups.append(
-            GroupAssignment(group_id=k + 1, players=group_members[k], builds=group_builds[k])
+            GroupAssignment(
+                group_id=k + 1, players=group_members[k], builds=group_builds[k]
+            )
         )
 
     coverage_by_group: List[Dict[str, float]] = []
     if is_feasible:
         for k in range(group_count):
             cov = {}
-            for boon in ["quickness", "alacrity", "stability", "resistance", "protection", "fury"]:
+            for boon in [
+                "quickness",
+                "alacrity",
+                "stability",
+                "resistance",
+                "protection",
+                "fury",
+            ]:
                 if (k, boon) in c:
                     cap = boon_caps.get(boon, 1000)
                     denom = float(cap) if cap > 0 else 1.0
@@ -388,7 +410,14 @@ def solve_cp_sat_streaming(
         for k in range(group_count):
             cov = {}
             members = [idx for idx in range(n) if assign_group_index[idx] == k]
-            for boon in ["quickness", "alacrity", "stability", "resistance", "protection", "fury"]:
+            for boon in [
+                "quickness",
+                "alacrity",
+                "stability",
+                "resistance",
+                "protection",
+                "fury",
+            ]:
                 idx_b = key_idx[boon]
                 s = 0.0
                 for i in members:

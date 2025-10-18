@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import models, schemas
-from app.api import deps
+from app.api import dependencies as deps
 from app.db.session import get_db
 from app.models.tag import Tag
 from app.models.composition_tag import CompositionTag

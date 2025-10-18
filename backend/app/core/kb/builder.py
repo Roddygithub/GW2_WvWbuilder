@@ -13,7 +13,9 @@ from .ingest_wiki import ingest_wiki_data
 logger = logging.getLogger(__name__)
 
 
-def build_kb_from_builds(builds: List[BuildTemplateInput], mode: str = "wvw") -> KnowledgeBase:
+def build_kb_from_builds(
+    builds: List[BuildTemplateInput], mode: str = "wvw"
+) -> KnowledgeBase:
     kb_builds: List[BuildTemplateKB] = []
     for b in builds:
         vec = compute_capability_vector(b, mode)
@@ -99,12 +101,12 @@ def build_kb_from_gw2_data(mode: str = "wvw") -> KnowledgeBase:
     logger.info("Building KB from GW2 API + wiki data...")
     gw2_data = ingest_all()
     wiki_data = ingest_wiki_data()
-    
+
     # Map specializations to professions and elite status
     spec_to_prof: Dict[str, str] = {}
     spec_is_elite: Dict[str, bool] = {}
     spec_id_to_name: Dict[int, str] = {}
-    
+
     for spec in gw2_data.get("specializations", []):
         spec_name = spec["name"].lower()
         spec_id = spec.get("id")
@@ -112,10 +114,10 @@ def build_kb_from_gw2_data(mode: str = "wvw") -> KnowledgeBase:
         spec_is_elite[spec_name] = spec.get("elite", False)
         if spec_id:
             spec_id_to_name[spec_id] = spec_name
-    
+
     # Aggregate skill/trait contributions per spec
     spec_contributions: Dict[str, Dict[str, float]] = {}
-    
+
     for skill in gw2_data.get("skills", []):
         profs = skill.get("professions", [])
         spec_ref = skill.get("specialization")
@@ -128,25 +130,36 @@ def build_kb_from_gw2_data(mode: str = "wvw") -> KnowledgeBase:
                     continue  # Skip unknown spec ID
             else:
                 key = spec_ref.lower()
-            
+
             if key not in spec_contributions:
                 spec_contributions[key] = {}
             for boon, val in contrib.items():
-                spec_contributions[key][boon] = spec_contributions[key].get(boon, 0.0) + val
-    
+                spec_contributions[key][boon] = (
+                    spec_contributions[key].get(boon, 0.0) + val
+                )
+
     for trait in gw2_data.get("traits", []):
         spec_id = trait.get("specialization")
         contrib = analyze_trait_boon_contribution(trait)
         if spec_id and contrib:
             # Find spec name by id
-            spec_obj = next((s for s in gw2_data.get("specializations", []) if s.get("id") == spec_id), None)
+            spec_obj = next(
+                (
+                    s
+                    for s in gw2_data.get("specializations", [])
+                    if s.get("id") == spec_id
+                ),
+                None,
+            )
             if spec_obj:
                 key = spec_obj["name"].lower()
                 if key not in spec_contributions:
                     spec_contributions[key] = {}
                 for boon, val in contrib.items():
-                    spec_contributions[key][boon] = spec_contributions[key].get(boon, 0.0) + val
-    
+                    spec_contributions[key][boon] = (
+                        spec_contributions[key].get(boon, 0.0) + val
+                    )
+
     # Normalize and cap contributions
     for spec, contribs in spec_contributions.items():
         for boon in contribs:
@@ -154,11 +167,11 @@ def build_kb_from_gw2_data(mode: str = "wvw") -> KnowledgeBase:
                 contribs[boon] = min(25.0, contribs[boon])
             else:
                 contribs[boon] = min(1.0, contribs[boon])
-    
+
     # Build BuildTemplateKB entries for known elite specs
     kb_builds: List[BuildTemplateKB] = []
     build_id = 200  # Start from 200 to avoid conflicts
-    
+
     known_specs = [
         ("Guardian", "Firebrand"),
         ("Engineer", "Scrapper"),
@@ -173,7 +186,7 @@ def build_kb_from_gw2_data(mode: str = "wvw") -> KnowledgeBase:
         ("Elementalist", "Weaver"),
         ("Engineer", "Holosmith"),
     ]
-    
+
     for prof, spec in known_specs:
         key = spec.lower()
         contrib = spec_contributions.get(key, {})
@@ -194,12 +207,14 @@ def build_kb_from_gw2_data(mode: str = "wvw") -> KnowledgeBase:
                 id=build_id,
                 profession=prof,
                 specialization=spec,
-                is_elite=spec_is_elite.get(spec.lower(), True),  # Default to True for known elite specs
+                is_elite=spec_is_elite.get(
+                    spec.lower(), True
+                ),  # Default to True for known elite specs
                 capability=cap_vec,
             )
         )
         build_id += 1
-    
+
     kb = KnowledgeBase(
         builds=kb_builds,
         meta={
@@ -208,7 +223,7 @@ def build_kb_from_gw2_data(mode: str = "wvw") -> KnowledgeBase:
             "wiki_data": wiki_data,
         },
     )
-    
+
     logger.info(f"KB built with {len(kb_builds)} elite spec templates")
     return kb
 

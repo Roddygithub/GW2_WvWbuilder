@@ -34,6 +34,7 @@ async def _run_job(job_id: str, req: OptimizationRequest) -> None:
     # Apply preset weights/targets from wvw_mode if provided
     if req.wvw_mode:
         from app.services.weights_presets import get_preset_weights, get_preset_targets
+
         preset_weights = get_preset_weights(req.wvw_mode)
         preset_targets = get_preset_targets(req.wvw_mode)
         # Merge: user-provided weights override presets
@@ -47,6 +48,7 @@ async def _run_job(job_id: str, req: OptimizationRequest) -> None:
 
     try:
         from app.core.optimizer.solver_cp_sat_streaming import solve_cp_sat_streaming
+
         result: OptimizationResult = solve_cp_sat_streaming(req, on_intermediate)
         JOB_STORE[job_id]["result"] = result.model_dump()
         JOB_STORE[job_id]["status"] = result.status
@@ -85,8 +87,10 @@ async def get_status(job_id: str) -> Dict:
 async def stream(job_id: str):
     queue = STREAM_QUEUES.get(job_id)
     if not queue:
+
         async def not_found():
             yield f"data: {json.dumps({'status': 'not_found'})}\n\n"
+
         return StreamingResponse(not_found(), media_type="text/event-stream")
 
     async def event_gen():
@@ -94,11 +98,18 @@ async def stream(job_id: str):
             try:
                 msg = await asyncio.wait_for(queue.get(), timeout=5.0)
                 yield f"data: {json.dumps(msg)}\n\n"
-                if msg.get("status") in ("done", "error", "complete", "timeout", "cancelled"):
+                if msg.get("status") in (
+                    "done",
+                    "error",
+                    "complete",
+                    "timeout",
+                    "cancelled",
+                ):
                     break
             except asyncio.TimeoutError:
                 # Send keepalive
                 yield f": keepalive\n\n"
+
     return StreamingResponse(event_gen(), media_type="text/event-stream")
 
 

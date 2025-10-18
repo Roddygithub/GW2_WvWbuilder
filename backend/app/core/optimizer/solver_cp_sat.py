@@ -45,11 +45,28 @@ def solve_cp_sat(req: OptimizationRequest) -> OptimizationResult:
     builds = req.builds
     n = len(players)
     if n == 0:
-        return OptimizationResult(status="complete", best_score=0.0, elapsed_ms=0, groups=[], coverage_by_group=[], diagnostics={})
+        return OptimizationResult(
+            status="complete",
+            best_score=0.0,
+            elapsed_ms=0,
+            groups=[],
+            coverage_by_group=[],
+            diagnostics={},
+        )
     group_count = max(1, math.ceil(n / 5))
     build_index: Dict[int, int] = {b.id: idx for idx, b in enumerate(builds)}
     caps = _build_caps_matrix(builds, req.mode)
-    keys = ["quickness", "alacrity", "stability", "resistance", "protection", "might", "fury", "dps", "sustain"]
+    keys = [
+        "quickness",
+        "alacrity",
+        "stability",
+        "resistance",
+        "protection",
+        "might",
+        "fury",
+        "dps",
+        "sustain",
+    ]
     key_idx = {k: i for i, k in enumerate(keys)}
     model = cp_model.CpModel()
     x = {}
@@ -81,12 +98,21 @@ def solve_cp_sat(req: OptimizationRequest) -> OptimizationResult:
                 model.Add(z[(i, j, k)] >= x[(i, j)] + g[(i, k)] - 1)
     u = {}
     for k in range(group_count):
-        for boon in ["quickness", "alacrity", "stability", "resistance", "protection", "fury"]:
+        for boon in [
+            "quickness",
+            "alacrity",
+            "stability",
+            "resistance",
+            "protection",
+            "fury",
+        ]:
             u[(k, boon)] = model.NewIntVar(0, 1000, f"u_{k}_{boon}")
             terms = []
             idx = key_idx[boon]
             for i in range(n):
-                elig = [bid for bid in players[i].eligible_build_ids if bid in build_index]
+                elig = [
+                    bid for bid in players[i].eligible_build_ids if bid in build_index
+                ]
                 if not elig:
                     elig = [builds[0].id]
                 for bid in elig:
@@ -135,11 +161,16 @@ def solve_cp_sat(req: OptimizationRequest) -> OptimizationResult:
                     dps_terms.append((dps_coef, z[(i, j, gg)]))
                     sus_terms.append((sus_coef, z[(i, j, gg)]))
         if dps_terms:
-            model.Add(dps_avg[k] == sum(coef * var for coef, var in dps_terms) // max(1, 5))
+            model.Add(
+                dps_avg[k] == sum(coef * var for coef, var in dps_terms) // max(1, 5)
+            )
         else:
             model.Add(dps_avg[k] == 0)
         if sus_terms:
-            model.Add(sustain_avg[k] == sum(coef * var for coef, var in sus_terms) // max(1, 5))
+            model.Add(
+                sustain_avg[k]
+                == sum(coef * var for coef, var in sus_terms) // max(1, 5)
+            )
         else:
             model.Add(sustain_avg[k] == 0)
     # High-priority constraints (hard) per group based on req.targets
@@ -157,8 +188,10 @@ def solve_cp_sat(req: OptimizationRequest) -> OptimizationResult:
 
     w = req.weights
     obj_terms = []
+
     def iw(v: float) -> int:
         return int(round(v * 1000))
+
     for k in range(group_count):
         obj_terms.append(iw(w.get("quickness", 0.0)) * u[(k, "quickness")])
         obj_terms.append(iw(w.get("alacrity", 0.0)) * u[(k, "alacrity")])
@@ -204,11 +237,22 @@ def solve_cp_sat(req: OptimizationRequest) -> OptimizationResult:
         build_id = builds[j].id
         group_builds[k].append(build_id)
     for k in range(group_count):
-        groups.append(GroupAssignment(group_id=k + 1, players=group_members[k], builds=group_builds[k]))
+        groups.append(
+            GroupAssignment(
+                group_id=k + 1, players=group_members[k], builds=group_builds[k]
+            )
+        )
     coverage_by_group: List[Dict[str, float]] = []
     for k in range(group_count):
         cov = {}
-        for boon in ["quickness", "alacrity", "stability", "resistance", "protection", "fury"]:
+        for boon in [
+            "quickness",
+            "alacrity",
+            "stability",
+            "resistance",
+            "protection",
+            "fury",
+        ]:
             val = solver.Value(u[(k, boon)]) / 1000.0 if (k, boon) in u else 0.0
             if boon == "might":
                 pass
@@ -220,4 +264,11 @@ def solve_cp_sat(req: OptimizationRequest) -> OptimizationResult:
         denom = 1000.0 * group_count if group_count > 0 else 1.0
         best_score = max(0.0, min(1.0, obj_val / (denom * 10.0)))
     elapsed_ms = int(1000 * solver.WallTime())
-    return OptimizationResult(status="complete", best_score=best_score, elapsed_ms=elapsed_ms, groups=groups, coverage_by_group=coverage_by_group, diagnostics={"status": int(status)})
+    return OptimizationResult(
+        status="complete",
+        best_score=best_score,
+        elapsed_ms=elapsed_ms,
+        groups=groups,
+        coverage_by_group=coverage_by_group,
+        diagnostics={"status": int(status)},
+    )

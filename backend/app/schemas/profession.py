@@ -780,6 +780,7 @@ class EliteSpecializationInDB(EliteSpecializationInDBBase):
 
     pass
 
+
 # Ensure forward references between Profession and EliteSpecialization are resolved
 Profession.model_rebuild()
 EliteSpecialization.model_rebuild()

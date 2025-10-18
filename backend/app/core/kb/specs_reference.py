@@ -10,9 +10,9 @@ from typing import Dict, List, Tuple
 # Elite specializations by profession (expansion-based)
 ELITE_SPECS: Dict[str, List[Tuple[str, str]]] = {
     "Guardian": [
-        ("Dragonhunter", "HoT"),      # Heart of Thorns
-        ("Firebrand", "PoF"),         # Path of Fire
-        ("Willbender", "EoD"),        # End of Dragons
+        ("Dragonhunter", "HoT"),  # Heart of Thorns
+        ("Firebrand", "PoF"),  # Path of Fire
+        ("Willbender", "EoD"),  # End of Dragons
     ],
     "Warrior": [
         ("Berserker", "HoT"),
@@ -61,8 +61,20 @@ CORE_SPECS: Dict[str, List[str]] = {
     "Guardian": ["Radiance", "Valor", "Honor", "Virtues", "Zeal"],
     "Warrior": ["Strength", "Arms", "Defense", "Tactics", "Discipline"],
     "Engineer": ["Explosives", "Firearms", "Inventions", "Alchemy", "Tools"],
-    "Ranger": ["Marksmanship", "Skirmishing", "Wilderness Survival", "Nature Magic", "Beastmastery"],
-    "Thief": ["Deadly Arts", "Critical Strikes", "Shadow Arts", "Acrobatics", "Trickery"],
+    "Ranger": [
+        "Marksmanship",
+        "Skirmishing",
+        "Wilderness Survival",
+        "Nature Magic",
+        "Beastmastery",
+    ],
+    "Thief": [
+        "Deadly Arts",
+        "Critical Strikes",
+        "Shadow Arts",
+        "Acrobatics",
+        "Trickery",
+    ],
     "Elementalist": ["Fire", "Air", "Earth", "Water", "Arcane"],
     "Mesmer": ["Domination", "Dueling", "Chaos", "Inspiration", "Illusions"],
     "Necromancer": ["Spite", "Curses", "Death Magic", "Blood Magic", "Soul Reaping"],
@@ -72,24 +84,24 @@ CORE_SPECS: Dict[str, List[str]] = {
 # WvW meta specs (most commonly used in WvW)
 WVW_META_SPECS: Dict[str, List[str]] = {
     "elite": [
-        "Firebrand",      # Guardian - Top tier support
-        "Scrapper",       # Engineer - Top tier support
-        "Mechanist",      # Engineer - DPS/Support
-        "Herald",         # Revenant - Support/DPS
-        "Tempest",        # Elementalist - Healing/Auras
-        "Scourge",        # Necromancer - Conditions/Barrier
-        "Reaper",         # Necromancer - Power DPS
-        "Willbender",     # Guardian - DPS/Mobility
-        "Spellbreaker",   # Warrior - Boon Strip
-        "Berserker",      # Warrior - Power DPS
-        "Weaver",         # Elementalist - Power DPS
-        "Holosmith",      # Engineer - Power DPS/Burst
-        "Vindicator",     # Revenant - Hybrid DPS
+        "Firebrand",  # Guardian - Top tier support
+        "Scrapper",  # Engineer - Top tier support
+        "Mechanist",  # Engineer - DPS/Support
+        "Herald",  # Revenant - Support/DPS
+        "Tempest",  # Elementalist - Healing/Auras
+        "Scourge",  # Necromancer - Conditions/Barrier
+        "Reaper",  # Necromancer - Power DPS
+        "Willbender",  # Guardian - DPS/Mobility
+        "Spellbreaker",  # Warrior - Boon Strip
+        "Berserker",  # Warrior - Power DPS
+        "Weaver",  # Elementalist - Power DPS
+        "Holosmith",  # Engineer - Power DPS/Burst
+        "Vindicator",  # Revenant - Hybrid DPS
     ],
     "core": [
         # Core builds are less common in organized WvW but can be viable in roaming
-        "Guardian",       # Power DPS (core guardian)
-        "Warrior",        # Power DPS/Banner support (core warrior)
+        "Guardian",  # Power DPS (core guardian)
+        "Warrior",  # Power DPS/Banner support (core warrior)
     ],
 }
 
@@ -123,13 +135,13 @@ def get_profession_for_spec(spec_name: str) -> str:
         for spec, _ in specs:
             if spec.lower() == spec_name.lower():
                 return prof
-    
+
     # Check core specs
     for prof, specs in CORE_SPECS.items():
         for spec in specs:
             if spec.lower() == spec_name.lower():
                 return prof
-    
+
     return ""
 
 
@@ -142,16 +154,18 @@ def get_expansion_for_elite(spec_name: str) -> str:
     return ""
 
 
-def get_specs_by_profession(profession: str, include_core: bool = True, include_elite: bool = True) -> List[str]:
+def get_specs_by_profession(
+    profession: str, include_core: bool = True, include_elite: bool = True
+) -> List[str]:
     """Get all specializations for a profession."""
     specs = []
-    
+
     if include_core and profession in CORE_SPECS:
         specs.extend(CORE_SPECS[profession])
-    
+
     if include_elite and profession in ELITE_SPECS:
         specs.extend([spec for spec, _ in ELITE_SPECS[profession]])
-    
+
     return specs
 
 

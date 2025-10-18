@@ -82,12 +82,24 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
         # Sample builds for warmup
         sample_builds = [
-            BuildTemplateInput(id=101, profession="Guardian", specialization="Firebrand", mode="wvw"),
-            BuildTemplateInput(id=102, profession="Engineer", specialization="Scrapper", mode="wvw"),
-            BuildTemplateInput(id=103, profession="Revenant", specialization="Herald", mode="wvw"),
-            BuildTemplateInput(id=104, profession="Elementalist", specialization="Tempest", mode="wvw"),
-            BuildTemplateInput(id=105, profession="Necromancer", specialization="Scourge", mode="wvw"),
-            BuildTemplateInput(id=106, profession="Engineer", specialization="Mechanist", mode="wvw"),
+            BuildTemplateInput(
+                id=101, profession="Guardian", specialization="Firebrand", mode="wvw"
+            ),
+            BuildTemplateInput(
+                id=102, profession="Engineer", specialization="Scrapper", mode="wvw"
+            ),
+            BuildTemplateInput(
+                id=103, profession="Revenant", specialization="Herald", mode="wvw"
+            ),
+            BuildTemplateInput(
+                id=104, profession="Elementalist", specialization="Tempest", mode="wvw"
+            ),
+            BuildTemplateInput(
+                id=105, profession="Necromancer", specialization="Scourge", mode="wvw"
+            ),
+            BuildTemplateInput(
+                id=106, profession="Engineer", specialization="Mechanist", mode="wvw"
+            ),
         ]
         # Initialize KB with sample builds if empty
         ensure_kb_initialized(sample_builds, mode="wvw")

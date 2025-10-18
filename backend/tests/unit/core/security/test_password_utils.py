@@ -1,6 +1,7 @@
 """
 Tests unitaires pour app/core/security/password_utils.py
 """
+
 import pytest
 from unittest.mock import patch, MagicMock
 
@@ -19,7 +20,7 @@ class TestPasswordHashing:
         """Test hachage mot de passe court."""
         password = "MyPassword123!"
         hashed = get_password_hash(password)
-        
+
         assert isinstance(hashed, str)
         assert len(hashed) > 0
         assert hashed != password  # Hash différent du mot de passe
@@ -29,7 +30,7 @@ class TestPasswordHashing:
         # Créer un mot de passe >72 bytes
         password = "A" * 80
         hashed = get_password_hash(password)
-        
+
         assert isinstance(hashed, str)
         assert len(hashed) > 0
 
@@ -37,19 +38,19 @@ class TestPasswordHashing:
         """Test que des mots de passe différents donnent des hash différents."""
         password1 = "Password123!"
         password2 = "DifferentPass456!"
-        
+
         hash1 = get_password_hash(password1)
         hash2 = get_password_hash(password2)
-        
+
         assert hash1 != hash2
 
     def test_get_password_hash_same_password_different_salt(self):
         """Test que le même mot de passe donne des hash différents (salt)."""
         password = "SamePassword123!"
-        
+
         hash1 = get_password_hash(password)
         hash2 = get_password_hash(password)
-        
+
         # Les hash devraient être différents à cause du salt
         assert hash1 != hash2
 
@@ -61,7 +62,7 @@ class TestPasswordVerification:
         """Test vérification mot de passe correct."""
         password = "MyPassword123!"
         hashed = get_password_hash(password)
-        
+
         assert verify_password(password, hashed) is True
 
     def test_verify_password_incorrect(self):
@@ -69,21 +70,21 @@ class TestPasswordVerification:
         password = "MyPassword123!"
         wrong_password = "WrongPassword456!"
         hashed = get_password_hash(password)
-        
+
         assert verify_password(wrong_password, hashed) is False
 
     def test_verify_password_long_password(self):
         """Test vérification mot de passe >72 bytes."""
         password = "A" * 80
         hashed = get_password_hash(password)
-        
+
         assert verify_password(password, hashed) is True
 
     def test_verify_password_invalid_hash(self):
         """Test vérification avec hash invalide."""
         password = "MyPassword123!"
         invalid_hash = "invalid_hash_string"
-        
+
         assert verify_password(password, invalid_hash) is False
 
 
@@ -94,27 +95,27 @@ class TestSHA256Hashing:
         """Test hachage SHA-256."""
         password = "MyPassword123!"
         hashed = get_password_hash_sha256(password)
-        
+
         assert isinstance(hashed, str)
         assert len(hashed) == 64  # SHA-256 produit 64 caractères hex
 
     def test_get_password_hash_sha256_deterministic(self):
         """Test que SHA-256 est déterministe (même input = même output)."""
         password = "MyPassword123!"
-        
+
         hash1 = get_password_hash_sha256(password)
         hash2 = get_password_hash_sha256(password)
-        
+
         assert hash1 == hash2
 
     def test_get_password_hash_sha256_different_passwords(self):
         """Test que des mots de passe différents donnent des hash différents."""
         password1 = "Password123!"
         password2 = "DifferentPass456!"
-        
+
         hash1 = get_password_hash_sha256(password1)
         hash2 = get_password_hash_sha256(password2)
-        
+
         assert hash1 != hash2
 
 
@@ -174,6 +175,6 @@ class TestPasswordStrength:
         """Test cas limites de force de mot de passe."""
         # Exactement 8 caractères avec tous les critères
         assert is_password_strong("Pass123!") is True
-        
+
         # 7 caractères (trop court)
         assert is_password_strong("Pas123!") is False

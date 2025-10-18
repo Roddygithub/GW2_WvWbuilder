@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas
-from app.api import deps
+from app.api import dependencies as deps
 from app.core.exceptions import NotFoundException
 
 router = APIRouter()

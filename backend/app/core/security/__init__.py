@@ -20,6 +20,7 @@ from .jwt import (
     verify_refresh_token,
     verify_password_reset_token as jwt_verify_password_reset_token,
     get_token_from_request,
+    oauth2_scheme,
     JWTError,
     JWTExpiredSignatureError,
     JWTInvalidTokenError,
@@ -50,6 +51,7 @@ __all__ = [
     "create_password_reset_token",
     "verify_refresh_token",
     "get_token_from_request",
+    "oauth2_scheme",
     # JWT Types and Exceptions
     "JWTError",
     "JWTExpiredSignatureError",

@@ -1,6 +1,0 @@
-Deployment Date: mer. 15 oct. 2025 00:53:26 CEST
-Branch: main
-Commit: 411eaef41c8de3c4036e8110a58b41790367b112
-Backend PID: 129620
-Backend URL: http://127.0.0.1:8000
-Log File: deployment_20251015_005301.log

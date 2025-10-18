@@ -118,7 +118,9 @@ class Settings(BaseSettings):
                     pass
 
             return MockRedis()
-        return cast(Any, redis.from_url(self.REDIS_URL, encoding="utf-8", decode_responses=True))
+        return cast(
+            Any, redis.from_url(self.REDIS_URL, encoding="utf-8", decode_responses=True)
+        )
 
     class Config:
         case_sensitive = True

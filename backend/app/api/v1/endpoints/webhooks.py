@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 
-from app.api import deps
+from app.api import dependencies as deps
 from app.models import User
 from app.schemas.webhook import Webhook, WebhookCreate, WebhookUpdate
 
@@ -139,9 +139,7 @@ async def delete_webhook(
         )
 
     # Delete the webhook
-    deleted_webhook = await webhook_service.delete_webhook(
-        webhook_id=webhook_id
-    )
+    deleted_webhook = await webhook_service.delete_webhook(webhook_id=webhook_id)
 
     if not deleted_webhook:
         raise HTTPException(

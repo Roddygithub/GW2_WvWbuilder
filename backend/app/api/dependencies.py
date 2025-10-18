@@ -5,7 +5,7 @@ Ce module contient les dépendances réutilisables pour l'API, notamment pour l'
 l'autorisation et la validation des données.
 """
 
-from typing import Dict, List, TypeVar
+from typing import Callable, Dict, List, TypeVar
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -22,7 +22,9 @@ from app.core.exceptions import (
     NotSuperUserException,
     UserNotFoundException,
 )
+from app.core.gw2.client import get_gw2_client
 from app.core.security import oauth2_scheme
+from app.db.dependencies import get_async_db
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.token import TokenPayload
@@ -144,6 +146,50 @@ def get_authorization_header(
         raise CredentialsException("Invalid authentication scheme")
 
     return token
+
+
+# Alias for backward compatibility
+get_current_user_dep = get_current_user
+
+
+async def get_current_user_optional(
+    request: Request,
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
+) -> User | None:
+    """
+    Obtient l'utilisateur actuellement authentifié, ou None si non authentifié.
+    
+    Version optionnelle de get_current_user qui ne lève pas d'exception.
+    
+    Args:
+        request: Requête HTTP actuelle
+        db: Session de base de données
+        token: Token JWT d'authentification (optionnel)
+        
+    Returns:
+        User | None: L'utilisateur authentifié ou None
+    """
+    if not token:
+        return None
+    
+    try:
+        # Décoder le token JWT
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+            options={"verify_aud": False},
+        )
+        token_data = TokenPayload(**payload)
+        
+        # Récupérer l'utilisateur depuis la base de données
+        user = db.query(User).filter(User.id == token_data.sub).first()
+        if user and user.is_active:
+            return user
+        return None
+    except (JWTError, ValidationError):
+        return None
 
 
 def has_permission(required_permissions: List[str]) -> Callable[..., User]:

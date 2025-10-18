@@ -13,10 +13,10 @@ DEFAULT_WEIGHTS: Dict[str, float] = {
     "dps": 0.3,
     "sustain": 0.3,
     # Soft-only objective extras
-    "dup_penalty_group": 0.20,   # penalty per extra duplicate per group
+    "dup_penalty_group": 0.20,  # penalty per extra duplicate per group
     "dup_penalty_global": 0.05,  # penalty per extra duplicate squad-wide
-    "diversity_reward": 0.03,    # reward per unique spec present per group
-    "synergy": 0.05,             # reward weight for synergy pairs
+    "diversity_reward": 0.03,  # reward per unique spec present per group
+    "synergy": 0.05,  # reward weight for synergy pairs
 }
 
 

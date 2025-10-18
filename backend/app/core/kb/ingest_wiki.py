@@ -9,11 +9,51 @@ logger = logging.getLogger(__name__)
 # In production, this could parse actual wiki pages or use cached snapshots
 
 WIKI_BOON_PRIORITIES = {
-    "zerg": ["stability", "quickness", "resistance", "protection", "might", "fury", "alacrity"],
-    "havoc": ["quickness", "stability", "resistance", "might", "fury", "protection", "alacrity"],
-    "roaming": ["stability", "resistance", "quickness", "might", "fury", "protection", "alacrity"],
-    "defense": ["stability", "protection", "resistance", "quickness", "might", "fury", "alacrity"],
-    "gank": ["stability", "quickness", "might", "fury", "resistance", "protection", "alacrity"],
+    "zerg": [
+        "stability",
+        "quickness",
+        "resistance",
+        "protection",
+        "might",
+        "fury",
+        "alacrity",
+    ],
+    "havoc": [
+        "quickness",
+        "stability",
+        "resistance",
+        "might",
+        "fury",
+        "protection",
+        "alacrity",
+    ],
+    "roaming": [
+        "stability",
+        "resistance",
+        "quickness",
+        "might",
+        "fury",
+        "protection",
+        "alacrity",
+    ],
+    "defense": [
+        "stability",
+        "protection",
+        "resistance",
+        "quickness",
+        "might",
+        "fury",
+        "alacrity",
+    ],
+    "gank": [
+        "stability",
+        "quickness",
+        "might",
+        "fury",
+        "resistance",
+        "protection",
+        "alacrity",
+    ],
 }
 
 WIKI_ROLE_DESCRIPTIONS = {

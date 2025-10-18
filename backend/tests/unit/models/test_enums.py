@@ -1,6 +1,7 @@
 """
 Tests unitaires pour app/models/enums.py
 """
+
 import pytest
 from enum import Enum, IntEnum
 

@@ -6,7 +6,9 @@ from typing import Optional
 
 from .schemas import KnowledgeBase, BuildTemplateKB, CapabilityVector
 
-KB_PATH = os.getenv("GW2_WVWB_KB_PATH", os.path.join(os.path.dirname(__file__), "../../var/kb.json"))
+KB_PATH = os.getenv(
+    "GW2_WVWB_KB_PATH", os.path.join(os.path.dirname(__file__), "../../var/kb.json")
+)
 KB_PATH = os.path.abspath(KB_PATH)
 
 _cached_kb: Optional[KnowledgeBase] = None
@@ -34,7 +36,9 @@ def save_kb(kb: KnowledgeBase) -> None:
     _cached_kb = kb
 
 
-def get_capability_from_kb(profession: str, specialization: str) -> Optional[CapabilityVector]:
+def get_capability_from_kb(
+    profession: str, specialization: str
+) -> Optional[CapabilityVector]:
     kb = load_kb()
     key = f"{profession.lower()}:{specialization.lower()}"
     m = kb.capability_map()

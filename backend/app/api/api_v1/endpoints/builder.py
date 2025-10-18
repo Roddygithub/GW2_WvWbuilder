@@ -10,7 +10,7 @@ from typing import Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api import deps
+from app.api import dependencies as deps
 from app.core.optimizer import optimize_composition
 from app.core.cache import cache_response
 from app.schemas.composition import (
@@ -129,7 +129,7 @@ async def optimize_composition_endpoint(
     the game mode and squad size.
 
     The optimization is time-boxed to ensure fast response times.
-    
+
     Authentication is optional - logged-in users get enhanced features.
     """
     try:

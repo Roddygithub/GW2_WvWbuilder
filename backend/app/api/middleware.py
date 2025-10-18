@@ -19,7 +19,7 @@ from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoin
 from starlette.types import ASGIApp
 
 from app.core.config import settings
-from app.core.logging import logger
+from app.core.logging_config import logger
 
 # Variable de contexte pour stocker l'ID de requête
 request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)

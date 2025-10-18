@@ -11,7 +11,7 @@ from web_crawler import extract_build_info
 
 def test_wvw_detection():
     """Test WvW vs PvE detection."""
-    
+
     test_cases = [
         {
             "name": "WvW zerg text",
@@ -49,42 +49,43 @@ def test_wvw_detection():
             "expected_is_wvw": False,  # PvE keywords dominate
         },
     ]
-    
+
     print("=" * 70)
     print("WvW Detection Diagnostic")
     print("=" * 70)
     print()
-    
+
     passed = 0
     failed = 0
-    
+
     for test in test_cases:
         info = extract_build_info(test["text"], "test")
         is_wvw = info["is_wvw"]
         wvw_score = info["wvw_score"]
         expected = test["expected_is_wvw"]
-        
+
         status = "✅ PASS" if is_wvw == expected else "❌ FAIL"
         if is_wvw == expected:
             passed += 1
         else:
             failed += 1
-        
+
         print(f"{status} {test['name']}")
         print(f"  Text: {test['text'][:60]}...")
         print(f"  Expected WvW: {expected}")
         print(f"  Detected WvW: {is_wvw}")
         print(f"  WvW Score: {wvw_score:.1f}")
         print()
-    
+
     print("=" * 70)
     print(f"Results: {passed} passed, {failed} failed")
     print("=" * 70)
-    
+
     return failed == 0
 
 
 if __name__ == "__main__":
     import sys
+
     success = test_wvw_detection()
     sys.exit(0 if success else 1)

@@ -11,11 +11,12 @@ class LLMEngine(ABC):
     """
 
     @abstractmethod
-    def name(self) -> str:
-        ...
+    def name(self) -> str: ...
 
     @abstractmethod
-    def get_synergy_pairs(self, specs: List[str], mode: str) -> Dict[Tuple[str, str], float]:
+    def get_synergy_pairs(
+        self, specs: List[str], mode: str
+    ) -> Dict[Tuple[str, str], float]:
         """
         Return a mapping of (spec_a, spec_b) -> synergy_score in [0,1].
         Only pairs present in specs should be returned. Missing pairs are assumed 0.

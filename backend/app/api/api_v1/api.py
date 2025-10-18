@@ -54,7 +54,11 @@ api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboar
 # Include builder/optimizer endpoints
 api_router.include_router(builder.router, prefix="/builder", tags=["Builder"])
 api_router.include_router(optimizer.router, tags=["Optimizer"])
-api_router.include_router(mode_splits.router, prefix="/mode-splits", tags=["Mode Splits"])
+api_router.include_router(
+    mode_splits.router, prefix="/mode-splits", tags=["Mode Splits"]
+)
 
 # Include meta evolution endpoints (v4.3)
-api_router.include_router(meta_evolution.router, prefix="/meta", tags=["Meta Evolution"]) 
+api_router.include_router(
+    meta_evolution.router, prefix="/meta", tags=["Meta Evolution"]
+)

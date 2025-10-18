@@ -1,6 +1,7 @@
 """
 Tests unitaires pour app/core/exceptions.py
 """
+
 import pytest
 from fastapi import status
 
@@ -29,8 +30,7 @@ class TestCustomException:
     def test_custom_exception_custom_values(self):
         """Test CustomException avec valeurs personnalisées."""
         exc = CustomException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Custom error message"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Custom error message"
         )
         assert exc.status_code == status.HTTP_400_BAD_REQUEST
         assert exc.detail == "Custom error message"
@@ -59,8 +59,7 @@ class TestBaseAPIException:
     def test_base_api_exception_both_custom(self):
         """Test BaseAPIException avec detail et status_code personnalisés."""
         exc = BaseAPIException(
-            detail="Custom error",
-            status_code=status.HTTP_418_IM_A_TEAPOT
+            detail="Custom error", status_code=status.HTTP_418_IM_A_TEAPOT
         )
         assert exc.detail == "Custom error"
         assert exc.status_code == status.HTTP_418_IM_A_TEAPOT
@@ -137,7 +136,9 @@ class TestConflictException:
         """Test ConflictException avec valeurs par défaut."""
         exc = ConflictException()
         assert exc.status_code == status.HTTP_409_CONFLICT
-        assert exc.detail == "A conflict occurred with the current state of the resource"
+        assert (
+            exc.detail == "A conflict occurred with the current state of the resource"
+        )
 
     def test_conflict_exception_custom_detail(self):
         """Test ConflictException avec detail personnalisé."""

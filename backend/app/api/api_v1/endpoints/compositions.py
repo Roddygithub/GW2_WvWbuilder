@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, insert, delete, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api import deps
+from app.api import dependencies as deps
 from app import models, schemas
 
 router = APIRouter()

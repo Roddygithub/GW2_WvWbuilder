@@ -118,6 +118,7 @@ build_profession = Table(
 # pour gérer les relations many-to-many entre les utilisateurs et les équipes avec des attributs supplémentaires
 # Compatibilité: exposer un alias de table pour le code/test existant
 from .team_member import TeamMember  # type: ignore F401
+
 team_members = TeamMember.__table__
 
 # La table composition_tags est maintenant définie dans composition_tag.py

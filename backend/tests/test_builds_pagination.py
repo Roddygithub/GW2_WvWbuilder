@@ -12,7 +12,7 @@ async def test_list_builds_with_invalid_pagination(client: AsyncClient, auth_hea
     """Test listing builds with invalid pagination parameters."""
     # Get auth headers with a test user
     headers = await auth_headers()
-    
+
     # Test with negative skip
     response = await client.get(
         f"{settings.API_V1_STR}/builds/",

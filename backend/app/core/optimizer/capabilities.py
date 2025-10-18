@@ -29,7 +29,9 @@ def _normalize(result: Dict[str, float]) -> Dict[str, float]:
     return out
 
 
-def _approx_from_splits(profession: str, specialization: str, mode: str) -> Dict[str, float]:
+def _approx_from_splits(
+    profession: str, specialization: str, mode: str
+) -> Dict[str, float]:
     # Aggregate contributions from traits/skills matching profession/specialization.
     traits = SPLIT_BALANCE_DATA.get("traits", {})
     skills = SPLIT_BALANCE_DATA.get("skills", {})
@@ -82,7 +84,18 @@ def _approx_from_splits(profession: str, specialization: str, mode: str) -> Dict
         # Heuristic: wells/tomes/overloads contribute small amounts
         name = (s.get("name") or "").lower()
         small = 0.05
-        if any(tag in name for tag in ["well", "tome", "overload", "gyro", "sphere", "summit", "orders"]):
+        if any(
+            tag in name
+            for tag in [
+                "well",
+                "tome",
+                "overload",
+                "gyro",
+                "sphere",
+                "summit",
+                "orders",
+            ]
+        ):
             # check specific hints
             if "alacrity" in str(data).lower():
                 add_boon("alacrity", small)

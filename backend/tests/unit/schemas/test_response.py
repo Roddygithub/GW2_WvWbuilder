@@ -1,6 +1,7 @@
 """
 Tests unitaires pour app/schemas/response.py
 """
+
 import pytest
 from typing import List
 
@@ -21,9 +22,7 @@ class TestAPIResponse:
     def test_api_response_success(self):
         """Test création APIResponse avec succès."""
         response = APIResponse[dict](
-            success=True,
-            data={"id": 1, "name": "Test"},
-            message="Success"
+            success=True, data={"id": 1, "name": "Test"}, message="Success"
         )
         assert response.success is True
         assert response.data == {"id": 1, "name": "Test"}
@@ -32,10 +31,7 @@ class TestAPIResponse:
 
     def test_api_response_error(self):
         """Test création APIResponse avec erreur."""
-        response = APIResponse[None](
-            success=False,
-            error="Something went wrong"
-        )
+        response = APIResponse[None](success=False, error="Something went wrong")
         assert response.success is False
         assert response.error == "Something went wrong"
         assert response.data is None
@@ -53,7 +49,7 @@ class TestPaginatedResponse:
             page_size=10,
             total_pages=10,
             has_next=True,
-            has_prev=False
+            has_prev=False,
         )
         assert response.success is True
         assert len(response.data) == 2
@@ -70,7 +66,7 @@ class TestPaginatedResponse:
             page_size=10,
             total_pages=10,
             has_next=True,
-            has_prev=True
+            has_prev=True,
         )
         assert response.page == 5
         assert response.has_next is True
@@ -85,7 +81,7 @@ class TestPaginatedResponse:
             page_size=10,
             total_pages=10,
             has_next=False,
-            has_prev=True
+            has_prev=True,
         )
         assert response.page == 10
         assert response.has_next is False
@@ -108,7 +104,7 @@ class TestErrorResponse:
         response = ErrorResponse(
             error="Validation error",
             detail="Field 'name' is required",
-            code="VALIDATION_ERROR"
+            code="VALIDATION_ERROR",
         )
         assert response.success is False
         assert response.error == "Validation error"
@@ -147,8 +143,7 @@ class TestHelperFunctions:
     def test_create_success_response_with_message(self):
         """Test création réponse succès avec message."""
         response = create_success_response(
-            data={"id": 1},
-            message="Created successfully"
+            data={"id": 1}, message="Created successfully"
         )
         assert response["success"] is True
         assert response["message"] == "Created successfully"
@@ -171,8 +166,7 @@ class TestHelperFunctions:
     def test_create_error_response_with_detail(self):
         """Test création réponse erreur avec détail."""
         response = create_error_response(
-            error="Not found",
-            detail="Resource with ID 123 not found"
+            error="Not found", detail="Resource with ID 123 not found"
         )
         assert response["success"] is False
         assert response["error"] == "Not found"
@@ -180,10 +174,7 @@ class TestHelperFunctions:
 
     def test_create_error_response_with_code(self):
         """Test création réponse erreur avec code."""
-        response = create_error_response(
-            error="Unauthorized",
-            code="AUTH_REQUIRED"
-        )
+        response = create_error_response(error="Unauthorized", code="AUTH_REQUIRED")
         assert response["success"] is False
         assert response["error"] == "Unauthorized"
         assert response["code"] == "AUTH_REQUIRED"
@@ -191,12 +182,7 @@ class TestHelperFunctions:
     def test_create_paginated_response_first_page(self):
         """Test création réponse paginée première page."""
         data = [{"id": 1}, {"id": 2}, {"id": 3}]
-        response = create_paginated_response(
-            data=data,
-            total=30,
-            page=1,
-            page_size=10
-        )
+        response = create_paginated_response(data=data, total=30, page=1, page_size=10)
         assert response["success"] is True
         assert response["data"] == data
         assert response["total"] == 30
@@ -209,24 +195,14 @@ class TestHelperFunctions:
     def test_create_paginated_response_last_page(self):
         """Test création réponse paginée dernière page."""
         data = [{"id": 21}]
-        response = create_paginated_response(
-            data=data,
-            total=21,
-            page=3,
-            page_size=10
-        )
+        response = create_paginated_response(data=data, total=21, page=3, page_size=10)
         assert response["total_pages"] == 3
         assert response["has_next"] is False
         assert response["has_prev"] is True
 
     def test_create_paginated_response_empty(self):
         """Test création réponse paginée vide."""
-        response = create_paginated_response(
-            data=[],
-            total=0,
-            page=1,
-            page_size=10
-        )
+        response = create_paginated_response(data=[], total=0, page=1, page_size=10)
         assert response["data"] == []
         assert response["total"] == 0
         assert response["total_pages"] == 0
@@ -236,10 +212,5 @@ class TestHelperFunctions:
     def test_create_paginated_response_ceiling_division(self):
         """Test calcul correct du nombre de pages (division avec arrondi supérieur)."""
         # 25 items avec page_size=10 devrait donner 3 pages
-        response = create_paginated_response(
-            data=[],
-            total=25,
-            page=1,
-            page_size=10
-        )
+        response = create_paginated_response(data=[], total=25, page=1, page_size=10)
         assert response["total_pages"] == 3

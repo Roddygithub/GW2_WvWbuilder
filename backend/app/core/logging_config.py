@@ -119,3 +119,7 @@ def setup_logging() -> None:
         )
 
     sys.excepthook = handle_exception
+
+
+# Module-level logger instance for imports
+logger = logging.getLogger(__name__)

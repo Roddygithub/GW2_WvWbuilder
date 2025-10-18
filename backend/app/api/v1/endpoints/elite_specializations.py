@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List
 
 from app import crud, models, schemas
-from app.api import deps
+from app.api import dependencies as deps
 from app.schemas.elite_specialization import (
     GameMode,
     EliteSpecializationCreate,
@@ -90,7 +90,9 @@ async def get_elite_specs_by_profession(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> List[schemas.EliteSpecialization]:
     """Get elite specs by profession ID."""
-    return await crud.elite_spec_crud.get_by_profession_async(db, profession_id=profession_id)
+    return await crud.elite_spec_crud.get_by_profession_async(
+        db, profession_id=profession_id
+    )
 
 
 @router.get(

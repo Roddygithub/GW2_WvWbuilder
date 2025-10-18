@@ -43,11 +43,11 @@ BUILD_SPECS = {
 def get_mode_constraints(mode: str, squad_size: int) -> Dict:
     """
     Returns constraints, targets, and weights for a given WvW mode.
-    
+
     Args:
         mode: "zerg" (25-50), "havoc" (10-20), or "roaming" (1-5)
         squad_size: Number of players
-        
+
     Returns:
         Dict with keys: "build_constraints", "targets", "weights"
     """
@@ -62,7 +62,7 @@ def get_mode_constraints(mode: str, squad_size: int) -> Dict:
 def get_zerg_constraints(squad_size: int) -> Dict:
     """
     Constraints for Zerg mode (25-50 players).
-    
+
     Meta composition:
     - Firebrand: 20% (8-12 for 50p)
     - Scrapper: 10-16% (5-10 for 50p)
@@ -73,7 +73,7 @@ def get_zerg_constraints(squad_size: int) -> Dict:
     """
     # Scale constraints based on squad size
     scale = squad_size / 50.0
-    
+
     build_constraints = {
         "Firebrand": {
             "min": max(2, int(8 * scale)),
@@ -101,29 +101,29 @@ def get_zerg_constraints(squad_size: int) -> Dict:
             "per_group_min": 0,
         },
     }
-    
+
     targets = {
-        "quickness_uptime": 0.95,      # 95% (critical)
-        "alacrity_uptime": 0.70,        # 70% (useful)
-        "resistance_uptime": 0.85,      # 85% (vs conditions)
-        "protection_uptime": 0.70,      # 70% (mitigation)
-        "stability_sources": 3,         # 3 sources minimum
-        "might_stacks": 20,             # 20 stacks
-        "fury_uptime": 0.80,            # 80%
+        "quickness_uptime": 0.95,  # 95% (critical)
+        "alacrity_uptime": 0.70,  # 70% (useful)
+        "resistance_uptime": 0.85,  # 85% (vs conditions)
+        "protection_uptime": 0.70,  # 70% (mitigation)
+        "stability_sources": 3,  # 3 sources minimum
+        "might_stacks": 20,  # 20 stacks
+        "fury_uptime": 0.80,  # 80%
     }
-    
+
     weights = {
-        "quickness": 1.0,      # Maximum priority
-        "stability": 1.0,      # Critical in Zerg
-        "resistance": 0.95,    # Very important (conditions)
-        "might": 0.85,         # Important (DPS)
-        "fury": 0.80,          # Important (crit)
-        "protection": 0.75,    # Mitigation
-        "alacrity": 0.70,      # Useful but not critical
-        "dps": 0.60,           # Moderate
-        "sustain": 0.55,       # Moderate
+        "quickness": 1.0,  # Maximum priority
+        "stability": 1.0,  # Critical in Zerg
+        "resistance": 0.95,  # Very important (conditions)
+        "might": 0.85,  # Important (DPS)
+        "fury": 0.80,  # Important (crit)
+        "protection": 0.75,  # Mitigation
+        "alacrity": 0.70,  # Useful but not critical
+        "dps": 0.60,  # Moderate
+        "sustain": 0.55,  # Moderate
     }
-    
+
     return {
         "build_constraints": build_constraints,
         "targets": targets,
@@ -134,7 +134,7 @@ def get_zerg_constraints(squad_size: int) -> Dict:
 def get_havoc_constraints(squad_size: int) -> Dict:
     """
     Constraints for Havoc mode (10-20 players).
-    
+
     Meta composition:
     - Firebrand: 20% (2-4 for 15p)
     - Scrapper: 13% (1-3 for 15p)
@@ -144,7 +144,7 @@ def get_havoc_constraints(squad_size: int) -> Dict:
     - DPS: 47-60% (7-9 for 15p)
     """
     scale = squad_size / 15.0
-    
+
     build_constraints = {
         "Firebrand": {
             "min": max(1, int(2 * scale)),
@@ -172,29 +172,29 @@ def get_havoc_constraints(squad_size: int) -> Dict:
             "per_group_min": 0,
         },
     }
-    
+
     targets = {
-        "quickness_uptime": 0.90,      # 90%
-        "alacrity_uptime": 0.60,        # 60% (less critical)
-        "resistance_uptime": 0.80,      # 80%
-        "protection_uptime": 0.65,      # 65%
-        "stability_sources": 2,         # 2 sources minimum
-        "might_stacks": 18,             # 18 stacks
-        "fury_uptime": 0.75,            # 75%
+        "quickness_uptime": 0.90,  # 90%
+        "alacrity_uptime": 0.60,  # 60% (less critical)
+        "resistance_uptime": 0.80,  # 80%
+        "protection_uptime": 0.65,  # 65%
+        "stability_sources": 2,  # 2 sources minimum
+        "might_stacks": 18,  # 18 stacks
+        "fury_uptime": 0.75,  # 75%
     }
-    
+
     weights = {
         "quickness": 1.0,
         "stability": 1.0,
         "resistance": 0.90,
-        "dps": 0.80,           # More important in Havoc
+        "dps": 0.80,  # More important in Havoc
         "might": 0.75,
         "fury": 0.70,
         "protection": 0.65,
         "sustain": 0.60,
-        "alacrity": 0.55,      # Less critical
+        "alacrity": 0.55,  # Less critical
     }
-    
+
     return {
         "build_constraints": build_constraints,
         "targets": targets,
@@ -205,7 +205,7 @@ def get_havoc_constraints(squad_size: int) -> Dict:
 def get_roaming_constraints(squad_size: int) -> Dict:
     """
     Constraints for Roaming mode (1-5 players).
-    
+
     Meta composition:
     - Self-sufficient builds (Celestial, Hybrid)
     - No strict composition requirements
@@ -215,36 +215,34 @@ def get_roaming_constraints(squad_size: int) -> Dict:
         # No strict constraints, but encourage diversity
         # Max 2 of the same build
         "_max_same_build": 2,
-        
         # At least 1 sustain build (Scrapper, Tempest, Druid)
         "_min_sustain_builds": 1,
-        
         # At least 1 burst build (Weaver, Willbender, Berserker)
         "_min_burst_builds": 1,
     }
-    
+
     targets = {
-        "quickness_uptime": 0.50,      # 50% (personal)
-        "alacrity_uptime": 0.30,        # 30% (personal)
-        "resistance_uptime": 0.60,      # 60%
-        "protection_uptime": 0.50,      # 50%
-        "stability_sources": 1,         # 1 source minimum
-        "might_stacks": 15,             # 15 stacks
-        "fury_uptime": 0.70,            # 70%
+        "quickness_uptime": 0.50,  # 50% (personal)
+        "alacrity_uptime": 0.30,  # 30% (personal)
+        "resistance_uptime": 0.60,  # 60%
+        "protection_uptime": 0.50,  # 50%
+        "stability_sources": 1,  # 1 source minimum
+        "might_stacks": 15,  # 15 stacks
+        "fury_uptime": 0.70,  # 70%
     }
-    
+
     weights = {
-        "dps": 1.0,            # Maximum priority (burst)
-        "sustain": 0.95,       # Very important (survival)
-        "mobility": 0.90,      # Very important (kiting)
+        "dps": 1.0,  # Maximum priority (burst)
+        "sustain": 0.95,  # Very important (survival)
+        "mobility": 0.90,  # Very important (kiting)
         "stability": 0.80,
         "resistance": 0.75,
         "might": 0.60,
         "fury": 0.60,
-        "quickness": 0.40,     # Less critical
-        "alacrity": 0.30,      # Less critical
+        "quickness": 0.40,  # Less critical
+        "alacrity": 0.30,  # Less critical
     }
-    
+
     return {
         "build_constraints": build_constraints,
         "targets": targets,
@@ -265,35 +263,35 @@ def apply_meta_constraints(
 ) -> Tuple[Dict, Dict]:
     """
     Apply meta-based constraints to the CP-SAT model.
-    
+
     Returns:
         Tuple of (targets, weights) for the objective function
     """
     meta = get_mode_constraints(mode, squad_size)
     build_constraints = meta["build_constraints"]
-    
+
     # Map build names to IDs
     spec_to_id = {spec: bid for spec, bid in BUILD_SPECS.items()}
-    
+
     # Apply build count constraints
     for spec_name, constraints in build_constraints.items():
         if spec_name.startswith("_"):
             # Special constraint (handled separately)
             continue
-            
+
         build_id = spec_to_id.get(spec_name)
         if not build_id or build_id not in build_index:
             continue
-            
+
         j = build_index[build_id]
         build_count = sum(x[(i, j)] for i in range(len(players)) if (i, j) in x)
-        
+
         # Min/Max constraints
         if "min" in constraints:
             model.Add(build_count >= constraints["min"])
         if "max" in constraints:
             model.Add(build_count <= constraints["max"])
-        
+
         # Per-group constraints
         if "per_group_min" in constraints and constraints["per_group_min"] > 0:
             for k in range(group_count):
@@ -303,14 +301,14 @@ def apply_meta_constraints(
                     if (i, j) in x and (i, k) in g
                 )
                 model.Add(group_build_count >= constraints["per_group_min"])
-    
+
     # Apply special constraints
     if "_max_same_build" in build_constraints:
         max_same = build_constraints["_max_same_build"]
         for j in range(len(builds)):
             build_count = sum(x[(i, j)] for i in range(len(players)) if (i, j) in x)
             model.Add(build_count <= max_same)
-    
+
     return meta["targets"], meta["weights"]
 
 

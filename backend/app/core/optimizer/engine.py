@@ -392,8 +392,10 @@ class OptimizerEngine:
 
         # Calculate target counts for each role based on squad size
         targets = {}
-        total_optimal = sum(dist.get("optimal", dist.get("min", 1)) for dist in role_dist.values())
-        
+        total_optimal = sum(
+            dist.get("optimal", dist.get("min", 1)) for dist in role_dist.values()
+        )
+
         for role, dist in role_dist.items():
             optimal = dist.get("optimal", dist.get("min", 1))
             # Proportion the roles according to squad size
@@ -421,7 +423,9 @@ class OptimizerEngine:
                         if i < min(2, len(matching)):
                             solution.append(matching[i % len(matching)])
                         else:
-                            solution.append(random.choice(matching[:min(3, len(matching))]))
+                            solution.append(
+                                random.choice(matching[: min(3, len(matching))])
+                            )
                         remaining -= 1
 
         # Fill any remaining slots with variety (not just one role!)
@@ -438,7 +442,7 @@ class OptimizerEngine:
     ) -> Tuple[float, Dict[str, float], Dict[str, float], Dict[str, int]]:
         """
         Evaluate a solution and return (score, metrics, boon_coverage, role_distribution).
-        
+
         Takes into account GW2 mechanics:
         - Boons limited to 5 players (subgroup mechanic)
         - Squad organized in groups of 5
@@ -467,7 +471,7 @@ class OptimizerEngine:
         # Calculate boon coverage with 5-player subgroup mechanic
         # In GW2, boons only affect 5 players max (your subgroup)
         num_subgroups = max(1, (len(solution) + 4) // 5)  # Ceiling division
-        
+
         for boon in [
             "might",
             "quickness",
@@ -484,7 +488,9 @@ class OptimizerEngine:
             # Each subgroup needs its own boon coverage
             # Coverage = min(1.0, total_generation / num_subgroups / players_per_subgroup)
             players_per_subgroup = min(5, len(solution))
-            boon_coverage[boon] = min(1.0, total_generation / num_subgroups / (players_per_subgroup * 0.5))
+            boon_coverage[boon] = min(
+                1.0, total_generation / num_subgroups / (players_per_subgroup * 0.5)
+            )
 
         # Calculate boon uptime metric (average of critical boons)
         critical_boons = self.config.critical_boons
@@ -508,27 +514,27 @@ class OptimizerEngine:
 
         # Log initial score
         logger.info(f"Base weighted score: {score:.3f} ({score*100:.1f}%)")
-        
+
         # For v1.0: No penalties! Let users see raw performance
         # Penalties make optimization feel "broken" when score shows as 0%
         # Future versions can add configurable penalties
         penalty_total = 0.0
-        
+
         # DISABLED: Penalty for missing critical boons
         # for boon, required in critical_boons.items():
         #     if boon_coverage.get(boon, 0.0) < required:
         #         penalty_total += 0.02 * (required - boon_coverage.get(boon, 0.0))
 
-        # DISABLED: Penalty for role imbalance  
+        # DISABLED: Penalty for role imbalance
         # role_dist_config = self.config.role_distribution
         # for role, dist in role_dist_config.items():
         #     actual = role_distribution.get(role, 0)
         #     if actual < dist.get("min", 0):
         #         penalty_total += 0.01
-        
+
         logger.info(f"Total penalties: -{penalty_total:.3f}")
         score = max(0.0, score - penalty_total)
-        
+
         # Ensure score is in [0, 1]
         score = min(1.0, score)
         logger.info(f"Final score: {score:.3f} ({score*100:.1f}%)")
@@ -727,40 +733,48 @@ class OptimizerEngine:
     ) -> List[Dict[str, Any]]:
         """
         Organize squad into subgroups of 5 (GW2 mechanic).
-        
+
         Ensures each subgroup has balanced boon coverage and roles.
         """
         squad_size = len(solution)
         num_groups = (squad_size + 4) // 5  # Ceiling division
         subgroups = []
-        
+
         # Distribute members across groups (round-robin for now)
         # TODO: Optimize distribution for better boon coverage per group
         for group_num in range(num_groups):
             group_members = []
             group_builds = []
-            
+
             # Get members for this group
             for i in range(group_num, squad_size, num_groups):
                 if i < len(members):
                     group_members.append(members[i]["id"])
                     group_builds.append(solution[i])
-            
+
             # Calculate boon coverage for this group
             group_boon_coverage = {}
             for boon in ["might", "quickness", "alacrity", "stability"]:
                 values = [b.get_capability(boon) for b in group_builds]
                 # Coverage for 5-player group
-                group_boon_coverage[boon] = min(1.0, sum(values) / max(1, len(group_builds) * 0.5))
-            
-            subgroups.append({
-                "group_number": group_num + 1,
-                "size": len(group_members),
-                "members": group_members,
-                "boon_coverage": group_boon_coverage,
-                "avg_boon_coverage": sum(group_boon_coverage.values()) / len(group_boon_coverage) if group_boon_coverage else 0.0,
-            })
-        
+                group_boon_coverage[boon] = min(
+                    1.0, sum(values) / max(1, len(group_builds) * 0.5)
+                )
+
+            subgroups.append(
+                {
+                    "group_number": group_num + 1,
+                    "size": len(group_members),
+                    "members": group_members,
+                    "boon_coverage": group_boon_coverage,
+                    "avg_boon_coverage": (
+                        sum(group_boon_coverage.values()) / len(group_boon_coverage)
+                        if group_boon_coverage
+                        else 0.0
+                    ),
+                }
+            )
+
         return subgroups
 
     def _generate_notes(

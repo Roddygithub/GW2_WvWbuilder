@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app import models, schemas
-from app.api import deps
+from app.api import dependencies as deps
 from app.db.session import get_db
 from app.models.team import Team
 from app.models.team_member import TeamMember

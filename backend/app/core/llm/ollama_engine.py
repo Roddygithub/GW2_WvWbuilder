@@ -20,9 +20,11 @@ class OllamaEngine(LLMEngine):
     def name(self) -> str:
         return f"ollama:{self._model}"
 
-    def get_synergy_pairs(self, specs: List[str], mode: str) -> Dict[Tuple[str, str], float]:
+    def get_synergy_pairs(
+        self, specs: List[str], mode: str
+    ) -> Dict[Tuple[str, str], float]:
         """Query LLM for synergy ratings between specs in WvW mode (ONLY).
-        
+
         Strictly filters for WvW-specific synergies and ignores PvE content.
         """
         specs_lower = [s.lower() for s in specs]
@@ -34,18 +36,22 @@ class OllamaEngine(LLMEngine):
             f"IGNORE raids, fractals, strikes, dungeons, and all PvE content. "
             f"Specs: {', '.join(specs)}. "
             "Return ONLY a JSON dict with pairs as keys (e.g., 'Firebrand-Scrapper') and scores as values. "
-            "Example: {\"Firebrand-Scrapper\": 0.95, \"Herald-Tempest\": 0.80}. "
+            'Example: {"Firebrand-Scrapper": 0.95, "Herald-Tempest": 0.80}. '
             "Consider WvW-specific synergies: boon sharing, stability stacking, cleanses, resistance, etc."
         )
         try:
             url = f"{self._endpoint}/api/generate"
-            data = json.dumps({
-                "model": self._model,
-                "prompt": prompt,
-                "stream": False,
-                "options": {"temperature": 0.1}
-            }).encode("utf-8")
-            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            data = json.dumps(
+                {
+                    "model": self._model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {"temperature": 0.1},
+                }
+            ).encode("utf-8")
+            req = urllib.request.Request(
+                url, data=data, headers={"Content-Type": "application/json"}
+            )
             with urllib.request.urlopen(req, timeout=6) as resp:
                 out = json.loads(resp.read().decode("utf-8"))
                 text = out.get("response", "{}")
@@ -55,7 +61,11 @@ class OllamaEngine(LLMEngine):
                     # Try to extract JSON substring
                     start = text.find("{")
                     end = text.rfind("}")
-                    parsed = json.loads(text[start:end+1]) if start >= 0 and end >= 0 else {}
+                    parsed = (
+                        json.loads(text[start : end + 1])
+                        if start >= 0 and end >= 0
+                        else {}
+                    )
                 result: Dict[Tuple[str, str], float] = {}
                 for k, v in parsed.items():
                     if not isinstance(k, str):
@@ -82,7 +92,7 @@ class OllamaEngine(LLMEngine):
         for grp in composition.get("groups", []):
             builds = grp.get("builds", [])
             groups_summary.append(f"Group {grp['group_id']}: {len(builds)} players")
-        
+
         coverage = composition.get("coverage_by_group", [])
         avg_coverage = {}
         if coverage:
@@ -91,7 +101,7 @@ class OllamaEngine(LLMEngine):
                     avg_coverage[boon] = avg_coverage.get(boon, 0.0) + val
             for boon in avg_coverage:
                 avg_coverage[boon] /= len(coverage)
-        
+
         prompt = (
             f"You are a Guild Wars 2 World vs World (WvW) tactical expert. "
             f"Analyze this squad composition for {mode} mode. "
@@ -102,16 +112,20 @@ class OllamaEngine(LLMEngine):
             "Provide a concise WvW tactical analysis (2-3 sentences): "
             "strengths in WvW combat, weaknesses against enemy zergs, and one key WvW-specific recommendation."
         )
-        
+
         try:
             url = f"{self._endpoint}/api/generate"
-            data = json.dumps({
-                "model": self._model,
-                "prompt": prompt,
-                "stream": False,
-                "options": {"temperature": 0.3, "max_tokens": 150}
-            }).encode("utf-8")
-            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            data = json.dumps(
+                {
+                    "model": self._model,
+                    "prompt": prompt,
+                    "stream": False,
+                    "options": {"temperature": 0.3, "max_tokens": 150},
+                }
+            ).encode("utf-8")
+            req = urllib.request.Request(
+                url, data=data, headers={"Content-Type": "application/json"}
+            )
             with urllib.request.urlopen(req, timeout=8) as resp:
                 out = json.loads(resp.read().decode("utf-8"))
                 text = out.get("response", "")

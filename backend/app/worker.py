@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 MAX_RETRIES = 5
 
 
-async def send_webhook(ctx: Dict[str, Any], webhook_id: int, event_type: str, payload: Dict[str, Any]) -> None:
+async def send_webhook(
+    ctx: Dict[str, Any], webhook_id: int, event_type: str, payload: Dict[str, Any]
+) -> None:
     """
     Envoie un payload de webhook à une URL de destination.
 

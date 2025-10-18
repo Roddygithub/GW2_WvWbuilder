@@ -123,7 +123,10 @@ def verify_refresh_token(token: str) -> Dict[str, Any]:
     """
     try:
         payload = jwt.decode(
-            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM], leeway=10
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+            leeway=10,
         )
         # Convertir le timestamp en datetime pour la validation
         exp_datetime = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)

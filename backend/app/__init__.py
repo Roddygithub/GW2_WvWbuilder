@@ -66,7 +66,7 @@ from .core.security import (
 )
 
 # Import des dépendances API
-from .api.deps import (
+from .api.dependencies import (
     get_async_db,
     get_current_user_dep,
     get_current_active_user,

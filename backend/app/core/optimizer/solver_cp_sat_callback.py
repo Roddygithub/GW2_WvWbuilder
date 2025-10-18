@@ -9,7 +9,7 @@ from ortools.sat.python import cp_model
 class StreamingSolutionCallback(cp_model.CpSolverSolutionCallback):
     """
     Callback to stream intermediate best solutions during CP-SAT search.
-    
+
     Invoked by OR-Tools whenever a better feasible solution is found.
     """
 
@@ -58,8 +58,14 @@ class StreamingSolutionCallback(cp_model.CpSolverSolutionCallback):
         groups_data = []
         for k in range(self.group_count):
             player_ids = [self.players[i].id for i in range(n) if assign_group[i] == k]
-            build_ids = [self.builds[assign_build[i]].id for i in range(n) if assign_group[i] == k]
-            groups_data.append({"group_id": k + 1, "players": player_ids, "builds": build_ids})
+            build_ids = [
+                self.builds[assign_build[i]].id
+                for i in range(n)
+                if assign_group[i] == k
+            ]
+            groups_data.append(
+                {"group_id": k + 1, "players": player_ids, "builds": build_ids}
+            )
 
         # Normalize score (heuristic)
         denom = 1000.0 * self.group_count if self.group_count > 0 else 1.0

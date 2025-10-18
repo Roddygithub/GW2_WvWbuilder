@@ -40,7 +40,9 @@ class BuildTemplateKB(BaseModel):
     id: int
     profession: str
     specialization: str
-    is_elite: bool = True  # True for elite specializations (Firebrand, Scrapper, etc.), False for core
+    is_elite: bool = (
+        True  # True for elite specializations (Firebrand, Scrapper, etc.), False for core
+    )
     capability: CapabilityVector
 
 

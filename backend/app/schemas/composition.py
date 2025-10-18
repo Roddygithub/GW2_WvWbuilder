@@ -277,7 +277,7 @@ class Composition(BaseModel):
                     "created_by_username": "john_doe",
                 }
             ]
-        }
+        },
     )
 
 

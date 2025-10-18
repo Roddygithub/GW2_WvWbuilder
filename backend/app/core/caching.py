@@ -10,7 +10,7 @@ from sqlalchemy import event
 from sqlalchemy.orm import Mapper
 
 from app.core.config import settings
-from app.core.logging import logger
+from app.core.logging_config import logger
 
 # Type variable for the model
 ModelType = TypeVar("ModelType", bound=Any)
@@ -173,7 +173,9 @@ def configure_sqlalchemy_caching() -> None:
                         if hasattr(prop, "mapper"):
 
                             @event.listens_for(mapper.class_, "refresh")
-                            def receive_refresh(target: Any, context: Any, attrs: Any) -> None:
+                            def receive_refresh(
+                                target: Any, context: Any, attrs: Any
+                            ) -> None:
                                 if hasattr(target, "_cache_namespace"):
                                     cache_key = f"{target._cache_namespace}:{target.id}"
                                     regions["default"].delete(cache_key)
@@ -190,7 +192,9 @@ def configure_sqlalchemy_caching() -> None:
         )
 
 
-def cache_region(region_name: str = "default") -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+def cache_region(
+    region_name: str = "default",
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """
     Décorateur pour mettre en cache le résultat d'une fonction.
 

@@ -1,6 +1,7 @@
 """
 Tests unitaires pour app/core/utils.py
 """
+
 import pytest
 from datetime import datetime, timezone
 from unittest.mock import Mock, MagicMock
@@ -106,11 +107,7 @@ class TestPaginationLinks:
         request.query_params = {}
 
         links = get_pagination_links(
-            request=request,
-            page=1,
-            total_pages=5,
-            page_size=10,
-            total_items=50
+            request=request, page=1, total_pages=5, page_size=10, total_items=50
         )
 
         assert links["first"] is None
@@ -129,11 +126,7 @@ class TestPaginationLinks:
         request.query_params = {"page": "3"}
 
         links = get_pagination_links(
-            request=request,
-            page=3,
-            total_pages=5,
-            page_size=10,
-            total_items=50
+            request=request, page=3, total_pages=5, page_size=10, total_items=50
         )
 
         assert links["first"] is not None
@@ -150,11 +143,7 @@ class TestPaginationLinks:
         request.query_params = {"page": "5"}
 
         links = get_pagination_links(
-            request=request,
-            page=5,
-            total_pages=5,
-            page_size=10,
-            total_items=50
+            request=request, page=5, total_pages=5, page_size=10, total_items=50
         )
 
         assert links["first"] is not None
@@ -170,11 +159,7 @@ class TestPaginationLinks:
         request.query_params = {"filter": "active", "page": "2"}
 
         links = get_pagination_links(
-            request=request,
-            page=2,
-            total_pages=3,
-            page_size=20,
-            total_items=60
+            request=request, page=2, total_pages=3, page_size=20, total_items=60
         )
 
         assert "filter=active" in links["next"]
