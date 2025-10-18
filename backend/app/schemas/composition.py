@@ -454,6 +454,20 @@ class CompositionOptimizationRequest(BaseModel):
         examples=[[10, 15]],
         description="List of elite specialization IDs to exclude from optimization",
     )
+    fixed_roles: Optional[List[Dict[str, Any]]] = Field(
+        default=None,
+        examples=[
+            [
+                {
+                    "profession_id": 1,
+                    "elite_specialization_id": 3,
+                    "count": 2,
+                    "role_type": "healer",
+                }
+            ]
+        ],
+        description="List of specific roles with professions/specs that must be included",
+    )
     optimization_goals: Optional[List[str]] = Field(
         default=None,
         examples=[["boon_uptime", "healing", "damage"]],
@@ -538,6 +552,24 @@ class CompositionOptimizationResult(BaseModel):
             [
                 "Consider adding more condition cleanses",
                 "Good balance of damage and support",
+            ]
+        ],
+    )
+    subgroups: Optional[List[Dict[str, Any]]] = Field(
+        default=None,
+        description="Squad organized in subgroups of 5 (GW2 mechanic)",
+        examples=[
+            [
+                {
+                    "group_number": 1,
+                    "members": [1, 2, 3, 4, 5],
+                    "boon_coverage": {"might": 0.95, "quickness": 0.90},
+                },
+                {
+                    "group_number": 2,
+                    "members": [6, 7, 8, 9, 10],
+                    "boon_coverage": {"might": 0.85, "quickness": 0.80},
+                },
             ]
         ],
     )

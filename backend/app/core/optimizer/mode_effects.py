@@ -3,10 +3,15 @@ Mode-specific effects mapping for traits, skills, and buffs.
 
 In GW2, some traits and skills have different effects in WvW vs PvE.
 This module maps these differences to ensure correct optimization.
+
+Note: GW2 API does not expose split balances. This data is maintained
+manually from community documentation (MetaBattle, GW2Wiki, Snowcrows).
 """
 
 from typing import Dict, Any, List
 from dataclasses import dataclass
+import json
+from pathlib import Path
 
 
 @dataclass
@@ -20,7 +25,22 @@ class EffectMapping:
     description: str
 
 
-# Exemples réels de différences McM/PvE
+def load_split_balance_data() -> Dict[str, Any]:
+    """Load WvW/PvE split balance data from JSON file."""
+    data_file = Path(__file__).parent.parent.parent / "data" / "wvw_pve_split_balance.json"
+    
+    if data_file.exists():
+        with open(data_file, "r") as f:
+            return json.load(f)
+    
+    return {"traits": {}, "skills": {}}
+
+
+# Load split balance data
+SPLIT_BALANCE_DATA = load_split_balance_data()
+
+
+# Convert to EffectMapping format for backward compatibility
 MODE_SPECIFIC_EFFECTS = [
     # Herald - Glint's Boon Duration
     EffectMapping(
@@ -279,3 +299,74 @@ def apply_mode_adjustments(
             adjusted[key] *= multiplier
 
     return adjusted
+
+
+def get_trait_split_data(trait_id: int, game_type: str = "wvw") -> Dict[str, Any]:
+    """
+    Get WvW/PvE split balance data for a specific trait.
+    
+    Args:
+        trait_id: Trait ID
+        game_type: "wvw" or "pve"
+    
+    Returns:
+        Dict with trait effects for the specified mode
+    """
+    trait_str = str(trait_id)
+    trait_data = SPLIT_BALANCE_DATA.get("traits", {}).get(trait_str, {})
+    
+    if not trait_data:
+        return {}
+    
+    return trait_data.get(game_type, {})
+
+
+def get_skill_split_data(skill_id: int, game_type: str = "wvw") -> Dict[str, Any]:
+    """
+    Get WvW/PvE split balance data for a specific skill.
+    
+    Args:
+        skill_id: Skill ID
+        game_type: "wvw" or "pve"
+    
+    Returns:
+        Dict with skill effects for the specified mode
+    """
+    skill_str = str(skill_id)
+    skill_data = SPLIT_BALANCE_DATA.get("skills", {}).get(skill_str, {})
+    
+    if not skill_data:
+        return {}
+    
+    return skill_data.get(game_type, {})
+
+
+def get_all_split_traits() -> List[str]:
+    """Get list of all trait IDs that have split balances."""
+    return list(SPLIT_BALANCE_DATA.get("traits", {}).keys())
+
+
+def get_all_split_skills() -> List[str]:
+    """Get list of all skill IDs that have split balances."""
+    return list(SPLIT_BALANCE_DATA.get("skills", {}).keys())
+
+
+def has_split_balance(item_id: int, item_type: str = "trait") -> bool:
+    """
+    Check if a trait or skill has different effects in WvW vs PvE.
+    
+    Args:
+        item_id: Trait or skill ID
+        item_type: "trait" or "skill"
+    
+    Returns:
+        True if item has split balance
+    """
+    item_str = str(item_id)
+    
+    if item_type == "trait":
+        return item_str in SPLIT_BALANCE_DATA.get("traits", {})
+    elif item_type == "skill":
+        return item_str in SPLIT_BALANCE_DATA.get("skills", {})
+    
+    return False

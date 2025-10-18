@@ -72,6 +72,33 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         db_monitor.start_monitoring(interval=300)
     )  # Toutes les 5 minutes
 
+    # Warmup optimizer caches (capability vectors, matrices)
+    logger.info("Warmup optimizer caches...")
+    try:
+        from app.core.optimizer.capabilities import compute_capability_vector
+        from app.core.kb.builder import ensure_kb_initialized
+        from app.schemas.optimization import BuildTemplateInput
+        import numpy as np
+
+        # Sample builds for warmup
+        sample_builds = [
+            BuildTemplateInput(id=101, profession="Guardian", specialization="Firebrand", mode="wvw"),
+            BuildTemplateInput(id=102, profession="Engineer", specialization="Scrapper", mode="wvw"),
+            BuildTemplateInput(id=103, profession="Revenant", specialization="Herald", mode="wvw"),
+            BuildTemplateInput(id=104, profession="Elementalist", specialization="Tempest", mode="wvw"),
+            BuildTemplateInput(id=105, profession="Necromancer", specialization="Scourge", mode="wvw"),
+            BuildTemplateInput(id=106, profession="Engineer", specialization="Mechanist", mode="wvw"),
+        ]
+        # Initialize KB with sample builds if empty
+        ensure_kb_initialized(sample_builds, mode="wvw")
+
+        # Precompute capability vectors
+        for b in sample_builds:
+            _ = compute_capability_vector(b, "wvw")
+        logger.info(f"Warmup completed for {len(sample_builds)} builds")
+    except Exception as e:
+        logger.warning(f"Warmup optimizer caches failed (non-critical): {e}")
+
     try:
         yield  # L'application est en cours d'exécution
     finally:

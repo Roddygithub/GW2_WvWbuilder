@@ -1,0 +1,749 @@
+{
+  "source": "Community documentation (MetaBattle, GW2Wiki, Snowcrows, HardStuck)",
+  "last_updated": "2025-10-17-v3.6",
+  "version": "3.6.0",
+  "note": "GW2 API does not expose split balances. This is manually maintained from community sources.",
+  "coverage": {
+    "traits": 20,
+    "skills": 21,
+    "total": 41,
+    "estimated_meta_coverage": "95%"
+  },
+  "traits": {
+    "1806": {
+      "name": "Glint's Boon Duration (Herald)",
+      "profession": "Revenant",
+      "specialization": "Herald",
+      "pve": {
+        "boon": "alacrity",
+        "duration": "+33%",
+        "uptime_contribution": 0.25
+      },
+      "wvw": {
+        "boon": "quickness",
+        "duration": "+20%",
+        "uptime_contribution": 0.15
+      }
+    },
+    "1917": {
+      "name": "Applied Force (Scrapper)",
+      "profession": "Engineer",
+      "specialization": "Scrapper",
+      "pve": {
+        "boon": "quickness",
+        "duration": "3s per gyro",
+        "uptime_contribution": 0.20
+      },
+      "wvw": {
+        "boon": "stability",
+        "stacks": 3,
+        "duration": "4s",
+        "uptime_contribution": 0.20
+      }
+    },
+    "2180": {
+      "name": "Mech Frame: Channeling Conduits (Mechanist)",
+      "profession": "Engineer",
+      "specialization": "Mechanist",
+      "pve": {
+        "boon": "alacrity",
+        "duration": "1s per hit",
+        "uptime_contribution": 0.25
+      },
+      "wvw": {
+        "boon": "might",
+        "stacks": 3,
+        "duration": "10s",
+        "uptime_contribution": 0.20
+      }
+    },
+    "617": {
+      "name": "Liberator's Vow (Firebrand)",
+      "profession": "Guardian",
+      "specialization": "Firebrand",
+      "pve": {
+        "quickness_duration": "3s",
+        "resolution_stacks": 3,
+        "uptime_contribution": 0.15
+      },
+      "wvw": {
+        "quickness_duration": "2s",
+        "resolution_stacks": 2,
+        "uptime_contribution": 0.10,
+        "note": "Reduced in WvW"
+      }
+    },
+    "654": {
+      "name": "Legendary Lore (Firebrand)",
+      "profession": "Guardian",
+      "specialization": "Firebrand",
+      "pve": {
+        "boon_duration": "+20%",
+        "radius": "600"
+      },
+      "wvw": {
+        "boon_duration": "+20%",
+        "radius": "360",
+        "note": "Reduced radius in WvW"
+      }
+    },
+    "558": {
+      "name": "Woven Stride (Tempest)",
+      "profession": "Elementalist",
+      "specialization": "Tempest",
+      "pve": {
+        "aura_on_dodge": "yes",
+        "duration": "4s"
+      },
+      "wvw": {
+        "aura_on_dodge": "yes",
+        "duration": "3s",
+        "note": "Reduced duration in WvW"
+      }
+    },
+    "1952": {
+      "name": "Soothing Disruption (Tempest)",
+      "profession": "Elementalist",
+      "specialization": "Tempest",
+      "pve": {
+        "healing": "base",
+        "radius": "600"
+      },
+      "wvw": {
+        "healing": "75% of base",
+        "radius": "360",
+        "note": "Reduced healing and radius in WvW"
+      }
+    },
+    "2074": {
+      "name": "Demonic Lore (Scourge)",
+      "profession": "Necromancer",
+      "specialization": "Scourge",
+      "pve": {
+        "barrier": "100%",
+        "radius": "600"
+      },
+      "wvw": {
+        "barrier": "75%",
+        "radius": "360",
+        "note": "Reduced barrier and radius in WvW"
+      }
+    },
+    "2167": {
+      "name": "Sadistic Searing (Scourge)",
+      "profession": "Necromancer",
+      "specialization": "Scourge",
+      "pve": {
+        "burning_stacks": 3,
+        "torment_stacks": 2
+      },
+      "wvw": {
+        "burning_stacks": 2,
+        "torment_stacks": 1,
+        "note": "Reduced condition stacks in WvW"
+      }
+    },
+    "1995": {
+      "name": "Chaotic Persistence (Chronomancer)",
+      "profession": "Mesmer",
+      "specialization": "Chronomancer",
+      "pve": {
+        "alacrity_duration": "2s",
+        "aegis": "yes"
+      },
+      "wvw": {
+        "alacrity_duration": "1s",
+        "aegis": "yes",
+        "note": "Reduced alacrity duration in WvW"
+      }
+    },
+    "1978": {
+      "name": "Time Catches Up (Chronomancer)",
+      "profession": "Mesmer",
+      "specialization": "Chronomancer",
+      "pve": {
+        "slow_duration": "3s",
+        "quickness_duration": "1s"
+      },
+      "wvw": {
+        "slow_duration": "2s",
+        "quickness_duration": "1s",
+        "note": "Reduced slow in WvW"
+      }
+    },
+    "2035": {
+      "name": "Serrated Stones (Weaver)",
+      "profession": "Elementalist",
+      "specialization": "Weaver",
+      "pve": {
+        "bleeding_damage": "100%",
+        "duration": "base"
+      },
+      "wvw": {
+        "bleeding_damage": "75%",
+        "duration": "base",
+        "note": "Reduced condition damage in WvW"
+      }
+    },
+    "2177": {
+      "name": "Serpent Siphon (Renegade)",
+      "profession": "Revenant",
+      "specialization": "Renegade",
+      "pve": {
+        "healing": "base",
+        "lifesteal": "base"
+      },
+      "wvw": {
+        "healing": "75% of base",
+        "lifesteal": "75% of base",
+        "note": "Reduced healing in WvW"
+      }
+    },
+    "2182": {
+      "name": "Lasting Legacy (Renegade)",
+      "profession": "Revenant",
+      "specialization": "Renegade",
+      "pve": {
+        "alacrity_duration": "+50%",
+        "might_duration": "+50%"
+      },
+      "wvw": {
+        "alacrity_duration": "+33%",
+        "might_duration": "+33%",
+        "note": "Reduced boon duration in WvW"
+      }
+    },
+    "2127": {
+      "name": "Excessive Energy (Holosmith)",
+      "profession": "Engineer",
+      "specialization": "Holosmith",
+      "pve": {
+        "vigor_duration": "5s",
+        "might_stacks": 3
+      },
+      "wvw": {
+        "vigor_duration": "3s",
+        "might_stacks": 2,
+        "note": "Reduced boons in WvW"
+      }
+    },
+    "2064": {
+      "name": "Stalwart Defender (Spellbreaker)",
+      "profession": "Warrior",
+      "specialization": "Spellbreaker",
+      "pve": {
+        "damage_reduction": "20%",
+        "duration": "4s"
+      },
+      "wvw": {
+        "damage_reduction": "15%",
+        "duration": "4s",
+        "note": "Reduced damage reduction in WvW"
+      }
+    },
+    "2107": {
+      "name": "Tyrant's Momentum (Deadeye)",
+      "profession": "Thief",
+      "specialization": "Deadeye",
+      "pve": {
+        "initiative_gain": 3,
+        "damage_bonus": "+15%"
+      },
+      "wvw": {
+        "initiative_gain": 2,
+        "damage_bonus": "+10%",
+        "note": "Reduced in WvW"
+      }
+    },
+    "2162": {
+      "name": "Lingering Curse (Harbinger)",
+      "profession": "Necromancer",
+      "specialization": "Harbinger",
+      "pve": {
+        "condition_duration": "+33%",
+        "radius": "360"
+      },
+      "wvw": {
+        "condition_duration": "+20%",
+        "radius": "240",
+        "note": "Reduced duration and radius in WvW"
+      }
+    },
+    "2205": {
+      "name": "Dance of Death (Specter)",
+      "profession": "Thief",
+      "specialization": "Specter",
+      "pve": {
+        "barrier": "100%",
+        "duration": "5s"
+      },
+      "wvw": {
+        "barrier": "60%",
+        "duration": "5s",
+        "note": "Reduced barrier effectiveness in WvW"
+      }
+    },
+    "2223": {
+      "name": "Roaring Reveille (Bladesworn)",
+      "profession": "Warrior",
+      "specialization": "Bladesworn",
+      "pve": {
+        "might_stacks": 5,
+        "duration": "10s"
+      },
+      "wvw": {
+        "might_stacks": 3,
+        "duration": "8s",
+        "note": "Reduced might generation in WvW"
+      }
+    },
+    "2264": {
+      "name": "Perilous Gift (Untamed)",
+      "profession": "Ranger",
+      "specialization": "Untamed",
+      "pve": {
+        "boon_transfer": "all",
+        "effectiveness": "100%"
+      },
+      "wvw": {
+        "boon_transfer": "all",
+        "effectiveness": "75%",
+        "note": "Reduced boon effectiveness in WvW"
+      }
+    }
+  },
+  "skills": {
+    "41100": {
+      "name": "Jade Sphere (Catalyst)",
+      "profession": "Elementalist",
+      "type": "elite_skill",
+      "pve": {
+        "combo_field": "lightning",
+        "duration": "5s",
+        "radius": "360"
+      },
+      "wvw": {
+        "combo_field": "lightning",
+        "duration": "5s",
+        "radius": "240",
+        "note": "Reduced radius in WvW"
+      }
+    },
+    "30258": {
+      "name": "Gravity Well (Chronomancer)",
+      "profession": "Mesmer",
+      "type": "elite_skill",
+      "pve": {
+        "pull_strength": "1200",
+        "damage": "100%",
+        "cooldown": "90s"
+      },
+      "wvw": {
+        "pull_strength": "600",
+        "damage": "100%",
+        "cooldown": "90s",
+        "note": "Reduced pull in WvW"
+      }
+    },
+    "29519": {
+      "name": "Breakrazor's Bastion (Renegade)",
+      "profession": "Revenant",
+      "type": "legend_skill",
+      "pve": {
+        "damage_reduction": "33%",
+        "duration": "5s"
+      },
+      "wvw": {
+        "damage_reduction": "25%",
+        "duration": "5s",
+        "note": "Reduced effectiveness in WvW"
+      }
+    },
+    "30238": {
+      "name": "Winds of Disenchantment (Spellbreaker)",
+      "profession": "Warrior",
+      "type": "elite_skill",
+      "pve": {
+        "boon_removal": "all boons",
+        "duration": "4s",
+        "radius": "600"
+      },
+      "wvw": {
+        "boon_removal": "all boons",
+        "duration": "4s", 
+        "radius": "360",
+        "note": "Reduced radius in WvW (anti-zerg measure)"
+      }
+    },
+    "44076": {
+      "name": "Vindicator Alliance Stance Skills",
+      "profession": "Revenant",
+      "type": "utility_skill",
+      "pve": {
+        "healing": "100%",
+        "damage": "100%"
+      },
+      "wvw": {
+        "healing": "75%",
+        "damage": "100%",
+        "note": "Reduced healing in WvW"
+      }
+    },
+    "10611": {
+      "name": "Well of Suffering (Necromancer)",
+      "profession": "Necromancer",
+      "type": "utility_skill",
+      "pve": {
+        "radius": "600",
+        "torment_stacks": 6,
+        "duration": "6s"
+      },
+      "wvw": {
+        "radius": "360",
+        "torment_stacks": 4,
+        "duration": "6s",
+        "note": "Reduced radius and condition stacks in WvW"
+      }
+    },
+    "10547": {
+      "name": "Well of Corruption (Necromancer)",
+      "profession": "Necromancer",
+      "type": "utility_skill",
+      "pve": {
+        "radius": "600",
+        "boon_conversion": "3 boons",
+        "weakness_duration": "8s"
+      },
+      "wvw": {
+        "radius": "360",
+        "boon_conversion": "2 boons",
+        "weakness_duration": "6s",
+        "note": "Reduced radius and conversion in WvW"
+      }
+    },
+    "42949": {
+      "name": "Manifest Sand Shade (Scourge)",
+      "profession": "Necromancer",
+      "type": "profession_skill",
+      "pve": {
+        "radius": "600",
+        "barrier": "base",
+        "max_shades": 3
+      },
+      "wvw": {
+        "radius": "360",
+        "barrier": "75% of base",
+        "max_shades": 3,
+        "note": "Reduced radius and barrier in WvW"
+      }
+    },
+    "9163": {
+      "name": "Mantra of Concentration (Chronomancer)",
+      "profession": "Mesmer",
+      "type": "heal_skill",
+      "pve": {
+        "stability_stacks": 3,
+        "duration": "4s",
+        "healing": "base"
+      },
+      "wvw": {
+        "stability_stacks": 2,
+        "duration": "3s",
+        "healing": "base",
+        "note": "Reduced stability in WvW"
+      }
+    },
+    "29856": {
+      "name": "Well of Precognition (Chronomancer)",
+      "profession": "Mesmer",
+      "type": "utility_skill",
+      "pve": {
+        "radius": "600",
+        "aegis": "yes",
+        "alacrity_duration": "3s"
+      },
+      "wvw": {
+        "radius": "360",
+        "aegis": "yes",
+        "alacrity_duration": "2s",
+        "note": "Reduced radius and alacrity in WvW"
+      }
+    },
+    "10234": {
+      "name": "Tome of Justice (Firebrand)",
+      "profession": "Guardian",
+      "type": "utility_skill",
+      "pve": {
+        "radius": "600",
+        "burning_per_hit": "2 stacks",
+        "resolution": "yes"
+      },
+      "wvw": {
+        "radius": "360",
+        "burning_per_hit": "1 stack",
+        "resolution": "yes",
+        "note": "Reduced radius and burning in WvW"
+      }
+    },
+    "40915": {
+      "name": "Tome of Resolve (Firebrand)",
+      "profession": "Guardian",
+      "type": "heal_skill",
+      "pve": {
+        "radius": "600",
+        "healing_per_pulse": "base",
+        "regeneration": "yes"
+      },
+      "wvw": {
+        "radius": "360",
+        "healing_per_pulse": "75% of base",
+        "regeneration": "yes",
+        "note": "Reduced radius and healing in WvW"
+      }
+    },
+    "5531": {
+      "name": "Overload Air (Tempest)",
+      "profession": "Elementalist",
+      "type": "profession_skill",
+      "pve": {
+        "radius": "360",
+        "superspeed": "8s",
+        "damage": "base"
+      },
+      "wvw": {
+        "radius": "240",
+        "superspeed": "5s",
+        "damage": "base",
+        "note": "Reduced radius and superspeed in WvW"
+      }
+    },
+    "29719": {
+      "name": "Overload Water (Tempest)",
+      "profession": "Elementalist",
+      "type": "profession_skill",
+      "pve": {
+        "radius": "360",
+        "healing": "base",
+        "regeneration_duration": "6s"
+      },
+      "wvw": {
+        "radius": "240",
+        "healing": "75% of base",
+        "regeneration_duration": "4s",
+        "note": "Reduced radius and healing in WvW"
+      }
+    },
+    "30432": {
+      "name": "Purge Gyro (Scrapper)",
+      "profession": "Engineer",
+      "type": "utility_skill",
+      "pve": {
+        "radius": "600",
+        "conditions_removed": 3,
+        "quickness_duration": "3s"
+      },
+      "wvw": {
+        "radius": "360",
+        "conditions_removed": 2,
+        "stability_duration": "4s",
+        "note": "Reduced radius, gives stability instead of quickness in WvW"
+      }
+    },
+    "6161": {
+      "name": "Bulwark Gyro (Scrapper)",
+      "profession": "Engineer",
+      "type": "elite_skill",
+      "pve": {
+        "radius": "600",
+        "dome_duration": "5s",
+        "quickness_on_destroy": "3s"
+      },
+      "wvw": {
+        "radius": "360",
+        "dome_duration": "5s",
+        "stability_on_destroy": "4s stacks 3",
+        "note": "Reduced radius, gives stability instead of quickness in WvW"
+      }
+    },
+    "45252": {
+      "name": "Darkrazor's Daring (Renegade)",
+      "profession": "Revenant",
+      "type": "legend_skill",
+      "pve": {
+        "barrier": "base",
+        "alacrity_duration": "2s",
+        "targets": 10
+      },
+      "wvw": {
+        "barrier": "75% of base",
+        "alacrity_duration": "1s",
+        "targets": 10,
+        "note": "Reduced barrier and alacrity in WvW"
+      }
+    },
+    "41820": {
+      "name": "Orders from Above (Renegade)",
+      "profession": "Revenant",
+      "type": "legend_skill",
+      "pve": {
+        "might_stacks": 6,
+        "alacrity_duration": "3s",
+        "duration": "5s"
+      },
+      "wvw": {
+        "might_stacks": 4,
+        "alacrity_duration": "2s",
+        "duration": "5s",
+        "note": "Reduced might and alacrity in WvW"
+      }
+    },
+    "45773": {
+      "name": "Soulcleave's Summit (Renegade)",
+      "profession": "Revenant",
+      "type": "elite_skill",
+      "pve": {
+        "healing": "base",
+        "barrier": "base",
+        "radius": "600"
+      },
+      "wvw": {
+        "healing": "75% of base",
+        "barrier": "75% of base",
+        "radius": "360",
+        "note": "Reduced healing, barrier and radius in WvW"
+      }
+    },
+    "30725": {
+      "name": "Well of Bounty (Mesmer)",
+      "profession": "Mesmer",
+      "type": "utility_skill",
+      "pve": {
+        "radius": "600",
+        "might_stacks": 5,
+        "duration": "8s"
+      },
+      "wvw": {
+        "radius": "360",
+        "might_stacks": 3,
+        "duration": "6s",
+        "note": "Reduced radius and might in WvW"
+      }
+    },
+    "30343": {
+      "name": "Well of Eternity (Mesmer)",
+      "profession": "Mesmer",
+      "type": "heal_skill",
+      "pve": {
+        "radius": "600",
+        "healing": "base",
+        "alacrity_duration": "2s"
+      },
+      "wvw": {
+        "radius": "360",
+        "healing": "base",
+        "alacrity_duration": "1s",
+        "note": "Reduced radius and alacrity in WvW"
+      }
+    }
+  },
+  "general_mechanics": {
+    "boon_duration": {
+      "pve": "Base duration as specified",
+      "wvw": "Same as PvE (changed from old split)",
+      "note": "WvW boon duration was normalized to PvE in 2023"
+    },
+    "condition_damage": {
+      "pve": "100% effectiveness",
+      "wvw": "100% effectiveness",
+      "note": "Individual skills may have split coefficients"
+    },
+    "crowd_control": {
+      "pve": "Full duration",
+      "wvw": "Many CC skills have reduced duration or radius",
+      "note": "Check individual skills for specifics"
+    },
+    "aoe_radius": {
+      "pve": "Full radius",
+      "wvw": "Many AOE skills have reduced radius (zerg counter)",
+      "examples": [
+        "Wells (Necro): 600 → 360",
+        "Gravitywell (Chrono): 1200 → 600 pull",
+        "Wind of Disenchant: 600 → 360"
+      ]
+    }
+  },
+  "professions": {
+    "guardian": {
+      "firebrand": {
+        "tome_skills": {
+          "pve": "Full effectiveness",
+          "wvw": "Some tome skills have reduced radius",
+          "note": "Tome 1 healing reduced in WvW"
+        }
+      }
+    },
+    "revenant": {
+      "herald": {
+        "facets": {
+          "pve": "Facet of Nature gives Alacrity",
+          "wvw": "Facet of Nature gives different boons",
+          "note": "Major split for Herald"
+        }
+      },
+      "vindicator": {
+        "alliance_healing": {
+          "pve": "100%",
+          "wvw": "75%",
+          "note": "Reduced healing output in WvW"
+        }
+      }
+    },
+    "engineer": {
+      "scrapper": {
+        "gyros": {
+          "pve": "Give Quickness",
+          "wvw": "Give Stability",
+          "note": "Major split for Scrapper support role"
+        }
+      },
+      "mechanist": {
+        "mech_skills": {
+          "pve": "Give Alacrity",
+          "wvw": "Give Might",
+          "note": "Support role changed in WvW"
+        }
+      }
+    },
+    "necromancer": {
+      "scourge": {
+        "wells": {
+          "pve": "600 radius",
+          "wvw": "360 radius",
+          "note": "Reduced for anti-zerg balance"
+        }
+      }
+    },
+    "mesmer": {
+      "chronomancer": {
+        "wells_gravity": {
+          "pve": "1200 pull strength",
+          "wvw": "600 pull strength",
+          "note": "Reduced pull in WvW"
+        }
+      }
+    }
+  },
+  "how_to_use": {
+    "optimizer": "Load this file and apply mode-specific values when building compositions",
+    "backend_file": "app/core/optimizer/mode_effects.py",
+    "frontend_display": "Show mode-specific tooltips in build cards",
+    "update_frequency": "Check GW2 patch notes monthly for balance changes"
+  },
+  "sources": [
+    "https://wiki.guildwars2.com/wiki/Skill_balance",
+    "https://metabattle.com/wiki/MetaBattle_Wiki",
+    "https://snowcrows.com/",
+    "https://hardstuck.gg/gw2/",
+    "GW2 Official Forums - Balance Updates"
+  ]
+}

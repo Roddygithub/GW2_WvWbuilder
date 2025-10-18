@@ -67,6 +67,13 @@ export interface CompositionOptimizationResult {
   role_distribution: Record<string, number>;
   boon_coverage: Record<string, number>;
   notes?: string[];
+  subgroups?: Array<{
+    group_number: number;
+    size: number;
+    members: number[];
+    boon_coverage: Record<string, number>;
+    avg_boon_coverage: number;
+  }>;
 }
 
 export interface GameMode {

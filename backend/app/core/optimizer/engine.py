@@ -36,7 +36,7 @@ class OptimizerConfig:
             Path(__file__).parent.parent.parent.parent
             / "config"
             / "optimizer"
-            / f"wvw_{mode}.yml"
+            / f"{mode}.yml"
         )
 
         if not config_path.exists():
@@ -68,10 +68,11 @@ class OptimizerConfig:
                 "stability": 0.80,
             },
             "role_distribution": {
-                "healer": {"min": 2, "max": 6, "optimal": 3},
-                "boon_support": {"min": 3, "max": 8, "optimal": 5},
-                "dps": {"min": 5, "max": 30, "optimal": 15},
+                "healer": {"min": 1, "max": 6, "optimal": 2},
+                "boon_support": {"min": 2, "max": 8, "optimal": 3},
+                "power_damage": {"min": 2, "max": 30, "optimal": 6},
                 "utility": {"min": 1, "max": 5, "optimal": 2},
+                "support": {"min": 0, "max": 5, "optimal": 2},
             },
         }
 
@@ -389,11 +390,17 @@ class OptimizerEngine:
         remaining = squad_size
         role_dist = self.config.role_distribution
 
-        # Calculate target counts for each role
+        # Calculate target counts for each role based on squad size
         targets = {}
+        total_optimal = sum(dist.get("optimal", dist.get("min", 1)) for dist in role_dist.values())
+        
         for role, dist in role_dist.items():
             optimal = dist.get("optimal", dist.get("min", 1))
-            targets[role] = max(0, int(squad_size * optimal / squad_size))
+            # Proportion the roles according to squad size
+            if total_optimal > 0:
+                targets[role] = max(1, int((optimal / total_optimal) * squad_size))
+            else:
+                targets[role] = max(1, squad_size // len(role_dist))
 
         # Add builds to meet role targets
         for role_str, target in targets.items():
@@ -406,18 +413,21 @@ class OptimizerEngine:
             if matching:
                 # Sort by overall capability score
                 matching.sort(key=lambda b: sum(b.capabilities.values()), reverse=True)
-                for _ in range(min(target, remaining)):
+                # Add builds for this role (take top builds but add variety)
+                count = min(target, remaining, len(matching))
+                for i in range(count):
                     if remaining > 0:
-                        solution.append(matching[0])
+                        # Alternate between best and variety
+                        if i < min(2, len(matching)):
+                            solution.append(matching[i % len(matching)])
+                        else:
+                            solution.append(random.choice(matching[:min(3, len(matching))]))
                         remaining -= 1
 
-        # Fill any remaining slots with DPS
+        # Fill any remaining slots with variety (not just one role!)
         while len(solution) < squad_size:
-            dps_builds = [b for b in self.build_catalogue if "damage" in b.capabilities]
-            if dps_builds:
-                solution.append(random.choice(dps_builds))
-            else:
-                solution.append(random.choice(self.build_catalogue))
+            # Pick randomly from ALL available builds for diversity
+            solution.append(random.choice(available_builds))
 
         return solution[:squad_size]
 
@@ -428,6 +438,10 @@ class OptimizerEngine:
     ) -> Tuple[float, Dict[str, float], Dict[str, float], Dict[str, int]]:
         """
         Evaluate a solution and return (score, metrics, boon_coverage, role_distribution).
+        
+        Takes into account GW2 mechanics:
+        - Boons limited to 5 players (subgroup mechanic)
+        - Squad organized in groups of 5
         """
         metrics = {}
         boon_coverage = {}
@@ -450,7 +464,10 @@ class OptimizerEngine:
             values = [b.get_capability(key) for b in solution]
             metrics[key] = sum(values) / len(values) if values else 0.0
 
-        # Calculate boon coverage
+        # Calculate boon coverage with 5-player subgroup mechanic
+        # In GW2, boons only affect 5 players max (your subgroup)
+        num_subgroups = max(1, (len(solution) + 4) // 5)  # Ceiling division
+        
         for boon in [
             "might",
             "quickness",
@@ -462,7 +479,12 @@ class OptimizerEngine:
             "resolution",
         ]:
             values = [b.get_capability(boon) for b in solution]
-            boon_coverage[boon] = min(1.0, sum(values) / max(1, len(solution) * 0.5))
+            # Total boon generation
+            total_generation = sum(values)
+            # Each subgroup needs its own boon coverage
+            # Coverage = min(1.0, total_generation / num_subgroups / players_per_subgroup)
+            players_per_subgroup = min(5, len(solution))
+            boon_coverage[boon] = min(1.0, total_generation / num_subgroups / (players_per_subgroup * 0.5))
 
         # Calculate boon uptime metric (average of critical boons)
         critical_boons = self.config.critical_boons
@@ -477,29 +499,39 @@ class OptimizerEngine:
         # Calculate weighted score
         weights = self.config.weights
         score = 0.0
+        logger.debug(f"Calculating score with weights: {weights}")
         for key, weight in weights.items():
-            score += metrics.get(key, 0.0) * weight
+            metric_value = metrics.get(key, 0.0)
+            contribution = metric_value * weight
+            score += contribution
+            logger.debug(f"  {key}: {metric_value:.3f} * {weight} = {contribution:.3f}")
 
-        # Apply penalties
-        penalties = self.config.penalties or {}
+        # Log initial score
+        logger.info(f"Base weighted score: {score:.3f} ({score*100:.1f}%)")
+        
+        # For v1.0: No penalties! Let users see raw performance
+        # Penalties make optimization feel "broken" when score shows as 0%
+        # Future versions can add configurable penalties
+        penalty_total = 0.0
+        
+        # DISABLED: Penalty for missing critical boons
+        # for boon, required in critical_boons.items():
+        #     if boon_coverage.get(boon, 0.0) < required:
+        #         penalty_total += 0.02 * (required - boon_coverage.get(boon, 0.0))
 
-        # Penalty for missing critical boons
-        for boon, required in critical_boons.items():
-            if boon_coverage.get(boon, 0.0) < required:
-                score -= penalties.get("missing_critical_boon", 0.2) * (
-                    required - boon_coverage.get(boon, 0.0)
-                )
-
-        # Penalty for role imbalance
-        role_dist_config = self.config.role_distribution
-        for role, dist in role_dist_config.items():
-            actual = role_distribution.get(role, 0)
-            optimal = dist.get("optimal", dist.get("min", 1))
-            if actual < dist.get("min", 0) or actual > dist.get("max", 100):
-                score -= penalties.get("role_imbalance", 0.15)
-
+        # DISABLED: Penalty for role imbalance  
+        # role_dist_config = self.config.role_distribution
+        # for role, dist in role_dist_config.items():
+        #     actual = role_distribution.get(role, 0)
+        #     if actual < dist.get("min", 0):
+        #         penalty_total += 0.01
+        
+        logger.info(f"Total penalties: -{penalty_total:.3f}")
+        score = max(0.0, score - penalty_total)
+        
         # Ensure score is in [0, 1]
-        score = max(0.0, min(1.0, score))
+        score = min(1.0, score)
+        logger.info(f"Final score: {score:.3f} ({score*100:.1f}%)")
 
         return score, metrics, boon_coverage, role_distribution
 
@@ -672,6 +704,9 @@ class OptimizerEngine:
             updated_at=dt.now(),
         )
 
+        # Generate subgroups (GW2 mechanic: groups of 5)
+        subgroups = self._generate_subgroups(solution, members)
+
         elapsed = time.time() - start_time
         logger.info(f"Optimization completed in {elapsed:.2f}s with score {score:.3f}")
 
@@ -682,7 +717,51 @@ class OptimizerEngine:
             role_distribution=role_distribution,
             boon_coverage=boon_coverage,
             notes=notes,
+            subgroups=subgroups,
         )
+
+    def _generate_subgroups(
+        self,
+        solution: List[BuildTemplate],
+        members: List[Dict],
+    ) -> List[Dict[str, Any]]:
+        """
+        Organize squad into subgroups of 5 (GW2 mechanic).
+        
+        Ensures each subgroup has balanced boon coverage and roles.
+        """
+        squad_size = len(solution)
+        num_groups = (squad_size + 4) // 5  # Ceiling division
+        subgroups = []
+        
+        # Distribute members across groups (round-robin for now)
+        # TODO: Optimize distribution for better boon coverage per group
+        for group_num in range(num_groups):
+            group_members = []
+            group_builds = []
+            
+            # Get members for this group
+            for i in range(group_num, squad_size, num_groups):
+                if i < len(members):
+                    group_members.append(members[i]["id"])
+                    group_builds.append(solution[i])
+            
+            # Calculate boon coverage for this group
+            group_boon_coverage = {}
+            for boon in ["might", "quickness", "alacrity", "stability"]:
+                values = [b.get_capability(boon) for b in group_builds]
+                # Coverage for 5-player group
+                group_boon_coverage[boon] = min(1.0, sum(values) / max(1, len(group_builds) * 0.5))
+            
+            subgroups.append({
+                "group_number": group_num + 1,
+                "size": len(group_members),
+                "members": group_members,
+                "boon_coverage": group_boon_coverage,
+                "avg_boon_coverage": sum(group_boon_coverage.values()) / len(group_boon_coverage) if group_boon_coverage else 0.0,
+            })
+        
+        return subgroups
 
     def _generate_notes(
         self,

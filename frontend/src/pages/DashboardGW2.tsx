@@ -186,7 +186,7 @@ export default function DashboardGW2() {
             </Link>
 
             <Link
-              to="/builder"
+              to="/optimizer"
               className="gw2-card p-6 hover:gw2-gold-glow transition-all group"
             >
               <div className="flex items-center space-x-4">
@@ -194,9 +194,9 @@ export default function DashboardGW2() {
                   <Sword className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold mb-1">Create Build</h3>
+                  <h3 className="text-lg font-bold mb-1">Squad Optimizer</h3>
                   <p className="text-sm text-muted-foreground">
-                    Design a new character build
+                    AI-powered composition builder
                   </p>
                 </div>
               </div>

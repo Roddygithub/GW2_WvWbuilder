@@ -118,7 +118,7 @@ logger = logging.getLogger(__name__)
 )
 async def optimize_composition_endpoint(
     request: CompositionOptimizationRequest,
-    current_user: User = Depends(deps.get_current_active_user),
+    current_user: Optional[User] = Depends(deps.get_current_user_optional),
     db: AsyncSession = Depends(deps.get_async_db),
 ) -> CompositionOptimizationResult:
     """
@@ -129,10 +129,13 @@ async def optimize_composition_endpoint(
     the game mode and squad size.
 
     The optimization is time-boxed to ensure fast response times.
+    
+    Authentication is optional - logged-in users get enhanced features.
     """
     try:
+        user_id = current_user.id if current_user else "anonymous"
         logger.info(
-            f"User {current_user.id} requested optimization: "
+            f"User {user_id} requested optimization: "
             f"mode={request.game_mode}, size={request.squad_size}"
         )
 

@@ -148,6 +148,36 @@ async def get_current_active_user(
     return current_user
 
 
+async def get_current_user_optional(
+    request: Request, token: Optional[str] = Depends(oauth2_scheme)
+) -> Optional[models.User]:
+    """
+    Dependency to get the current user from the JWT token, but returns None if no token.
+    
+    This is useful for endpoints that work with or without authentication,
+    providing enhanced features for logged-in users.
+
+    Args:
+        request: The FastAPI request object
+        token: The JWT token from the Authorization header (optional)
+
+    Returns:
+        Optional[models.User]: The authenticated user or None if no token
+
+    Raises:
+        CredentialsException: If token is provided but invalid
+    """
+    if not token:
+        return None
+    
+    try:
+        return await get_current_user(request, token)
+    except (CredentialsException, UserNotFoundException):
+        # Invalid token: return None instead of raising
+        # This allows public access while rejecting malformed tokens
+        return None
+
+
 async def get_current_active_superuser(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:

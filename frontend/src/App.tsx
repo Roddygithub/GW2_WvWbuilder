@@ -5,6 +5,9 @@ import DashboardGW2 from "./pages/DashboardGW2";
 import TagsManager from "./pages/TagsManager";
 import GW2Test from "./pages/GW2Test";
 import BuilderV2Page from "./pages/BuilderV2";
+import OptimizationBuilder from "./pages/OptimizationBuilder";
+import OptimizePage from "./pages/OptimizePage";
+import MetaEvolutionPage from "./pages/MetaEvolutionPage";
 import CompositionsPage from "./pages/compositions";
 import CompositionCreate from "./pages/CompositionCreate";
 import ComingSoon from "./pages/ComingSoon";
@@ -71,6 +74,35 @@ function App() {
           <ProtectedRoute>
             <BuilderV2Page />
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/optimizer"
+        element={
+          <ProtectedRoute>
+            <OptimizationBuilder />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* New Optimizer (WvW, subgroups-first + streaming) */}
+      {/* Temporarily without auth for testing */}
+      <Route
+        path="/optimize"
+        element={
+          <MainLayout>
+            <OptimizePage />
+          </MainLayout>
+        }
+      />
+
+      {/* Meta Evolution Dashboard (AI-powered meta analysis) */}
+      <Route
+        path="/meta-evolution"
+        element={
+          <MainLayout>
+            <MetaEvolutionPage />
+          </MainLayout>
         }
       />
 
