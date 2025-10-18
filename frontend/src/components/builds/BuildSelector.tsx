@@ -3,8 +3,8 @@
  * Modal pour sélectionner et appliquer des builds
  */
 
-import { FC, useState, useMemo } from 'react';
-import { X, Search, Filter } from 'lucide-react';
+import { FC, useState, useMemo, useEffect } from 'react';
+import { X, Search, Filter, Loader2, AlertCircle } from 'lucide-react';
 import { Build, BuildFilter, PROFESSIONS } from '@/types/gw2optimizer';
 
 interface BuildSelectorProps {
@@ -12,20 +12,53 @@ interface BuildSelectorProps {
   onClose: () => void;
   onSelect: (build: Build) => void;
   availableBuilds?: Build[];
+  fetchFromBackend?: boolean;
 }
 
 export const BuildSelector: FC<BuildSelectorProps> = ({
   isOpen,
   onClose,
   onSelect,
-  availableBuilds = MOCK_BUILDS,
+  availableBuilds,
+  fetchFromBackend = false,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<BuildFilter>({});
+  const [builds, setBuilds] = useState<Build[]>(availableBuilds || MOCK_BUILDS);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch builds from backend if enabled
+  useEffect(() => {
+    if (fetchFromBackend && isOpen) {
+      fetchBuildsFromBackend();
+    } else if (availableBuilds) {
+      setBuilds(availableBuilds);
+    }
+  }, [isOpen, fetchFromBackend, availableBuilds]);
+
+  const fetchBuildsFromBackend = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // TODO: Replace with actual API call
+      // const response = await fetch('/api/v1/builds');
+      // const data = await response.json();
+      // setBuilds(data);
+      
+      // Mock delay for demonstration
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setBuilds(MOCK_BUILDS);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch builds');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filtrer les builds
   const filteredBuilds = useMemo(() => {
-    return availableBuilds.filter((build) => {
+    return builds.filter((build) => {
       // Search term
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
@@ -57,11 +90,25 @@ export const BuildSelector: FC<BuildSelectorProps> = ({
 
       return true;
     });
-  }, [availableBuilds, searchTerm, filters]);
+  }, [builds, searchTerm, filters]);
 
   const handleSelect = (build: Build) => {
     onSelect(build);
     onClose();
+  };
+
+  const handleApplyBuild = async (build: Build) => {
+    try {
+      // TODO: Replace with actual API call
+      // await fetch('/api/v1/builds/apply', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ build_id: build.id })
+      // });
+      handleSelect(build);
+    } catch (err: any) {
+      setError(err.message || 'Failed to apply build');
+    }
   };
 
   if (!isOpen) return null;
@@ -88,6 +135,17 @@ export const BuildSelector: FC<BuildSelectorProps> = ({
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mt-4 p-3 bg-danger/10 border border-danger rounded-md flex items-start gap-2">
+            <AlertCircle className="h-5 w-5 text-danger flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <div className="font-semibold text-danger">Error</div>
+              <div className="text-sm text-gw2-text">{error}</div>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="py-4 space-y-3 border-b border-gw2-border">
@@ -170,7 +228,12 @@ export const BuildSelector: FC<BuildSelectorProps> = ({
 
         {/* Builds List */}
         <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-          {filteredBuilds.length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="h-12 w-12 text-gw2-gold animate-spin mb-4" />
+              <p className="text-gw2-textSecondary">Loading builds...</p>
+            </div>
+          ) : filteredBuilds.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="text-6xl mb-4">🔍</div>
               <p className="text-gw2-textSecondary">No builds found</p>
@@ -180,7 +243,7 @@ export const BuildSelector: FC<BuildSelectorProps> = ({
               <BuildCard
                 key={build.id}
                 build={build}
-                onSelect={() => handleSelect(build)}
+                onSelect={() => handleApplyBuild(build)}
               />
             ))
           )}

@@ -5,6 +5,7 @@ from app.api.api_v1.endpoints import (
     roles,
     professions,
     compositions,
+    compositions_generate,
     auth,
     builds,
     teams,
@@ -30,6 +31,9 @@ api_router.include_router(
 )
 api_router.include_router(
     compositions.router, prefix="/compositions", tags=["Compositions"]
+)
+api_router.include_router(
+    compositions_generate.router, prefix="/compositions", tags=["Compositions"]
 )
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(builds.router, prefix="/builds", tags=["Builds"])

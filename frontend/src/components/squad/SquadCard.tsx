@@ -1,22 +1,38 @@
 /**
  * GW2Optimizer - SquadCard Component
  * Affiche une composition d'escouade avec builds, poids, synergies et badges
+ * Version avancée avec animations, hover details et timeline
  */
 
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { Squad, PROFESSIONS } from '@/types/gw2optimizer';
-import { Users, TrendingUp, TrendingDown, Clock, Zap } from 'lucide-react';
+import { Users, TrendingUp, TrendingDown, Clock, Zap, ChevronDown, ChevronUp, Info } from 'lucide-react';
 
 interface SquadCardProps {
   squad: Squad;
   onSelect?: (squadId: string) => void;
+  showTimeline?: boolean;
 }
 
-export const SquadCard: FC<SquadCardProps> = ({ squad, onSelect }) => {
+export const SquadCard: FC<SquadCardProps> = ({ squad, onSelect, showTimeline = false }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
+
+  const handleCardClick = () => {
+    onSelect?.(squad.id);
+  };
+
+  const handleExpandToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
+
   return (
     <div
-      className="gw2-card-hover cursor-pointer"
-      onClick={() => onSelect?.(squad.id)}
+      className="gw2-card-hover cursor-pointer transition-all duration-300"
+      onClick={handleCardClick}
+      onMouseEnter={() => setShowDetails(true)}
+      onMouseLeave={() => setShowDetails(false)}
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
@@ -125,12 +141,78 @@ export const SquadCard: FC<SquadCardProps> = ({ squad, onSelect }) => {
         </div>
       )}
 
-      {/* Mode Badge */}
-      {squad.mode && (
-        <div className="mt-3 pt-3 border-t border-gw2-border">
+      {/* Mode Badge & Expand Button */}
+      <div className="mt-3 pt-3 border-t border-gw2-border flex items-center justify-between">
+        {squad.mode && (
           <span className="gw2-badge bg-gw2-red/20 text-gw2-red border border-gw2-red/50 text-xs">
             Mode: {squad.mode.toUpperCase()}
           </span>
+        )}
+        
+        <button
+          onClick={handleExpandToggle}
+          className="gw2-button-secondary px-3 py-1 text-xs flex items-center gap-1"
+        >
+          {isExpanded ? (
+            <>
+              <ChevronUp className="h-3 w-3" />
+              Less
+            </>
+          ) : (
+            <>
+              <ChevronDown className="h-3 w-3" />
+              Details
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Expanded Details */}
+      {isExpanded && (
+        <div className="mt-4 pt-4 border-t border-gw2-border space-y-3 animate-accordion-down">
+          {/* Detailed Stats */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Info className="h-4 w-4 text-gw2-gold" />
+              <span className="text-sm font-semibold text-gw2-text">Detailed Analysis</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="gw2-card bg-gw2-dark p-2">
+                <div className="text-gw2-textSecondary mb-1">Avg Build Weight</div>
+                <div className="text-gw2-gold font-bold">
+                  {squad.builds.length > 0
+                    ? ((squad.builds.reduce((sum, b) => sum + b.weight, 0) / squad.builds.length) * 100).toFixed(0)
+                    : 0}%
+                </div>
+              </div>
+              <div className="gw2-card bg-gw2-dark p-2">
+                <div className="text-gw2-textSecondary mb-1">Build Diversity</div>
+                <div className="text-gw2-gold font-bold">
+                  {squad.builds.length} types
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Timeline (if enabled) */}
+          {showTimeline && (
+            <div>
+              <div className="text-xs font-semibold text-gw2-textSecondary mb-2">Recent Changes</div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-xs text-gw2-text">
+                  <Clock className="h-3 w-3 text-gw2-gold" />
+                  <span>Created {new Date(squad.timestamp).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Hover Tooltip */}
+      {showDetails && !isExpanded && (
+        <div className="absolute top-0 left-0 right-0 bg-gw2-dark/95 backdrop-blur-sm p-2 rounded-t-card border-t-2 border-gw2-gold text-xs text-gw2-textSecondary z-10">
+          Click to select • Hover for quick stats • Details for full analysis
         </div>
       )}
     </div>
